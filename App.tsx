@@ -1,20 +1,37 @@
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { ThemeProvider } from './src/context/ThemeContext';
+import { AuthProvider } from './src/context/AuthContext';
+import { NetworkProvider } from './src/context/NetworkContext';
+import { DownloadProvider } from './src/context/DownloadContext';
+import { AudioProvider } from './src/context/AudioContext';
+import AppNavigator from './src/navigation/AppNavigator';
+import { PaperProvider } from 'react-native-paper';
+import { theme } from './src/theme';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+// Create a client for React Query
+const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <PaperProvider theme={theme}>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <NetworkProvider>
+              <AuthProvider>
+                <DownloadProvider>
+                  <AudioProvider>
+                    <StatusBar style="auto" />
+                    <AppNavigator />
+                  </AudioProvider>
+                </DownloadProvider>
+              </AuthProvider>
+            </NetworkProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
