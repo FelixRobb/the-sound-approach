@@ -3,11 +3,12 @@
 import { useState, useEffect, useContext } from "react"
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from "react-native"
 import { Appbar, Divider, Button, ActivityIndicator } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
+import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { DownloadContext } from "../context/DownloadContext"
 import { AudioContext } from "../context/AudioContext"
 import type { DownloadRecord } from "../types"
+import React from "react"
 
 
 
@@ -33,31 +34,44 @@ const DownloadsScreen = () => {
   }
 
   // Load downloaded recordings from database
+ 
+  // Load downloaded recordings from database
+  const loadDownloads = async () => {
+    setIsLoading(true);
+    try {
+      const downloadedRecordings = await getDownloadedRecordings();
+      // Map the downloaded recordings to match the DownloadedRecording type
+      const formattedRecordings = downloadedRecordings.map(record => ({
+        recording_id: record.recording_id,
+        audio_path: record.audio_path,
+        sonogram_path: record.sonogram_path,
+        downloaded_at: record.downloaded_at,
+        title: record.title,
+        species_name: record.species_name,
+        scientific_name: record.scientific_name,
+        book_page_number: record.book_page_number,
+        caption: record.caption,
+      }));
+      setDownloads(formattedRecordings);
+    } catch (error) {
+      console.error("Error loading downloads:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Check for downloads when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadDownloads();
+      return () => {
+        // Optional cleanup if needed
+      };
+    }, [])
+  );
+
+  // Initial load when component mounts
   useEffect(() => {
-    const loadDownloads = async () => {
-      setIsLoading(true);
-      try {
-        const downloadedRecordings = await getDownloadedRecordings();
-        // Map the downloaded recordings to match the DownloadedRecording type
-        const formattedRecordings = downloadedRecordings.map(record => ({
-          recording_id: record.recording_id,
-          audio_path: record.audio_path,
-          sonogram_path: record.sonogram_path,
-          downloaded_at: record.downloaded_at,
-          title: record.title,
-          species_name: record.species_name,
-          scientific_name: record.scientific_name,
-          book_page_number: record.book_page_number,
-          caption: record.caption,
-        }));
-        setDownloads(formattedRecordings);
-      } catch (error) {
-        console.error("Error loading downloads:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-  
     loadDownloads();
   }, []);
 

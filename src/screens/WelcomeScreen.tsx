@@ -1,3 +1,4 @@
+// src/screens/WelcomeScreen.tsx
 "use client"
 
 import { useEffect } from "react"
@@ -6,22 +7,35 @@ import { Button } from "react-native-paper"
 import { useNavigation } from "@react-navigation/native"
 import { StatusBar } from "expo-status-bar"
 import * as SecureStore from "expo-secure-store"
+import { AuthContext } from "../context/AuthContext"
+import { useContext } from "react"
 
 const WelcomeScreen = () => {
   const navigation = useNavigation()
+  const { state: authState } = useContext(AuthContext)
 
   useEffect(() => {
     // Check if user is already logged in
     const checkToken = async () => {
       const token = await SecureStore.getItemAsync("userToken")
       if (token) {
-        // @ts-ignore - Navigation typing issue
-        navigation.replace("MainTabs")
+        // Instead of using replace, let the AuthContext handle the navigation
+        // The root navigator will automatically switch to MainNavigator when userToken is present
+        console.log("User is already logged in, AuthContext will handle navigation")
       }
     }
 
     checkToken()
   }, [navigation])
+
+  // If user is already authenticated, don't render the welcome screen
+  if (authState.userToken) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Redirecting...</Text>
+      </View>
+    )
+  }
 
   return (
     <ImageBackground
@@ -120,6 +134,11 @@ const styles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: "transparent",
     borderColor: "#FFFFFF",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 })
 

@@ -75,6 +75,9 @@ const MainNavigator = () => {
       <MainStack.Screen name="SpeciesDetails" component={SpeciesDetailsScreen} />
       <MainStack.Screen name="Search" component={SearchScreen} />
       <MainStack.Screen name="OfflineNotice" component={OfflineNoticeScreen} options={{ presentation: "modal" }} />
+      <MainStack.Screen name="Profile" component={ProfileSettingsScreen}/>
+      <MainStack.Screen name="Downloads" component={DownloadsScreen}/>
+
     </MainStack.Navigator>
   )
 }
