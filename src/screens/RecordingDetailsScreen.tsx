@@ -1,18 +1,21 @@
 "use client"
 
 import React from "react"
-import { useState, useEffect, useContext, useRef } from "react"
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from "react-native"
-import { Appbar, Button, ActivityIndicator } from "react-native-paper"
-import Slider from '@react-native-community/slider'
-import { useNavigation, useRoute } from "@react-navigation/native"
+import { useState, useEffect, useContext } from "react"
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Dimensions } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
+import { useNavigation, useRoute } from "@react-navigation/native"
 import { useQuery } from "@tanstack/react-query"
+import Slider from '@react-native-community/slider'
+import { ActivityIndicator } from "react-native-paper"
 import { fetchRecordingById } from "../lib/supabase"
 import { NetworkContext } from "../context/NetworkContext"
 import { DownloadContext } from "../context/DownloadContext"
 import { AudioContext } from "../context/AudioContext"
 import { supabase } from "../lib/supabase"
+import { PlaybackSpeed } from "../types"
+
+const { width } = Dimensions.get("window")
 
 // Format time in mm:ss
 const formatTime = (milliseconds: number) => {
@@ -58,87 +61,80 @@ const RecordingDetailsScreen = () => {
 
   // Handle audio loading
   useEffect(() => {
-    let isMounted = true;
-    let loadAttemptInProgress = false;
+    let isMounted = true
+    let loadAttemptInProgress = false
 
     const loadRecordingAudio = async () => {
       // Skip if already loading, no recording, or loading in progress
-      if (!recording || isLoadingAudio || loadAttemptInProgress) return;
+      if (!recording || isLoadingAudio || loadAttemptInProgress) return
 
-      loadAttemptInProgress = true;
+      loadAttemptInProgress = true
 
       try {
-        setIsLoadingAudio(true);
-        let audioUri = null;
+        setIsLoadingAudio(true)
+        let audioUri = null
 
         if (isDownloaded(recording.id)) {
           // Use local file
-          audioUri = getDownloadPath(recording.audio_id, true);
-          console.log("Using local audio file:", audioUri);
+          audioUri = getDownloadPath(recording.audio_id, true)
         } else if (isConnected) {
           // Use public URL from Supabase
-          const { data } = supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`);
-          audioUri = data?.publicUrl;
-          console.log("Using remote audio URL:", audioUri);
+          const { data } = supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`)
+          audioUri = data?.publicUrl
         } else {
           // No audio available offline
-          console.log("No audio available offline");
-          setIsLoadingAudio(false);
-          loadAttemptInProgress = false;
-          return;
+          setIsLoadingAudio(false)
+          loadAttemptInProgress = false
+          return
         }
 
         if (!audioUri) {
-          console.log("No valid audio URI found");
-          setIsLoadingAudio(false);
-          loadAttemptInProgress = false;
-          return;
+          setIsLoadingAudio(false)
+          loadAttemptInProgress = false
+          return
         }
 
-        console.log("Attempting to load audio...");
         // Direct load without setTimeout
-        const success = await loadAudio(audioUri, recording.audio_id || '');
+        const success = await loadAudio(audioUri, recording.audio_id || '')
 
         if (isMounted) {
           if (success) {
-            console.log("Audio loaded successfully");
-            setAudioLoadRetries(0);
+            setAudioLoadRetries(0)
           } else {
-            console.log("Audio failed to load");
-
             // Retry logic - but only if component is still mounted
             if (audioLoadRetries < 2 && isMounted) {
-              setAudioLoadRetries(prev => prev + 1);
+              setAudioLoadRetries(prev => prev + 1)
             } else if (isMounted) {
               // Show error alert after retries
               Alert.alert(
                 "Audio Error",
                 "Failed to load audio file. Please try again later.",
                 [{ text: "OK" }]
-              );
+              )
             }
           }
         }
       } catch (err) {
-        console.error("Error in audio loading:", err);
+        console.error("Error in audio loading:", err)
       } finally {
         if (isMounted) {
-          setIsLoadingAudio(false);
+          setIsLoadingAudio(false)
         }
-        loadAttemptInProgress = false;
+        loadAttemptInProgress = false
       }
-    };
+    }
 
     // Load audio when recording is available and we have network/local file
     if (recording && (isConnected || isDownloaded(recording.id))) {
-      loadRecordingAudio();
+      loadRecordingAudio()
     }
 
     // Clean up function
     return () => {
-      isMounted = false;
-    };
-  }, [recording, recording?.id ? isDownloaded(recording.id) : false, isConnected, audioLoadRetries]);
+      isMounted = false
+    }
+  }, [recording, recording?.id ? isDownloaded(recording.id) : false, isConnected, audioLoadRetries])
+  
   // Check if audio is actually loaded
   const isAudioReady = audioState.isLoaded && audioState.currentAudioId === recording?.audio_id
 
@@ -176,8 +172,6 @@ const RecordingDetailsScreen = () => {
   // Handle play/pause button press
   const handlePlayPause = async () => {
     if (!isAudioReady) {
-      console.log("Audio not ready for playback")
-
       // If we have recording but audio isn't ready, try loading again
       if (recording && !isLoadingAudio) {
         setAudioLoadRetries(0)
@@ -187,19 +181,12 @@ const RecordingDetailsScreen = () => {
 
     try {
       if (audioState.isPlaying) {
-        const success = await pauseAudio()
-        if (!success) {
-          console.log("Failed to pause audio")
-        }
+        await pauseAudio()
       } else {
         const success = await playAudio()
-        if (!success) {
-          console.log("Failed to play audio")
-
+        if (!success && recording) {
           // Try reloading if play fails
-          if (recording) {
-            setAudioLoadRetries(0)
-          }
+          setAudioLoadRetries(0)
         }
       }
     } catch (error) {
@@ -212,24 +199,18 @@ const RecordingDetailsScreen = () => {
     if (!isAudioReady) return
 
     try {
-      const success = await seekAudio(value)
-      if (!success) {
-        console.log("Seek operation failed")
-      }
+      await seekAudio(value)
     } catch (error) {
       console.error("Error seeking:", error)
     }
   }
 
   // Handle playback speed change
-  const handleSpeedChange = async (speed: 0.5 | 1 | 1.5 | 2) => {
+  const handleSpeedChange = async (speed: PlaybackSpeed) => {
     if (!isAudioReady) return
 
     try {
-      const success = await setPlaybackSpeed(speed)
-      if (!success) {
-        console.log("Failed to change playback speed")
-      }
+      await setPlaybackSpeed(speed)
     } catch (error) {
       console.error("Error changing speed:", error)
     }
@@ -240,10 +221,7 @@ const RecordingDetailsScreen = () => {
     if (!isAudioReady) return
 
     try {
-      const success = await toggleLooping()
-      if (!success) {
-        console.log("Failed to toggle looping")
-      }
+      await toggleLooping()
     } catch (error) {
       console.error("Error toggling loop:", error)
     }
@@ -253,50 +231,6 @@ const RecordingDetailsScreen = () => {
   const handleRetry = () => {
     setAudioLoadRetries(0)
     refetch()
-  }
-
-  // Render loading state
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Appbar.Header>
-          <Appbar.BackAction onPress={() => navigation.goBack()} />
-          <Appbar.Content title="Loading..." />
-        </Appbar.Header>
-
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2E7D32" />
-          <Text style={styles.loadingText}>Loading recording details...</Text>
-        </View>
-      </View>
-    )
-  }
-
-  // Render error state
-  if (error || !recording) {
-    return (
-      <View style={styles.container}>
-        <Appbar.Header>
-          <Appbar.BackAction onPress={() => navigation.goBack()} />
-          <Appbar.Content title="Error" />
-        </Appbar.Header>
-
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color="#B00020" />
-          <Text style={styles.errorText}>
-            {!isConnected
-              ? "You're offline. This recording is not available offline."
-              : "Something went wrong. Please try again."}
-          </Text>
-          <Button mode="contained" onPress={handleRetry} style={styles.backButton}>
-            Retry
-          </Button>
-          <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.backButton}>
-            Go Back
-          </Button>
-        </View>
-      </View>
-    )
   }
 
   // Get sonogram image URI
@@ -315,16 +249,78 @@ const RecordingDetailsScreen = () => {
     return null
   }
 
+  // Render loading state
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#2E7D32" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Loading...</Text>
+        </View>
+
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color="#2E7D32" />
+            <Text style={styles.loadingText}>Loading recording details...</Text>
+          </View>
+        </View>
+      </View>
+    )
+  }
+
+  // Render error state
+  if (error || !recording) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#2E7D32" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Error</Text>
+        </View>
+
+        <View style={styles.errorContainer}>
+          <View style={styles.errorCard}>
+            <Ionicons name="alert-circle" size={60} color="#B00020" />
+            <Text style={styles.errorTitle}>Unable to Load Recording</Text>
+            <Text style={styles.errorText}>
+              {!isConnected
+                ? "You're offline. This recording is not available offline."
+                : "Something went wrong. Please try again."}
+            </Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={handleRetry}
+            >
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.goBackButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.goBackText}>Go Back</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )
+  }
+
   return (
     <View style={styles.container}>
-      <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title={recording.title} />
-      </Appbar.Header>
-
       {isImageFullscreen ? (
         <View style={styles.fullscreenContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => setIsImageFullscreen(false)}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => {
+            setIsImageFullscreen(false);
+          }}>
             <Ionicons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Image
@@ -334,142 +330,253 @@ const RecordingDetailsScreen = () => {
           />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.content}>
-          <TouchableOpacity
-            onPress={() => {
-              // @ts-ignore - Navigation typing issue
-              navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
-            }}
-          >
-            <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
-            <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
-          </TouchableOpacity>
-
-          <View style={styles.pageReference}>
-            <Ionicons name="book-outline" size={16} color="#666666" />
-            <Text style={styles.pageText}>Page {recording.book_page_number}</Text>
+        <>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton} 
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="chevron-back" size={24} color="#2E7D32" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{recording.title}</Text>
+            {isDownloaded(recording.id) && (
+              <View style={styles.downloadedIndicator}>
+                <Ionicons name="cloud-done" size={16} color="#2E7D32" />
+              </View>
+            )}
           </View>
 
-          <Text style={styles.caption}>{recording.caption}</Text>
+          <ScrollView contentContainerStyle={styles.content}>
+            {/* Species Card */}
+            <View style={styles.card}>
+              <TouchableOpacity
+                style={styles.speciesHeader}
+                onPress={() => {
+                  // @ts-ignore - Navigation typing issue
+                  navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
+                }}
+              >
+                <View style={styles.speciesInfo}>
+                  <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
+                  <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
 
-          <View style={styles.playerContainer}>
-            {isLoadingAudio ? (
-              <View style={styles.loadingAudioContainer}>
-                <ActivityIndicator size="small" color="#2E7D32" />
-                <Text style={styles.loadingAudioText}>Loading audio...</Text>
-              </View>
-            ) : (
-              <>
-                <View style={styles.playerControls}>
-                  <TouchableOpacity
-                    style={styles.playButton}
-                    onPress={handlePlayPause}
-                    disabled={!isAudioReady}
-                  >
-                    <Ionicons
-                      name={audioState.isPlaying ? "pause-circle" : "play-circle"}
-                      size={64}
-                      color={isAudioReady ? "#2E7D32" : "#CCCCCC"}
-                    />
-                  </TouchableOpacity>
-
-                  <View style={styles.timeContainer}>
-                    <Text style={styles.timeText}>{formatTime(audioState.position)}</Text>
-                    <Text style={styles.timeText}>{formatTime(audioState.duration)}</Text>
+                  <View style={styles.pageReference}>
+                    <Text style={styles.pageText}>Page {recording.book_page_number}</Text>
                   </View>
                 </View>
+                <View style={styles.speciesActionButton}>
+                  <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+                </View>
+              </TouchableOpacity>
+            </View>
 
-                <Slider
-                  value={audioState.position}
-                  minimumValue={0}
-                  maximumValue={audioState.duration || 1}
-                  onSlidingComplete={handleSeek}
-                  disabled={!isAudioReady}
-                  minimumTrackTintColor="#2E7D32"
-                  maximumTrackTintColor="#CCCCCC"
-                  thumbTintColor="#2E7D32"
-                  style={styles.slider}
-                />
-
-                <View style={styles.playerOptions}>
-                  <View style={styles.speedOptions}>
-                    <Text style={styles.optionLabel}>Speed:</Text>
-                    {[0.5, 1, 1.5, 2].map((speed) => (
+            {/* Audio Player Card */}
+            <View style={styles.card}>
+              {/* Player Visualization */}
+              <View style={styles.playerHeader}>
+                {getSonogramUri() ? (
+                  <Image
+                    source={{ uri: getSonogramUri() || "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available" }}
+                    style={styles.waveformPreview}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.waveformPlaceholder}>
+                    <Ionicons name="musical-notes" size={32} color="#E0E0E0" />
+                  </View>
+                )}
+              </View>
+              
+              {/* Player Controls */}
+              <View style={styles.playerContainer}>
+                {isLoadingAudio ? (
+                  <View style={styles.loadingAudioContainer}>
+                    <ActivityIndicator size="small" color="#2E7D32" />
+                    <Text style={styles.loadingAudioText}>Loading audio...</Text>
+                  </View>
+                ) : (
+                  <>
+                    {/* Playback Progress */}
+                    <Slider
+                      value={audioState.position}
+                      minimumValue={0}
+                      maximumValue={audioState.duration || 1}
+                      onSlidingComplete={handleSeek}
+                      disabled={!isAudioReady}
+                      minimumTrackTintColor="#2E7D32"
+                      maximumTrackTintColor="#EEEEEE"
+                      thumbTintColor="#2E7D32"
+                      style={styles.slider}
+                    />
+                    
+                    <View style={styles.timeContainer}>
+                      <Text style={styles.timeText}>{formatTime(audioState.position)}</Text>
+                      <Text style={styles.timeText}>{formatTime(audioState.duration)}</Text>
+                    </View>
+                    
+                    {/* Primary Controls */}
+                    <View style={styles.primaryControls}>
                       <TouchableOpacity
-                        key={speed}
-                        style={[styles.speedButton, audioState.playbackSpeed === speed && styles.activeSpeedButton]}
-                        onPress={() => handleSpeedChange(speed as 0.5 | 1 | 1.5 | 2)}
+                        style={styles.speedButton}
+                        onPress={() => handleSpeedChange(audioState.playbackSpeed === 1 ? 1.5 : 1)}
                         disabled={!isAudioReady}
                       >
-                        <Text style={[styles.speedText, audioState.playbackSpeed === speed && styles.activeSpeedText]}>
-                          {speed}x
-                        </Text>
+                        <View style={[
+                          styles.controlButton, 
+                          styles.smallButton,
+                          audioState.playbackSpeed !== 1 && styles.activeControlButton,
+                          !isAudioReady && styles.disabledControlButton
+                        ]}>
+                          <Text style={[
+                            styles.speedText,
+                            audioState.playbackSpeed !== 1 && styles.activeControlText
+                          ]}>
+                            {audioState.playbackSpeed}x
+                          </Text>
+                        </View>
                       </TouchableOpacity>
-                    ))}
-                  </View>
+                      
+                      <TouchableOpacity
+                        style={styles.playButton}
+                        onPress={handlePlayPause}
+                        disabled={!isAudioReady}
+                      >
+                        <View style={[
+                          styles.controlButton, 
+                          styles.mainButton,
+                          !isAudioReady && styles.disabledControlButton
+                        ]}>
+                          <Ionicons
+                            name={audioState.isPlaying ? "pause" : "play"}
+                            size={36}
+                            color="#FFFFFF"
+                          />
+                        </View>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.loopButton}
+                        onPress={handleLoopToggle}
+                        disabled={!isAudioReady}
+                      >
+                        <View style={[
+                          styles.controlButton, 
+                          styles.smallButton,
+                          audioState.isLooping && styles.activeControlButton,
+                          !isAudioReady && styles.disabledControlButton
+                        ]}>
+                          <Ionicons 
+                            name="repeat" 
+                            size={20} 
+                            color={audioState.isLooping ? "#FFFFFF" : "#999999"} 
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                    
+                    {/* Speed Options */}
+                    <View style={styles.speedControlContainer}>
+                      <Text style={styles.speedLabel}>Playback Speed:</Text>
+                      <View style={styles.speedOptions}>
+                        {([0.5, 1, 1.5, 2] as PlaybackSpeed[]).map((speed) => (
+                          <TouchableOpacity
+                            key={speed}
+                            style={[
+                              styles.speedOption, 
+                              audioState.playbackSpeed === speed && styles.activeSpeedOption,
+                              !isAudioReady && styles.disabledOption
+                            ]}
+                            onPress={() => handleSpeedChange(speed)}
+                            disabled={!isAudioReady}
+                          >
+                            <Text style={[
+                              styles.speedOptionText, 
+                              audioState.playbackSpeed === speed && styles.activeSpeedOptionText
+                            ]}>
+                              {speed}x
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
 
-                  <TouchableOpacity
-                    style={[styles.loopButton, audioState.isLooping && styles.activeLoopButton]}
-                    onPress={handleLoopToggle}
-                    disabled={!isAudioReady}
-                  >
-                    <Ionicons name="repeat" size={20} color={audioState.isLooping ? "#FFFFFF" : "#666666"} />
-                    <Text style={[styles.loopText, audioState.isLooping && styles.activeLoopText]}>Loop</Text>
-                  </TouchableOpacity>
-                </View>
+                    {!isAudioReady && !isLoadingAudio && audioLoadRetries > 0 && (
+                      <TouchableOpacity
+                        style={styles.audioRetryButton}
+                        onPress={() => setAudioLoadRetries(0)}
+                      >
+                        <Ionicons name="refresh" size={16} color="#FFFFFF" />
+                        <Text style={styles.audioRetryText}>Retry loading audio</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
+              </View>
+            </View>
 
-                {!isAudioReady && !isLoadingAudio && audioLoadRetries > 0 && (
-                  <TouchableOpacity
-                    style={styles.retryButton}
-                    onPress={() => setAudioLoadRetries(0)}
+            {/* Description Card */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Description</Text>
+              <Text style={styles.caption}>{recording.caption}</Text>
+            </View>
+
+            {/* Sonogram Card */}
+            <View style={styles.card}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Sonogram</Text>
+                {getSonogramUri() && (
+                  <TouchableOpacity 
+                    style={styles.expandButton}
+                    onPress={() => setIsImageFullscreen(true)}
                   >
-                    <Ionicons name="refresh" size={16} color="#FFFFFF" />
-                    <Text style={styles.retryText}>Retry loading audio</Text>
+                    <Ionicons name="expand" size={20} color="#2E7D32" />
                   </TouchableOpacity>
                 )}
-              </>
-            )}
-          </View>
+              </View>
+              
+              <View style={styles.sonogramContainer}>
+                <Image
+                  source={{
+                    uri: getSonogramUri() || "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
+                  }}
+                  style={styles.sonogramImage}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
 
-          <View style={styles.sonogramContainer}>
-            <Text style={styles.sectionTitle}>Sonogram</Text>
-            <TouchableOpacity onPress={() => setIsImageFullscreen(true)} disabled={!getSonogramUri()}>
-              <Image
-                source={{
-                  uri: getSonogramUri() || "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
-                }}
-                style={styles.sonogramImage}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
+            {/* Download Card */}
+            <View style={styles.card}>
+              {getDownloadStatus() === "completed" ? (
+                <View style={styles.downloadedContainer}>
+                  <Ionicons name="cloud-done" size={28} color="#2E7D32" />
+                  <Text style={styles.downloadedText}>Available Offline</Text>
+                </View>
+              ) : getDownloadStatus() === "downloading" ? (
+                <View style={styles.downloadingContainer}>
+                  <ActivityIndicator size="small" color="#2E7D32" />
+                  <Text style={styles.downloadingText}>Downloading...</Text>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.downloadButtonContainer, !isConnected && styles.disabledDownloadButton]}
+                  onPress={handleDownload}
+                  disabled={!isConnected}
+                >
+                  <Ionicons name="cloud-download" size={22} color="#FFFFFF" />
+                  <Text style={styles.downloadButtonText}>Download for Offline Use</Text>
+                </TouchableOpacity>
+              )}
 
-          <View style={styles.downloadContainer}>
-            {getDownloadStatus() === "completed" ? (
-              <Button mode="outlined" icon="check" disabled style={styles.downloadButton}>
-                Downloaded
-              </Button>
-            ) : getDownloadStatus() === "downloading" ? (
-              <Button mode="outlined" loading disabled style={styles.downloadButton}>
-                Downloading...
-              </Button>
-            ) : (
-              <Button
-                mode="contained"
-                icon="download"
-                onPress={handleDownload}
-                disabled={!isConnected}
-                style={styles.downloadButton}
-              >
-                Download for Offline Use
-              </Button>
-            )}
-
-            {!isConnected && getDownloadStatus() === "idle" && (
-              <Text style={styles.offlineText}>You're offline. Connect to download this recording.</Text>
-            )}
-          </View>
-        </ScrollView>
+              {!isConnected && getDownloadStatus() === "idle" && (
+                <View style={styles.offlineWarning}>
+                  <Ionicons name="wifi" size={16} color="#B00020" />
+                  <Text style={styles.offlineText}>Connect to download this recording</Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </>
       )}
     </View>
   )
@@ -478,165 +585,339 @@ const RecordingDetailsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F5F7FA",
+  },
+  header: {
+    backgroundColor: "white",
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333333",
+    flex: 1,
+  },
+  downloadedIndicator: {
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    padding: 8,
+    borderRadius: 16,
+    marginLeft: 8,
   },
   content: {
     padding: 16,
+    paddingBottom: 32,
+  },
+  card: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    marginBottom: 16,
+    padding: 16,
+  },
+  speciesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  speciesInfo: {
+    flex: 1,
   },
   speciesName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
+    color: "#2E7D32",
     marginBottom: 4,
   },
   scientificName: {
-    fontSize: 16,
+    fontSize: 14,
     fontStyle: "italic",
     color: "#666666",
     marginBottom: 8,
   },
   pageReference: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
+    marginTop: 8,
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   pageText: {
-    fontSize: 14,
-    color: "#666666",
-    marginLeft: 4,
+    fontSize: 12,
+    color: "#2E7D32",
+    fontWeight: "500",
+  },
+  speciesActionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#2E7D32",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+    color: "#2E7D32",
+  },
+  expandButton: {
+    padding: 4,
   },
   caption: {
     fontSize: 16,
     lineHeight: 24,
-    marginBottom: 24,
+    color: "#333333",
+  },
+  playerHeader: {
+    height: 80,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+  waveformPreview: {
+    width: "100%",
+    height: "100%",
+  },
+  waveformPlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#F5F5F5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   playerContainer: {
-    backgroundColor: "#F5F5F5",
     borderRadius: 8,
-    padding: 16,
-    marginBottom: 24,
   },
-  playerControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  playButton: {
-    marginRight: 16,
+  slider: {
+    marginBottom: 2,
+    height: 40,
   },
   timeContainer: {
-    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingHorizontal: 2,
+    marginBottom: 16,
   },
   timeText: {
     fontSize: 14,
     color: "#666666",
   },
-  slider: {
-    marginBottom: 16,
-  },
-  playerOptions: {
+  primaryControls: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
+    marginBottom: 20,
+  },
+  speedButton: {
+    marginRight: 24,
+  },
+  loopButton: {
+    marginLeft: 24,
+  },
+  controlButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#4CAF50",
+    borderRadius: 30,
+  },
+  smallButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: "#F5F5F5",
+  },
+  mainButton: {
+    width: 72,
+    height: 72,
+    backgroundColor: "#2E7D32",
+  },
+  activeControlButton: {
+    backgroundColor: "#2E7D32",
+  },
+  disabledControlButton: {
+    backgroundColor: "#E0E0E0",
+  },
+  speedText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#999999",
+  },
+  activeControlText: {
+    color: "#FFFFFF",
+  },
+  speedControlContainer: {
+    marginBottom: 8,
+  },
+  speedLabel: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 8,
   },
   speedOptions: {
     flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  speedOption: {
+    flex: 1,
+    paddingVertical: 8,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 20,
+    marginHorizontal: 4,
     alignItems: "center",
   },
-  optionLabel: {
+  activeSpeedOption: {
+    backgroundColor: "#2E7D32",
+  },
+  disabledOption: {
+    opacity: 0.5,
+  },
+  speedOptionText: {
     fontSize: 14,
-    color: "#666666",
-    marginRight: 8,
-  },
-  speedButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 8,
-    backgroundColor: "#EEEEEE",
-  },
-  activeSpeedButton: {
-    backgroundColor: "#2E7D32",
-  },
-  speedText: {
-    fontSize: 12,
+    fontWeight: "500",
     color: "#666666",
   },
-  activeSpeedText: {
-    color: "#FFFFFF",
-  },
-  loopButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: "#EEEEEE",
-  },
-  activeLoopButton: {
-    backgroundColor: "#2E7D32",
-  },
-  loopText: {
-    fontSize: 12,
-    color: "#666666",
-    marginLeft: 4,
-  },
-  activeLoopText: {
+  activeSpeedOptionText: {
     color: "#FFFFFF",
   },
   sonogramContainer: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: "#F5F5F5",
   },
   sonogramImage: {
     width: "100%",
     height: 200,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 8,
   },
-  downloadContainer: {
-    marginBottom: 32,
+  downloadedContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 12,
   },
-  downloadButton: {
-    marginBottom: 8,
+  downloadedText: {
+    marginLeft: 12,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#2E7D32",
+  },
+  downloadingContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 16,
+  },
+  downloadingText: {
+    marginLeft: 12,
+    fontSize: 16,
+    color: "#2E7D32",
+  },
+  downloadButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#2E7D32",
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  disabledDownloadButton: {
+    backgroundColor: "#CCCCCC",
+  },
+  downloadButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  offlineWarning: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 8,
   },
   offlineText: {
     fontSize: 14,
     color: "#B00020",
-    textAlign: "center",
+    marginLeft: 6,
   },
-  fullscreenContainer: {
-    flex: 1,
-    backgroundColor: "#000000",
-    justifyContent: "center",
+  audioRetryButton: {
+    flexDirection: "row",
     alignItems: "center",
-  },
-  fullscreenImage: {
-    width: "100%",
-    height: "100%",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    zIndex: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    backgroundColor: "#2E7D32",
     borderRadius: 20,
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    alignSelf: "center",
+  },
+  audioRetryText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    marginLeft: 8,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
+  },
+  loadingCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 24,
+    width: width * 0.8,
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+    color: "#666666",
+  },
+  loadingAudioContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 24,
+  },
+  loadingAudioText: {
+    marginLeft: 8,
+    fontSize: 14,
     color: "#666666",
   },
   errorContainer: {
@@ -645,41 +926,89 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
   },
-  errorText: {
+  errorCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 24,
+    width: width * 0.8,
+    alignItems: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#B00020",
     marginTop: 16,
+    marginBottom: 8,
+  },
+  errorText: {
     fontSize: 16,
     color: "#666666",
     textAlign: "center",
     marginBottom: 24,
-  },
-  backButton: {
-    marginTop: 16,
+    lineHeight: 22,
   },
   retryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#2E7D32",
-    borderRadius: 16,
+    borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    marginTop: 12,
+    marginTop: 16,
+    alignSelf: 'center',
   },
   retryText: {
     fontSize: 14,
     color: "#FFFFFF",
     marginLeft: 8,
   },
-  loadingAudioContainer: {
-    flexDirection: "row",
+  fullscreenContainer: {
+    flex: 1,
+    backgroundColor: "black",
+    zIndex: 10,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    zIndex: 20,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  loadingAudioText: {
-    marginLeft: 8,
+  fullscreenImage: {
+    flex: 1,
+  },
+  goBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    marginRight: 12,
+  },
+  goBackText: {
     fontSize: 14,
-    color: "#666666",
+    color: "#2E7D32",
+    fontWeight: "bold",
+  },
+  playButton: {
+    width: 72,
+    height: 72,
+    borderRadius: 100,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#2E7D32",
   },
 })
 
