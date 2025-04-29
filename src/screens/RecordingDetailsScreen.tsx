@@ -4,7 +4,7 @@ import React from "react"
 import { useState, useEffect, useContext } from "react"
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Dimensions } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import { useNavigation, useRoute } from "@react-navigation/native"
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { useQuery } from "@tanstack/react-query"
 import Slider from '@react-native-community/slider'
 import { ActivityIndicator } from "react-native-paper"
@@ -13,8 +13,8 @@ import { NetworkContext } from "../context/NetworkContext"
 import { DownloadContext } from "../context/DownloadContext"
 import { AudioContext } from "../context/AudioContext"
 import { supabase } from "../lib/supabase"
-import { PlaybackSpeed } from "../types"
-
+import { PlaybackSpeed, RootStackParamList } from "../types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 const { width } = Dimensions.get("window")
 
 // Format time in mm:ss
@@ -26,14 +26,13 @@ const formatTime = (milliseconds: number) => {
 }
 
 const RecordingDetailsScreen = () => {
-  const navigation = useNavigation()
-  const route = useRoute()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+  const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>()
   const { isConnected } = useContext(NetworkContext)
   const { downloadRecording, isDownloaded, getDownloadPath, downloads } = useContext(DownloadContext)
   const { audioState, loadAudio, playAudio, pauseAudio, seekAudio, setPlaybackSpeed, toggleLooping, resetAudio } =
     useContext(AudioContext)
 
-  // @ts-ignore - Route params typing
   const { recordingId } = route.params
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
@@ -47,8 +46,8 @@ const RecordingDetailsScreen = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ["recording", recordingId],
-    queryFn: () => fetchRecordingById(recordingId),
+    queryKey: ["recording", route.params.recordingId],
+    queryFn: () => fetchRecordingById(route.params.recordingId),
   })
 
   // Cleanup function
@@ -352,7 +351,6 @@ const RecordingDetailsScreen = () => {
               <TouchableOpacity
                 style={styles.speciesHeader}
                 onPress={() => {
-                  // @ts-ignore - Navigation typing issue
                   navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
                 }}
               >

@@ -174,6 +174,8 @@ export type Species = {
     SpeciesDetails: { speciesId: string };
     Search: undefined;
     OfflineNotice: undefined;
+    Profile: undefined
+    Downloads: undefined
   };
   
   export type MainTabParamList = {

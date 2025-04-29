@@ -50,7 +50,14 @@ export const fetchSpecies = async () => {
 export const fetchRecordingsBySpecies = async (speciesId: string) => {
   const { data, error } = await supabase
     .from("recordings")
-    .select("*")
+    .select(`
+      *,
+      species:species_id (
+        id,
+        common_name,
+        scientific_name
+      )
+    `)
     .eq("species_id", speciesId)
     .order("order_in_book", { ascending: true })
 

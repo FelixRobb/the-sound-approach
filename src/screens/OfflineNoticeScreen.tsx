@@ -7,9 +7,11 @@ import { useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { NetworkContext } from "../context/NetworkContext"
 import { DownloadContext } from "../context/DownloadContext"
+import { RootStackParamList } from "../types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 const OfflineNoticeScreen = () => {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useContext(NetworkContext)
   const { downloadedRecordings } = useContext(DownloadContext)
 
@@ -33,7 +35,6 @@ const OfflineNoticeScreen = () => {
             mode="contained"
             icon="download"
             onPress={() => {
-              // @ts-ignore - Navigation typing issue
               navigation.navigate("Downloads")
             }}
             style={styles.button}

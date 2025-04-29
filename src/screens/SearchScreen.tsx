@@ -10,9 +10,11 @@ import { NetworkContext } from "../context/NetworkContext"
 import { DownloadContext } from "../context/DownloadContext"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import type { Recording } from "../types"
+import { RootStackParamList } from "../types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 const SearchScreen = () => {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useContext(NetworkContext)
   const { isDownloaded } = useContext(DownloadContext)
 
@@ -96,7 +98,6 @@ const SearchScreen = () => {
       <TouchableOpacity
         style={styles.resultItem}
         onPress={() => {
-          // @ts-ignore - Navigation typing issue
           navigation.navigate("RecordingDetails", { recordingId: item.id })
         }}
       >

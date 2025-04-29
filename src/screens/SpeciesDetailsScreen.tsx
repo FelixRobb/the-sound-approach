@@ -3,7 +3,7 @@
 import { useContext } from "react"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from "react-native"
 import { ActivityIndicator } from "react-native-paper"
-import { useNavigation, useRoute } from "@react-navigation/native"
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { useQuery } from "@tanstack/react-query"
 import { fetchRecordingsBySpecies } from "../lib/supabase"
@@ -11,17 +11,18 @@ import { NetworkContext } from "../context/NetworkContext"
 import { DownloadContext } from "../context/DownloadContext"
 import { AudioContext } from "../context/AudioContext"
 import { supabase } from "../lib/supabase"
+import { RootStackParamList } from "../types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 const { width } = Dimensions.get("window")
 
 const SpeciesDetailsScreen = () => {
-  const navigation = useNavigation()
-  const route = useRoute()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
+  const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>()
   const { isConnected } = useContext(NetworkContext)
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext)
   const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
 
-  // @ts-ignore - Route params typing
   const { speciesId } = route.params
 
   // Fetch recordings for this species
@@ -79,7 +80,7 @@ const SpeciesDetailsScreen = () => {
       )
     }
   }
-  
+
   // Handle retry
   const handleRetry = () => {
     refetch()
@@ -90,8 +91,8 @@ const SpeciesDetailsScreen = () => {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
+          <TouchableOpacity
+            style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="chevron-back" size={24} color="#2E7D32" />
@@ -114,8 +115,8 @@ const SpeciesDetailsScreen = () => {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
+          <TouchableOpacity
+            style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="chevron-back" size={24} color="#2E7D32" />
@@ -161,32 +162,20 @@ const SpeciesDetailsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="chevron-back" size={24} color="#2E7D32" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{speciesName}</Text>
+        <View>
+          <Text style={styles.speciesName}>{speciesName}</Text>
+          <Text style={styles.scientificName}>{scientificName}</Text>
+        </View>
+
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Species Info Card */}
-        <View style={styles.card}>
-          <View style={styles.speciesHeader}>
-            <Text style={styles.speciesName}>{speciesName}</Text>
-            <Text style={styles.scientificName}>{scientificName}</Text>
-          </View>
-          
-          {/* Add image if available */}
-          <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: "https://placeholder.svg?height=200&width=300&text=Species+Image" }}
-              style={styles.speciesImage}
-              resizeMode="cover"
-            />
-          </View>
-        </View>
 
         {/* Recordings Card */}
         <View style={styles.card}>
@@ -196,7 +185,7 @@ const SpeciesDetailsScreen = () => {
               <Text style={styles.recordingCountText}>{recordings.length}</Text>
             </View>
           </View>
-          
+
           {recordings.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="musical-notes" size={48} color="#E0E0E0" />
@@ -212,7 +201,6 @@ const SpeciesDetailsScreen = () => {
                     <TouchableOpacity
                       style={styles.recordingItem}
                       onPress={() => {
-                        // @ts-ignore - Navigation typing issue
                         navigation.navigate("RecordingDetails", { recordingId: item.id })
                       }}
                     >
@@ -243,10 +231,10 @@ const SpeciesDetailsScreen = () => {
                           styles.playButtonInner,
                           isCurrentlyPlaying && styles.playingButton
                         ]}>
-                          <Ionicons 
-                            name={isCurrentlyPlaying ? "pause" : "play"} 
-                            size={24} 
-                            color="#FFFFFF" 
+                          <Ionicons
+                            name={isCurrentlyPlaying ? "pause" : "play"}
+                            size={24}
+                            color="#FFFFFF"
                           />
                         </View>
                       </TouchableOpacity>
@@ -257,15 +245,6 @@ const SpeciesDetailsScreen = () => {
               })}
             </View>
           )}
-        </View>
-        
-        {/* Additional Info Card - can be populated with actual data when available */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>About this Species</Text>
-          <Text style={styles.infoText}>
-            This section can include additional information about the species, such as habitat, 
-            behaviors, and other relevant facts. The content would come from your database.
-          </Text>
         </View>
       </ScrollView>
     </View>

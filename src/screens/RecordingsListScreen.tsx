@@ -12,11 +12,13 @@ import { DownloadContext } from "../context/DownloadContext"
 import { AudioContext } from "../context/AudioContext"
 import { supabase } from "../lib/supabase"
 import type { Recording, Species } from "../types"
+import { RootStackParamList } from "../types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 const { width } = Dimensions.get("window")
 
 const RecordingsListScreen = () => {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useContext(NetworkContext)
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext)
   const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
@@ -50,7 +52,6 @@ const RecordingsListScreen = () => {
   // Check if offline and no data
   useEffect(() => {
     if (!isConnected && (!recordings || recordings.length === 0)) {
-      // @ts-ignore - Navigation typing issue
       navigation.navigate("OfflineNotice")
     }
   }, [isConnected, recordings, navigation])
@@ -123,7 +124,6 @@ const renderRecordingItem = ({ item }: { item: Recording }) => {
       <TouchableOpacity
         style={styles.recordingCard}
         onPress={() => {
-          // @ts-ignore - Navigation typing issue
           navigation.navigate("RecordingDetails", { recordingId: item.id })
         }}
       >
@@ -176,7 +176,6 @@ const renderSpeciesItem = ({ item }: { item: Species }) => {
       <TouchableOpacity
         style={styles.speciesCard}
         onPress={() => {
-          // @ts-ignore - Navigation typing issue
           navigation.navigate("SpeciesDetails", { speciesId: item.id })
         }}
       >
@@ -217,7 +216,6 @@ const Header = () => (
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => {
-              // @ts-ignore - Navigation typing issue
               navigation.navigate("OfflineNotice")
             }}
           >
@@ -235,7 +233,6 @@ const Header = () => (
         <TouchableOpacity
           style={styles.profileButton}
           onPress={() => {
-            // @ts-ignore - Navigation typing issue
             navigation.navigate("Profile")
           }}
         >

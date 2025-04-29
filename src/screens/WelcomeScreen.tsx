@@ -10,9 +10,11 @@ import * as SecureStore from "expo-secure-store"
 import { AuthContext } from "../context/AuthContext"
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Platform } from "react-native"
+import { RootStackParamList } from "../types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 
 const WelcomeScreen = () => {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { state: authState } = useContext(AuthContext)
 
   useEffect(() => {
@@ -65,7 +67,6 @@ const WelcomeScreen = () => {
               contentStyle={styles.buttonContent}
               labelStyle={styles.buttonLabel}
               onPress={() => {
-                // @ts-ignore - Navigation typing issue
                 navigation.navigate("Login")
               }}
               icon={() => <MaterialCommunityIcons name="login" size={22} color="#fff" style={{ marginRight: 8 }} />}
@@ -80,7 +81,6 @@ const WelcomeScreen = () => {
               labelStyle={styles.buttonLabel}
               textColor="#fff"
               onPress={() => {
-                // @ts-ignore - Navigation typing issue
                 navigation.navigate("SignUp")
               }}
               icon={() => <MaterialCommunityIcons name="account-plus-outline" size={22} color="#fff" style={{ marginRight: 8 }} />}

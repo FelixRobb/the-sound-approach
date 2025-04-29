@@ -1,16 +1,21 @@
 "use client"
 
-import { useContext, useState } from "react"
-import { View, StyleSheet, ScrollView, Alert } from "react-native"
-import { Appbar, List, Switch, Button, Divider } from "react-native-paper"
+import React, { useContext, useState } from "react"
+import { View, Text, StyleSheet, ScrollView, Alert, Dimensions, TouchableOpacity } from "react-native"
+import { List, Switch } from "react-native-paper"
 import { useNavigation } from "@react-navigation/native"
+import { Ionicons } from "@expo/vector-icons"
 import { AuthContext } from "../context/AuthContext"
 import { DownloadContext } from "../context/DownloadContext"
 import { ThemeContext } from "../context/ThemeContext"
 import { supabase } from "../lib/supabase"
+import { RootStackParamList } from "../types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+
+const { width } = Dimensions.get("window")
 
 const ProfileSettingsScreen = () => {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { state: authState, signOut } = useContext(AuthContext)
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext)
   const { theme, isDarkMode, setTheme } = useContext(ThemeContext)
@@ -90,36 +95,80 @@ const ProfileSettingsScreen = () => {
     ])
   }
 
+  // Background pattern
+  const BackgroundPattern = () => (
+    <View style={styles.backgroundPattern} />
+  )
+
+  // Header component
+  const Header = () => (
+    <View style={styles.header}>
+      <View style={styles.headerContent}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <View style={styles.headerTitleContainer}>
+          <Ionicons name="settings-outline" size={24} color="#2E7D32" />
+          <Text style={styles.headerTitle}>Profile & Settings</Text>
+        </View>
+      </View>
+    </View>
+  )
+
   return (
     <View style={styles.container}>
-      <Appbar.Header>
-        <Appbar.Content title="Profile & Settings" />
-      </Appbar.Header>
+      <BackgroundPattern />
+      <Header />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <List.Section>
-          <List.Subheader>Account</List.Subheader>
+        {/* Account Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="person-circle-outline" size={20} color="#2E7D32" />
+            <Text style={styles.sectionTitle}>Account</Text>
+          </View>
+          
           <List.Item
             title="Email"
             description={authState.user?.email || "Not available"}
-            left={(props) => <List.Icon {...props} icon="email" />}
+            left={(props) => <List.Icon {...props} icon="email" color="#2E7D32" />}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
+            descriptionStyle={styles.listItemDescription}
           />
-          <List.Item title="Book Code" description="••••••••" left={(props) => <List.Icon {...props} icon="book" />} />
-        </List.Section>
+          
+          <List.Item 
+            title="Book Code" 
+            description="••••••••" 
+            left={(props) => <List.Icon {...props} icon="book" color="#2E7D32" />}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
+            descriptionStyle={styles.listItemDescription}
+          />
+        </View>
 
-        <Divider />
-
-        <List.Section>
-          <List.Subheader>Appearance</List.Subheader>
+        {/* Appearance Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="color-palette-outline" size={20} color="#2E7D32" />
+            <Text style={styles.sectionTitle}>Appearance</Text>
+          </View>
+          
           <List.Item
             title="Dark Mode"
-            left={(props) => <List.Icon {...props} icon="theme-light-dark" />}
-            right={() => <Switch value={isDarkMode} onValueChange={() => setTheme(isDarkMode ? "light" : "dark")} />}
+            left={(props) => <List.Icon {...props} icon="theme-light-dark" color="#2E7D32" />}
+            right={() => <Switch value={isDarkMode} onValueChange={() => setTheme(isDarkMode ? "light" : "dark")} color="#2E7D32" />}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
           />
+          
           <List.Item
             title="Theme"
             description={theme === "system" ? "Follow system" : theme === "dark" ? "Dark" : "Light"}
-            left={(props) => <List.Icon {...props} icon="palette" />}
+            left={(props) => <List.Icon {...props} icon="palette" color="#2E7D32" />}
             onPress={() => {
               Alert.alert("Select Theme", "Choose your preferred theme", [
                 {
@@ -136,76 +185,119 @@ const ProfileSettingsScreen = () => {
                 },
               ])
             }}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
+            descriptionStyle={styles.listItemDescription}
           />
-        </List.Section>
+        </View>
 
-        <Divider />
-
-        <List.Section>
-          <List.Subheader>Storage</List.Subheader>
+        {/* Storage Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="folder-outline" size={20} color="#2E7D32" />
+            <Text style={styles.sectionTitle}>Storage</Text>
+          </View>
+          
           <List.Item
             title="Storage Used"
             description={formatBytes(totalStorageUsed)}
-            left={(props) => <List.Icon {...props} icon="folder" />}
+            left={(props) => <List.Icon {...props} icon="folder" color="#2E7D32" />}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
+            descriptionStyle={styles.listItemDescription}
           />
-          <Button mode="outlined" icon="delete" onPress={handleClearAllDownloads} style={styles.clearButton}>
-            Clear All Downloads
-          </Button>
-        </List.Section>
+          
+          <View style={styles.buttonWrapper}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleClearAllDownloads}
+            >
+              <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.actionButtonText}>Clear All Downloads</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-        <Divider />
-
-        <List.Section>
-          <List.Subheader>About</List.Subheader>
+        {/* About Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="information-circle-outline" size={20} color="#2E7D32" />
+            <Text style={styles.sectionTitle}>About</Text>
+          </View>
+          
           <List.Item
             title="App Version"
             description="1.0.0"
-            left={(props) => <List.Icon {...props} icon="information" />}
+            left={(props) => <List.Icon {...props} icon="information" color="#2E7D32" />}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
+            descriptionStyle={styles.listItemDescription}
           />
+          
           <List.Item
             title="The Sound Approach"
             description="© 2023 All Rights Reserved"
-            left={(props) => <List.Icon {...props} icon="copyright" />}
+            left={(props) => <List.Icon {...props} icon="copyright" color="#2E7D32" />}
+            style={styles.listItem}
+            titleStyle={styles.listItemTitle}
+            descriptionStyle={styles.listItemDescription}
           />
-          <List.Item
-            title="Privacy Policy"
-            left={(props) => <List.Icon {...props} icon="shield-account" />}
-            onPress={() => {
-              // Open privacy policy
-            }}
-          />
-          <List.Item
-            title="Terms of Service"
-            left={(props) => <List.Icon {...props} icon="file-document" />}
-            onPress={() => {
-              // Open terms of service
-            }}
-          />
-          <List.Item
-            title="Contact Support"
-            left={(props) => <List.Icon {...props} icon="help-circle" />}
-            onPress={() => {
-              // Open support contact
-            }}
-          />
-        </List.Section>
+          
+          <TouchableOpacity>
+            <List.Item
+              title="Privacy Policy"
+              left={(props) => <List.Icon {...props} icon="shield-account" color="#2E7D32" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#666666" />}
+              style={styles.listItem}
+              titleStyle={styles.listItemTitle}
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity>
+            <List.Item
+              title="Terms of Service"
+              left={(props) => <List.Icon {...props} icon="file-document" color="#2E7D32" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#666666" />}
+              style={styles.listItem}
+              titleStyle={styles.listItemTitle}
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity>
+            <List.Item
+              title="Contact Support"
+              left={(props) => <List.Icon {...props} icon="help-circle" color="#2E7D32" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" color="#666666" />}
+              style={styles.listItem}
+              titleStyle={styles.listItemTitle}
+            />
+          </TouchableOpacity>
+        </View>
 
-        <View style={styles.buttonContainer}>
-          <Button mode="outlined" icon="logout" onPress={handleSignOut} style={styles.signOutButton}>
-            Sign Out
-          </Button>
-
-          <Button
-            mode="text"
-            icon="delete"
-            onPress={handleDeleteAccount}
-            loading={isDeleting}
-            disabled={isDeleting}
-            style={styles.deleteButton}
-            textColor="#B00020"
+        {/* Account Actions */}
+        <View style={styles.accountActionsContainer}>
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={handleSignOut}
           >
-            Delete Account
-          </Button>
+            <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.signOutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteAccount}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <Text style={styles.deleteButtonText}>Deleting...</Text>
+            ) : (
+              <>
+                <Ionicons name="trash-outline" size={18} color="#B00020" />
+                <Text style={styles.deleteButtonText}>Delete Account</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -215,23 +307,138 @@ const ProfileSettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F5F7FA",
+  },
+  backgroundPattern: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#F5F7FA",
+  },
+  header: {
+    backgroundColor: "white",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    zIndex: 10,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 48,
+    paddingBottom: 16,
+  },
+  headerTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginLeft: 8,
+  },
+  backButton: {
+    padding: 8,
   },
   content: {
+    padding: 16,
     paddingBottom: 32,
   },
-  clearButton: {
-    marginHorizontal: 16,
-    marginTop: 8,
+  sectionCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    marginBottom: 16,
   },
-  buttonContainer: {
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginLeft: 8,
+  },
+  listItem: {
+    paddingVertical: 8,
+  },
+  listItemTitle: {
+    fontSize: 16,
+    color: "#333333",
+    fontWeight: "500",
+  },
+  listItemDescription: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  buttonWrapper: {
+    padding: 16,
+    paddingTop: 8,
+  },
+  actionButton: {
+    backgroundColor: "#2E7D32",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  actionButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  accountActionsContainer: {
     padding: 16,
   },
   signOutButton: {
+    backgroundColor: "#2E7D32",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     marginBottom: 16,
   },
+  signOutButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginLeft: 8,
+  },
   deleteButton: {
-    marginBottom: 16,
+    backgroundColor: "rgba(176, 0, 32, 0.1)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  deleteButtonText: {
+    color: "#B00020",
+    fontWeight: "600",
+    fontSize: 14,
+    marginLeft: 8,
   },
 })
 
