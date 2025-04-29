@@ -8,6 +8,8 @@ import { Ionicons } from "@expo/vector-icons"
 import { ActivityIndicator } from "react-native-paper"
 import { DownloadContext } from "../context/DownloadContext"
 import { AudioContext } from "../context/AudioContext"
+import { ThemeContext } from "../context/ThemeContext"
+import { useThemedStyles } from "../hooks/useThemedStyles"
 import type { DownloadRecord } from "../types"
 import React from "react"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
@@ -20,6 +22,8 @@ const DownloadsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } = useContext(DownloadContext)
   const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
+  const { isDarkMode } = useContext(ThemeContext)
+  const { theme } = useThemedStyles()
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -93,7 +97,7 @@ const DownloadsScreen = () => {
         }
       } else {
         // Load and play new audio
-        await loadAudio(`file://${item.audio_path}`, item.audio_path)
+        await loadAudio(`file://${item.audio_path}`, item.audio_path, true)
         await playAudio()
       }
     } catch (error) {
@@ -168,6 +172,317 @@ const DownloadsScreen = () => {
     )
   })
 
+  // Create styles with theme support
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    backgroundPattern: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}08` : // Very transparent primary color
+        `${theme.colors.primary}05`,
+      opacity: 0.6,
+    },
+    header: {
+      backgroundColor: theme.colors.surface,
+      paddingTop: 50,
+      paddingBottom: 16,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      elevation: 4,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      zIndex: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    headerContent: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+    },
+    headerTitleContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      color: theme.colors.primary,
+      marginLeft: 8,
+    },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    headerButton: {
+      padding: 8,
+      marginLeft: 8,
+      borderRadius: 20,
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    profileButton: {
+      marginLeft: 8,
+      borderRadius: 18,
+      overflow: "hidden",
+    },
+    profileButtonBackground: {
+      padding: 8,
+      borderRadius: 20,
+      backgroundColor: theme.colors.primary,
+    },
+    searchBarContainer: {
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 12,
+    },
+    searchBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: 8,
+      fontSize: 16,
+      color: theme.colors.onSurface,
+    },
+    storageInfoContainer: {
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}15` : 
+        `${theme.colors.primary}08`,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+    },
+    storageInfo: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    storageText: {
+      fontSize: 14,
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
+    clearAllButton: {
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}20` : 
+        `${theme.colors.primary}15`,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+    },
+    clearAllText: {
+      fontSize: 14,
+      color: theme.colors.primary,
+      fontWeight: "bold",
+    },
+    disabledButton: {
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    disabledButtonText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
+    },
+    listContent: {
+      padding: 16,
+      paddingBottom: 80, // Extra space for button at bottom
+    },
+    downloadCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      overflow: "hidden",
+      elevation: 3,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.22,
+      shadowRadius: 2.22,
+    },
+    downloadHeader: {
+      padding: 16,
+      paddingBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0',
+    },
+    downloadTitle: {
+      fontSize: 17,
+      fontWeight: "bold",
+      color: theme.colors.onSurface,
+    },
+    scientificName: {
+      fontSize: 14,
+      fontStyle: "italic",
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      marginTop: 2,
+    },
+    downloadContent: {
+      flexDirection: "row",
+      padding: 16,
+      paddingTop: 8,
+      justifyContent: "space-between",
+    },
+    downloadInfo: {
+      flex: 1,
+    },
+    speciesName: {
+      fontSize: 15,
+      color: theme.colors.onSurface,
+      marginBottom: 4,
+    },
+    pageReference: {
+      marginTop: 4,
+      marginBottom: 4,
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}20` : 
+        `${theme.colors.primary}10`,
+      alignSelf: "flex-start",
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 12,
+    },
+    pageText: {
+      fontSize: 12,
+      color: theme.colors.primary,
+    },
+    downloadDate: {
+      fontSize: 12,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      marginTop: 4,
+    },
+    downloadActions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    playButton: {
+      marginRight: 16,
+    },
+    playButtonInner: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+    },
+    playButtonActive: {
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}DD` : 
+        `${theme.colors.primary}AA`,
+    },
+    deleteButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+      marginTop: 48,
+    },
+    emptyCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      padding: 24,
+      width: width * 0.8,
+      alignItems: "center",
+      elevation: 4,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+    },
+    emptyTitle: {
+      marginTop: 16,
+      fontSize: 18,
+      fontWeight: "bold",
+      color: theme.colors.onSurface,
+      textAlign: "center",
+    },
+    emptyText: {
+      marginTop: 8,
+      fontSize: 14,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      textAlign: "center",
+      lineHeight: 20,
+    },
+    clearSearchButton: {
+      marginTop: 16,
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}20` : 
+        `${theme.colors.primary}10`,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+    },
+    clearSearchText: {
+      color: theme.colors.primary,
+      fontWeight: "bold",
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+    },
+    loadingCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      padding: 24,
+      width: width * 0.8,
+      alignItems: "center",
+      elevation: 4,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: theme.colors.onSurface,
+      textAlign: "center",
+    },
+    manageStorageButton: {
+      position: "absolute",
+      bottom: 20,
+      right: 20,
+      backgroundColor: theme.colors.primary,
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 24,
+      elevation: 4,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.2,
+      shadowRadius: 3,
+    },
+    manageStorageText: {
+      color: "#FFFFFF",
+      fontWeight: "bold",
+      marginRight: 8,
+    },
+  });
+
   // Background pattern
   const BackgroundPattern = () => (
     <View style={styles.backgroundPattern} />
@@ -178,7 +493,7 @@ const DownloadsScreen = () => {
     <View style={styles.header}>
       <View style={styles.headerContent}>
         <View style={styles.headerTitleContainer}>
-          <Ionicons name="cloud-download" size={24} color="#2E7D32" />
+          <Ionicons name="cloud-download" size={24} color={theme.colors.primary} />
           <Text style={styles.headerTitle}>Downloads</Text>
         </View>
 
@@ -187,7 +502,11 @@ const DownloadsScreen = () => {
             style={styles.headerButton}
             onPress={() => setShowSearch(!showSearch)}
           >
-            <Ionicons name={showSearch ? "close" : "search"} size={24} color="#333" />
+            <Ionicons 
+              name={showSearch ? "close" : "search"} 
+              size={24} 
+              color={theme.colors.onSurface} 
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -206,16 +525,25 @@ const DownloadsScreen = () => {
       {showSearch && (
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={20} color="#666" />
+            <Ionicons 
+              name="search" 
+              size={20} 
+              color={isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666'} 
+            />
             <TextInput
               style={styles.searchInput}
               placeholder="Search downloads..."
+              placeholderTextColor={isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery ? (
               <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color="#666" />
+                <Ionicons 
+                  name="close-circle" 
+                  size={20} 
+                  color={isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666'} 
+                />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -291,7 +619,11 @@ const DownloadsScreen = () => {
                 style={styles.deleteButton}
                 onPress={() => handleDeleteDownload(item)}
               >
-                <Ionicons name="trash-outline" size={22} color="#B00020" />
+                <Ionicons 
+                  name="trash-outline" 
+                  size={22} 
+                  color={theme.colors.error} 
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -304,7 +636,11 @@ const DownloadsScreen = () => {
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyCard}>
-        <Ionicons name="cloud-download-outline" size={60} color="#2E7D32" />
+        <Ionicons 
+          name="cloud-download-outline" 
+          size={60} 
+          color={theme.colors.primary} 
+        />
         <Text style={styles.emptyTitle}>
           {searchQuery ? "No results found" : "No Downloads"}
         </Text>
@@ -335,7 +671,7 @@ const DownloadsScreen = () => {
 
         <View style={styles.loadingContainer}>
           <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#2E7D32" />
+            <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={styles.loadingText}>Loading downloads...</Text>
           </View>
         </View>
@@ -362,8 +698,8 @@ const DownloadsScreen = () => {
               setRefreshing(true)
               loadDownloads()
             }}
-            colors={["#2E7D32"]}
-            tintColor="#2E7D32"
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
           />
         }
       />
@@ -383,6 +719,9 @@ const DownloadsScreen = () => {
 
 // TextInput implementation
 const TextInput = (props: React.ComponentProps<typeof RNTextInput>) => {
+  const { theme } = useThemedStyles()
+  const { isDarkMode } = useContext(ThemeContext)
+  
   return (
     <RNTextInput
       {...props}
@@ -390,304 +729,14 @@ const TextInput = (props: React.ComponentProps<typeof RNTextInput>) => {
         {
           backgroundColor: "transparent",
           fontSize: 16,
-          color: "#333",
+          color: theme.colors.onSurface,
           flex: 1,
         },
         props.style
       ]}
+      placeholderTextColor={isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'}
     />
   )
 }
-
-// Styles
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F7FA",
-  },
-  backgroundPattern: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#F5F7FA",
-  },
-  header: {
-    backgroundColor: "white",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    zIndex: 10,
-  },
-  headerContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 16,
-  },
-  headerTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginLeft: 8,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  profileButton: {
-    marginLeft: 8,
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-  profileButtonBackground: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#2E7D32",
-  },
-  searchBarContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-    color: "#333",
-  },
-  storageInfoContainer: {
-    backgroundColor: "rgba(46, 125, 50, 0.08)",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  storageInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  storageText: {
-    fontSize: 14,
-    color: "#2E7D32",
-    fontWeight: "500",
-  },
-  clearAllButton: {
-    backgroundColor: "rgba(46, 125, 50, 0.2)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  clearAllText: {
-    fontSize: 14,
-    color: "#2E7D32",
-    fontWeight: "bold",
-  },
-  disabledButton: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-  },
-  disabledButtonText: {
-    color: "#999",
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 80, // Extra space for button at bottom
-  },
-  downloadCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  downloadHeader: {
-    padding: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  downloadTitle: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#333333",
-  },
-  scientificName: {
-    fontSize: 14,
-    fontStyle: "italic",
-    color: "#666666",
-    marginTop: 2,
-  },
-  downloadContent: {
-    flexDirection: "row",
-    padding: 16,
-    paddingTop: 8,
-    justifyContent: "space-between",
-  },
-  downloadInfo: {
-    flex: 1,
-  },
-  speciesName: {
-    fontSize: 15,
-    color: "#333333",
-    marginBottom: 4,
-  },
-  pageReference: {
-    marginTop: 4,
-    marginBottom: 4,
-    backgroundColor: "rgba(46, 125, 50, 0.1)",
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  pageText: {
-    fontSize: 12,
-    color: "#2E7D32",
-  },
-  downloadDate: {
-    fontSize: 12,
-    color: "#666666",
-    marginTop: 4,
-  },
-  downloadActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  playButton: {
-    marginRight: 16,
-  },
-  playButtonInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#4CAF50",
-  },
-  playButtonActive: {
-    backgroundColor: "#2E7D32",
-  },
-  deleteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(176, 0, 32, 0.1)",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    marginTop: 48,
-  },
-  emptyCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 24,
-    width: width * 0.8,
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  emptyTitle: {
-    marginTop: 16,
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333333",
-    textAlign: "center",
-  },
-  emptyText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#666666",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  clearSearchButton: {
-    marginTop: 16,
-    backgroundColor: "rgba(46, 125, 50, 0.1)",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  clearSearchText: {
-    color: "#2E7D32",
-    fontWeight: "bold",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  loadingCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 24,
-    width: width * 0.8,
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#333333",
-    textAlign: "center",
-  },
-  manageStorageButton: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "#2E7D32",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 24,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-  },
-  manageStorageText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    marginRight: 8,
-  },
-})
 
 export default DownloadsScreen

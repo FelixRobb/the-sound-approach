@@ -21,7 +21,7 @@ type AudioState = {
 
 type AudioContextType = {
   audioState: AudioState
-  loadAudio: (uri: string, audioId: string) => Promise<boolean>
+  loadAudio: (uri: string, audioId: string, autoPlay?: boolean) => Promise<boolean>
   playAudio: () => Promise<boolean>
   pauseAudio: () => Promise<boolean>
   stopAudio: () => Promise<boolean>
@@ -192,7 +192,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }
 
-  const loadAudio = async (uri: string, audioId: string): Promise<boolean> => {
+  const loadAudio = async (uri: string, audioId: string, autoPlay: boolean = false): Promise<boolean> => {
     if (isLoadingRef.current) {
       // Don't start a new load if one is in progress
       console.log("Already loading audio, ignoring request")
@@ -226,7 +226,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         : { androidMaxBufferSize: 500 * 1024 }   // 500KB buffer for Android
   
       const initialStatus = {
-        shouldPlay: false,
+        shouldPlay: autoPlay,
         rate: 1.0,
         shouldCorrectPitch: true,
         volume: 1.0,

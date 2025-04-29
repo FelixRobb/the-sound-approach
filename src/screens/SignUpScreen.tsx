@@ -9,12 +9,14 @@ import { Ionicons } from "@expo/vector-icons"
 import { AuthContext } from "../context/AuthContext"
 import { RootStackParamList } from "../types"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { useThemedStyles } from "../hooks/useThemedStyles"
 
 const { width } = Dimensions.get("window")
 
 const SignUpScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { signUp, state: authState, clearError } = useContext(AuthContext)
+  const { theme, isDarkMode } = useThemedStyles()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -25,6 +27,183 @@ const SignUpScreen = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    backgroundPattern: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}08` : // Very transparent primary color
+        `${theme.colors.primary}05`,
+      opacity: 0.6,
+    },
+    header: {
+      paddingTop: 50,
+      paddingHorizontal: 16,
+      paddingBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: theme.colors.surface,
+      elevation: 2,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    headerTitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: 12,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      marginLeft: 8,
+      color: theme.colors.onSurface,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingVertical: 24,
+      paddingHorizontal: 16,
+    },
+    card: {
+      padding: 24,
+      borderRadius: 12,
+      backgroundColor: theme.colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+      marginHorizontal: 4,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '700',
+      marginBottom: 8,
+      textAlign: 'center',
+      color: theme.colors.onSurface,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      marginBottom: 24,
+      textAlign: 'center',
+    },
+    form: {
+      marginTop: 8,
+    },
+    inputContainer: {
+      marginBottom: 16,
+      position: 'relative',
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    inputIconContainer: {
+      position: 'absolute',
+      left: 8,
+      zIndex: 1,
+      height: '100%',
+      justifyContent: 'center',
+      paddingTop: 8,
+    },
+    input: {
+      flex: 1,
+      paddingLeft: 40,
+      backgroundColor: theme.colors.surface,
+    },
+    inputOutline: {
+      borderRadius: 8,
+    },
+    errorText: {
+      color: theme.colors.error,
+      marginTop: -12,
+      marginBottom: 16,
+    },
+    errorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 16,
+    },
+    errorMessage: {
+      marginLeft: 8,
+      color: theme.colors.error,
+      flex: 1,
+    },
+    button: {
+      marginTop: 16,
+      borderRadius: 8,
+    },
+    buttonContent: {
+      paddingVertical: 8,
+    },
+    loginContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: 24,
+    },
+    loginText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+    },
+    loginLink: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
+    tooltipContainer: {
+      position: "absolute",
+      top: 5,
+      right: 10,
+      zIndex: 10,
+    },
+    tooltip: {
+      position: "absolute",
+      right: 0,
+      top: 30,
+      backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+      padding: 12,
+      borderRadius: 8,
+      width: width * 0.7,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      zIndex: 20,
+    },
+    tooltipText: {
+      color: isDarkMode ? '#fff' : '#333',
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    tooltipArrow: {
+      position: "absolute",
+      right: 10,
+      top: -10,
+      width: 0,
+      height: 0,
+      borderLeftWidth: 10,
+      borderRightWidth: 10,
+      borderBottomWidth: 10,
+      borderLeftColor: "transparent",
+      borderRightColor: "transparent",
+      borderBottomColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+    },
+  });
 
   // Validate email format
   const validateEmail = (email: string) => {
@@ -103,10 +282,10 @@ const SignUpScreen = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Ionicons name="person-add" size={24} color="#2E7D32" />
+          <Ionicons name="person-add" size={24} color={theme.colors.primary} />
           <Text style={styles.headerTitle}>Create Account</Text>
         </View>
       </View>
@@ -129,7 +308,7 @@ const SignUpScreen = () => {
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="mail-outline" size={20} color="#2E7D32" />
+                <Ionicons name="mail-outline" size={20} color={theme.colors.primary} />
               </View>
               <TextInput
                 label="Email"
@@ -144,7 +323,6 @@ const SignUpScreen = () => {
                 error={!!emailError}
                 style={styles.input}
                 outlineStyle={styles.inputOutline}
-                theme={{ colors: { primary: '#2E7D32' } }}
               />
             </View>
             {emailError ? (
@@ -155,7 +333,7 @@ const SignUpScreen = () => {
 
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color="#2E7D32" />
+                <Ionicons name="lock-closed-outline" size={20} color={theme.colors.primary} />
               </View>
               <TextInput
                 label="Password"
@@ -169,12 +347,11 @@ const SignUpScreen = () => {
                 error={!!passwordError}
                 style={styles.input}
                 outlineStyle={styles.inputOutline}
-                theme={{ colors: { primary: '#2E7D32' } }}
                 right={
                   <TextInput.Icon
                     icon={showPassword ? "eye-off" : "eye"}
                     onPress={() => setShowPassword(!showPassword)}
-                    color="#2E7D32"
+                    color={theme.colors.primary}
                   />
                 }
               />
@@ -187,7 +364,7 @@ const SignUpScreen = () => {
 
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="key-outline" size={20} color="#2E7D32" />
+                <Ionicons name="key-outline" size={20} color={theme.colors.primary} />
               </View>
               <TextInput
                 label="Book Code"
@@ -201,18 +378,27 @@ const SignUpScreen = () => {
                 error={!!bookCodeError}
                 style={styles.input}
                 outlineStyle={styles.inputOutline}
-                theme={{ colors: { primary: '#2E7D32' } }}
+                right={
+                  <TouchableOpacity
+                    style={styles.tooltipContainer}
+                    onPress={() => setShowTooltip(!showTooltip)}
+                  >
+                    <Ionicons
+                      name="information-circle-outline"
+                      size={22}
+                      color={theme.colors.primary}
+                    />
+                    {showTooltip && (
+                      <View style={styles.tooltip}>
+                        <View style={styles.tooltipArrow} />
+                        <Text style={styles.tooltipText}>
+                          The book code is an 8-character code found on the inside cover of "The Sound Approach to Birding" book.
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                }
               />
-              <TouchableOpacity 
-                style={styles.infoButton}
-                onPress={() => setShowTooltip(!showTooltip)}
-              >
-                <Ionicons 
-                  name="information-circle" 
-                  size={22} 
-                  color="#2E7D32" 
-                />
-              </TouchableOpacity>
             </View>
             {bookCodeError ? (
               <HelperText type="error" style={styles.errorText}>
@@ -220,22 +406,9 @@ const SignUpScreen = () => {
               </HelperText>
             ) : null}
 
-            {showTooltip && (
-              <View style={styles.tooltip}>
-                <View style={styles.tooltipHeader}>
-                  <Ionicons name="information-circle" size={20} color="#2E7D32" />
-                  <Text style={styles.tooltipTitle}>About Book Codes</Text>
-                </View>
-                <Text style={styles.tooltipText}>
-                  The book code can be found on the inside cover of your Sound Approach book. It's an 8-character code
-                  consisting of letters and numbers.
-                </Text>
-              </View>
-            )}
-
             {authState.error ? (
               <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={20} color="#B00020" />
+                <Ionicons name="alert-circle" size={20} color={theme.colors.error} />
                 <Text style={styles.errorMessage}>{authState.error}</Text>
               </View>
             ) : null}
@@ -247,7 +420,6 @@ const SignUpScreen = () => {
               disabled={isLoading}
               style={styles.button}
               contentStyle={styles.buttonContent}
-              buttonColor="#2E7D32"
             >
               Create Account
             </Button>
@@ -266,174 +438,5 @@ const SignUpScreen = () => {
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F7FA",
-  },
-  backgroundPattern: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#F5F7FA",
-  },
-  header: {
-    backgroundColor: "white",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    zIndex: 10,
-  },
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 16,
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  headerTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginLeft: 8,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 24,
-    width: "100%",
-    maxWidth: 400,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333333",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666666",
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  form: {
-    width: "100%",
-  },
-  inputContainer: {
-    position: "relative",
-    marginBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  inputIconContainer: {
-    position: "absolute",
-    left: 12,
-    top: 20,
-    zIndex: 1,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "transparent",
-    paddingLeft: 40,
-    fontSize: 16,
-  },
-  inputOutline: {
-    borderRadius: 12,
-    borderColor: "#dddddd",
-  },
-  infoButton: {
-    position: "absolute",
-    right: 12,
-    top: 18,
-    zIndex: 1,
-  },
-  errorText: {
-    color: "#B00020",
-    marginTop: -12,
-    marginBottom: 8,
-  },
-  tooltip: {
-    backgroundColor: "rgba(46, 125, 50, 0.08)",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  tooltipHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  tooltipTitle: {
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginLeft: 8,
-  },
-  tooltipText: {
-    fontSize: 14,
-    color: "#333333",
-    lineHeight: 20,
-  },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(176, 0, 32, 0.1)",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  errorMessage: {
-    color: "#B00020",
-    fontSize: 14,
-    marginLeft: 8,
-    flex: 1,
-  },
-  button: {
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  buttonContent: {
-    paddingVertical: 6,
-  },
-  loginContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loginText: {
-    color: "#666666",
-    fontSize: 14,
-  },
-  loginLink: {
-    color: "#2E7D32",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-})
 
 export default SignUpScreen

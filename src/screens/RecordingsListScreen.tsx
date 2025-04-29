@@ -14,6 +14,7 @@ import { supabase } from "../lib/supabase"
 import type { Recording, Species } from "../types"
 import { RootStackParamList } from "../types"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { useThemedStyles } from "../hooks/useThemedStyles"
 
 const { width } = Dimensions.get("window")
 
@@ -22,10 +23,262 @@ const RecordingsListScreen = () => {
   const { isConnected } = useContext(NetworkContext)
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext)
   const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
+  const { theme, isDarkMode } = useThemedStyles()
 
   const [activeTab, setActiveTab] = useState("book")
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearch, setShowSearch] = useState(false)
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    backgroundPattern: {
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}08` : // Very transparent primary color
+        `${theme.colors.primary}05`,
+      opacity: 0.5,
+    },
+    header: {
+      paddingTop: 45,
+      paddingBottom: 10,
+      backgroundColor: theme.colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      elevation: 4,
+      zIndex: 10,
+    },
+    headerContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+    },
+    headerTitle: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: theme.colors.onSurface,
+    },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    iconButton: {
+      padding: 8,
+      borderRadius: 20,
+      marginLeft: 8,
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    tabBar: {
+      flexDirection: "row",
+      marginHorizontal: 16,
+      marginTop: 12,
+      marginBottom: 8,
+      borderRadius: 8,
+      overflow: "hidden",
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 12,
+      alignItems: "center",
+    },
+    activeTab: {
+      backgroundColor: theme.colors.primary,
+    },
+    tabText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+    },
+    activeTabText: {
+      color: "white",
+    },
+    searchContainer: {
+      paddingHorizontal: 16,
+      marginVertical: 8,
+    },
+    searchBar: {
+      borderRadius: 8,
+      elevation: 2,
+      backgroundColor: theme.colors.surface,
+    },
+    listContainer: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    },
+    recordingCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      marginVertical: 8,
+      padding: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    recordingHeader: {
+      marginBottom: 8,
+    },
+    titleContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    recordingTitle: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.colors.onSurface,
+      flex: 1,
+    },
+    scientificName: {
+      fontSize: 14,
+      fontStyle: "italic",
+      marginTop: 2,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+    },
+    recordingContent: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    captionContainer: {
+      flex: 1,
+      marginRight: 12,
+    },
+    caption: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)',
+      marginBottom: 8,
+    },
+    pageReference: {
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 4,
+      alignSelf: "flex-start",
+    },
+    pageText: {
+      fontSize: 12,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+    },
+    audioControls: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    playButtonContainer: {
+      width: 40,
+      height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    playButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    playButtonActive: {
+      backgroundColor: theme.colors.primary,
+    },
+    downloadedIndicator: {
+      marginLeft: 8,
+      backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+      paddingHorizontal: 6,
+      paddingVertical: 3,
+      borderRadius: 4,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    speciesCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      marginVertical: 8,
+      padding: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    speciesContent: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    speciesName: {
+      fontSize: 16,
+      fontWeight: "700",
+      color: theme.colors.onSurface,
+      marginBottom: 4,
+    },
+    speciesAction: {
+      marginLeft: 8,
+    },
+    speciesActionButton: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    emptyContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 40,
+    },
+    emptyIcon: {
+      marginBottom: 16,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.colors.onSurface,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    emptyText: {
+      fontSize: 16,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      textAlign: "center",
+      marginHorizontal: 24,
+      marginBottom: 24,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 40,
+    },
+    errorContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 40,
+    },
+    errorText: {
+      fontSize: 16,
+      color: theme.colors.error,
+      textAlign: "center",
+      marginHorizontal: 24,
+      marginBottom: 24,
+    },
+  });
 
   // Fetch recordings by book order
   const {
@@ -104,8 +357,7 @@ const RecordingsListScreen = () => {
         }
 
         if (audioUri) {
-          await loadAudio(audioUri, recording.audio_id)
-          await playAudio()
+          await loadAudio(audioUri, recording.audio_id, true)
         }
       }
     } catch (error) {
@@ -115,12 +367,11 @@ const RecordingsListScreen = () => {
 
 
   // Render recording item
-const renderRecordingItem = ({ item }: { item: Recording }) => {
-  const isCurrentlyPlaying = audioState.isPlaying && audioState.currentAudioId === item.audio_id
-  const isItemDownloaded = isDownloaded(item.id)
-  
-  return (
-    <View>
+  const renderRecordingItem = ({ item }: { item: Recording }) => {
+    const isCurrentlyPlaying = audioState.isPlaying && audioState.currentAudioId === item.audio_id
+    const isItemDownloaded = isDownloaded(item.id)
+    
+    return (
       <TouchableOpacity
         style={styles.recordingCard}
         onPress={() => {
@@ -132,7 +383,10 @@ const renderRecordingItem = ({ item }: { item: Recording }) => {
             <Text style={styles.recordingTitle}>{item.title}</Text>
             {isItemDownloaded && (
               <View style={styles.downloadedIndicator}>
-                <Ionicons name="cloud-done" size={14} color="#2E7D32" />
+                <Ionicons name="cloud-done" size={14} color={isDarkMode ? '#81C784' : '#2E7D32'} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: isDarkMode ? '#81C784' : '#2E7D32' }}>
+                  Downloaded
+                </Text>
               </View>
             )}
           </View>
@@ -165,14 +419,12 @@ const renderRecordingItem = ({ item }: { item: Recording }) => {
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
-    </View>
-  )
-}
+    )
+  }
+
   // Render species item
-  // Replace renderSpeciesItem with simplified version
-const renderSpeciesItem = ({ item }: { item: Species }) => {
-  return (
-    <View>
+  const renderSpeciesItem = ({ item }: { item: Species }) => {
+    return (
       <TouchableOpacity
         style={styles.speciesCard}
         onPress={() => {
@@ -192,540 +444,140 @@ const renderSpeciesItem = ({ item }: { item: Species }) => {
           </View>
         </View>
       </TouchableOpacity>
-    </View>
-  )
-}
+    )
+  }
 
   // Background pattern
   const BackgroundPattern = () => (
     <View style={styles.backgroundPattern} />
   )
 
-  // Custom header component
-  // Replace Header component with this simplified version
-const Header = () => (
-  <View style={styles.header}>
-    <View style={styles.headerContent}>
-      <View style={styles.headerTitleContainer}>
-        <Ionicons name="musical-notes" size={24} color="#2E7D32" />
-        <Text style={styles.headerTitle}>The Sound Approach</Text>
-      </View>
-      
-      <View style={styles.headerActions}>
-        {!isConnected && (
+  // Header component
+  const Header = () => (
+    <View style={styles.header}>
+      <View style={styles.headerContent}>
+        <Text style={styles.headerTitle}>Library</Text>
+        <View style={styles.headerActions}>
           <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => {
-              navigation.navigate("OfflineNotice")
-            }}
+            style={styles.iconButton}
+            onPress={() => setShowSearch(!showSearch)}
           >
-            <Ionicons name="cloud-offline" size={24} color="#B00020" />
+            <Ionicons name="search" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
-        )}
-        
-        <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={() => setShowSearch(true)}
-        >
-          <Ionicons name="search" size={24} color="#333" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={() => {
-            navigation.navigate("Profile")
-          }}
-        >
-          <View style={styles.profileButtonBackground}>
-            <Ionicons name="person" size={18} color="#FFFFFF" />
-          </View>
-        </TouchableOpacity>
+        </View>
       </View>
-    </View>
-    
-    {!showSearch ? (
-      <View style={styles.tabContainer}>
+
+      <View style={styles.tabBar}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "book" && styles.activeTab]}
           onPress={() => setActiveTab("book")}
         >
-          <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>Book Order</Text>
-          {activeTab === "book" && <View style={styles.activeTabIndicator} />}
+          <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>
+            By Book Order
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === "species" && styles.activeTab]}
           onPress={() => setActiveTab("species")}
         >
-          <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>Species</Text>
-          {activeTab === "species" && <View style={styles.activeTabIndicator} />}
+          <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>
+            By Species
+          </Text>
         </TouchableOpacity>
       </View>
-    ) : (
-      <Searchbar
-        placeholder="Search birds, sounds, or pages..."
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-        style={styles.searchBar}
-        inputStyle={styles.searchInput}
-        iconColor="#2E7D32"
-        onIconPress={() => {
-          if (searchQuery) {
-            setSearchQuery("")
-          } else {
-            setShowSearch(false)
-          }
-        }}
-        icon={searchQuery ? "close" : "arrow-left"}
-      />
-    )}
-  </View>
-)
 
-  // Render loading state
-  if ((activeTab === "book" && recordingsLoading) || (activeTab === "species" && speciesLoading)) {
-    return (
-      <View style={styles.container}>
-        <BackgroundPattern />
-        <Header />
-        
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#2E7D32" />
-            <Text style={styles.loadingText}>Loading amazing birdsongs...</Text>
-          </View>
+      {showSearch && (
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchBar}
+            iconColor={theme.colors.primary}
+          />
         </View>
-      </View>
-    )
-  }
-
-  // Render error state
-  if ((activeTab === "book" && recordingsError) || (activeTab === "species" && speciesError)) {
-    return (
-      <View style={styles.container}>
-        <BackgroundPattern />
-        <Header />
-        
-        <View style={styles.errorContainer}>
-          <View style={styles.errorCard}>
-            <Ionicons name="alert-circle" size={60} color="#B00020" />
-            <Text style={styles.errorText}>
-              {!isConnected ? "You're offline. Please check your connection." : "Something went wrong. Please try again."}
-            </Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={() => {
-                if (activeTab === "book") {
-                  refetchRecordings()
-                } else {
-                  refetchSpecies()
-                }
-              }}
-            >
-              <Text style={styles.retryText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    )
-  }
-
-  // Empty state component
-const EmptyState = ({ type }: { type: 'recordings' | 'species' }) => (
-  <View style={styles.emptyContainer}>
-    <View style={styles.emptyCard}>
-      <Ionicons 
-        name={type === 'recordings' ? "musical-notes" : "leaf"} 
-        size={60} 
-        color="#2E7D32" 
-      />
-      <Text style={styles.emptyTitle}>
-        {searchQuery ? "No results found" : `No ${type} available`}
-      </Text>
-      <Text style={styles.emptyText}>
-        {searchQuery 
-          ? `We couldn't find any ${type} matching "${searchQuery}"`
-          : `There are no ${type} available at the moment`
-        }
-      </Text>
-      {searchQuery && (
-        <TouchableOpacity
-          style={styles.clearSearchButton}
-          onPress={() => setSearchQuery("")}
-        >
-          <Text style={styles.clearSearchText}>Clear Search</Text>
-        </TouchableOpacity>
       )}
     </View>
-  </View>
-)
+  )
+
+  // Empty state component
+  const EmptyState = ({ type }: { type: 'recordings' | 'species' }) => (
+    <View style={styles.emptyContainer}>
+      <Ionicons
+        name={type === 'recordings' ? "disc-outline" : "leaf-outline"}
+        size={60}
+        color={isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.3)'}
+        style={styles.emptyIcon}
+      />
+      <Text style={styles.emptyTitle}>
+        {type === 'recordings' ? "No Recordings Found" : "No Species Found"}
+      </Text>
+      <Text style={styles.emptyText}>
+        {type === 'recordings'
+          ? "We couldn't find any recordings matching your search."
+          : "We couldn't find any species matching your search."}
+      </Text>
+    </View>
+  )
 
   return (
     <View style={styles.container}>
       <BackgroundPattern />
       <Header />
-      
-      {activeTab === "book" ? (
-        <FlatList
-          data={filteredRecordings}
-          renderItem={renderRecordingItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-          refreshControl={
-            <RefreshControl 
-              refreshing={recordingsLoading} 
-              onRefresh={refetchRecordings} 
-              colors={["#2E7D32"]} 
-              tintColor="#2E7D32"
-            />
-          }
-          ListEmptyComponent={<EmptyState type="recordings" />}
-        />
+
+      {recordingsLoading || speciesLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={{ marginTop: 16, color: theme.colors.onBackground }}>
+            Loading {activeTab === "book" ? "recordings" : "species"}...
+          </Text>
+        </View>
+      ) : recordingsError || speciesError ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={60} color={theme.colors.error} />
+          <Text style={styles.errorText}>
+            Error loading data. Please check your connection and try again.
+          </Text>
+        </View>
       ) : (
-        <FlatList
-          data={filteredSpecies}
-          renderItem={renderSpeciesItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-          refreshControl={
-            <RefreshControl 
-              refreshing={speciesLoading} 
-              onRefresh={refetchSpecies} 
-              colors={["#2E7D32"]} 
-              tintColor="#2E7D32"
+        <View style={styles.listContainer}>
+          {activeTab === "book" ? (
+            <FlatList
+              data={filteredRecordings}
+              renderItem={renderRecordingItem}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={recordingsLoading}
+                  onRefresh={refetchRecordings}
+                  colors={[theme.colors.primary]}
+                  tintColor={theme.colors.primary}
+                />
+              }
+              ListEmptyComponent={<EmptyState type="recordings" />}
             />
-          }
-          ListEmptyComponent={<EmptyState type="species" />}
-        />
+          ) : (
+            <FlatList
+              data={filteredSpecies}
+              renderItem={renderSpeciesItem}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={speciesLoading}
+                  onRefresh={refetchSpecies}
+                  colors={[theme.colors.primary]}
+                  tintColor={theme.colors.primary}
+                />
+              }
+              ListEmptyComponent={<EmptyState type="species" />}
+            />
+          )}
+        </View>
       )}
     </View>
   )
 }
-
-// Updated styles object with simplified styling
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F7FA",
-  },
-  backgroundPattern: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#F5F7FA",
-  },
-  header: {
-    backgroundColor: "white",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    zIndex: 10,
-  },
-  headerContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 16,
-  },
-  headerTitleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginLeft: 8,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  profileButton: {
-    marginLeft: 8,
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-  profileButtonBackground: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#2E7D32",
-  },
-  searchBar: {
-    margin: 16,
-    borderRadius: 12,
-    elevation: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-    height: 50,
-  },
-  searchInput: {
-    color: "#333333",
-  },
-  tabContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    marginTop: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    position: "relative",
-    alignItems: "center",
-  },
-  activeTab: {},
-  tabText: {
-    fontSize: 16,
-    color: "#666666",
-  },
-  activeTabText: {
-    color: "#2E7D32",
-    fontWeight: "bold",
-  },
-  activeTabIndicator: {
-    position: "absolute",
-    bottom: 0,
-    left: "25%",
-    right: "25%",
-    height: 3,
-    backgroundColor: "#2E7D32",
-    borderRadius: 2,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  recordingCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  recordingHeader: {
-    padding: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  recordingTitle: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#333333",
-    flex: 1,
-  },
-  downloadedIndicator: {
-    marginLeft: 8,
-  },
-  scientificName: {
-    fontSize: 14,
-    fontStyle: "italic",
-    color: "#666666",
-    marginTop: 2,
-  },
-  recordingContent: {
-    flexDirection: "row",
-    padding: 16,
-    paddingTop: 8,
-  },
-  captionContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  caption: {
-    fontSize: 14,
-    color: "#333333",
-    lineHeight: 20,
-  },
-  pageReference: {
-    marginTop: 8,
-    backgroundColor: "rgba(46, 125, 50, 0.1)",
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  pageText: {
-    fontSize: 12,
-    color: "#2E7D32",
-  },
-  audioControls: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 48,
-  },
-  playButtonContainer: {
-    borderRadius: 22,
-    overflow: "hidden",
-  },
-  playButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#4CAF50",
-  },
-  playButtonActive: {
-    backgroundColor: "#2E7D32",
-  },
-  speciesCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  speciesContent: {
-    flexDirection: "row",
-    padding: 16,
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  speciesName: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#333333",
-  },
-  speciesAction: {
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  speciesActionButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1976D2",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  loadingCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 24,
-    width: width * 0.8,
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#333333",
-    textAlign: "center",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  errorCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 24,
-    width: width * 0.8,
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  errorText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#333333",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  retryButton: {
-    marginTop: 24,
-    backgroundColor: "#2E7D32",
-    paddingVertical: 12,
-    paddingHorizontal: 36,
-    borderRadius: 12,
-  },
-  retryText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    marginTop: 48,
-  },
-  emptyCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 24,
-    width: width * 0.8,
-    alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  emptyTitle: {
-    marginTop: 16,
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333333",
-    textAlign: "center",
-  },
-  emptyText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#666666",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  clearSearchButton: {
-    marginTop: 16,
-    backgroundColor: "rgba(46, 125, 50, 0.1)",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  clearSearchText: {
-    color: "#2E7D32",
-    fontWeight: "bold",
-  }
-})
 
 export default RecordingsListScreen

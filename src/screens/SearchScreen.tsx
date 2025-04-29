@@ -12,17 +12,164 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import type { Recording } from "../types"
 import { RootStackParamList } from "../types"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { useThemedStyles } from "../hooks/useThemedStyles"
 
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useContext(NetworkContext)
   const { isDownloaded } = useContext(DownloadContext)
+  const { theme, isDarkMode } = useThemedStyles()
 
   const [searchQuery, setSearchQuery] = useState("")
   const [results, setResults] = useState<Recording[]>([])
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings" | "pages">("all")
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    searchBar: {
+      margin: 16,
+      borderRadius: 8,
+      elevation: 2,
+      backgroundColor: theme.colors.surface,
+    },
+    filterContainer: {
+      paddingHorizontal: 16,
+      marginBottom: 8,
+    },
+    filterChip: {
+      marginRight: 8,
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: theme.colors.onBackground,
+    },
+    listContent: {
+      padding: 16,
+    },
+    resultItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 12,
+    },
+    resultContent: {
+      flex: 1,
+    },
+    resultTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.onBackground,
+    },
+    scientificName: {
+      fontSize: 14,
+      fontStyle: "italic",
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      marginTop: 4,
+    },
+    resultMeta: {
+      flexDirection: "row",
+      marginTop: 8,
+      alignItems: "center",
+    },
+    pageReference: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 4,
+    },
+    pageText: {
+      fontSize: 12,
+      marginLeft: 4,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+    },
+    downloadedBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 4,
+      marginLeft: 8,
+    },
+    downloadedText: {
+      fontSize: 12,
+      marginLeft: 4,
+      color: isDarkMode ? '#81C784' : '#2E7D32',
+    },
+    emptyContainer: {
+      paddingVertical: 48,
+      alignItems: "center",
+    },
+    emptyText: {
+      marginTop: 16,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      textAlign: "center",
+    },
+    recentContainer: {
+      padding: 16,
+    },
+    recentHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    recentTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: theme.colors.onBackground,
+    },
+    clearText: {
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
+    recentItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    recentQueryText: {
+      marginLeft: 12,
+      fontSize: 16,
+      color: theme.colors.onBackground,
+    },
+    emptyRecentText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+      fontStyle: "italic",
+      textAlign: "center",
+      marginTop: 24,
+    },
+    offlineNotice: {
+      marginHorizontal: 16,
+      padding: 12,
+      backgroundColor: isDarkMode ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.1)',
+      borderRadius: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 16,
+    },
+    offlineText: {
+      flex: 1,
+      marginLeft: 8,
+      color: isDarkMode ? '#FFCC80' : '#E65100',
+    },
+  });
 
   // Load recent searches from storage
   useEffect(() => {
@@ -106,18 +253,18 @@ const SearchScreen = () => {
           {item.species && <Text style={styles.scientificName}>{item.species.scientific_name}</Text>}
           <View style={styles.resultMeta}>
             <View style={styles.pageReference}>
-              <Ionicons name="book-outline" size={14} color="#666666" />
+              <Ionicons name="book-outline" size={14} color={isDarkMode ? '#ccc' : '#666'} />
               <Text style={styles.pageText}>Page {item.book_page_number}</Text>
             </View>
             {isDownloaded(item.id) && (
               <View style={styles.downloadedBadge}>
-                <Ionicons name="cloud-done-outline" size={14} color="#2E7D32" />
+                <Ionicons name="cloud-done-outline" size={14} color={isDarkMode ? '#81C784' : '#2E7D32'} />
                 <Text style={styles.downloadedText}>Downloaded</Text>
               </View>
             )}
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={24} color="#666666" />
+        <Ionicons name="chevron-forward" size={24} color={isDarkMode ? '#ccc' : '#666'} />
       </TouchableOpacity>
     )
   }
@@ -135,7 +282,17 @@ const SearchScreen = () => {
         value={searchQuery}
         onSubmitEditing={() => handleSearch(searchQuery)}
         style={styles.searchBar}
+        iconColor={theme.colors.primary}
       />
+
+      {!isConnected && (
+        <View style={styles.offlineNotice}>
+          <Ionicons name="cloud-offline-outline" size={20} color={isDarkMode ? '#FFCC80' : '#E65100'} />
+          <Text style={styles.offlineText}>
+            You're offline. Search is unavailable while offline.
+          </Text>
+        </View>
+      )}
 
       {searchQuery ? (
         <View style={styles.filterContainer}>
@@ -170,7 +327,7 @@ const SearchScreen = () => {
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2E7D32" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>Searching...</Text>
         </View>
       ) : searchQuery ? (
@@ -182,7 +339,7 @@ const SearchScreen = () => {
           ItemSeparatorComponent={() => <Divider />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={48} color="#666666" />
+              <Ionicons name="search-outline" size={48} color={isDarkMode ? '#aaa' : '#666'} />
               <Text style={styles.emptyText}>No results found for "{searchQuery}"</Text>
             </View>
           }
@@ -209,141 +366,19 @@ const SearchScreen = () => {
                     handleSearch(item)
                   }}
                 >
-                  <Ionicons name="time-outline" size={20} color="#666666" />
-                  <Text style={styles.recentText}>{item}</Text>
+                  <Ionicons name="time-outline" size={20} color={isDarkMode ? '#aaa' : '#666'} />
+                  <Text style={styles.recentQueryText}>{item}</Text>
                 </TouchableOpacity>
               )}
               keyExtractor={(item, index) => `recent-${index}`}
-              contentContainerStyle={styles.recentList}
             />
           ) : (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={48} color="#666666" />
-              <Text style={styles.emptyText}>Your recent searches will appear here</Text>
-            </View>
+            <Text style={styles.emptyRecentText}>No recent searches</Text>
           )}
         </View>
       )}
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  searchBar: {
-    margin: 8,
-    elevation: 0,
-  },
-  filterContainer: {
-    paddingHorizontal: 8,
-    marginBottom: 8,
-  },
-  filterChip: {
-    marginHorizontal: 4,
-  },
-  listContent: {
-    flexGrow: 1,
-  },
-  resultItem: {
-    flexDirection: "row",
-    padding: 16,
-    alignItems: "center",
-  },
-  resultContent: {
-    flex: 1,
-  },
-  resultTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  scientificName: {
-    fontSize: 14,
-    fontStyle: "italic",
-    color: "#666666",
-    marginBottom: 4,
-  },
-  resultMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  pageReference: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  pageText: {
-    fontSize: 12,
-    color: "#666666",
-    marginLeft: 4,
-  },
-  downloadedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  downloadedText: {
-    fontSize: 12,
-    color: "#2E7D32",
-    marginLeft: 4,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#666666",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    marginTop: 48,
-  },
-  emptyText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#666666",
-    textAlign: "center",
-  },
-  recentContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  recentHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  recentTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  clearText: {
-    fontSize: 14,
-    color: "#2E7D32",
-  },
-  recentList: {
-    flexGrow: 1,
-  },
-  recentItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
-  },
-  recentText: {
-    fontSize: 16,
-    marginLeft: 12,
-  },
-})
 
 export default SearchScreen

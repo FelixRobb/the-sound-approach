@@ -5,6 +5,7 @@ import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { Ionicons } from "@expo/vector-icons"
+import { ThemeContext } from "../context/ThemeContext"
 
 // Screens
 import WelcomeScreen from "../screens/WelcomeScreen"
@@ -17,6 +18,7 @@ import DownloadsScreen from "../screens/DownloadsScreen"
 import ProfileSettingsScreen from "../screens/ProfileSettingsScreen"
 import SearchScreen from "../screens/SearchScreen"
 import OfflineNoticeScreen from "../screens/OfflineNoticeScreen"
+import { lightTheme, darkTheme, navigationDarkTheme, navigationLightTheme } from "../theme"
 
 // Context
 import { AuthContext } from "../context/AuthContext"
@@ -60,6 +62,7 @@ const MainTabNavigator = () => {
       })}
     >
       <Tab.Screen name="Recordings" component={RecordingsListScreen} options={{ headerShown: false }} />
+      <Tab.Screen name="Search" component={SearchScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Downloads" component={DownloadsScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Profile" component={ProfileSettingsScreen} options={{ headerShown: false }} />
     </Tab.Navigator>
@@ -85,8 +88,10 @@ const MainNavigator = () => {
 const AppNavigator = () => {
   const { state: authState } = useContext(AuthContext)
   const { isConnected } = useContext(NetworkContext)
+  const { isDarkMode } = useContext(ThemeContext);
+  const navTheme = isDarkMode ? navigationDarkTheme : navigationLightTheme;
 
-  return <NavigationContainer>{authState.userToken ? <MainNavigator /> : <AuthNavigator />}</NavigationContainer>
+  return <NavigationContainer theme={navTheme}>{authState.userToken ? <MainNavigator /> : <AuthNavigator />}</NavigationContainer>
 }
 
 export default AppNavigator
