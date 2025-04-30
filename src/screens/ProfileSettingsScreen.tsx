@@ -2,7 +2,7 @@
 
 import React, { useContext, useState } from "react"
 import { View, Text, StyleSheet, ScrollView, Alert, Dimensions, TouchableOpacity } from "react-native"
-import { List, Switch, Divider, RadioButton } from "react-native-paper"
+import { List, Switch } from "react-native-paper"
 import { useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { AuthContext } from "../context/AuthContext"
@@ -22,168 +22,159 @@ const ProfileSettingsScreen = () => {
   const { theme: themeMode, isDarkMode, setTheme } = useContext(ThemeContext)
   const { theme } = useThemedStyles()
 
-  const [isDeleting, setIsDeleting] = useState(false)
   const [showThemeOptions, setShowThemeOptions] = useState(false)
 
   // Create styles based on theme
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
+    backButton: {
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      borderRadius: 20,
+      padding: 8,
     },
     backgroundPattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: isDarkMode ? 
+      backgroundColor: isDarkMode ?
         `${theme.colors.primary}08` : // Very transparent primary color
         `${theme.colors.primary}05`,
+      bottom: 0,
+      left: 0,
       opacity: 0.6,
+      position: "absolute",
+      right: 0,
+      top: 0,
     },
-    header: {
-      paddingTop: 50,
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      backgroundColor: theme.colors.surface,
-      elevation: 2,
-    },
-    headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    headerTitleContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginLeft: 12,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      marginLeft: 8,
-      color: theme.colors.onSurface,
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
     },
     content: {
       padding: 16,
     },
+    header: {
+      backgroundColor: theme.colors.surface,
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomWidth: 1,
+      elevation: 2,
+      paddingBottom: 8,
+      paddingHorizontal: 16,
+      paddingTop: 50,
+    },
+    headerContent: {
+      alignItems: 'center',
+      flexDirection: 'row',
+    },
+    headerTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 20,
+      fontWeight: '600',
+      marginLeft: 8,
+    },
+    headerTitleContainer: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      marginLeft: 12,
+    },
+    listItem: {
+      paddingVertical: 6,
+    },
+    listItemDescription: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+    },
+    listItemTitle: {
+      color: theme.colors.onSurface,
+    },
+    logoutButton: {
+      marginBottom: 32,
+      marginHorizontal: 16,
+      marginTop: 24,
+    },
     sectionCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 12,
+      elevation: 2,
       marginBottom: 16,
       padding: 4,
-      elevation: 2,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 4,
     },
     sectionHeader: {
-      flexDirection: "row",
       alignItems: "center",
-      padding: 12,
-      borderBottomWidth: 1,
       borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomWidth: 1,
+      flexDirection: "row",
+      padding: 12,
     },
     sectionTitle: {
+      color: theme.colors.primary,
       fontSize: 16,
       fontWeight: "600",
       marginLeft: 8,
-      color: theme.colors.primary,
     },
-    listItem: {
-      paddingVertical: 6,
-    },
-    listItemTitle: {
-      color: theme.colors.onSurface,
-    },
-    listItemDescription: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-    },
-    button: {
+    storageBar: {
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      borderRadius: 4,
+      height: 8,
+      marginBottom: 4,
+      marginHorizontal: 16,
       marginTop: 8,
-      marginHorizontal: 16,
-      marginBottom: 16,
+      overflow: 'hidden',
     },
-    dangerButton: {
-      backgroundColor: theme.colors.error,
+    storageBarFill: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 4,
+      height: '100%',
     },
-    logoutButton: {
-      marginTop: 24,
-      marginHorizontal: 16,
-      marginBottom: 32,
+    storageText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      fontSize: 12,
+      marginRight: 16,
+      textAlign: 'right',
+    },
+    themeOption: {
+      alignItems: 'center',
+      borderRadius: 12,
+      borderWidth: 2,
+      padding: 12,
+      width: width / 3.5,
     },
     themeOptionContainer: {
       flexDirection: 'row',
       justifyContent: 'space-around',
+      marginTop: 8,
       paddingHorizontal: 16,
       paddingVertical: 12,
-      marginTop: 8,
-    },
-    themeOption: {
-      alignItems: 'center',
-      width: width / 3.5,
-      padding: 12,
-      borderRadius: 12,
-      borderWidth: 2,
-    },
-    themeOptionLight: {
-      backgroundColor: '#FFFFFF',
-      borderColor: themeMode === 'light' ? theme.colors.primary : '#E0E0E0',
     },
     themeOptionDark: {
       backgroundColor: '#121212',
       borderColor: themeMode === 'dark' ? theme.colors.primary : '#333333',
+    },
+    themeOptionDivider: {
+      backgroundColor: isDarkMode ? '#FFFFFF' : '#121212',
+      bottom: 0,
+      left: '50%',
+      position: 'absolute',
+      top: 0,
+      width: 2,
+    },
+    themeOptionIcon: {
+      borderRadius: 20,
+      padding: 8,
+    },
+    themeOptionLight: {
+      backgroundColor: '#FFFFFF',
+      borderColor: themeMode === 'light' ? theme.colors.primary : '#E0E0E0',
     },
     themeOptionSystem: {
       backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
       borderColor: themeMode === 'system' ? theme.colors.primary : isDarkMode ? '#333333' : '#E0E0E0',
       overflow: 'hidden',
     },
-    themeOptionDivider: {
-      position: 'absolute',
-      top: 0,
-      bottom: 0,
-      width: 2,
-      left: '50%',
-      backgroundColor: isDarkMode ? '#FFFFFF' : '#121212',
-    },
     themeOptionText: {
-      marginTop: 8,
-      fontWeight: '500',
-      fontSize: 14,
       color: theme.colors.onSurface,
-    },
-    themeOptionIcon: {
-      padding: 8,
-      borderRadius: 20,
-    },
-    storageBar: {
-      height: 8,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-      borderRadius: 4,
+      fontSize: 14,
+      fontWeight: '500',
       marginTop: 8,
-      marginBottom: 4,
-      marginHorizontal: 16,
-      overflow: 'hidden',
-    },
-    storageBarFill: {
-      height: '100%',
-      backgroundColor: theme.colors.primary,
-      borderRadius: 4,
-    },
-    storageText: {
-      fontSize: 12,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-      textAlign: 'right',
-      marginRight: 16,
     },
   });
 
@@ -220,7 +211,6 @@ const ProfileSettingsScreen = () => {
         text: "Delete",
         style: "destructive",
         onPress: async () => {
-          setIsDeleting(true)
           try {
             await supabase.functions.invoke("delete-account")
 
@@ -229,8 +219,6 @@ const ProfileSettingsScreen = () => {
           } catch (error) {
             console.error("Delete account error:", error)
             Alert.alert("Error", "Failed to delete account. Please try again later.")
-          } finally {
-            setIsDeleting(false)
           }
         },
       },
@@ -286,40 +274,40 @@ const ProfileSettingsScreen = () => {
   // Theme options component
   const ThemeOptions = () => (
     <View style={styles.themeOptionContainer}>
-      <TouchableOpacity 
-        style={[styles.themeOption, styles.themeOptionLight]} 
+      <TouchableOpacity
+        style={[styles.themeOption, styles.themeOptionLight]}
         onPress={() => setTheme('light')}
       >
-        <Ionicons 
-          name="sunny" 
-          size={24} 
+        <Ionicons
+          name="sunny"
+          size={24}
           color={themeMode === 'light' ? theme.colors.primary : "#333"}
           style={styles.themeOptionIcon}
         />
         <Text style={styles.themeOptionText}>Light</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.themeOption, styles.themeOptionDark]} 
+
+      <TouchableOpacity
+        style={[styles.themeOption, styles.themeOptionDark]}
         onPress={() => setTheme('dark')}
       >
-        <Ionicons 
-          name="moon" 
-          size={24} 
+        <Ionicons
+          name="moon"
+          size={24}
           color={themeMode === 'dark' ? theme.colors.primary : "#FFF"}
           style={styles.themeOptionIcon}
         />
         <Text style={[styles.themeOptionText, { color: '#FFF' }]}>Dark</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.themeOption, styles.themeOptionSystem]} 
+
+      <TouchableOpacity
+        style={[styles.themeOption, styles.themeOptionSystem]}
         onPress={() => setTheme('system')}
       >
         <View style={styles.themeOptionDivider} />
-        <Ionicons 
-          name="contrast" 
-          size={24} 
+        <Ionicons
+          name="contrast"
+          size={24}
           color={themeMode === 'system' ? theme.colors.primary : isDarkMode ? "#FFF" : "#333"}
           style={styles.themeOptionIcon}
         />
@@ -340,7 +328,7 @@ const ProfileSettingsScreen = () => {
             <Ionicons name="person-circle-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle}>Account</Text>
           </View>
-          
+
           <List.Item
             title="Email"
             description={authState.user?.email || "Not available"}
@@ -349,10 +337,10 @@ const ProfileSettingsScreen = () => {
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}
           />
-          
-          <List.Item 
-            title="Book Code" 
-            description="••••••••" 
+
+          <List.Item
+            title="Book Code"
+            description="••••••••"
             left={(props) => <List.Icon {...props} icon="book" color={theme.colors.primary} />}
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
@@ -366,7 +354,7 @@ const ProfileSettingsScreen = () => {
             <Ionicons name="color-palette-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle}>Appearance</Text>
           </View>
-          
+
           <List.Item
             title="Dark Mode"
             left={(props) => <List.Icon {...props} icon="theme-light-dark" color={theme.colors.primary} />}
@@ -374,7 +362,7 @@ const ProfileSettingsScreen = () => {
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
           />
-          
+
           <List.Item
             title="Theme"
             description={themeMode === "system" ? "Follow system" : themeMode === "dark" ? "Dark" : "Light"}
@@ -384,14 +372,14 @@ const ProfileSettingsScreen = () => {
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}
             right={(props) => (
-              <List.Icon 
-                {...props} 
-                icon={showThemeOptions ? "chevron-up" : "chevron-down"} 
-                color={theme.colors.primary} 
+              <List.Icon
+                {...props}
+                icon={showThemeOptions ? "chevron-up" : "chevron-down"}
+                color={theme.colors.primary}
               />
             )}
           />
-          
+
           {showThemeOptions && <ThemeOptions />}
         </View>
 
@@ -401,7 +389,7 @@ const ProfileSettingsScreen = () => {
             <Ionicons name="folder-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle}>Storage</Text>
           </View>
-          
+
           <List.Item
             title="Offline Recordings"
             description="Manage downloaded recordings"
@@ -411,12 +399,12 @@ const ProfileSettingsScreen = () => {
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}
           />
-          
+
           <View style={styles.storageBar}>
             <View style={[styles.storageBarFill, { width: `${Math.min((totalStorageUsed / (500 * 1024 * 1024)) * 100, 100)}%` }]} />
           </View>
           <Text style={styles.storageText}>{formatBytes(totalStorageUsed)} used of 500 MB</Text>
-          
+
           <List.Item
             title="Clear All Downloads"
             description="Free up storage space"
@@ -434,7 +422,7 @@ const ProfileSettingsScreen = () => {
             <Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle}>Security</Text>
           </View>
-          
+
           <List.Item
             title="Change Password"
             left={(props) => <List.Icon {...props} icon="key" color={theme.colors.primary} />}
@@ -442,7 +430,7 @@ const ProfileSettingsScreen = () => {
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
           />
-          
+
           <List.Item
             title="Delete Account"
             description="Permanently remove all your data"

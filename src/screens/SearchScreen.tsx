@@ -13,6 +13,7 @@ import type { Recording } from "../types"
 import { RootStackParamList } from "../types"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { useThemedStyles } from "../hooks/useThemedStyles"
+import React from "react"
 
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
@@ -27,147 +28,147 @@ const SearchScreen = () => {
   const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings" | "pages">("all")
 
   const styles = StyleSheet.create({
+    clearText: {
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
     container: {
-      flex: 1,
       backgroundColor: theme.colors.background,
+      flex: 1,
     },
-    searchBar: {
-      margin: 16,
-      borderRadius: 8,
-      elevation: 2,
-      backgroundColor: theme.colors.surface,
+    downloadedBadge: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+      borderRadius: 4,
+      flexDirection: "row",
+      marginLeft: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
     },
-    filterContainer: {
-      paddingHorizontal: 16,
-      marginBottom: 8,
+    downloadedText: {
+      color: isDarkMode ? '#81C784' : '#2E7D32',
+      fontSize: 12,
+      marginLeft: 4,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      paddingVertical: 48,
+    },
+    emptyRecentText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+      fontStyle: "italic",
+      marginTop: 24,
+      textAlign: "center",
+    },
+    emptyText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      marginTop: 16,
+      textAlign: "center",
     },
     filterChip: {
-      marginRight: 8,
       backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      marginRight: 8,
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    loadingText: {
-      marginTop: 16,
-      fontSize: 16,
-      color: theme.colors.onBackground,
+    filterContainer: {
+      marginBottom: 8,
+      paddingHorizontal: 16,
     },
     listContent: {
       padding: 16,
     },
-    resultItem: {
-      flexDirection: "row",
+    loadingContainer: {
       alignItems: "center",
-      justifyContent: "space-between",
-      paddingVertical: 12,
-    },
-    resultContent: {
       flex: 1,
+      justifyContent: "center",
     },
-    resultTitle: {
-      fontSize: 16,
-      fontWeight: "600",
+    loadingText: {
       color: theme.colors.onBackground,
+      fontSize: 16,
+      marginTop: 16,
     },
-    scientificName: {
-      fontSize: 14,
-      fontStyle: "italic",
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-      marginTop: 4,
-    },
-    resultMeta: {
-      flexDirection: "row",
-      marginTop: 8,
+    offlineNotice: {
       alignItems: "center",
-    },
-    pageReference: {
+      backgroundColor: isDarkMode ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.1)',
+      borderRadius: 8,
       flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-      borderRadius: 4,
+      marginHorizontal: 16,
+      marginTop: 16,
+      padding: 12,
     },
-    pageText: {
-      fontSize: 12,
-      marginLeft: 4,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
-    },
-    downloadedBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-      borderRadius: 4,
+    offlineText: {
+      color: isDarkMode ? '#FFCC80' : '#E65100',
+      flex: 1,
       marginLeft: 8,
     },
-    downloadedText: {
+    pageReference: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      borderRadius: 4,
+      flexDirection: "row",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    pageText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
       fontSize: 12,
       marginLeft: 4,
-      color: isDarkMode ? '#81C784' : '#2E7D32',
-    },
-    emptyContainer: {
-      paddingVertical: 48,
-      alignItems: "center",
-    },
-    emptyText: {
-      marginTop: 16,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-      textAlign: "center",
     },
     recentContainer: {
       padding: 16,
     },
     recentHeader: {
+      alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
       marginBottom: 16,
     },
-    recentTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: theme.colors.onBackground,
-    },
-    clearText: {
-      color: theme.colors.primary,
-      fontWeight: "500",
-    },
     recentItem: {
-      flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 12,
-      borderBottomWidth: 1,
       borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomWidth: 1,
+      flexDirection: "row",
+      paddingVertical: 12,
     },
     recentQueryText: {
-      marginLeft: 12,
-      fontSize: 16,
       color: theme.colors.onBackground,
+      fontSize: 16,
+      marginLeft: 12,
     },
-    emptyRecentText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
-      fontStyle: "italic",
-      textAlign: "center",
-      marginTop: 24,
+    recentTitle: {
+      color: theme.colors.onBackground,
+      fontSize: 18,
+      fontWeight: "600",
     },
-    offlineNotice: {
-      marginHorizontal: 16,
-      padding: 12,
-      backgroundColor: isDarkMode ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.1)',
-      borderRadius: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 16,
-    },
-    offlineText: {
+    resultContent: {
       flex: 1,
-      marginLeft: 8,
-      color: isDarkMode ? '#FFCC80' : '#E65100',
+    },
+    resultItem: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: 12,
+    },
+    resultMeta: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginTop: 8,
+    },
+    resultTitle: {
+      color: theme.colors.onBackground,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    scientificName: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      fontSize: 14,
+      fontStyle: "italic",
+      marginTop: 4,
+    },
+    searchBar: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 8,
+      elevation: 2,
+      margin: 16,
     },
   });
 
@@ -289,7 +290,7 @@ const SearchScreen = () => {
         <View style={styles.offlineNotice}>
           <Ionicons name="cloud-offline-outline" size={20} color={isDarkMode ? '#FFCC80' : '#E65100'} />
           <Text style={styles.offlineText}>
-            You're offline. Search is unavailable while offline.
+            You&apos;re offline. Search is unavailable while offline.
           </Text>
         </View>
       )}
@@ -298,28 +299,28 @@ const SearchScreen = () => {
         <View style={styles.filterContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <Chip selected={activeFilter === "all"} onPress={() => setActiveFilter("all")} style={styles.filterChip}>
-              All
+              <Text>All</Text>
             </Chip>
             <Chip
               selected={activeFilter === "species"}
               onPress={() => setActiveFilter("species")}
               style={styles.filterChip}
             >
-              Species
+              <Text>Species</Text>
             </Chip>
             <Chip
               selected={activeFilter === "recordings"}
               onPress={() => setActiveFilter("recordings")}
               style={styles.filterChip}
             >
-              Recordings
+              <Text>Recordings</Text>
             </Chip>
             <Chip
               selected={activeFilter === "pages"}
               onPress={() => setActiveFilter("pages")}
               style={styles.filterChip}
             >
-              Pages
+              <Text>Pages</Text>
             </Chip>
           </ScrollView>
         </View>
@@ -340,7 +341,7 @@ const SearchScreen = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={48} color={isDarkMode ? '#aaa' : '#666'} />
-              <Text style={styles.emptyText}>No results found for "{searchQuery}"</Text>
+              <Text style={styles.emptyText}>No results found for &quot;{searchQuery}&quot;</Text>
             </View>
           }
         />

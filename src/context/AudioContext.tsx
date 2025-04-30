@@ -235,23 +235,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         progressUpdateIntervalMillis: 100,
         ...bufferConfig
       }
-  
-      // Create our onDownloadProgressUpdate callback
-      const onDownloadProgressUpdate = (
-        downloadStatus: {
-          downloadProgress: number;
-          totalBytesLoaded: number;
-          totalBytesExpectedToLoad: number;
-        }
-      ) => {
-        if (currentLoadToken === loadCancelTokenRef.current && isMountedRef.current) {
-          setAudioState(prev => ({
-            ...prev,
-            loadProgress: downloadStatus.downloadProgress || 
-              downloadStatus.totalBytesLoaded / (downloadStatus.totalBytesExpectedToLoad || 1)
-          }))
-        }
-      }
+
   
       // Create the sound with properly typed parameters
       const { sound, status } = await Audio.Sound.createAsync(

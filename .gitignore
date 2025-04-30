@@ -38,3 +38,4 @@ yarn-error.*
 /node_modules
 /sonograms
 /recordings
+/.env

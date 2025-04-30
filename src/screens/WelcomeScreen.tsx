@@ -13,115 +13,111 @@ import { Platform } from "react-native"
 import { RootStackParamList } from "../types"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { useThemedStyles } from "../hooks/useThemedStyles"
+import backgroundImage from '../../assets/image.png'
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { state: authState } = useContext(AuthContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const { theme } = useThemedStyles()
 
   // Define styles first
   const styles = StyleSheet.create({
     backgroundImage: {
       flex: 1,
-      width: "100%",
       height: "100%",
       justifyContent: "center",
+      width: "100%",
     },
-    overlay: {
-      flex: 1,
-      backgroundColor: "rgba(15, 25, 40, 0.65)",
-      justifyContent: "center",
+    button: {
+      borderRadius: 24,
+      elevation: 2,
+      marginVertical: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.13,
+      shadowRadius: 4,
+    },
+    buttonContainer: {
+      marginBottom: 16,
+      width: "100%",
+    },
+    buttonContent: {
+      flexDirection: 'row-reverse',
+      paddingVertical: 14,
+    },
+    buttonLabel: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: 'bold',
+      letterSpacing: 0.5,
     },
     container: {
       flex: 1,
       justifyContent: "space-between",
+      paddingBottom: 32,
       paddingHorizontal: 24,
       paddingTop: 60,
-      paddingBottom: 32,
     },
-    logoContainer: {
+    loadingContainer: {
       alignItems: "center",
-      marginTop: 24,
-      marginBottom: 32,
+      backgroundColor: theme.colors.background,
+      flex: 1,
+      justifyContent: "center",
+    },
+    loadingText: {
+      color: theme.colors.onBackground,
+      fontSize: 18,
+      fontWeight: '500',
+      marginTop: 18,
+      opacity: 0.85,
     },
     logoCircle: {
+      alignItems: 'center',
       backgroundColor: 'rgba(255,255,255,0.14)',
       borderRadius: 54,
-      width: 108,
+      elevation: 6,
       height: 108,
-      alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 18,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.18,
       shadowRadius: 8,
-      elevation: 6,
+      width: 108,
     },
-    logoImage: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+    logoContainer: {
+      alignItems: "center",
+      marginBottom: 32,
+      marginTop: 24,
     },
-    title: {
-      fontSize: 36,
-      fontWeight: "bold",
-      color: "#fff",
-      textAlign: "center",
-      letterSpacing: 1.2,
-      marginBottom: 10,
-      fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto',
-    },
-    subtitle: {
-      fontSize: 18,
-      color: "#e0e0e0",
-      textAlign: "center",
-      opacity: 0.94,
-      marginHorizontal: 18,
-      marginBottom: 8,
-      lineHeight: 25,
-      fontWeight: '500',
-    },
-    buttonContainer: {
-      width: "100%",
-      marginBottom: 16,
-    },
-    button: {
-      marginVertical: 8,
-      borderRadius: 24,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.13,
-      shadowRadius: 4,
-    },
-    buttonContent: {
-      paddingVertical: 14,
-      flexDirection: 'row-reverse',
-    },
-    buttonLabel: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      letterSpacing: 0.5,
-      color: '#fff',
+    overlay: {
+      backgroundColor: "rgba(15, 25, 40, 0.65)",
+      flex: 1,
+      justifyContent: "center",
     },
     secondaryButton: {
       backgroundColor: "rgba(255,255,255,0.13)",
       borderColor: "#fff",
       borderWidth: 2,
     },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: theme.colors.background,
-    },
-    loadingText: {
-      marginTop: 18,
-      color: theme.colors.onBackground,
+    subtitle: {
+      color: "#e0e0e0",
       fontSize: 18,
       fontWeight: '500',
-      opacity: 0.85,
+      lineHeight: 25,
+      marginBottom: 8,
+      marginHorizontal: 18,
+      opacity: 0.94,
+      textAlign: "center",
+    },
+    title: {
+      color: "#fff",
+      fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto',
+      fontSize: 36,
+      fontWeight: "bold",
+      letterSpacing: 1.2,
+      marginBottom: 10,
+      textAlign: "center",
     },
   });
 
@@ -151,7 +147,7 @@ const WelcomeScreen = () => {
 
   return (
     <ImageBackground
-      source={require('../../assets/image.png')}
+      source={backgroundImage}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -179,7 +175,7 @@ const WelcomeScreen = () => {
               accessibilityLabel="Login to your account"
               buttonColor={theme.colors.primary}
             >
-              Login
+              <Text>Login</Text>
             </Button>
             <Button
               mode="outlined"
@@ -193,7 +189,7 @@ const WelcomeScreen = () => {
               icon={() => <MaterialCommunityIcons name="account-plus-outline" size={22} color="#fff" style={{ marginRight: 8 }} />}
               accessibilityLabel="Create a new account"
             >
-              Sign Up
+              <Text>Sign Up</Text>
             </Button>
           </View>
         </View>

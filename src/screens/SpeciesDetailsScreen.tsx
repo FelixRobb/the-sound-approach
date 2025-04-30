@@ -1,7 +1,7 @@
 "use client"
 
 import { useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from "react-native"
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from "react-native"
 import { ActivityIndicator } from "react-native-paper"
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
@@ -15,6 +15,7 @@ import { useThemedStyles } from "../hooks/useThemedStyles"
 import { supabase } from "../lib/supabase"
 import { RootStackParamList } from "../types"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import React from "react"
 
 const { width } = Dimensions.get("window")
 
@@ -42,297 +43,261 @@ const SpeciesDetailsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
+    backButton: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(46, 125, 50, 0.1)',
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      marginRight: 12,
+      width: 40,
     },
     backgroundPattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
       backgroundColor: isDarkMode ? 
         `${theme.colors.primary}08` : // Very transparent primary color
         `${theme.colors.primary}05`,
+      bottom: 0,
+      left: 0,
       opacity: 0.6,
+      position: "absolute",
+      right: 0,
+      top: 0,
     },
-    header: {
+    caption: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    card: {
       backgroundColor: theme.colors.surface,
-      paddingTop: 50,
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-      flexDirection: "row",
-      alignItems: "center",
-      elevation: 4,
+      borderRadius: 16,
+      elevation: 3,
+      marginBottom: 16,
+      overflow: "hidden",
+      padding: 16,
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.22,
+      shadowRadius: 2.22,
     },
-    backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(46, 125, 50, 0.1)',
-      marginRight: 12,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
-      color: theme.colors.onSurface,
+    container: {
+      backgroundColor: theme.colors.background,
       flex: 1,
     },
     content: {
       padding: 16,
       paddingBottom: 32,
     },
-    card: {
+    divider: {
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#EEEEEE',
+      height: 1,
+    },
+    downloadedBadge: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    downloadedText: {
+      color: theme.colors.primary,
+      fontSize: 12,
+      marginLeft: 4,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 32,
+    },
+    emptyText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      fontSize: 16,
+      marginTop: 16,
+      textAlign: "center",
+    },
+    errorCard: {
+      alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: 16,
-      overflow: "hidden",
-      elevation: 3,
+      elevation: 4,
+      padding: 24,
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.22,
-      shadowRadius: 2.22,
-      marginBottom: 16,
-      padding: 16,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      width: width * 0.8,
     },
-    speciesHeader: {
-      marginBottom: 16,
+    errorContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: 24,
     },
-    speciesName: {
-      fontSize: 24,
-      fontWeight: "bold",
-      color: theme.colors.primary,
-      marginBottom: 4,
-    },
-    scientificName: {
-      fontSize: 16,
-      fontStyle: "italic",
+    errorText: {
       color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-    },
-    imageContainer: {
-      height: 200,
-      borderRadius: 12,
-      overflow: "hidden",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#F5F5F5',
-    },
-    speciesImage: {
-      width: "100%",
-      height: "100%",
-    },
-    sectionHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 16,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: theme.colors.primary,
-      flex: 1,
-    },
-    recordingCountBadge: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` :
-        `${theme.colors.primary}10`,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    recordingCountText: {
-      color: theme.colors.primary,
-      fontWeight: "bold",
-      fontSize: 14,
-    },
-    recordingsList: {
-      borderRadius: 12,
-      overflow: "hidden",
-    },
-    recordingItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: 16,
-    },
-    recordingContent: {
-      flex: 1,
-      paddingRight: 12,
-    },
-    recordingTitle: {
       fontSize: 16,
-      fontWeight: "bold",
-      color: theme.colors.onSurface,
-      marginBottom: 6,
+      lineHeight: 22,
+      marginBottom: 24,
+      textAlign: "center",
     },
-    recordingMeta: {
-      flexDirection: "row",
-      alignItems: "center",
+    errorTitle: {
+      color: theme.colors.error,
+      fontSize: 18,
+      fontWeight: "bold",
       marginBottom: 8,
+      marginTop: 16,
+    },
+    goBackButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    goBackText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    header: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      borderBottomWidth: 1,
+      elevation: 4,
+      flexDirection: "row",
+      paddingBottom: 16,
+      paddingHorizontal: 16,
+      paddingTop: 50,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+    },
+    headerTitle: {
+      color: theme.colors.onSurface,
+      flex: 1,
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    loadingCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 4,
+      padding: 24,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      width: width * 0.8,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: 24,
+    },
+    loadingText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      fontSize: 16,
+      marginTop: 16,
     },
     pageReference: {
-      flexDirection: "row",
       alignItems: "center",
+      flexDirection: "row",
       marginRight: 16,
     },
     pageText: {
-      fontSize: 12,
       color: theme.colors.primary,
-      marginLeft: 4,
-    },
-    downloadedBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    downloadedText: {
       fontSize: 12,
-      color: theme.colors.primary,
       marginLeft: 4,
-    },
-    caption: {
-      fontSize: 14,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      lineHeight: 20,
     },
     playButton: {
       marginLeft: 12,
     },
     playButtonInner: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: theme.colors.primary,
-      justifyContent: "center",
       alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 24,
+      height: 48,
+      justifyContent: "center",
+      width: 48,
     },
     playingButton: {
       backgroundColor: isDarkMode ? 
         `${theme.colors.primary}DD` : 
         `${theme.colors.primary}AA`,
     },
-    divider: {
-      height: 1,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#EEEEEE',
+    recordingContent: {
+      flex: 1,
+      paddingRight: 12,
     },
-    emptyContainer: {
-      padding: 32,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    emptyText: {
-      marginTop: 16,
-      fontSize: 16,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      textAlign: "center",
-    },
-    infoText: {
-      fontSize: 16,
-      lineHeight: 24,
-      color: theme.colors.onSurface,
-    },
-    relatedSpeciesList: {
+    recordingCountBadge: {
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}20` :
+        `${theme.colors.primary}10`,
       borderRadius: 12,
-      overflow: "hidden",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#F9F9F9',
+      paddingHorizontal: 12,
+      paddingVertical: 4,
     },
-    relatedSpeciesItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#EEEEEE',
-    },
-    relatedSpeciesName: {
-      fontSize: 16,
-      color: theme.colors.onSurface,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 24,
-    },
-    loadingCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      padding: 24,
-      width: width * 0.8,
-      alignItems: "center",
-      elevation: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-    },
-    loadingText: {
-      marginTop: 16,
-      fontSize: 16,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-    },
-    errorContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 24,
-    },
-    errorCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      padding: 24,
-      width: width * 0.8,
-      alignItems: "center",
-      elevation: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-    },
-    errorTitle: {
-      fontSize: 18,
+    recordingCountText: {
+      color: theme.colors.primary,
+      fontSize: 14,
       fontWeight: "bold",
-      color: theme.colors.error,
-      marginTop: 16,
+    },
+    recordingItem: {
+      alignItems: "center",
+      flexDirection: "row",
+      paddingVertical: 16,
+    },
+    recordingMeta: {
+      alignItems: "center",
+      flexDirection: "row",
       marginBottom: 8,
     },
-    errorText: {
+    recordingTitle: {
+      color: theme.colors.onSurface,
       fontSize: 16,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      textAlign: "center",
-      marginBottom: 24,
-      lineHeight: 22,
+      fontWeight: "bold",
+      marginBottom: 6,
+    },
+    recordingsList: {
+      borderRadius: 12,
+      overflow: "hidden",
     },
     retryButton: {
-      flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
       backgroundColor: theme.colors.primary,
       borderRadius: 20,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
+      flexDirection: "row",
+      justifyContent: "center",
       marginBottom: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
     },
     retryText: {
-      fontSize: 14,
       color: "#FFFFFF",
+      fontSize: 14,
       marginLeft: 8,
     },
-    goBackButton: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
+    scientificName: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      fontSize: 16,
+      fontStyle: "italic",
     },
-    goBackText: {
-      fontSize: 14,
+    sectionHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginBottom: 16,
+    },
+    sectionTitle: {
       color: theme.colors.primary,
-      fontWeight: "500",
+      flex: 1,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    speciesName: {
+      color: theme.colors.primary,
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 4,
     }
   });
 

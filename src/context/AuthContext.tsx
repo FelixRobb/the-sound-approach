@@ -157,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             },
           })
         }
-      } catch (e) {
+      } catch {
         dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" })
       }
     },
@@ -226,7 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             },
           })
         }
-      } catch (e) {
+      } catch {
         dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" })
       }
     },

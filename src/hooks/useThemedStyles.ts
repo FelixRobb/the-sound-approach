@@ -1,7 +1,6 @@
 import { useContext } from 'react';
 import { useTheme } from 'react-native-paper';
 import { ThemeContext } from '../context/ThemeContext';
-import { StyleSheet } from 'react-native';
 import { MD3Theme } from 'react-native-paper';
 
 /**

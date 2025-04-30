@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useContext } from "react"
+import { useState, useEffect, useContext, useCallback } from "react"
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Dimensions, Alert } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { useFocusEffect } from "@react-navigation/native"
@@ -45,7 +45,7 @@ const DownloadsScreen = () => {
   }
 
   // Load downloaded recordings from database
-  const loadDownloads = async () => {
+  const loadDownloads = useCallback(async () => {
     setIsLoading(true)
     try {
       const downloadedRecordings = await getDownloadedRecordings()
@@ -68,7 +68,7 @@ const DownloadsScreen = () => {
       setIsLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [getDownloadedRecordings])
 
   // Check for downloads when screen comes into focus
   useFocusEffect(
@@ -77,13 +77,13 @@ const DownloadsScreen = () => {
       return () => {
         // Optional cleanup if needed
       }
-    }, [])
+    }, [loadDownloads])
   )
 
   // Initial load when component mounts
   useEffect(() => {
     loadDownloads()
-  }, [])
+  }, [loadDownloads])
 
   // Handle audio playback
   const handleAudioPlayback = async (item: DownloadRecord) => {
@@ -174,122 +174,54 @@ const DownloadsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
     backgroundPattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
       backgroundColor: isDarkMode ? 
         `${theme.colors.primary}08` : // Very transparent primary color
         `${theme.colors.primary}05`,
+      bottom: 0,
+      left: 0,
       opacity: 0.6,
-    },
-    header: {
-      backgroundColor: theme.colors.surface,
-      paddingTop: 50,
-      paddingBottom: 16,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      elevation: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-      zIndex: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    headerContent: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 16,
-    },
-    headerTitleContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: "600",
-      color: theme.colors.primary,
-      marginLeft: 8,
-    },
-    headerActions: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    headerButton: {
-      padding: 8,
-      marginLeft: 8,
-      borderRadius: 20,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    profileButton: {
-      marginLeft: 8,
-      borderRadius: 18,
-      overflow: "hidden",
-    },
-    profileButtonBackground: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: theme.colors.primary,
-    },
-    searchBarContainer: {
-      paddingHorizontal: 16,
-      paddingTop: 12,
-      paddingBottom: 12,
-    },
-    searchBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    searchInput: {
-      flex: 1,
-      marginLeft: 8,
-      fontSize: 16,
-      color: theme.colors.onSurface,
-    },
-    storageInfoContainer: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}15` : 
-        `${theme.colors.primary}08`,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-    },
-    storageInfo: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    storageText: {
-      fontSize: 14,
-      color: theme.colors.primary,
-      fontWeight: "500",
+      position: "absolute",
+      right: 0,
+      top: 0,
     },
     clearAllButton: {
       backgroundColor: isDarkMode ? 
         `${theme.colors.primary}20` : 
         `${theme.colors.primary}15`,
+      borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 8,
     },
     clearAllText: {
+      color: theme.colors.primary,
       fontSize: 14,
+      fontWeight: "bold",
+    },
+    clearSearchButton: {
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}20` : 
+        `${theme.colors.primary}10`,
+      borderRadius: 8,
+      marginTop: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    clearSearchText: {
       color: theme.colors.primary,
       fontWeight: "bold",
+    },
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
+    deleteButton: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      width: 40,
     },
     disabledButton: {
       backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
@@ -297,180 +229,158 @@ const DownloadsScreen = () => {
     disabledButtonText: {
       color: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
     },
-    listContent: {
-      padding: 16,
-      paddingBottom: 80, // Extra space for button at bottom
+    downloadActions: {
+      alignItems: "center",
+      flexDirection: "row",
     },
     downloadCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 16,
-      overflow: "hidden",
       elevation: 3,
+      overflow: "hidden",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: isDarkMode ? 0.3 : 0.22,
       shadowRadius: 2.22,
     },
-    downloadHeader: {
-      padding: 16,
-      paddingBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0',
-    },
-    downloadTitle: {
-      fontSize: 17,
-      fontWeight: "bold",
-      color: theme.colors.onSurface,
-    },
-    scientificName: {
-      fontSize: 14,
-      fontStyle: "italic",
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      marginTop: 2,
-    },
     downloadContent: {
       flexDirection: "row",
+      justifyContent: "space-between",
       padding: 16,
       paddingTop: 8,
-      justifyContent: "space-between",
+    },
+    downloadDate: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      fontSize: 12,
+      marginTop: 4,
+    },
+    downloadHeader: {
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0',
+      borderBottomWidth: 1,
+      padding: 16,
+      paddingBottom: 8,
     },
     downloadInfo: {
       flex: 1,
     },
-    speciesName: {
-      fontSize: 15,
+    downloadTitle: {
       color: theme.colors.onSurface,
-      marginBottom: 4,
-    },
-    pageReference: {
-      marginTop: 4,
-      marginBottom: 4,
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}10`,
-      alignSelf: "flex-start",
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 12,
-    },
-    pageText: {
-      fontSize: 12,
-      color: theme.colors.primary,
-    },
-    downloadDate: {
-      fontSize: 12,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      marginTop: 4,
-    },
-    downloadActions: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    playButton: {
-      marginRight: 16,
-    },
-    playButtonInner: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-    },
-    playButtonActive: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}DD` : 
-        `${theme.colors.primary}AA`,
-    },
-    deleteButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 24,
-      marginTop: 48,
+      fontSize: 17,
+      fontWeight: "bold",
     },
     emptyCard: {
+      alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: 16,
-      padding: 24,
-      width: width * 0.8,
-      alignItems: "center",
       elevation: 4,
+      padding: 24,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
+      width: width * 0.8,
     },
-    emptyTitle: {
-      marginTop: 16,
-      fontSize: 18,
-      fontWeight: "bold",
-      color: theme.colors.onSurface,
-      textAlign: "center",
-    },
-    emptyText: {
-      marginTop: 8,
-      fontSize: 14,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      textAlign: "center",
-      lineHeight: 20,
-    },
-    clearSearchButton: {
-      marginTop: 16,
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}10`,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 8,
-    },
-    clearSearchText: {
-      color: theme.colors.primary,
-      fontWeight: "bold",
-    },
-    loadingContainer: {
+    emptyContainer: {
+      alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      alignItems: "center",
+      marginTop: 48,
       padding: 24,
     },
-    loadingCard: {
+    emptyText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      fontSize: 14,
+      lineHeight: 20,
+      marginTop: 8,
+      textAlign: "center",
+    },
+    emptyTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 18,
+      fontWeight: "bold",
+      marginTop: 16,
+      textAlign: "center",
+    },
+    header: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      padding: 24,
-      width: width * 0.8,
-      alignItems: "center",
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      borderBottomWidth: 1,
       elevation: 4,
+      paddingBottom: 16,
+      paddingTop: 50,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
+      zIndex: 10,
+    },
+    headerActions: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    headerButton: {
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      borderRadius: 20,
+      marginLeft: 8,
+      padding: 8,
+    },
+    headerContent: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+    },
+    headerTitle: {
+      color: theme.colors.primary,
+      fontSize: 20,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    headerTitleContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    listContent: {
+      padding: 16,
+      paddingBottom: 80, // Extra space for button at bottom
+    },
+    loadingCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 4,
+      padding: 24,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      width: width * 0.8,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: 24,
     },
     loadingText: {
-      marginTop: 16,
-      fontSize: 16,
       color: theme.colors.onSurface,
+      fontSize: 16,
+      marginTop: 16,
       textAlign: "center",
     },
     manageStorageButton: {
-      position: "absolute",
-      bottom: 20,
-      right: 20,
-      backgroundColor: theme.colors.primary,
-      flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      backgroundColor: theme.colors.primary,
       borderRadius: 24,
+      bottom: 20,
       elevation: 4,
+      flexDirection: "row",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      position: "absolute",
+      right: 20,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.2,
@@ -480,6 +390,96 @@ const DownloadsScreen = () => {
       color: "#FFFFFF",
       fontWeight: "bold",
       marginRight: 8,
+    },
+    pageReference: {
+      alignSelf: "flex-start",
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}20` : 
+        `${theme.colors.primary}10`,
+      borderRadius: 12,
+      marginBottom: 4,
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    pageText: {
+      color: theme.colors.primary,
+      fontSize: 12,
+    },
+    playButton: {
+      marginRight: 16,
+    },
+    playButtonActive: {
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}DD` : 
+        `${theme.colors.primary}AA`,
+    },
+    playButtonInner: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      width: 40,
+    },
+    profileButton: {
+      borderRadius: 18,
+      marginLeft: 8,
+      overflow: "hidden",
+    },
+    profileButtonBackground: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      padding: 8,
+    },
+    scientificName: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      fontSize: 14,
+      fontStyle: "italic",
+      marginTop: 2,
+    },
+    searchBar: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderRadius: 12,
+      flexDirection: "row",
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    searchBarContainer: {
+      paddingBottom: 12,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+    },
+    searchInput: {
+      color: theme.colors.onSurface,
+      flex: 1,
+      fontSize: 16,
+      marginLeft: 8,
+    },
+    speciesName: {
+      color: theme.colors.onSurface,
+      fontSize: 15,
+      marginBottom: 4,
+    },
+    storageInfo: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    storageInfoContainer: {
+      backgroundColor: isDarkMode ? 
+        `${theme.colors.primary}15` : 
+        `${theme.colors.primary}08`,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    storageText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "500",
     },
   });
 

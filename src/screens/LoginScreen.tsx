@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native"
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native"
 import { TextInput, Button, HelperText } from "react-native-paper"
 import { useNavigation } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
@@ -10,8 +10,8 @@ import { AuthContext } from "../context/AuthContext"
 import { RootStackParamList } from "../types"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { useThemedStyles } from "../hooks/useThemedStyles"
+import React from "react"
 
-const { width } = Dimensions.get("window")
 
 const LoginScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
@@ -27,137 +27,137 @@ const LoginScreen = () => {
 
   // Create styles based on theme
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
+    backButton: {
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      borderRadius: 20,
+      padding: 8,
     },
     backgroundPattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
+      backgroundColor: theme.colors.background,
       bottom: 0,
-      backgroundColor: theme.colors.background,
+      left: 0,
       opacity: 0.6,
+      position: "absolute",
+      right: 0,
+      top: 0,
     },
-    header: {
-      paddingTop: 50,
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      backgroundColor: theme.colors.background,
+    button: {
+      borderRadius: 8,
+      marginTop: 8,
     },
-    headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    headerTitleContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginLeft: 12,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      marginLeft: 8,
-      color: theme.colors.onBackground,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      paddingVertical: 24,
-      paddingHorizontal: 16,
+    buttonContent: {
+      paddingVertical: 8,
     },
     card: {
-      padding: 24,
-      borderRadius: 12,
       backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      elevation: 4,
+      marginHorizontal: 4,
+      padding: 24,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 8,
-      elevation: 4,
-      marginHorizontal: 4,
     },
-    title: {
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: 8,
-      textAlign: 'center',
-      color: theme.colors.onSurface,
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
     },
-    subtitle: {
-      fontSize: 16,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-      marginBottom: 24,
-      textAlign: 'center',
+    errorContainer: {
+      alignItems: 'center',
+      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
+      borderRadius: 8,
+      flexDirection: 'row',
+      marginBottom: 16,
+      padding: 12,
+    },
+    errorMessage: {
+      color: theme.colors.error,
+      flex: 1,
+      marginLeft: 8,
+    },
+    errorText: {
+      color: theme.colors.error,
+      marginBottom: 16,
+      marginTop: -12,
     },
     form: {
       marginTop: 8,
     },
-    inputContainer: {
-      marginBottom: 16,
-      position: 'relative',
-      flexDirection: 'row',
-      alignItems: 'center',
+    header: {
+      backgroundColor: theme.colors.background,
+      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomWidth: 1,
+      paddingBottom: 8,
+      paddingHorizontal: 16,
+      paddingTop: 50,
     },
-    inputIconContainer: {
-      position: 'absolute',
-      left: 8,
-      zIndex: 1,
-      height: '100%',
-      justifyContent: 'center',
-      paddingTop: 8,
+    headerContent: {
+      alignItems: 'center',
+      flexDirection: 'row',
+    },
+    headerTitle: {
+      color: theme.colors.onBackground,
+      fontSize: 20,
+      fontWeight: '600',
+      marginLeft: 8,
+    },
+    headerTitleContainer: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      marginLeft: 12,
     },
     input: {
+      backgroundColor: theme.colors.surface,
       flex: 1,
       paddingLeft: 40,
-      backgroundColor: theme.colors.surface,
+    },
+    inputContainer: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      marginBottom: 16,
+      position: 'relative',
+    },
+    inputIconContainer: {
+      height: '100%',
+      justifyContent: 'center',
+      left: 8,
+      paddingTop: 8,
+      position: 'absolute',
+      zIndex: 1,
     },
     inputOutline: {
       borderRadius: 8,
     },
-    errorText: {
-      color: theme.colors.error,
-      marginTop: -12,
-      marginBottom: 16,
-    },
-    errorContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
-      padding: 12,
-      borderRadius: 8,
-      marginBottom: 16,
-    },
-    errorMessage: {
-      marginLeft: 8,
-      color: theme.colors.error,
-      flex: 1,
-    },
-    button: {
-      marginTop: 8,
-      borderRadius: 8,
-    },
-    buttonContent: {
-      paddingVertical: 8,
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 24,
     },
     signupContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
       marginTop: 24,
     },
-    signupText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-    },
     signupLink: {
       color: theme.colors.primary,
       fontWeight: '600',
+    },
+    signupText: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+    },
+    subtitle: {
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      fontSize: 16,
+      marginBottom: 24,
+      textAlign: 'center',
+    },
+    title: {
+      color: theme.colors.onSurface,
+      fontSize: 24,
+      fontWeight: '700',
+      marginBottom: 8,
+      textAlign: 'center',
     },
   });
 
@@ -211,7 +211,7 @@ const LoginScreen = () => {
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
@@ -229,8 +229,8 @@ const LoginScreen = () => {
     <View style={styles.container}>
       <BackgroundPattern />
       <Header />
-      
-      <ScrollView 
+
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -260,7 +260,7 @@ const LoginScreen = () => {
             </View>
             {emailError ? (
               <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} /> {emailError}
+                <Ionicons name="alert-circle-outline" size={14} />{emailError}
               </HelperText>
             ) : null}
 
@@ -291,7 +291,7 @@ const LoginScreen = () => {
             </View>
             {passwordError ? (
               <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} /> {passwordError}
+                <Ionicons name="alert-circle-outline" size={14} />{passwordError}
               </HelperText>
             ) : null}
 
@@ -309,12 +309,10 @@ const LoginScreen = () => {
               disabled={isLoading}
               style={styles.button}
               contentStyle={styles.buttonContent}
-            >
-              Sign In
-            </Button>
+            ><Text>Sign In</Text></Button>
 
             <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don't have an account? </Text>
+              <Text style={styles.signupText}>Don&apos;t have an account? </Text>
               <TouchableOpacity onPress={() => {
                 navigation.navigate("SignUp")
               }}>

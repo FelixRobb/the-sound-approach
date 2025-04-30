@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-import { createContext, useState, useEffect, useContext } from "react"
+import { createContext, useState, useEffect, useContext, useCallback } from "react"
 import * as FileSystem from "expo-file-system"
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { AuthContext } from "./AuthContext"
 import { supabase } from "../lib/supabase"
-import type { Recording, DownloadStatus, DownloadRecord, DownloadContextType, DownloadInfo } from "../types"
+import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types"
 
 // Create context
 export const DownloadContext = createContext<DownloadContextType>({
@@ -28,18 +28,9 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [downloadedRecordings, setDownloadedRecordings] = useState<string[]>([])
   const [totalStorageUsed, setTotalStorageUsed] = useState(0)
 
-  // Initialize downloads from storage
-  useEffect(() => {
-    if (authState.userToken) {
-      loadDownloadedRecordings()
-      calculateStorageUsed()
-    }
-  }, [authState.userToken])
-
   // Load downloaded recordings from AsyncStorage
-  const loadDownloadedRecordings = async () => {
+  const loadDownloadedRecordings = useCallback(async () => {
     try {
-      // Get the downloads list key
       const downloadsListKey = `downloads_list_${authState.user?.id || 'anonymous'}`
       const downloadsList = await AsyncStorage.getItem(downloadsListKey)
 
@@ -53,7 +44,15 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.error("Error loading downloaded recordings:", error)
       setDownloadedRecordings([])
     }
-  }
+  }, [authState.user?.id])
+
+  // Initialize downloads from storage
+  useEffect(() => {
+    if (authState.userToken) {
+      loadDownloadedRecordings()
+      calculateStorageUsed()
+    }
+  }, [authState.userToken, loadDownloadedRecordings])
 
   // Calculate total storage used
   const calculateStorageUsed = async () => {
@@ -119,11 +118,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (!audioUrlData?.publicUrl) throw new Error("Failed to get audio URL")
 
-      const audioUrl = audioUrlData.publicUrl
-      const audioDownload = await FileSystem.downloadAsync(audioUrl, audioPath, {
-        md5: true,
-      })
-
       // Download sonogram image
       const sonogramPath = `${downloadsDir}sonogram_${recording.sonogram_id}.png`
       const { data: sonogramUrlData } = await supabase.storage
@@ -131,11 +125,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .getPublicUrl(`${recording.sonogram_id}.png`)
 
       if (!sonogramUrlData?.publicUrl) throw new Error("Failed to get sonogram URL")
-
-      const sonogramUrl = sonogramUrlData.publicUrl
-      const sonogramDownload = await FileSystem.downloadAsync(sonogramUrl, sonogramPath, {
-        md5: true,
-      })
 
       // Get species info if available
       let speciesName = ""

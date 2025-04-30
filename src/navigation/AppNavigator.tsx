@@ -18,11 +18,11 @@ import DownloadsScreen from "../screens/DownloadsScreen"
 import ProfileSettingsScreen from "../screens/ProfileSettingsScreen"
 import SearchScreen from "../screens/SearchScreen"
 import OfflineNoticeScreen from "../screens/OfflineNoticeScreen"
-import { lightTheme, darkTheme, navigationDarkTheme, navigationLightTheme } from "../theme"
+import { navigationDarkTheme, navigationLightTheme } from "../theme"
+import React from "react"
 
 // Context
 import { AuthContext } from "../context/AuthContext"
-import { NetworkContext } from "../context/NetworkContext"
 
 // Stack navigators
 const AuthStack = createNativeStackNavigator()
@@ -87,7 +87,6 @@ const MainNavigator = () => {
 // Root navigator that switches between auth and main flows
 const AppNavigator = () => {
   const { state: authState } = useContext(AuthContext)
-  const { isConnected } = useContext(NetworkContext)
   const { isDarkMode } = useContext(ThemeContext);
   const navTheme = isDarkMode ? navigationDarkTheme : navigationLightTheme;
 
