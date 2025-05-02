@@ -23,7 +23,7 @@ const DownloadsScreen = () => {
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } = useContext(DownloadContext)
   const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
   const { isDarkMode } = useContext(ThemeContext)
-  const { theme } = useThemedStyles()
+  const { theme, colors } = useThemedStyles()
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -98,7 +98,6 @@ const DownloadsScreen = () => {
       } else {
         // Load and play new audio
         await loadAudio(`file://${item.audio_path}`, item.audio_path, true)
-        await playAudio()
       }
     } catch (error) {
       console.error("Audio playback error:", error)
@@ -175,9 +174,7 @@ const DownloadsScreen = () => {
   // Create styles with theme support
   const styles = StyleSheet.create({
     backgroundPattern: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}08` : // Very transparent primary color
-        `${theme.colors.primary}05`,
+      backgroundColor: isDarkMode ? colors.alpha.primary[8] : colors.alpha.primary[5],
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -186,9 +183,7 @@ const DownloadsScreen = () => {
       top: 0,
     },
     clearAllButton: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}15`,
+      backgroundColor: isDarkMode ? colors.alpha.primary[20] : colors.alpha.primary[15],
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 6,
@@ -199,9 +194,7 @@ const DownloadsScreen = () => {
       fontWeight: "bold",
     },
     clearSearchButton: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}10`,
+      backgroundColor: isDarkMode ? colors.alpha.primary[20] : colors.alpha.primary[10],
       borderRadius: 8,
       marginTop: 16,
       paddingHorizontal: 16,
@@ -217,17 +210,18 @@ const DownloadsScreen = () => {
     },
     deleteButton: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
+      backgroundColor: isDarkMode ? colors.alpha.error[20] : colors.alpha.error[10],
       borderRadius: 20,
       height: 40,
       justifyContent: "center",
       width: 40,
     },
     disabledButton: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
     },
     disabledButtonText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
+      color: isDarkMode ? colors.textSecondary : colors.textSecondary,
+      opacity: 0.4,
     },
     downloadActions: {
       alignItems: "center",
@@ -238,7 +232,7 @@ const DownloadsScreen = () => {
       borderRadius: 16,
       elevation: 3,
       overflow: "hidden",
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: isDarkMode ? 0.3 : 0.22,
       shadowRadius: 2.22,
@@ -250,12 +244,12 @@ const DownloadsScreen = () => {
       paddingTop: 8,
     },
     downloadDate: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: colors.textSecondary,
       fontSize: 12,
       marginTop: 4,
     },
     downloadHeader: {
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0',
+      borderBottomColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderBottomWidth: 1,
       padding: 16,
       paddingBottom: 8,
@@ -274,7 +268,7 @@ const DownloadsScreen = () => {
       borderRadius: 16,
       elevation: 4,
       padding: 24,
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
@@ -288,7 +282,7 @@ const DownloadsScreen = () => {
       padding: 24,
     },
     emptyText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 20,
       marginTop: 8,
@@ -303,14 +297,14 @@ const DownloadsScreen = () => {
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderBottomLeftRadius: 20,
       borderBottomRightRadius: 20,
       borderBottomWidth: 1,
       elevation: 4,
       paddingBottom: 16,
       paddingTop: 50,
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
@@ -321,7 +315,7 @@ const DownloadsScreen = () => {
       flexDirection: "row",
     },
     headerButton: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: isDarkMode ? colors.alpha.white[8] : colors.alpha.black[5],
       borderRadius: 20,
       marginLeft: 8,
       padding: 8,
@@ -344,7 +338,7 @@ const DownloadsScreen = () => {
     },
     listContent: {
       padding: 16,
-      paddingBottom: 80, // Extra space for button at bottom
+      paddingBottom: 80,
     },
     loadingCard: {
       alignItems: "center",
@@ -352,7 +346,7 @@ const DownloadsScreen = () => {
       borderRadius: 16,
       elevation: 4,
       padding: 24,
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
@@ -381,7 +375,7 @@ const DownloadsScreen = () => {
       paddingVertical: 12,
       position: "absolute",
       right: 20,
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.2,
       shadowRadius: 3,
@@ -393,9 +387,7 @@ const DownloadsScreen = () => {
     },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}10`,
+      backgroundColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderRadius: 12,
       marginBottom: 4,
       marginTop: 4,
@@ -410,9 +402,7 @@ const DownloadsScreen = () => {
       marginRight: 16,
     },
     playButtonActive: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}DD` : 
-        `${theme.colors.primary}AA`,
+      backgroundColor: isDarkMode ? `${theme.colors.primary}DD` : `${theme.colors.primary}AA`,
     },
     playButtonInner: {
       alignItems: "center",
@@ -433,14 +423,14 @@ const DownloadsScreen = () => {
       padding: 8,
     },
     scientificName: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: colors.textSecondary,
       fontSize: 14,
       fontStyle: "italic",
       marginTop: 2,
     },
     searchBar: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderRadius: 12,
       flexDirection: "row",
       paddingHorizontal: 12,
@@ -468,9 +458,7 @@ const DownloadsScreen = () => {
       justifyContent: "space-between",
     },
     storageInfoContainer: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}15` : 
-        `${theme.colors.primary}08`,
+      backgroundColor: isDarkMode ? colors.alpha.primary[15] : colors.alpha.primary[8],
       borderBottomLeftRadius: 20,
       borderBottomRightRadius: 20,
       paddingHorizontal: 16,

@@ -20,21 +20,19 @@ const ProfileSettingsScreen = () => {
   const { state: authState, signOut } = useContext(AuthContext)
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext)
   const { theme: themeMode, isDarkMode, setTheme } = useContext(ThemeContext)
-  const { theme } = useThemedStyles()
+  const { theme, colors } = useThemedStyles()
 
   const [showThemeOptions, setShowThemeOptions] = useState(false)
 
   // Create styles based on theme
   const styles = StyleSheet.create({
     backButton: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: isDarkMode ? colors.alpha.white[8] : colors.alpha.black[5],
       borderRadius: 20,
       padding: 8,
     },
     backgroundPattern: {
-      backgroundColor: isDarkMode ?
-        `${theme.colors.primary}08` : // Very transparent primary color
-        `${theme.colors.primary}05`,
+      backgroundColor: isDarkMode ? colors.alpha.primary[8] : colors.alpha.primary[5],
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -51,7 +49,7 @@ const ProfileSettingsScreen = () => {
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderBottomWidth: 1,
       elevation: 2,
       paddingBottom: 8,
@@ -77,7 +75,7 @@ const ProfileSettingsScreen = () => {
       paddingVertical: 6,
     },
     listItemDescription: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      color: isDarkMode ? colors.textSecondary : colors.textSecondary,
     },
     listItemTitle: {
       color: theme.colors.onSurface,
@@ -93,14 +91,14 @@ const ProfileSettingsScreen = () => {
       elevation: 2,
       marginBottom: 16,
       padding: 4,
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 4,
     },
     sectionHeader: {
       alignItems: "center",
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderBottomWidth: 1,
       flexDirection: "row",
       padding: 12,
@@ -112,7 +110,7 @@ const ProfileSettingsScreen = () => {
       marginLeft: 8,
     },
     storageBar: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      backgroundColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[10],
       borderRadius: 4,
       height: 8,
       marginBottom: 4,
@@ -126,7 +124,7 @@ const ProfileSettingsScreen = () => {
       height: '100%',
     },
     storageText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      color: isDarkMode ? colors.textSecondary : colors.textSecondary,
       fontSize: 12,
       marginRight: 16,
       textAlign: 'right',
@@ -146,11 +144,11 @@ const ProfileSettingsScreen = () => {
       paddingVertical: 12,
     },
     themeOptionDark: {
-      backgroundColor: '#121212',
-      borderColor: themeMode === 'dark' ? theme.colors.primary : '#333333',
+      backgroundColor: colors.dark.background,
+      borderColor: themeMode === 'dark' ? theme.colors.primary : colors.dark.divider,
     },
     themeOptionDivider: {
-      backgroundColor: isDarkMode ? '#FFFFFF' : '#121212',
+      backgroundColor: isDarkMode ? colors.dark.text : colors.light.text,
       bottom: 0,
       left: '50%',
       position: 'absolute',
@@ -162,12 +160,12 @@ const ProfileSettingsScreen = () => {
       padding: 8,
     },
     themeOptionLight: {
-      backgroundColor: '#FFFFFF',
-      borderColor: themeMode === 'light' ? theme.colors.primary : '#E0E0E0',
+      backgroundColor: colors.light.background,
+      borderColor: themeMode === 'light' ? theme.colors.primary : colors.light.divider,
     },
     themeOptionSystem: {
-      backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
-      borderColor: themeMode === 'system' ? theme.colors.primary : isDarkMode ? '#333333' : '#E0E0E0',
+      backgroundColor: isDarkMode ? colors.dark.background : colors.light.background,
+      borderColor: themeMode === 'system' ? theme.colors.primary : isDarkMode ? colors.dark.divider : colors.light.divider,
       overflow: 'hidden',
     },
     themeOptionText: {

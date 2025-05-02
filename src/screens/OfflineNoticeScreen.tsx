@@ -16,7 +16,7 @@ const OfflineNoticeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useContext(NetworkContext)
   const { downloadedRecordings } = useContext(DownloadContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const { theme, colors, isDarkMode } = useThemedStyles()
 
   const styles = StyleSheet.create({
     button: {
@@ -25,7 +25,7 @@ const OfflineNoticeScreen = () => {
     },
     container: {
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      backgroundColor: colors.dark.overlay,
       flex: 1,
       justifyContent: "center",
     },
@@ -35,14 +35,14 @@ const OfflineNoticeScreen = () => {
       borderRadius: 16,
       elevation: 6,
       padding: 24,
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
       width: "80%",
     },
     description: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      color: colors.textSecondary,
       fontSize: 16,
       marginBottom: 24,
       textAlign: "center",
@@ -52,7 +52,7 @@ const OfflineNoticeScreen = () => {
       width: "100%",
     },
     noDownloadsText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+      color: colors.textSecondary,
       fontSize: 14,
       fontStyle: "italic",
       marginBottom: 24,
@@ -60,7 +60,7 @@ const OfflineNoticeScreen = () => {
     },
     reconnectedContainer: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+      backgroundColor: isDarkMode ? colors.alpha.success[20] : colors.alpha.success[10],
       borderRadius: 8,
       flexDirection: "row",
       marginTop: 24,
@@ -68,10 +68,11 @@ const OfflineNoticeScreen = () => {
       width: "100%",
     },
     reconnectedText: {
-      color: isDarkMode ? '#81C784' : '#2E7D32',
+      color: isDarkMode ? colors.dark.text : colors.light.text,
       flex: 1,
       fontSize: 14,
       marginLeft: 8,
+      opacity: 0.8,
     },
     title: {
       color: theme.colors.onSurface,

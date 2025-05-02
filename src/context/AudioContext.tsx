@@ -1,7 +1,7 @@
 import type React from "react"
-import { createContext, useState, useEffect, useRef } from "react"
+import { createContext, useState, useEffect, useRef, useCallback } from "react"
 import { Audio, type AVPlaybackStatus, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av"
-import { AppState, type AppStateStatus, Platform } from "react-native"
+import { AppState, type AppStateStatus } from "react-native"
 
 // Types
 type PlaybackSpeed = 0.5 | 1 | 1.5 | 2
@@ -64,43 +64,10 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const isMountedRef = useRef(true)
   const isLoadingRef = useRef(false)
   const lastPositionUpdateRef = useRef(0)
-  const statusUpdateCountRef = useRef(0)
   const appState = useRef(AppState.currentState)
   const loadCancelTokenRef = useRef<number>(0)
-  const isSeekingRef = useRef<boolean>(false);
-  const lastSeekTimeRef = useRef<number>(0);
 
-  useEffect(() => {
-    isMountedRef.current = true
-
-    const setupAudio = async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-          shouldDuckAndroid: true,
-          playThroughEarpieceAndroid: false,
-          // Add these important audio mode settings
-          interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-        })
-      } catch (error) {
-        console.error("Error setting audio mode:", error)
-      }
-    }
-
-    setupAudio()
-
-    const subscription = AppState.addEventListener("change", handleAppStateChange)
-
-    return () => {
-      isMountedRef.current = false
-      subscription.remove()
-      cleanupAudio()
-    }
-  }, [])
-
-  const cleanupAudio = async () => {
+  const cleanupAudio = useCallback(async () => {
     try {
       if (soundRef.current) {
         // Make sure to stop first to prevent lingering audio
@@ -111,9 +78,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (e) {
       console.error("Error cleaning up audio:", e)
     }
-  }
+  }, []);
 
-  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+  const handleAppStateChange = useCallback(async (nextAppState: AppStateStatus) => {
     if (appState.current === "active" && nextAppState.match(/inactive|background/)) {
       if (audioState.isPlaying && soundRef.current) {
         try {
@@ -143,49 +110,66 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     
     appState.current = nextAppState
-  }
+  }, [audioState.isPlaying]);
 
-  const resetAudio = async () => {
+  useEffect(() => {
+    isMountedRef.current = true
+
+    const setupAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+          // Add these important audio mode settings
+          interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+          interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+        })
+      } catch (error) {
+        console.error("Error setting audio mode:", error)
+      }
+    }
+
+    setupAudio()
+
+    const subscription = AppState.addEventListener("change", handleAppStateChange)
+
+    return () => {
+      isMountedRef.current = false
+      subscription.remove()
+      cleanupAudio()
+    }
+  }, [handleAppStateChange, cleanupAudio])
+
+  const resetAudio = useCallback(async () => {
     // Cancel any ongoing load operation
     loadCancelTokenRef.current++
     
     await cleanupAudio()
     setAudioState(initialAudioState)
-  }
+  }, [cleanupAudio]);
 
   const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (!isMountedRef.current || !status.isLoaded) return
     
-    // Don't process updates during active seeking or shortly after
-    if (isSeekingRef.current || (Date.now() - lastSeekTimeRef.current < 500)) return;
-    
+    // Much simpler logic for status updates
     const now = Date.now();
-    const timeSinceLastUpdate = now - lastPositionUpdateRef.current;
     
-    // Important state changes that should always be reflected
-    const isStateChange = 
-      status.isPlaying !== audioState.isPlaying || 
-      status.isBuffering !== audioState.isBuffering ||
-      status.didJustFinish;
-      
-    // Throttle position updates heavily to avoid feedback loops
-    const shouldUpdatePosition = 
-      timeSinceLastUpdate > 1000 || // Only update position once per second at most
-      Math.abs(status.positionMillis - audioState.position) > 3000; // Unless there's a big jump
-      
-    if (isStateChange || shouldUpdatePosition) {
-      if (shouldUpdatePosition) {
-        lastPositionUpdateRef.current = now;
-      }
-      
-      setAudioState(prev => ({
-        ...prev,
-        isPlaying: status.isPlaying,
-        duration: status.durationMillis || prev.duration,
-        isBuffering: status.isBuffering || false,
-        position: shouldUpdatePosition ? status.positionMillis : prev.position
-      }));
+    // Only update position every 500ms to prevent feedback loops
+    const shouldUpdatePosition = now - lastPositionUpdateRef.current > 500;
+    
+    if (shouldUpdatePosition) {
+      lastPositionUpdateRef.current = now;
     }
+    
+    setAudioState(prev => ({
+      ...prev,
+      isPlaying: status.isPlaying,
+      duration: status.durationMillis || prev.duration,
+      isBuffering: status.isBuffering || false,
+      position: shouldUpdatePosition ? status.positionMillis : prev.position
+    }));
   
     if (status.didJustFinish && !status.isLooping) {
       soundRef.current?.setPositionAsync(0).catch(() => {})
@@ -193,105 +177,41 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }
 
   const loadAudio = async (uri: string, audioId: string, autoPlay: boolean = false): Promise<boolean> => {
-    if (isLoadingRef.current) {
-      // Don't start a new load if one is in progress
-      console.log("Already loading audio, ignoring request")
-      return false
-    }
+    // Clean up properly before loading new audio
+    await cleanupAudio();
+    isLoadingRef.current = true;
     
-    isLoadingRef.current = true
-    const currentLoadToken = ++loadCancelTokenRef.current
-  
     try {
       // Reset state before loading
       setAudioState({
         ...initialAudioState,
         isBuffering: true,
         loadProgress: 0
-      })
+      });
   
-      await cleanupAudio()
+      console.log("Creating sound from URI:", uri);
       
-      // Check if loading was cancelled
-      if (currentLoadToken !== loadCancelTokenRef.current) {
-        console.log("Audio loading cancelled")
-        return false
-      }
-  
-      console.log("Creating sound from URI:", uri)
-      
-      // Set appropriate buffering strategy based on platform
-      const bufferConfig = Platform.OS === 'ios' 
-        ? { iosPreferredBufferSize: 20 * 1024 }  // 20KB buffer for iOS
-        : { androidMaxBufferSize: 500 * 1024 }   // 500KB buffer for Android
-  
-      const initialStatus = {
-        shouldPlay: autoPlay,
-        rate: 1.0,
-        shouldCorrectPitch: true,
-        volume: 1.0,
-        isMuted: false,
-        isLooping: false,
-        progressUpdateIntervalMillis: 100,
-        ...bufferConfig
-      }
-
-  
-      // Create the sound with properly typed parameters
+      // Simplified creation with fewer options
       const { sound, status } = await Audio.Sound.createAsync(
         { uri },
-        initialStatus,
-        onPlaybackStatusUpdate,
-        true // Enable download progress updates instead of passing the callback directly
-      )
+        {
+          shouldPlay: false, // Always load paused first for reliability
+          progressUpdateIntervalMillis: 500, // Less frequent updates
+        },
+        onPlaybackStatusUpdate
+      );
       
-      // Set the download progress listener separately after creation
-      sound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate)
+      soundRef.current = sound;
       
-      // Check if loading was cancelled during creation
-      if (currentLoadToken !== loadCancelTokenRef.current) {
-        await sound.unloadAsync();
-        console.log("Audio loading cancelled after creation")
-        return false
-      }
-  
-      soundRef.current = sound
-  
       if (!status.isLoaded) {
-        throw new Error("Sound loaded but not ready")
+        throw new Error("Sound loaded but not ready");
       }
-  
-      // Pre-buffer some audio before allowing playback
-      await new Promise<void>((resolve) => {
-        const bufferTimeout = setTimeout(() => {
-          resolve() // Resolve anyway after timeout to prevent hanging
-        }, 1500)
-        
-        // Wait for buffering to complete or timeout
-        const bufferStatusCallback = (newStatus: AVPlaybackStatus) => {
-          if (!newStatus.isLoaded) return
-          
-          const hasBuffered = Platform.OS === 'ios' ? 
-            !newStatus.isBuffering || newStatus.positionMillis > 0 :
-            true // Android buffers differently
-            
-          if (hasBuffered) {
-            clearTimeout(bufferTimeout)
-            sound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate)
-            resolve()
-          }
-        }
-  
-        sound.setOnPlaybackStatusUpdate(bufferStatusCallback)
-        
-        // Start buffering by setting position to beginning
-        sound.setPositionAsync(0).catch(() => {})
-      })
-  
+      
+      // Set state after successful load
       setAudioState({
         isLoaded: true,
         isPlaying: false,
-        position: 0, 
+        position: 0,
         duration: status.durationMillis || 0,
         playbackSpeed: 1,
         isLooping: false,
@@ -299,51 +219,56 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         loadError: null,
         isBuffering: false,
         loadProgress: 1.0
-      })
-  
-      return true
+      });
+      
+      // Start playback after successful loading if autoPlay is true
+      if (autoPlay && soundRef.current) {
+        // Short delay to ensure audio is ready
+        setTimeout(() => {
+          soundRef.current?.playAsync().catch(err => 
+            console.error("Error auto-playing after load:", err)
+          );
+        }, 200);
+      }
+      
+      return true;
     } catch (error) {
-      console.error("Error loading audio:", error)
+      console.error("Error loading audio:", error);
       
-      // Only update state if this is still the current load operation
-      if (currentLoadToken === loadCancelTokenRef.current) {
-        setAudioState({
-          ...initialAudioState,
-          loadError: error instanceof Error ? error.message : "Unknown error"
-        })
-      }
+      setAudioState({
+        ...initialAudioState,
+        loadError: error instanceof Error ? error.message : "Unknown error"
+      });
       
-      return false
+      return false;
     } finally {
-      if (currentLoadToken === loadCancelTokenRef.current) {
-        isLoadingRef.current = false
-      }
+      isLoadingRef.current = false;
     }
   }
 
   const playAudio = async (): Promise<boolean> => {
-  if (!soundRef.current || !audioState.isLoaded) return false
-  
-  try {
-    console.log("Playing audio")
+    if (!soundRef.current || !audioState.isLoaded) return false;
     
-    // Set audio active again in case it was deactivated
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      shouldDuckAndroid: true,
-    })
-    
-    // Mark current time to prevent position updates for a moment
-    lastPositionUpdateRef.current = Date.now()
-    
-    const result = await soundRef.current.playAsync()
-    return result.isLoaded && result.isPlaying
-  } catch (error) {
-    console.error("Error playing audio:", error)
-    return false
+    try {
+      console.log("Playing audio");
+      
+      // Reset audio mode on each play for better reliability
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      });
+      
+      // Play the audio
+      const result = await soundRef.current.playAsync();
+      return result.isLoaded && result.isPlaying;
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      return false;
+    }
   }
-}
 
   const pauseAudio = async (): Promise<boolean> => {
     if (!soundRef.current || !audioState.isLoaded) return false
@@ -373,28 +298,15 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }
 
   const seekAudio = async (position: number): Promise<boolean> => {
-    if (!soundRef.current || !audioState.isLoaded) return false
+    if (!soundRef.current || !audioState.isLoaded) return false;
     
     try {
-      console.log("Seeking to position:", position)
-      
-      // Add stronger debounce/throttle
-      const seekTimeNow = Date.now()
-      
-      // Ignore very rapid seek requests
-      if (isSeekingRef.current || seekTimeNow - lastSeekTimeRef.current < 300) {
-        console.log("Ignoring rapid seek request")
-        return false
-      }
-      
-      // Set flag to prevent feedback loops
-      isSeekingRef.current = true;
-      lastSeekTimeRef.current = seekTimeNow;
+      console.log("Seeking to position:", position);
       
       // Ensure position is within bounds
       const safePosition = Math.max(0, Math.min(position, audioState.duration));
       
-      // Manually update state first to provide immediate visual feedback
+      // Update state immediately for responsive UI
       setAudioState(prev => ({ 
         ...prev, 
         position: safePosition,
@@ -402,29 +314,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }));
       
       // Perform the actual seek
-      const result = await soundRef.current.setPositionAsync(safePosition);
+      await soundRef.current.setPositionAsync(safePosition);
       
-      // Update last position timestamp to prevent immediate position updates
-      lastPositionUpdateRef.current = Date.now() + 500; // Add 500ms buffer
+      // Prevent position updates for a moment to avoid flicker
+      lastPositionUpdateRef.current = Date.now();
       
-      // Clear seeking flag with a small delay to ensure any pending updates have completed
-      setTimeout(() => {
-        isSeekingRef.current = false;
-        
-        // Update final state after seek is complete and delay has passed
-        if (isMountedRef.current) {
-          setAudioState(prev => ({ 
-            ...prev, 
-            position: safePosition,
-            isBuffering: false 
-          }));
-        }
-      }, 300);
-      
-      return result.isLoaded;
+      return true;
     } catch (error) {
       console.error("Seek operation failed", error);
-      isSeekingRef.current = false;
       setAudioState(prev => ({ ...prev, isBuffering: false }));
       return false;
     }
@@ -515,7 +412,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         clearInterval(watchdogTimer);
       }
     };
-  }, [audioState.isBuffering]);
+  }, [audioState.isBuffering, audioState.isPlaying, audioState.position, resetAudio]);
 
   return (
     <AudioContext.Provider

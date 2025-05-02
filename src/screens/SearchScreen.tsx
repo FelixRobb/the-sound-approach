@@ -19,7 +19,7 @@ const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useContext(NetworkContext)
   const { isDownloaded } = useContext(DownloadContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const { theme, colors, isDarkMode } = useThemedStyles()
 
   const [searchQuery, setSearchQuery] = useState("")
   const [results, setResults] = useState<Recording[]>([])
@@ -38,7 +38,7 @@ const SearchScreen = () => {
     },
     downloadedBadge: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+      backgroundColor: isDarkMode ? colors.alpha.success[20] : colors.alpha.success[10],
       borderRadius: 4,
       flexDirection: "row",
       marginLeft: 8,
@@ -46,7 +46,7 @@ const SearchScreen = () => {
       paddingVertical: 4,
     },
     downloadedText: {
-      color: isDarkMode ? '#81C784' : '#2E7D32',
+      color: theme.colors.primary,
       fontSize: 12,
       marginLeft: 4,
     },
@@ -55,18 +55,19 @@ const SearchScreen = () => {
       paddingVertical: 48,
     },
     emptyRecentText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
+      color: colors.textSecondary,
       fontStyle: "italic",
       marginTop: 24,
+      opacity: 0.5,
       textAlign: "center",
     },
     emptyText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      color: colors.textSecondary,
       marginTop: 16,
       textAlign: "center",
     },
     filterChip: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: isDarkMode ? colors.alpha.white[8] : colors.alpha.black[5],
       marginRight: 8,
     },
     filterContainer: {
@@ -88,7 +89,7 @@ const SearchScreen = () => {
     },
     offlineNotice: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.1)',
+      backgroundColor: isDarkMode ? colors.alpha.warning[20] : colors.alpha.warning[10],
       borderRadius: 8,
       flexDirection: "row",
       marginHorizontal: 16,
@@ -96,20 +97,20 @@ const SearchScreen = () => {
       padding: 12,
     },
     offlineText: {
-      color: isDarkMode ? '#FFCC80' : '#E65100',
+      color: colors.warning,
       flex: 1,
       marginLeft: 8,
     },
     pageReference: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: isDarkMode ? colors.alpha.white[8] : colors.alpha.black[5],
       borderRadius: 4,
       flexDirection: "row",
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
     pageText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+      color: colors.textSecondary,
       fontSize: 12,
       marginLeft: 4,
     },
@@ -124,7 +125,7 @@ const SearchScreen = () => {
     },
     recentItem: {
       alignItems: "center",
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderBottomWidth: 1,
       flexDirection: "row",
       paddingVertical: 12,
@@ -159,7 +160,7 @@ const SearchScreen = () => {
       fontWeight: "600",
     },
     scientificName: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      color: colors.textSecondary,
       fontSize: 14,
       fontStyle: "italic",
       marginTop: 4,

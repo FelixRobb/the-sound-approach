@@ -16,7 +16,7 @@ import React from "react"
 const LoginScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { signIn, state: authState, clearError } = useContext(AuthContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const { theme, colors, isDarkMode } = useThemedStyles()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -28,12 +28,12 @@ const LoginScreen = () => {
   // Create styles based on theme
   const styles = StyleSheet.create({
     backButton: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: isDarkMode ? colors.alpha.white[8] : colors.alpha.black[5],
       borderRadius: 20,
       padding: 8,
     },
     backgroundPattern: {
-      backgroundColor: theme.colors.background,
+      backgroundColor: isDarkMode ? colors.alpha.primary[8] : colors.alpha.primary[5],
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -54,7 +54,7 @@ const LoginScreen = () => {
       elevation: 4,
       marginHorizontal: 4,
       padding: 24,
-      shadowColor: "#000",
+      shadowColor: theme.colors.onSurface,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 8,
@@ -65,7 +65,7 @@ const LoginScreen = () => {
     },
     errorContainer: {
       alignItems: 'center',
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
+      backgroundColor: isDarkMode ? colors.alpha.error[20] : colors.alpha.error[10],
       borderRadius: 8,
       flexDirection: 'row',
       marginBottom: 16,
@@ -85,9 +85,10 @@ const LoginScreen = () => {
       marginTop: 8,
     },
     header: {
-      backgroundColor: theme.colors.background,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: theme.colors.surface,
+      borderBottomColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
       borderBottomWidth: 1,
+      elevation: 2,
       paddingBottom: 8,
       paddingHorizontal: 16,
       paddingTop: 50,
@@ -97,7 +98,7 @@ const LoginScreen = () => {
       flexDirection: 'row',
     },
     headerTitle: {
-      color: theme.colors.onBackground,
+      color: theme.colors.onSurface,
       fontSize: 20,
       fontWeight: '600',
       marginLeft: 8,
@@ -144,10 +145,10 @@ const LoginScreen = () => {
       fontWeight: '600',
     },
     signupText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      color: colors.textSecondary,
     },
     subtitle: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      color: colors.textSecondary,
       fontSize: 16,
       marginBottom: 24,
       textAlign: 'center',

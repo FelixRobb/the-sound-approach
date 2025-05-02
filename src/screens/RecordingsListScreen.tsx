@@ -22,7 +22,7 @@ const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const { isConnected } = useContext(NetworkContext)
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext)
-  const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
+  const { loadAudio, playAudio, pauseAudio, audioState, resetAudio } = useContext(AudioContext)
   const { theme, isDarkMode } = useThemedStyles()
 
   const [activeTab, setActiveTab] = useState("book")
@@ -331,37 +331,45 @@ const RecordingsListScreen = () => {
     return species.common_name.toLowerCase().includes(query) || species.scientific_name.toLowerCase().includes(query)
   })
 
-  // Handle audio preview
   const handleAudioPreview = async (recording: Recording) => {
     try {
-      if (audioState.currentAudioId === recording.audio_id) {
-        // Toggle play/pause if it's the same audio
+      const isSameAudio = audioState.currentAudioId === recording.audio_id;
+      
+      if (isSameAudio && audioState.isLoaded) {
+        // Toggle play/pause if it's the same audio and already loaded
         if (audioState.isPlaying) {
-          await pauseAudio()
+          await pauseAudio();
         } else {
-          await playAudio()
+          await playAudio();
         }
       } else {
         // Load and play new audio
-        let audioUri
-
+        let audioUri;
+        
+        // Reset audio first to prevent conflicts
+        resetAudio();
+  
         if (isDownloaded(recording.id)) {
           // Use local file
-          audioUri = getDownloadPath(recording.audio_id, true)
+          audioUri = getDownloadPath(recording.audio_id, true);
         } else if (isConnected) {
-          const { data } = await supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`)
-          audioUri = data?.publicUrl
+          const { data } = await supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`);
+          audioUri = data?.publicUrl;
         } else {
           // No audio available offline
-          return
+          alert("This recording is not available offline");
+          return;
         }
-
+  
         if (audioUri) {
-          await loadAudio(audioUri, recording.audio_id, true)
+          // Give UI time to respond before starting new audio load
+          setTimeout(() => {
+            loadAudio(audioUri, recording.audio_id, true);
+          }, 100);
         }
       }
     } catch (error) {
-      console.error("Audio preview error:", error)
+      console.error("Audio preview error:", error);
     }
   }
 
