@@ -1,56 +1,65 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useContext } from "react"
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Dimensions, Alert } from "react-native"
-import { useNavigation } from "@react-navigation/native"
-import { useFocusEffect } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { ActivityIndicator } from "react-native-paper"
-import { DownloadContext } from "../context/DownloadContext"
-import { AudioContext } from "../context/AudioContext"
-import { ThemeContext } from "../context/ThemeContext"
-import { useThemedStyles } from "../hooks/useThemedStyles"
-import type { DownloadRecord } from "../types"
-import React from "react"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import { RootStackParamList } from "../types"
-import { TextInput as RNTextInput } from 'react-native'
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  Dimensions,
+  Alert,
+  TextInput as RNTextInput,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
-const { width } = Dimensions.get("window")
+import { AudioContext } from "../context/AudioContext";
+import { DownloadContext } from "../context/DownloadContext";
+import { ThemeContext } from "../context/ThemeContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import type { DownloadRecord } from "../types";
+import { RootStackParamList } from "../types";
+
+const { width } = Dimensions.get("window");
 
 const DownloadsScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } = useContext(DownloadContext)
-  const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
-  const { isDarkMode } = useContext(ThemeContext)
-  const { theme } = useThemedStyles()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
+    useContext(DownloadContext);
+  const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext);
+  const { isDarkMode } = useContext(ThemeContext);
+  const { theme } = useThemedStyles();
 
-  const [downloads, setDownloads] = useState<DownloadRecord[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSearch, setShowSearch] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
+  const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Format bytes to human-readable size
   const formatBytes = (bytes: number, decimals = 2) => {
-    if (bytes === 0) return "0 Bytes"
+    if (bytes === 0) return "0 Bytes";
 
-    const k = 1024
-    const dm = decimals < 0 ? 0 : decimals
-    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
 
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
-  }
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+  };
 
   // Load downloaded recordings from database
-  const loadDownloads = async () => {
-    setIsLoading(true)
+  const loadDownloads = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const downloadedRecordings = await getDownloadedRecordings()
+      const downloadedRecordings = await getDownloadedRecordings();
       // Map the downloaded recordings to match the DownloadedRecording type
-      const formattedRecordings = downloadedRecordings.map(record => ({
+      const formattedRecordings = downloadedRecordings.map((record) => ({
         recording_id: record.recording_id,
         audio_path: record.audio_path,
         sonogram_path: record.sonogram_path,
@@ -60,30 +69,30 @@ const DownloadsScreen = () => {
         scientific_name: record.scientific_name,
         book_page_number: record.book_page_number,
         caption: record.caption,
-      }))
-      setDownloads(formattedRecordings)
+      }));
+      setDownloads(formattedRecordings);
     } catch (error) {
-      console.error("Error loading downloads:", error)
+      console.error("Error loading downloads:", error);
     } finally {
-      setIsLoading(false)
-      setRefreshing(false)
+      setIsLoading(false);
+      setRefreshing(false);
     }
-  }
+  }, [getDownloadedRecordings]);
 
   // Check for downloads when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      loadDownloads()
+      loadDownloads();
       return () => {
         // Optional cleanup if needed
-      }
-    }, [])
-  )
+      };
+    }, [loadDownloads])
+  );
 
   // Initial load when component mounts
   useEffect(() => {
-    loadDownloads()
-  }, [])
+    loadDownloads();
+  }, [loadDownloads]);
 
   // Handle audio playback
   const handleAudioPlayback = async (item: DownloadRecord) => {
@@ -91,46 +100,44 @@ const DownloadsScreen = () => {
       if (audioState.currentAudioId === item.audio_path) {
         // Toggle play/pause if it's the same audio
         if (audioState.isPlaying) {
-          await pauseAudio()
+          await pauseAudio();
         } else {
-          await playAudio()
+          await playAudio();
         }
       } else {
         // Load and play new audio
-        await loadAudio(`file://${item.audio_path}`, item.audio_path, true)
-        await playAudio()
+        await loadAudio(`file://${item.audio_path}`, item.audio_path, true);
+        await playAudio();
       }
     } catch (error) {
-      console.error("Audio playback error:", error)
+      console.error("Audio playback error:", error);
     }
-  }
+  };
 
   // Handle delete download
   const handleDeleteDownload = (item: DownloadRecord) => {
-    Alert.alert(
-      "Delete Download",
-      "Are you sure you want to delete this download?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
+    Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteDownload(item.recording_id)
+            .then(() => {
+              setDownloads((prev) =>
+                prev.filter((download) => download.recording_id !== item.recording_id)
+              );
+            })
+            .catch((error) => {
+              console.error("Delete error:", error);
+            });
         },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            deleteDownload(item.recording_id)
-              .then(() => {
-                setDownloads((prev) => prev.filter((download) => download.recording_id !== item.recording_id))
-              })
-              .catch((error) => {
-                console.error("Delete error:", error)
-              })
-          }
-        }
-      ]
-    )
-  }
+      },
+    ]);
+  };
 
   // Handle clear all downloads
   const handleClearAllDownloads = () => {
@@ -140,7 +147,7 @@ const DownloadsScreen = () => {
       [
         {
           text: "Cancel",
-          style: "cancel"
+          style: "cancel",
         },
         {
           text: "Clear All",
@@ -148,345 +155,336 @@ const DownloadsScreen = () => {
           onPress: () => {
             clearAllDownloads()
               .then(() => {
-                setDownloads([])
+                setDownloads([]);
               })
               .catch((error) => {
-                console.error("Clear downloads error:", error)
-              })
-          }
-        }
+                console.error("Clear downloads error:", error);
+              });
+          },
+        },
       ]
-    )
-  }
+    );
+  };
 
   // Filter downloads based on search query
   const filteredDownloads = downloads.filter((download) => {
-    if (!searchQuery) return true
+    if (!searchQuery) return true;
 
-    const query = searchQuery.toLowerCase()
+    const query = searchQuery.toLowerCase();
     return (
       download.title?.toLowerCase().includes(query) ||
       download.species_name?.toLowerCase().includes(query) ||
       download.scientific_name?.toLowerCase().includes(query) ||
       (download.book_page_number && download.book_page_number.toString().includes(query))
-    )
-  })
+    );
+  });
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
     backgroundPattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
+      backgroundColor: isDarkMode
+        ? `${theme.colors.primary}08` // Very transparent primary color
+        : `${theme.colors.primary}05`,
       bottom: 0,
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}08` : // Very transparent primary color
-        `${theme.colors.primary}05`,
+      left: 0,
       opacity: 0.6,
-    },
-    header: {
-      backgroundColor: theme.colors.surface,
-      paddingTop: 50,
-      paddingBottom: 16,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      elevation: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-      zIndex: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    headerContent: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 16,
-    },
-    headerTitleContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: "600",
-      color: theme.colors.primary,
-      marginLeft: 8,
-    },
-    headerActions: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    headerButton: {
-      padding: 8,
-      marginLeft: 8,
-      borderRadius: 20,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    profileButton: {
-      marginLeft: 8,
-      borderRadius: 18,
-      overflow: "hidden",
-    },
-    profileButtonBackground: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: theme.colors.primary,
-    },
-    searchBarContainer: {
-      paddingHorizontal: 16,
-      paddingTop: 12,
-      paddingBottom: 12,
-    },
-    searchBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    searchInput: {
-      flex: 1,
-      marginLeft: 8,
-      fontSize: 16,
-      color: theme.colors.onSurface,
-    },
-    storageInfoContainer: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}15` : 
-        `${theme.colors.primary}08`,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-    },
-    storageInfo: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    storageText: {
-      fontSize: 14,
-      color: theme.colors.primary,
-      fontWeight: "500",
+      position: "absolute",
+      right: 0,
+      top: 0,
     },
     clearAllButton: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}15`,
+      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}15`,
+      borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 8,
     },
     clearAllText: {
-      fontSize: 14,
       color: theme.colors.primary,
-      fontWeight: "bold",
-    },
-    disabledButton: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    disabledButtonText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
-    },
-    listContent: {
-      padding: 16,
-      paddingBottom: 80, // Extra space for button at bottom
-    },
-    downloadCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      overflow: "hidden",
-      elevation: 3,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.22,
-      shadowRadius: 2.22,
-    },
-    downloadHeader: {
-      padding: 16,
-      paddingBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0',
-    },
-    downloadTitle: {
-      fontSize: 17,
-      fontWeight: "bold",
-      color: theme.colors.onSurface,
-    },
-    scientificName: {
       fontSize: 14,
-      fontStyle: "italic",
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      marginTop: 2,
-    },
-    downloadContent: {
-      flexDirection: "row",
-      padding: 16,
-      paddingTop: 8,
-      justifyContent: "space-between",
-    },
-    downloadInfo: {
-      flex: 1,
-    },
-    speciesName: {
-      fontSize: 15,
-      color: theme.colors.onSurface,
-      marginBottom: 4,
-    },
-    pageReference: {
-      marginTop: 4,
-      marginBottom: 4,
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}10`,
-      alignSelf: "flex-start",
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 12,
-    },
-    pageText: {
-      fontSize: 12,
-      color: theme.colors.primary,
-    },
-    downloadDate: {
-      fontSize: 12,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      marginTop: 4,
-    },
-    downloadActions: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    playButton: {
-      marginRight: 16,
-    },
-    playButtonInner: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-    },
-    playButtonActive: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}DD` : 
-        `${theme.colors.primary}AA`,
-    },
-    deleteButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 24,
-      marginTop: 48,
-    },
-    emptyCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      padding: 24,
-      width: width * 0.8,
-      alignItems: "center",
-      elevation: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-    },
-    emptyTitle: {
-      marginTop: 16,
-      fontSize: 18,
       fontWeight: "bold",
-      color: theme.colors.onSurface,
-      textAlign: "center",
-    },
-    emptyText: {
-      marginTop: 8,
-      fontSize: 14,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
-      textAlign: "center",
-      lineHeight: 20,
     },
     clearSearchButton: {
-      marginTop: 16,
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` : 
-        `${theme.colors.primary}10`,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
+      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
       borderRadius: 8,
+      marginTop: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
     },
     clearSearchText: {
       color: theme.colors.primary,
       fontWeight: "bold",
     },
-    loadingContainer: {
+    container: {
+      backgroundColor: theme.colors.background,
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 24,
     },
-    loadingCard: {
+    deleteButton: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      width: 40,
+    },
+    disabledButton: {
+      backgroundColor: theme.colors.surfaceDisabled,
+    },
+    disabledButtonText: {
+      color: theme.colors.onSurfaceDisabled,
+    },
+    downloadActions: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    downloadCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 16,
-      padding: 24,
-      width: width * 0.8,
+      elevation: 3,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.22,
+      shadowRadius: 2.22,
+    },
+    downloadContent: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      padding: 16,
+      paddingTop: 8,
+    },
+    downloadDate: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+      marginTop: 4,
+    },
+    downloadHeader: {
+      borderBottomColor: isDarkMode ? theme.colors.surfaceVariant : theme.colors.surfaceVariant,
+      borderBottomWidth: 1,
+      padding: 16,
+      paddingBottom: 8,
+    },
+    downloadInfo: {
+      flex: 1,
+    },
+    downloadTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 17,
+      fontWeight: "bold",
+    },
+    emptyCard: {
       alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
       elevation: 4,
-      shadowColor: "#000",
+      padding: 24,
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
+      width: width * 0.8,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      marginTop: 48,
+      padding: 24,
+    },
+    emptyText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      lineHeight: 20,
+      marginTop: 8,
+      textAlign: "center",
+    },
+    emptyTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 18,
+      fontWeight: "bold",
+      marginTop: 16,
+      textAlign: "center",
+    },
+    header: {
+      backgroundColor: theme.colors.surface,
+      borderBottomColor: theme.colors.surfaceVariant,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      borderBottomWidth: 1,
+      elevation: 4,
+      paddingBottom: 16,
+      paddingTop: 50,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      zIndex: 10,
+    },
+    headerActions: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    headerButton: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 20,
+      marginLeft: 8,
+      padding: 8,
+    },
+    headerContent: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+    },
+    headerTitle: {
+      color: theme.colors.primary,
+      fontSize: 20,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    headerTitleContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    listContent: {
+      padding: 16,
+      paddingBottom: 80, // Extra space for button at bottom
+    },
+    loadingCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 4,
+      padding: 24,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 3,
+      width: width * 0.8,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: 24,
     },
     loadingText: {
-      marginTop: 16,
-      fontSize: 16,
       color: theme.colors.onSurface,
+      fontSize: 16,
+      marginTop: 16,
       textAlign: "center",
     },
     manageStorageButton: {
-      position: "absolute",
-      bottom: 20,
-      right: 20,
-      backgroundColor: theme.colors.primary,
-      flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      backgroundColor: theme.colors.primary,
       borderRadius: 24,
+      bottom: 20,
       elevation: 4,
-      shadowColor: "#000",
+      flexDirection: "row",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      position: "absolute",
+      right: 20,
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.2,
       shadowRadius: 3,
     },
     manageStorageText: {
-      color: "#FFFFFF",
+      color: theme.colors.onPrimary,
       fontWeight: "bold",
       marginRight: 8,
+    },
+    pageReference: {
+      alignSelf: "flex-start",
+      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
+      borderRadius: 12,
+      marginBottom: 4,
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    pageText: {
+      color: theme.colors.primary,
+      fontSize: 12,
+    },
+    playButton: {
+      marginRight: 16,
+    },
+    playButtonActive: {
+      backgroundColor: isDarkMode ? `${theme.colors.primary}DD` : `${theme.colors.primary}AA`,
+    },
+    playButtonInner: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      width: 40,
+    },
+    profileButton: {
+      borderRadius: 18,
+      marginLeft: 8,
+      overflow: "hidden",
+    },
+    profileButtonBackground: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      padding: 8,
+    },
+    scientificName: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      fontStyle: "italic",
+      marginTop: 2,
+    },
+    searchBar: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? theme.colors.surfaceVariant : theme.colors.surfaceVariant,
+      borderRadius: 12,
+      flexDirection: "row",
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    searchBarContainer: {
+      paddingBottom: 12,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+    },
+    searchInput: {
+      color: theme.colors.onSurface,
+      flex: 1,
+      fontSize: 16,
+      marginLeft: 8,
+    },
+    separator: {
+      height: 16,
+    },
+    speciesName: {
+      color: theme.colors.onSurface,
+      fontSize: 15,
+      marginBottom: 4,
+    },
+    storageInfo: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    storageInfoContainer: {
+      backgroundColor: isDarkMode ? `${theme.colors.primary}15` : `${theme.colors.primary}08`,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    storageText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "500",
     },
   });
 
   // Background pattern
-  const BackgroundPattern = () => (
-    <View style={styles.backgroundPattern} />
-  )
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Custom header component
   const Header = () => (
@@ -498,25 +496,22 @@ const DownloadsScreen = () => {
         </View>
 
         <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.headerButton}
-            onPress={() => setShowSearch(!showSearch)}
-          >
-            <Ionicons 
-              name={showSearch ? "close" : "search"} 
-              size={24} 
-              color={theme.colors.onSurface} 
+          <TouchableOpacity style={styles.headerButton} onPress={() => setShowSearch(!showSearch)}>
+            <Ionicons
+              name={showSearch ? "close" : "search"}
+              size={24}
+              color={theme.colors.onSurface}
             />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.profileButton}
             onPress={() => {
-              navigation.navigate("Profile")
+              navigation.navigate("Profile");
             }}
           >
             <View style={styles.profileButtonBackground}>
-              <Ionicons name="person" size={18} color="#FFFFFF" />
+              <Ionicons name="person" size={18} color={theme.colors.onPrimary} />
             </View>
           </TouchableOpacity>
         </View>
@@ -525,25 +520,17 @@ const DownloadsScreen = () => {
       {showSearch && (
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
-            <Ionicons 
-              name="search" 
-              size={20} 
-              color={isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666'} 
-            />
+            <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search downloads..."
-              placeholderTextColor={isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'}
+              placeholderTextColor={theme.colors.onSurfaceDisabled}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             {searchQuery ? (
               <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons 
-                  name="close-circle" 
-                  size={20} 
-                  color={isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666'} 
-                />
+                <Ionicons name="close-circle" size={20} color={theme.colors.onSurfaceVariant} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -552,33 +539,34 @@ const DownloadsScreen = () => {
 
       <View style={styles.storageInfoContainer}>
         <View style={styles.storageInfo}>
-          <Text style={styles.storageText}>
-            Storage used: {formatBytes(totalStorageUsed)}
-          </Text>
+          <Text style={styles.storageText}>Storage used: {formatBytes(totalStorageUsed)}</Text>
           <TouchableOpacity
             style={[styles.clearAllButton, downloads.length === 0 && styles.disabledButton]}
             disabled={downloads.length === 0}
             onPress={handleClearAllDownloads}
           >
-            <Text style={[styles.clearAllText, downloads.length === 0 && styles.disabledButtonText]}>
+            <Text
+              style={[styles.clearAllText, downloads.length === 0 && styles.disabledButtonText]}
+            >
               Clear All
             </Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
-  )
+  );
 
   // Render download item
   const renderDownloadItem = ({ item }: { item: DownloadRecord }) => {
-    const isCurrentlyPlaying = audioState.isPlaying && audioState.currentAudioId === item.audio_path
+    const isCurrentlyPlaying =
+      audioState.isPlaying && audioState.currentAudioId === item.audio_path;
 
     return (
       <View>
         <TouchableOpacity
           style={styles.downloadCard}
           onPress={() => {
-            navigation.navigate("RecordingDetails", { recordingId: item.recording_id })
+            navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
           }}
         >
           <View style={styles.downloadHeader}>
@@ -589,78 +577,63 @@ const DownloadsScreen = () => {
           <View style={styles.downloadContent}>
             <View style={styles.downloadInfo}>
               <Text style={styles.speciesName}>{item.species_name || "Unknown Species"}</Text>
-              
+
               {item.book_page_number && (
                 <View style={styles.pageReference}>
                   <Text style={styles.pageText}>Page {item.book_page_number}</Text>
                 </View>
               )}
-              
+
               <Text style={styles.downloadDate}>
                 Downloaded: {new Date(item.downloaded_at).toLocaleDateString()}
               </Text>
             </View>
 
             <View style={styles.downloadActions}>
-              <TouchableOpacity 
-                style={styles.playButton}
-                onPress={() => handleAudioPlayback(item)}
-              >
-                <View style={[styles.playButtonInner, isCurrentlyPlaying && styles.playButtonActive]}>
+              <TouchableOpacity style={styles.playButton} onPress={() => handleAudioPlayback(item)}>
+                <View
+                  style={[styles.playButtonInner, isCurrentlyPlaying && styles.playButtonActive]}
+                >
                   <Ionicons
                     name={isCurrentlyPlaying ? "pause" : "play"}
                     size={20}
-                    color="#FFFFFF"
+                    color={theme.colors.onPrimary}
                   />
                 </View>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDeleteDownload(item)}
               >
-                <Ionicons 
-                  name="trash-outline" 
-                  size={22} 
-                  color={theme.colors.error} 
-                />
+                <Ionicons name="trash-outline" size={22} color={theme.colors.error} />
               </TouchableOpacity>
             </View>
           </View>
         </TouchableOpacity>
       </View>
-    )
-  }
+    );
+  };
 
   // Empty state component
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyCard}>
-        <Ionicons 
-          name="cloud-download-outline" 
-          size={60} 
-          color={theme.colors.primary} 
-        />
-        <Text style={styles.emptyTitle}>
-          {searchQuery ? "No results found" : "No Downloads"}
-        </Text>
+        <Ionicons name="cloud-download-outline" size={60} color={theme.colors.primary} />
+        <Text style={styles.emptyTitle}>{searchQuery ? "No results found" : "No Downloads"}</Text>
         <Text style={styles.emptyText}>
           {searchQuery
             ? `We couldn't find any downloads matching "${searchQuery}"`
-            : "Downloaded recordings will appear here for offline listening."
-          }
+            : "Downloaded recordings will appear here for offline listening."}
         </Text>
         {searchQuery && (
-          <TouchableOpacity
-            style={styles.clearSearchButton}
-            onPress={() => setSearchQuery("")}
-          >
+          <TouchableOpacity style={styles.clearSearchButton} onPress={() => setSearchQuery("")}>
             <Text style={styles.clearSearchText}>Clear Search</Text>
           </TouchableOpacity>
         )}
       </View>
     </View>
-  )
+  );
 
   // Loading state
   if (isLoading && !refreshing) {
@@ -676,7 +649,7 @@ const DownloadsScreen = () => {
           </View>
         </View>
       </View>
-    )
+    );
   }
 
   return (
@@ -689,14 +662,14 @@ const DownloadsScreen = () => {
         renderItem={renderDownloadItem}
         keyExtractor={(item) => item.recording_id.toString()}
         contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={<EmptyState />}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              setRefreshing(true)
-              loadDownloads()
+              setRefreshing(true);
+              loadDownloads();
             }}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}
@@ -707,36 +680,34 @@ const DownloadsScreen = () => {
       <TouchableOpacity
         style={styles.manageStorageButton}
         onPress={() => {
-          navigation.navigate("Profile")
+          navigation.navigate("Profile");
         }}
       >
         <Text style={styles.manageStorageText}>Manage Storage</Text>
         <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
-  )
-}
+  );
+};
 
 // TextInput implementation
 const TextInput = (props: React.ComponentProps<typeof RNTextInput>) => {
-  const { theme } = useThemedStyles()
-  const { isDarkMode } = useContext(ThemeContext)
-  
+  const { theme } = useThemedStyles();
+  const styles = StyleSheet.create({
+    RNTextInput: {
+      backgroundColor: theme.colors.surface,
+      color: theme.colors.onSurface,
+      flex: 1,
+      fontSize: 16,
+    },
+  });
   return (
     <RNTextInput
       {...props}
-      style={[
-        {
-          backgroundColor: "transparent",
-          fontSize: 16,
-          color: theme.colors.onSurface,
-          flex: 1,
-        },
-        props.style
-      ]}
-      placeholderTextColor={isDarkMode ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)'}
+      style={styles.RNTextInput}
+      placeholderTextColor={theme.colors.onSurfaceDisabled}
     />
-  )
-}
+  );
+};
 
-export default DownloadsScreen
+export default DownloadsScreen;

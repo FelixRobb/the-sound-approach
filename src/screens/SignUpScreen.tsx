@@ -1,287 +1,284 @@
 // src/screens/SignUpScreen.tsx
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native"
-import { TextInput, Button, HelperText } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { AuthContext } from "../context/AuthContext"
-import { RootStackParamList } from "../types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import { useThemedStyles } from "../hooks/useThemedStyles"
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState, useContext } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { TextInput, Button, HelperText } from "react-native-paper";
 
-const { width } = Dimensions.get("window")
+import { AuthContext } from "../context/AuthContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import { RootStackParamList } from "../types";
+
+const { width } = Dimensions.get("window");
 
 const SignUpScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const { signUp, state: authState, clearError } = useContext(AuthContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signUp, state: authState, clearError } = useContext(AuthContext);
+  const { theme, isDarkMode } = useThemedStyles();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [bookCode, setBookCode] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const [bookCodeError, setBookCodeError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [showTooltip, setShowTooltip] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [bookCode, setBookCode] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [bookCodeError, setBookCodeError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
+    backButton: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      padding: 8,
     },
     backgroundPattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
+      backgroundColor: isDarkMode
+        ? `${theme.colors.primary}08` // Very transparent primary color
+        : `${theme.colors.primary}05`,
       bottom: 0,
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}08` : // Very transparent primary color
-        `${theme.colors.primary}05`,
+      left: 0,
       opacity: 0.6,
-    },
-    header: {
-      paddingTop: 50,
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      backgroundColor: theme.colors.surface,
-      elevation: 2,
-    },
-    headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    headerTitleContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginLeft: 12,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      marginLeft: 8,
-      color: theme.colors.onSurface,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      paddingVertical: 24,
-      paddingHorizontal: 16,
-    },
-    card: {
-      padding: 24,
-      borderRadius: 12,
-      backgroundColor: theme.colors.surface,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 8,
-      elevation: 4,
-      marginHorizontal: 4,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: 8,
-      textAlign: 'center',
-      color: theme.colors.onSurface,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-      marginBottom: 24,
-      textAlign: 'center',
-    },
-    form: {
-      marginTop: 8,
-    },
-    inputContainer: {
-      marginBottom: 16,
-      position: 'relative',
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    inputIconContainer: {
-      position: 'absolute',
-      left: 8,
-      zIndex: 1,
-      height: '100%',
-      justifyContent: 'center',
-      paddingTop: 8,
-    },
-    input: {
-      flex: 1,
-      paddingLeft: 40,
-      backgroundColor: theme.colors.surface,
-    },
-    inputOutline: {
-      borderRadius: 8,
-    },
-    errorText: {
-      color: theme.colors.error,
-      marginTop: -12,
-      marginBottom: 16,
-    },
-    errorContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
-      padding: 12,
-      borderRadius: 8,
-      marginBottom: 16,
-    },
-    errorMessage: {
-      marginLeft: 8,
-      color: theme.colors.error,
-      flex: 1,
+      position: "absolute",
+      right: 0,
+      top: 0,
     },
     button: {
-      marginTop: 16,
       borderRadius: 8,
+      marginTop: 16,
     },
     buttonContent: {
       paddingVertical: 8,
     },
-    loginContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      marginTop: 24,
+    card: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      elevation: 4,
+      marginHorizontal: 4,
+      padding: 24,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 8,
     },
-    loginText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
+    errorContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginBottom: 16,
+      padding: 12,
+    },
+    errorMessage: {
+      color: theme.colors.error,
+      flex: 1,
+      marginLeft: 8,
+    },
+    errorText: {
+      color: theme.colors.error,
+      marginBottom: 16,
+      marginTop: -12,
+    },
+    form: {
+      marginTop: 8,
+    },
+    header: {
+      backgroundColor: theme.colors.surface,
+      borderBottomColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      elevation: 2,
+      paddingBottom: 8,
+      paddingHorizontal: 16,
+      paddingTop: 50,
+    },
+    headerContent: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    headerTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 20,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    headerTitleContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginLeft: 12,
+    },
+    input: {
+      backgroundColor: theme.colors.surface,
+      flex: 1,
+      paddingLeft: 40,
+    },
+    inputContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginBottom: 16,
+      position: "relative",
+    },
+    inputIconContainer: {
+      height: "100%",
+      justifyContent: "center",
+      left: 8,
+      paddingTop: 8,
+      position: "absolute",
+      zIndex: 1,
+    },
+    inputOutline: {
+      borderRadius: 8,
+    },
+    loginContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 24,
     },
     loginLink: {
       color: theme.colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
-    tooltipContainer: {
-      position: "absolute",
-      top: 5,
-      right: 10,
-      zIndex: 10,
+    loginText: {
+      color: theme.colors.onSurface,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 24,
+    },
+    subtitle: {
+      color: theme.colors.onSurface,
+      fontSize: 16,
+      marginBottom: 24,
+      textAlign: "center",
+    },
+    title: {
+      color: theme.colors.onSurface,
+      fontSize: 24,
+      fontWeight: "700",
+      marginBottom: 8,
+      textAlign: "center",
     },
     tooltip: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 8,
+      elevation: 5,
+      padding: 12,
       position: "absolute",
       right: 0,
-      top: 30,
-      backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
-      padding: 12,
-      borderRadius: 8,
-      width: width * 0.7,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
-      elevation: 5,
+      top: 30,
+      width: width * 0.7,
       zIndex: 20,
     },
-    tooltipText: {
-      color: isDarkMode ? '#fff' : '#333',
-      fontSize: 14,
-      lineHeight: 20,
-    },
+    // eslint-disable-next-line react-native/no-color-literals
     tooltipArrow: {
+      borderBottomColor: theme.colors.surface,
+      borderBottomWidth: 10,
+      borderLeftColor: "transparent",
+      borderLeftWidth: 10,
+      borderRightColor: "transparent",
+      borderRightWidth: 10,
+      height: 0,
       position: "absolute",
       right: 10,
       top: -10,
       width: 0,
-      height: 0,
-      borderLeftWidth: 10,
-      borderRightWidth: 10,
-      borderBottomWidth: 10,
-      borderLeftColor: "transparent",
-      borderRightColor: "transparent",
-      borderBottomColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+    },
+    tooltipContainer: {
+      position: "absolute",
+      right: 10,
+      top: 5,
+      zIndex: 10,
+    },
+    tooltipText: {
+      color: theme.colors.onSurface,
+      fontSize: 14,
+      lineHeight: 20,
     },
   });
 
   // Validate email format
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   // Validate password (at least 6 characters)
   const validatePassword = (password: string) => {
-    return password.length >= 6
-  }
+    return password.length >= 6;
+  };
 
   // Validate book code format (example: 8 characters alphanumeric)
   const validateBookCode = (code: string) => {
-    const codeRegex = /^[A-Za-z0-9]{8}$/
-    return codeRegex.test(code)
-  }
+    const codeRegex = /^[A-Za-z0-9]{8}$/;
+    return codeRegex.test(code);
+  };
 
   const handleSubmit = async () => {
     // Reset errors
-    setEmailError("")
-    setPasswordError("")
-    setBookCodeError("")
-    clearError()
+    setEmailError("");
+    setPasswordError("");
+    setBookCodeError("");
+    clearError();
 
     // Validate inputs
-    let isValid = true
+    let isValid = true;
 
     if (!email) {
-      setEmailError("Email is required")
-      isValid = false
+      setEmailError("Email is required");
+      isValid = false;
     } else if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address")
-      isValid = false
+      setEmailError("Please enter a valid email address");
+      isValid = false;
     }
 
     if (!password) {
-      setPasswordError("Password is required")
-      isValid = false
+      setPasswordError("Password is required");
+      isValid = false;
     } else if (!validatePassword(password)) {
-      setPasswordError("Password must be at least 6 characters")
-      isValid = false
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
     }
 
     if (!bookCode) {
-      setBookCodeError("Book code is required")
-      isValid = false
+      setBookCodeError("Book code is required");
+      isValid = false;
     } else if (!validateBookCode(bookCode)) {
-      setBookCodeError("Book code must be 8 characters (letters and numbers)")
-      isValid = false
+      setBookCodeError("Book code must be 8 characters (letters and numbers)");
+      isValid = false;
     }
 
-    if (!isValid) return
+    if (!isValid) return;
 
     // Submit form
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await signUp(email, password, bookCode)
+      await signUp(email, password, bookCode);
     } catch (error) {
-      console.error("Signup error:", error)
+      console.error("Signup error:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Background pattern
-  const BackgroundPattern = () => (
-    <View style={styles.backgroundPattern} />
-  )
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Custom header
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
@@ -290,17 +287,14 @@ const SignUpScreen = () => {
         </View>
       </View>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
       <BackgroundPattern />
       <Header />
-      
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.title}>Join The Sound Approach</Text>
           <Text style={styles.subtitle}>Enter your details to create a new account</Text>
@@ -314,8 +308,8 @@ const SignUpScreen = () => {
                 label="Email"
                 value={email}
                 onChangeText={(text) => {
-                  setEmail(text)
-                  setEmailError("")
+                  setEmail(text);
+                  setEmailError("");
                 }}
                 mode="outlined"
                 keyboardType="email-address"
@@ -339,8 +333,8 @@ const SignUpScreen = () => {
                 label="Password"
                 value={password}
                 onChangeText={(text) => {
-                  setPassword(text)
-                  setPasswordError("")
+                  setPassword(text);
+                  setPasswordError("");
                 }}
                 mode="outlined"
                 secureTextEntry={!showPassword}
@@ -370,8 +364,8 @@ const SignUpScreen = () => {
                 label="Book Code"
                 value={bookCode}
                 onChangeText={(text) => {
-                  setBookCode(text.toUpperCase())
-                  setBookCodeError("")
+                  setBookCode(text.toUpperCase());
+                  setBookCodeError("");
                 }}
                 mode="outlined"
                 autoCapitalize="characters"
@@ -392,7 +386,8 @@ const SignUpScreen = () => {
                       <View style={styles.tooltip}>
                         <View style={styles.tooltipArrow} />
                         <Text style={styles.tooltipText}>
-                          The book code is an 8-character code found on the inside cover of "The Sound Approach to Birding" book.
+                          The book code is an 8-character code found on the inside cover of
+                          &quot;The Sound Approach to Birding&quot; book.
                         </Text>
                       </View>
                     )}
@@ -426,9 +421,11 @@ const SignUpScreen = () => {
 
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => {
-                navigation.navigate("Login")
-              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate("Login");
+                }}
+              >
                 <Text style={styles.loginLink}>Sign In</Text>
               </TouchableOpacity>
             </View>
@@ -436,7 +433,7 @@ const SignUpScreen = () => {
         </View>
       </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default SignUpScreen
+export default SignUpScreen;

@@ -1,220 +1,214 @@
 // src/screens/LoginScreen.tsx
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native"
-import { TextInput, Button, HelperText } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { AuthContext } from "../context/AuthContext"
-import { RootStackParamList } from "../types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import { useThemedStyles } from "../hooks/useThemedStyles"
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState, useContext } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { TextInput, Button, HelperText } from "react-native-paper";
 
-const { width } = Dimensions.get("window")
+import { AuthContext } from "../context/AuthContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import { RootStackParamList } from "../types";
 
 const LoginScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const { signIn, state: authState, clearError } = useContext(AuthContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signIn, state: authState, clearError } = useContext(AuthContext);
+  const { theme, isDarkMode } = useThemedStyles();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Create styles based on theme
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
+    backButton: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      padding: 8,
     },
     backgroundPattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
+      backgroundColor: theme.colors.background,
       bottom: 0,
-      backgroundColor: theme.colors.background,
+      left: 0,
       opacity: 0.6,
-    },
-    header: {
-      paddingTop: 50,
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      backgroundColor: theme.colors.background,
-    },
-    headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    backButton: {
-      padding: 8,
-      borderRadius: 20,
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-    },
-    headerTitleContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginLeft: 12,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      marginLeft: 8,
-      color: theme.colors.onBackground,
-    },
-    scrollContent: {
-      flexGrow: 1,
-      paddingVertical: 24,
-      paddingHorizontal: 16,
-    },
-    card: {
-      padding: 24,
-      borderRadius: 12,
-      backgroundColor: theme.colors.surface,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 8,
-      elevation: 4,
-      marginHorizontal: 4,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: '700',
-      marginBottom: 8,
-      textAlign: 'center',
-      color: theme.colors.onSurface,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-      marginBottom: 24,
-      textAlign: 'center',
-    },
-    form: {
-      marginTop: 8,
-    },
-    inputContainer: {
-      marginBottom: 16,
-      position: 'relative',
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    inputIconContainer: {
-      position: 'absolute',
-      left: 8,
-      zIndex: 1,
-      height: '100%',
-      justifyContent: 'center',
-      paddingTop: 8,
-    },
-    input: {
-      flex: 1,
-      paddingLeft: 40,
-      backgroundColor: theme.colors.surface,
-    },
-    inputOutline: {
-      borderRadius: 8,
-    },
-    errorText: {
-      color: theme.colors.error,
-      marginTop: -12,
-      marginBottom: 16,
-    },
-    errorContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
-      padding: 12,
-      borderRadius: 8,
-      marginBottom: 16,
-    },
-    errorMessage: {
-      marginLeft: 8,
-      color: theme.colors.error,
-      flex: 1,
+      position: "absolute",
+      right: 0,
+      top: 0,
     },
     button: {
-      marginTop: 8,
       borderRadius: 8,
+      marginTop: 8,
     },
     buttonContent: {
       paddingVertical: 8,
     },
-    signupContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      marginTop: 24,
+    card: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      elevation: 4,
+      marginHorizontal: 4,
+      padding: 24,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 8,
     },
-    signupText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
+    errorContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginBottom: 16,
+      padding: 12,
+    },
+    errorMessage: {
+      color: theme.colors.error,
+      flex: 1,
+      marginLeft: 8,
+    },
+    errorText: {
+      color: theme.colors.error,
+      marginBottom: 16,
+      marginTop: -12,
+    },
+    form: {
+      marginTop: 8,
+    },
+    header: {
+      backgroundColor: theme.colors.background,
+      borderBottomColor: theme.colors.surfaceVariant,
+      borderBottomWidth: 1,
+      paddingBottom: 8,
+      paddingHorizontal: 16,
+      paddingTop: 50,
+    },
+    headerContent: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    headerTitle: {
+      color: theme.colors.onBackground,
+      fontSize: 20,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    headerTitleContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginLeft: 12,
+    },
+    input: {
+      backgroundColor: theme.colors.surface,
+      flex: 1,
+      paddingLeft: 40,
+    },
+    inputContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginBottom: 16,
+      position: "relative",
+    },
+    inputIconContainer: {
+      height: "100%",
+      justifyContent: "center",
+      left: 8,
+      paddingTop: 8,
+      position: "absolute",
+      zIndex: 1,
+    },
+    inputOutline: {
+      borderRadius: 8,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 24,
+    },
+    signupContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 24,
     },
     signupLink: {
       color: theme.colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
+    },
+    signupText: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 16,
+      marginBottom: 24,
+      textAlign: "center",
+    },
+    title: {
+      color: theme.colors.onSurface,
+      fontSize: 24,
+      fontWeight: "700",
+      marginBottom: 8,
+      textAlign: "center",
     },
   });
 
   // Validate email format
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async () => {
     // Reset errors
-    setEmailError("")
-    setPasswordError("")
-    clearError()
+    setEmailError("");
+    setPasswordError("");
+    clearError();
 
     // Validate inputs
-    let isValid = true
+    let isValid = true;
 
     if (!email) {
-      setEmailError("Email is required")
-      isValid = false
+      setEmailError("Email is required");
+      isValid = false;
     } else if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address")
-      isValid = false
+      setEmailError("Please enter a valid email address");
+      isValid = false;
     }
 
     if (!password) {
-      setPasswordError("Password is required")
-      isValid = false
+      setPasswordError("Password is required");
+      isValid = false;
     }
 
-    if (!isValid) return
+    if (!isValid) return;
 
     // Submit form
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await signIn(email, password)
+      await signIn(email, password);
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("Login error:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Background pattern
-  const BackgroundPattern = () => (
-    <View style={styles.backgroundPattern} />
-  )
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Custom header
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.onBackground} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
@@ -223,17 +217,14 @@ const LoginScreen = () => {
         </View>
       </View>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
       <BackgroundPattern />
       <Header />
-      
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
@@ -247,8 +238,8 @@ const LoginScreen = () => {
                 label="Email"
                 value={email}
                 onChangeText={(text) => {
-                  setEmail(text)
-                  setEmailError("")
+                  setEmail(text);
+                  setEmailError("");
                 }}
                 mode="outlined"
                 keyboardType="email-address"
@@ -272,8 +263,8 @@ const LoginScreen = () => {
                 label="Password"
                 value={password}
                 onChangeText={(text) => {
-                  setPassword(text)
-                  setPasswordError("")
+                  setPassword(text);
+                  setPasswordError("");
                 }}
                 mode="outlined"
                 secureTextEntry={!showPassword}
@@ -314,10 +305,12 @@ const LoginScreen = () => {
             </Button>
 
             <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => {
-                navigation.navigate("SignUp")
-              }}>
+              <Text style={styles.signupText}>Don&apos;t have an account? </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate("SignUp");
+                }}
+              >
                 <Text style={styles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>
@@ -325,7 +318,7 @@ const LoginScreen = () => {
         </View>
       </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default LoginScreen
+export default LoginScreen;

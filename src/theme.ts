@@ -1,41 +1,44 @@
-import { MD3LightTheme, MD3DarkTheme, MD3Theme } from "react-native-paper"
-import { DefaultTheme as NavigationLightTheme, DarkTheme as NavigationDarkTheme } from "@react-navigation/native"
+import {
+  DefaultTheme as NavigationLightTheme,
+  DarkTheme as NavigationDarkTheme,
+} from '@react-navigation/native';
+import { MD3LightTheme, MD3DarkTheme, MD3Theme } from 'react-native-paper';
 
 // Define our color palette
 const Colors = {
   // Primary color (bright red)
-  primary: "#D32F2F",
-  primaryLight: "#FF6659",
-  primaryDark: "#9A0007",
-  
+  primary: '#D32F2F',
+  primaryLight: '#FF6659',
+  primaryDark: '#9A0007',
+
   // Secondary color (complementary to red)
-  secondary: "#455A64",
-  secondaryLight: "#718792",
-  secondaryDark: "#1C313A",
-  
+  secondary: '#455A64',
+  secondaryLight: '#718792',
+  secondaryDark: '#1C313A',
+
   // Accent colors
-  accent: "#F44336",
-  
+  accent: '#F44336',
+
   // Status colors
-  success: "#4CAF50",
-  warning: "#FFC107",
-  error: "#FF5252",
-  info: "#2196F3",
-  
+  success: '#4CAF50',
+  warning: '#FFC107',
+  error: '#FF5252',
+  info: '#2196F3',
+
   // Light mode colors
-  lightBackground: "#FFFFFF",
-  lightSurface: "#F5F5F5",
-  lightText: "#121212",
-  lightDisabled: "#9E9E9E",
-  lightPlaceholder: "#757575",
-  
+  lightBackground: '#FFFFFF',
+  lightSurface: '#F5F5F5',
+  lightText: '#121212',
+  lightDisabled: '#9E9E9E',
+  lightPlaceholder: '#757575',
+
   // Dark mode colors
-  darkBackground: "#121212",
-  darkSurface: "#1E1E1E",
-  darkText: "#FFFFFF",
-  darkDisabled: "#757575",
-  darkPlaceholder: "#9E9E9E",
-}
+  darkBackground: '#121212',
+  darkSurface: '#1E1E1E',
+  darkText: '#FFFFFF',
+  darkDisabled: '#757575',
+  darkPlaceholder: '#9E9E9E',
+};
 
 // Create custom light theme
 export const lightTheme: MD3Theme = {
@@ -54,7 +57,7 @@ export const lightTheme: MD3Theme = {
     onPrimary: Colors.lightText,
     onSecondary: Colors.lightText,
   },
-}
+};
 
 // Create custom dark theme
 export const darkTheme: MD3Theme = {
@@ -73,7 +76,7 @@ export const darkTheme: MD3Theme = {
     onPrimary: Colors.darkText,
     onSecondary: Colors.darkText,
   },
-}
+};
 
 // Navigation themes
 export const navigationLightTheme = {
@@ -87,7 +90,7 @@ export const navigationLightTheme = {
     border: '#E0E0E0',
     notification: Colors.accent,
   },
-}
+};
 
 export const navigationDarkTheme = {
   ...NavigationDarkTheme,
@@ -100,7 +103,7 @@ export const navigationDarkTheme = {
     border: '#333333',
     notification: Colors.accent,
   },
-}
+};
 
 // Export the theme (for backward compatibility)
-export const theme = lightTheme
+export const theme = lightTheme;

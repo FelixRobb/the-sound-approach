@@ -19,10 +19,8 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 
 import { AudioContext } from "../context/AudioContext";
-import type { AudioState } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
 import { fetchRecordingById, supabase } from "../lib/supabase";
 import { PlaybackSpeed, RootStackParamList } from "../types";
 
@@ -37,7 +35,6 @@ const formatTime = (milliseconds: number) => {
 };
 
 const RecordingDetailsScreen = () => {
-  const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const { isConnected } = useContext(NetworkContext);
@@ -52,435 +49,11 @@ const RecordingDetailsScreen = () => {
     setPlaybackSpeed,
     toggleLooping,
     resetAudio,
-    setAudioState,
   } = useContext(AudioContext);
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
-
-  const styles = StyleSheet.create({
-    activeControlButton: {
-      backgroundColor: theme.colors.primary,
-    },
-    activeControlText: {
-      color: theme.colors.onPrimary,
-    },
-    activeSpeedOption: {
-      backgroundColor: theme.colors.primary,
-    },
-    activeSpeedOptionText: {
-      color: theme.colors.onPrimary,
-    },
-    audioErrorContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      padding: 16,
-    },
-    audioErrorText: {
-      color: theme.colors.error,
-      fontSize: 16,
-      marginLeft: 8,
-    },
-    backButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      marginRight: 12,
-      width: 40,
-    },
-    caption: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 24,
-    },
-    card: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 3,
-      marginBottom: 16,
-      overflow: "hidden",
-      padding: 16,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.22,
-      shadowRadius: 2.22,
-    },
-    closeButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      position: "absolute",
-      right: 20,
-      top: 40,
-      width: 40,
-      zIndex: 20,
-    },
-    container: {
-      backgroundColor: theme.colors.background,
-      flex: 1,
-    },
-    content: {
-      padding: 16,
-      paddingBottom: 32,
-    },
-    controlButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 30,
-      justifyContent: "center",
-    },
-    disabledControlButton: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-    },
-    disabledDownloadButton: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-    },
-    disabledOption: {
-      opacity: 0.5,
-    },
-    downloadButtonContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingVertical: 16,
-    },
-    downloadButtonText: {
-      color: theme.colors.onPrimary,
-      fontSize: 16,
-      fontWeight: "600",
-      marginLeft: 8,
-    },
-    downloadedContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingVertical: 12,
-    },
-    downloadedIndicator: {
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 16,
-      marginLeft: 8,
-      padding: 8,
-    },
-    downloadedText: {
-      color: theme.colors.primary,
-      fontSize: 16,
-      fontWeight: "500",
-      marginLeft: 12,
-    },
-    downloadingContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingVertical: 16,
-    },
-    downloadingText: {
-      color: theme.colors.primary,
-      fontSize: 16,
-      marginLeft: 12,
-    },
-    errorCard: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 4,
-      padding: 24,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      width: width * 0.8,
-    },
-    errorContainer: {
-      alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      padding: 24,
-    },
-    errorText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 22,
-      marginBottom: 24,
-      textAlign: "center",
-    },
-    errorTitle: {
-      color: theme.colors.error,
-      fontSize: 18,
-      fontWeight: "bold",
-      marginBottom: 8,
-      marginTop: 16,
-    },
-    expandButton: {
-      padding: 4,
-    },
-    fullscreenContainer: {
-      backgroundColor: theme.colors.surface,
-      flex: 1,
-      zIndex: 10,
-    },
-    fullscreenImage: {
-      flex: 1,
-    },
-    goBackButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      marginRight: 12,
-      width: 40,
-    },
-    goBackText: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: "bold",
-    },
-    header: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      elevation: 4,
-      flexDirection: "row",
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-      paddingTop: 50,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-    },
-    headerTitle: {
-      color: theme.colors.onSurfaceVariant,
-      flex: 1,
-      fontSize: 18,
-      fontWeight: "bold",
-    },
-    loadingAudioContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingVertical: 24,
-    },
-    loadingAudioText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginLeft: 8,
-    },
-    loadingCard: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 4,
-      padding: 24,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      width: width * 0.8,
-    },
-    loadingContainer: {
-      alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      padding: 24,
-    },
-    loadingText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      marginTop: 16,
-    },
-    loopButton: {
-      marginLeft: 24,
-    },
-    mainButton: {
-      backgroundColor: theme.colors.primary,
-      height: 72,
-      width: 72,
-    },
-    offlineText: {
-      color: theme.colors.error,
-      fontSize: 14,
-      marginLeft: 6,
-    },
-    offlineWarning: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      marginTop: 8,
-    },
-    pageReference: {
-      alignSelf: "flex-start",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 12,
-      marginTop: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-    },
-    pageText: {
-      color: theme.colors.primary,
-      fontSize: 12,
-      fontWeight: "500",
-    },
-    playButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 100,
-      height: 72,
-      justifyContent: "center",
-      width: 72,
-    },
-    playerContainer: {
-      borderRadius: 8,
-    },
-    playerHeader: {
-      borderRadius: 12,
-      height: 80,
-      marginBottom: 16,
-      overflow: "hidden",
-    },
-    primaryControls: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      marginBottom: 20,
-    },
-    retryButton: {
-      alignItems: "center",
-      alignSelf: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      flexDirection: "row",
-      justifyContent: "center",
-      marginTop: 16,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
-    retryText: {
-      color: theme.colors.onPrimary,
-      fontSize: 14,
-      marginLeft: 8,
-    },
-    scientificName: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontStyle: "italic",
-      marginBottom: 8,
-    },
-    sectionHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 12,
-    },
-    sectionTitle: {
-      color: theme.colors.primary,
-      fontSize: 18,
-      fontWeight: "600",
-      marginBottom: 12,
-    },
-    slider: {
-      height: 40,
-      marginBottom: 2,
-    },
-    smallButton: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-      height: 44,
-      width: 44,
-    },
-    sonogramContainer: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-      borderRadius: 12,
-      overflow: "hidden",
-    },
-    sonogramImage: {
-      height: 200,
-      width: "100%",
-    },
-    speciesActionButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 16,
-      height: 32,
-      justifyContent: "center",
-      width: 32,
-    },
-    speciesHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    speciesInfo: {
-      flex: 1,
-    },
-    speciesName: {
-      color: theme.colors.primary,
-      fontSize: 22,
-      fontWeight: "bold",
-      marginBottom: 4,
-    },
-    speedButton: {
-      marginRight: 24,
-    },
-    speedControlContainer: {
-      marginBottom: 8,
-    },
-    speedLabel: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginBottom: 8,
-    },
-    speedOption: {
-      alignItems: "center",
-      backgroundColor: theme.colors.onSurfaceVariant,
-      borderRadius: 20,
-      flex: 1,
-      marginHorizontal: 4,
-      paddingVertical: 8,
-    },
-    speedOptionText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontWeight: "500",
-    },
-    speedOptions: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    speedText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontWeight: "bold",
-    },
-    timeContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 16,
-      paddingHorizontal: 2,
-    },
-    timeText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-    },
-    waveformPlaceholder: {
-      alignItems: "center",
-      backgroundColor: theme.colors.onSurfaceVariant,
-      height: "100%",
-      justifyContent: "center",
-      width: "100%",
-    },
-    waveformPreview: {
-      height: "100%",
-      width: "100%",
-    },
-  });
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [audioLoadRetries, setAudioLoadRetries] = useState(0);
 
   // Fetch recording details
   const {
@@ -493,141 +66,94 @@ const RecordingDetailsScreen = () => {
     queryFn: () => fetchRecordingById(route.params.recordingId),
   });
 
-  // Cleanup function when leaving screen
+  // Cleanup function
   useEffect(() => {
     return () => {
       pauseAudio();
       resetAudio();
     };
-  }, [pauseAudio, resetAudio]);
+  }, []);
 
-  // Handle audio loading and playback
-  const handlePlayPause = async () => {
-    if (!recording) {
-      console.log("⚠️ [Player] Cannot play/pause - no recording");
-      return;
-    }
+  // Handle audio loading
+  useEffect(() => {
+    let isMounted = true;
+    let loadAttemptInProgress = false;
 
-    try {
-      console.log("🎵 [Player] HandlePlayPause:", {
-        currentAudioId: audioState.currentAudioId,
-        recordingAudioId: recording.audio_id,
-        isPlaying: audioState.isPlaying,
-        isLoaded: audioState.isLoaded,
-      });
+    const loadRecordingAudio = async () => {
+      // Skip if already loading, no recording, or loading in progress
+      if (!recording || isLoadingAudio || loadAttemptInProgress) return;
 
-      // If we're already playing this audio, just toggle play/pause
-      if (audioState.currentAudioId === recording.audio_id && audioState.isLoaded) {
-        if (audioState.isPlaying) {
-          console.log("⏸️ [Player] Pausing current audio");
-          await pauseAudio();
+      loadAttemptInProgress = true;
+
+      try {
+        setIsLoadingAudio(true);
+        let audioUri = null;
+
+        if (isDownloaded(recording.id)) {
+          // Use local file
+          audioUri = getDownloadPath(recording.audio_id, true);
+        } else if (isConnected) {
+          // Use public URL from Supabase
+          const { data } = supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`);
+          audioUri = data?.publicUrl;
         } else {
-          console.log("▶️ [Player] Playing current audio");
-          await playAudio();
+          // No audio available offline
+          setIsLoadingAudio(false);
+          loadAttemptInProgress = false;
+          return;
         }
-        return;
+
+        if (!audioUri) {
+          setIsLoadingAudio(false);
+          loadAttemptInProgress = false;
+          return;
+        }
+
+        // Direct load without setTimeout
+        const success = await loadAudio(audioUri, recording.audio_id || "");
+
+        if (isMounted) {
+          if (success) {
+            setAudioLoadRetries(0);
+          } else {
+            // Retry logic - but only if component is still mounted
+            if (audioLoadRetries < 2 && isMounted) {
+              setAudioLoadRetries((prev) => prev + 1);
+            } else if (isMounted) {
+              // Show error alert after retries
+              Alert.alert("Audio Error", "Failed to load audio file. Please try again later.", [
+                { text: "OK" },
+              ]);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error in audio loading:", err);
+      } finally {
+        if (isMounted) {
+          setIsLoadingAudio(false);
+        }
+        loadAttemptInProgress = false;
       }
+    };
 
-      // Load and play new audio
-      let audioUri = null;
-
-      // Reset any previous error state before starting
-      console.log("🎵 [Player] Resetting audio state before load");
-      setAudioState((prevState: AudioState) => ({
-        ...prevState,
-        loadError: null,
-        isBuffering: true,
-        loadProgress: 0,
-      }));
-
-      // First determine the audio URI
-      if (isDownloaded(recording.id)) {
-        // Use local file
-        audioUri = getDownloadPath(recording.audio_id, true);
-        console.log("🎵 [Player] Using local audio file:", audioUri);
-      } else if (isConnected) {
-        // Use public URL from Supabase
-        const { data } = supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`);
-        audioUri = data?.publicUrl;
-        console.log("🎵 [Player] Using remote audio URL:", audioUri);
-      } else {
-        console.log("❌ [Player] No internet connection available");
-        throw new Error("No internet connection available");
-      }
-
-      if (!audioUri) {
-        console.log("❌ [Player] Could not get audio URL");
-        throw new Error("Could not get audio URL");
-      }
-
-      // Now load the audio and start playback - REMOVED the pause attempt
-      console.log("🎵 [Player] Loading audio:", audioUri);
-      const success = await loadAudio(audioUri, recording.audio_id, true); // Use autoPlay=true parameter
-      console.log("🎵 [Player] Load result:", success);
-
-      if (!success) {
-        console.log("❌ [Player] Failed to load audio");
-        throw new Error("Failed to load audio");
-      }
-    } catch (error) {
-      console.error("❌ [Player] Error controlling playback:", error);
-      setAudioState((prevState: AudioState) => ({
-        ...prevState,
-        loadError: error instanceof Error ? error.message : "Unknown error occurred",
-        isBuffering: false,
-        loadProgress: 0,
-        isLoaded: false,
-        isPlaying: false,
-      }));
-    }
-  };
-
-  // Handle seek with additional checks
-  const handleSeek = async (value: number) => {
-    console.log("🎵 [Player] Seeking to:", value);
-    if (!audioState.isLoaded) {
-      console.log("⚠️ [Player] Cannot seek - audio not loaded");
-      return;
+    // Load audio when recording is available and we have network/local file
+    if (recording && (isConnected || isDownloaded(recording.id))) {
+      loadRecordingAudio();
     }
 
-    try {
-      await seekAudio(value);
-    } catch (error) {
-      console.error("❌ [Player] Error seeking:", error);
-    }
-  };
+    // Clean up function
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    recording,
+    recording?.id ? isDownloaded(recording.id) : false,
+    isConnected,
+    audioLoadRetries,
+  ]);
 
-  // Handle playback speed change
-  const handleSpeedChange = async (speed: PlaybackSpeed) => {
-    console.log("🎵 [Player] Changing speed to:", speed);
-    if (!audioState.isLoaded) {
-      console.log("⚠️ [Player] Cannot change speed - audio not loaded");
-      return;
-    }
-
-    try {
-      await setPlaybackSpeed(speed);
-    } catch (error) {
-      console.error("❌ [Player] Error changing speed:", error);
-    }
-  };
-
-  // Handle loop toggle
-  const handleLoopToggle = async () => {
-    console.log("🎵 [Player] Toggling loop");
-    if (!audioState.isLoaded) {
-      console.log("⚠️ [Player] Cannot toggle loop - audio not loaded");
-      return;
-    }
-
-    try {
-      await toggleLooping();
-    } catch (error) {
-      console.error("❌ [Player] Error toggling loop:", error);
-    }
-  };
-
-  // Check if audio is actually loaded and ready
+  // Check if audio is actually loaded
   const isAudioReady = audioState.isLoaded && audioState.currentAudioId === recording?.audio_id;
 
   // Get download status
@@ -647,12 +173,80 @@ const RecordingDetailsScreen = () => {
 
     try {
       await downloadRecording(recording);
+      // After download is complete, try to load audio again
+      setTimeout(() => {
+        setAudioLoadRetries(0);
+      }, 1000);
     } catch (error) {
       console.error("Download error:", error);
       Alert.alert("Download Error", "Failed to download the recording. Please try again.", [
         { text: "OK" },
       ]);
     }
+  };
+
+  // Handle play/pause button press
+  const handlePlayPause = async () => {
+    if (!isAudioReady) {
+      // If we have recording but audio isn't ready, try loading again
+      if (recording && !isLoadingAudio) {
+        setAudioLoadRetries(0);
+      }
+      return;
+    }
+
+    try {
+      if (audioState.isPlaying) {
+        await pauseAudio();
+      } else {
+        const success = await playAudio();
+        if (!success && recording) {
+          // Try reloading if play fails
+          setAudioLoadRetries(0);
+        }
+      }
+    } catch (error) {
+      console.error("Error controlling playback:", error);
+    }
+  };
+
+  // Handle seek with additional checks
+  const handleSeek = async (value: number) => {
+    if (!isAudioReady) return;
+
+    try {
+      await seekAudio(value);
+    } catch (error) {
+      console.error("Error seeking:", error);
+    }
+  };
+
+  // Handle playback speed change
+  const handleSpeedChange = async (speed: PlaybackSpeed) => {
+    if (!isAudioReady) return;
+
+    try {
+      await setPlaybackSpeed(speed);
+    } catch (error) {
+      console.error("Error changing speed:", error);
+    }
+  };
+
+  // Handle loop toggle
+  const handleLoopToggle = async () => {
+    if (!isAudioReady) return;
+
+    try {
+      await toggleLooping();
+    } catch (error) {
+      console.error("Error toggling loop:", error);
+    }
+  };
+
+  // Handle retry
+  const handleRetry = () => {
+    setAudioLoadRetries(0);
+    refetch();
   };
 
   // Get sonogram image URI
@@ -714,7 +308,7 @@ const RecordingDetailsScreen = () => {
                 ? "You're offline. This recording is not available offline."
                 : "Something went wrong. Please try again."}
             </Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.goBackButton} onPress={() => navigation.goBack()}>
@@ -806,24 +400,10 @@ const RecordingDetailsScreen = () => {
 
               {/* Player Controls */}
               <View style={styles.playerContainer}>
-                {audioState.loadError ? (
-                  <View style={styles.audioErrorContainer}>
-                    <Ionicons name="alert-circle" size={24} color={theme.colors.error} />
-                    <Text style={styles.audioErrorText}>
-                      Failed to load audio: {audioState.loadError}
-                    </Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={() => handlePlayPause()}>
-                      <Text style={styles.retryText}>Retry</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : audioState.isBuffering ? (
+                {isLoadingAudio ? (
                   <View style={styles.loadingAudioContainer}>
                     <ActivityIndicator size="small" color="#2E7D32" />
-                    <Text style={styles.loadingAudioText}>
-                      {audioState.loadProgress < 1
-                        ? `Loading audio (${Math.round(audioState.loadProgress * 100)}%)`
-                        : "Preparing playback..."}
-                    </Text>
+                    <Text style={styles.loadingAudioText}>Loading audio...</Text>
                   </View>
                 ) : (
                   <>
@@ -874,13 +454,13 @@ const RecordingDetailsScreen = () => {
                       <TouchableOpacity
                         style={styles.playButton}
                         onPress={handlePlayPause}
-                        disabled={!recording}
+                        disabled={!isAudioReady}
                       >
                         <View
                           style={[
                             styles.controlButton,
                             styles.mainButton,
-                            !recording && styles.disabledControlButton,
+                            !isAudioReady && styles.disabledControlButton,
                           ]}
                         >
                           <Ionicons
@@ -940,6 +520,16 @@ const RecordingDetailsScreen = () => {
                         ))}
                       </View>
                     </View>
+
+                    {!isAudioReady && !isLoadingAudio && audioLoadRetries > 0 && (
+                      <TouchableOpacity
+                        style={styles.audioRetryButton}
+                        onPress={() => setAudioLoadRetries(0)}
+                      >
+                        <Ionicons name="refresh" size={16} color="#FFFFFF" />
+                        <Text style={styles.audioRetryText}>Retry loading audio</Text>
+                      </TouchableOpacity>
+                    )}
                   </>
                 )}
               </View>
@@ -1017,5 +607,435 @@ const RecordingDetailsScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  activeControlButton: {
+    backgroundColor: "#2E7D32",
+  },
+  activeControlText: {
+    color: "#FFFFFF",
+  },
+  activeSpeedOption: {
+    backgroundColor: "#2E7D32",
+  },
+  activeSpeedOptionText: {
+    color: "#FFFFFF",
+  },
+  audioRetryButton: {
+    alignItems: "center",
+    alignSelf: "center",
+    backgroundColor: "#2E7D32",
+    borderRadius: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  audioRetryText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  backButton: {
+    alignItems: "center",
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    borderRadius: 20,
+    height: 40,
+    justifyContent: "center",
+    marginRight: 12,
+    width: 40,
+  },
+  caption: {
+    color: "#333333",
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  card: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    elevation: 3,
+    marginBottom: 16,
+    overflow: "hidden",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  closeButton: {
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+    height: 40,
+    justifyContent: "center",
+    position: "absolute",
+    right: 20,
+    top: 40,
+    width: 40,
+    zIndex: 20,
+  },
+  container: {
+    backgroundColor: "#F5F7FA",
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  controlButton: {
+    alignItems: "center",
+    backgroundColor: "#4CAF50",
+    borderRadius: 30,
+    justifyContent: "center",
+  },
+  disabledControlButton: {
+    backgroundColor: "#E0E0E0",
+  },
+  disabledDownloadButton: {
+    backgroundColor: "#CCCCCC",
+  },
+  disabledOption: {
+    opacity: 0.5,
+  },
+  downloadButtonContainer: {
+    alignItems: "center",
+    backgroundColor: "#2E7D32",
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+    paddingVertical: 16,
+  },
+  downloadButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  downloadedContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    paddingVertical: 12,
+  },
+  downloadedIndicator: {
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    borderRadius: 16,
+    marginLeft: 8,
+    padding: 8,
+  },
+  downloadedText: {
+    color: "#2E7D32",
+    fontSize: 16,
+    fontWeight: "500",
+    marginLeft: 12,
+  },
+  downloadingContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    paddingVertical: 16,
+  },
+  downloadingText: {
+    color: "#2E7D32",
+    fontSize: 16,
+    marginLeft: 12,
+  },
+  errorCard: {
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 16,
+    elevation: 4,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    width: width * 0.8,
+  },
+  errorContainer: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+  },
+  errorText: {
+    color: "#666666",
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  errorTitle: {
+    color: "#B00020",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  expandButton: {
+    padding: 4,
+  },
+  fullscreenContainer: {
+    backgroundColor: "black",
+    flex: 1,
+    zIndex: 10,
+  },
+  fullscreenImage: {
+    flex: 1,
+  },
+  goBackButton: {
+    alignItems: "center",
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    borderRadius: 20,
+    height: 40,
+    justifyContent: "center",
+    marginRight: 12,
+    width: 40,
+  },
+  goBackText: {
+    color: "#2E7D32",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  header: {
+    alignItems: "center",
+    backgroundColor: "white",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    elevation: 4,
+    flexDirection: "row",
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  headerTitle: {
+    color: "#333333",
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  loadingAudioContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    paddingVertical: 24,
+  },
+  loadingAudioText: {
+    color: "#666666",
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  loadingCard: {
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 16,
+    elevation: 4,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    width: width * 0.8,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+  },
+  loadingText: {
+    color: "#666666",
+    fontSize: 16,
+    marginTop: 16,
+  },
+  loopButton: {
+    marginLeft: 24,
+  },
+  mainButton: {
+    backgroundColor: "#2E7D32",
+    height: 72,
+    width: 72,
+  },
+  offlineText: {
+    color: "#B00020",
+    fontSize: 14,
+    marginLeft: 6,
+  },
+  offlineWarning: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  pageReference: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(46, 125, 50, 0.1)",
+    borderRadius: 12,
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  pageText: {
+    color: "#2E7D32",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  playButton: {
+    alignItems: "center",
+    backgroundColor: "#2E7D32",
+    borderRadius: 100,
+    height: 72,
+    justifyContent: "center",
+    width: 72,
+  },
+  playerContainer: {
+    borderRadius: 8,
+  },
+  playerHeader: {
+    borderRadius: 12,
+    height: 80,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  primaryControls: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    alignItems: "center",
+    alignSelf: "center",
+    backgroundColor: "#2E7D32",
+    borderRadius: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  retryText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  scientificName: {
+    color: "#666666",
+    fontSize: 14,
+    fontStyle: "italic",
+    marginBottom: 8,
+  },
+  sectionHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    color: "#2E7D32",
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+  },
+  slider: {
+    height: 40,
+    marginBottom: 2,
+  },
+  smallButton: {
+    backgroundColor: "#F5F5F5",
+    height: 44,
+    width: 44,
+  },
+  sonogramContainer: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  sonogramImage: {
+    height: 200,
+    width: "100%",
+  },
+  speciesActionButton: {
+    alignItems: "center",
+    backgroundColor: "#2E7D32",
+    borderRadius: 16,
+    height: 32,
+    justifyContent: "center",
+    width: 32,
+  },
+  speciesHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  speciesInfo: {
+    flex: 1,
+  },
+  speciesName: {
+    color: "#2E7D32",
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  speedButton: {
+    marginRight: 24,
+  },
+  speedControlContainer: {
+    marginBottom: 8,
+  },
+  speedLabel: {
+    color: "#666666",
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  speedOption: {
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 20,
+    flex: 1,
+    marginHorizontal: 4,
+    paddingVertical: 8,
+  },
+  speedOptionText: {
+    color: "#666666",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  speedOptions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  speedText: {
+    color: "#999999",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  timeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+    paddingHorizontal: 2,
+  },
+  timeText: {
+    color: "#666666",
+    fontSize: 14,
+  },
+  waveformPlaceholder: {
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    height: "100%",
+    justifyContent: "center",
+    width: "100%",
+  },
+  waveformPreview: {
+    height: "100%",
+    width: "100%",
+  },
+});
 
 export default RecordingDetailsScreen;
