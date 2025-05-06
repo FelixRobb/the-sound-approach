@@ -1,11 +1,11 @@
 // src/context/AuthContext.tsx
-'use client';
+"use client";
 
-import * as SecureStore from 'expo-secure-store';
-import type React from 'react';
-import { createContext, useReducer, useEffect } from 'react';
+import * as SecureStore from "expo-secure-store";
+import type React from "react";
+import { createContext, useReducer, useEffect } from "react";
 
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
 // Define types
 type User = {
@@ -22,10 +22,10 @@ type AuthState = {
 };
 
 type AuthAction =
-  | { type: 'RESTORE_TOKEN'; token: string | null; user: User | null }
-  | { type: 'SIGN_IN'; token: string; user: User }
-  | { type: 'SIGN_OUT' }
-  | { type: 'AUTH_ERROR'; error: string };
+  | { type: "RESTORE_TOKEN"; token: string | null; user: User | null }
+  | { type: "SIGN_IN"; token: string; user: User }
+  | { type: "SIGN_OUT" }
+  | { type: "AUTH_ERROR"; error: string };
 
 type AuthContextType = {
   state: AuthState;
@@ -56,14 +56,14 @@ export const AuthContext = createContext<AuthContextType>({
 // Reducer function
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
-    case 'RESTORE_TOKEN':
+    case "RESTORE_TOKEN":
       return {
         ...state,
         userToken: action.token,
         user: action.user,
         isLoading: false,
       };
-    case 'SIGN_IN':
+    case "SIGN_IN":
       return {
         ...state,
         isSignout: false,
@@ -71,14 +71,14 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         user: action.user,
         error: null,
       };
-    case 'SIGN_OUT':
+    case "SIGN_OUT":
       return {
         ...state,
         isSignout: true,
         userToken: null,
         user: null,
       };
-    case 'AUTH_ERROR':
+    case "AUTH_ERROR":
       return {
         ...state,
         error: action.error,
@@ -100,8 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         // Fetch the token from storage
-        userToken = await SecureStore.getItemAsync('userToken');
-        const userString = await SecureStore.getItemAsync('user');
+        userToken = await SecureStore.getItemAsync("userToken");
+        const userString = await SecureStore.getItemAsync("user");
 
         if (userString) {
           user = JSON.parse(userString);
@@ -113,18 +113,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (error) {
             // Token is invalid or expired
-            await SecureStore.deleteItemAsync('userToken');
-            await SecureStore.deleteItemAsync('user');
+            await SecureStore.deleteItemAsync("userToken");
+            await SecureStore.deleteItemAsync("user");
             userToken = null;
             user = null;
           }
         }
       } catch (e) {
-        console.error('Failed to restore authentication state:', e);
+        console.error("Failed to restore authentication state:", e);
       }
 
       // After restoring token, update state
-      dispatch({ type: 'RESTORE_TOKEN', token: userToken, user });
+      dispatch({ type: "RESTORE_TOKEN", token: userToken, user });
     };
 
     bootstrapAsync();
@@ -140,46 +140,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-          dispatch({ type: 'AUTH_ERROR', error: error.message });
+          dispatch({ type: "AUTH_ERROR", error: error.message });
           return;
         }
 
         if (data?.user && data?.session) {
           // Store the session
-          await SecureStore.setItemAsync('userToken', data.session.access_token);
-          await SecureStore.setItemAsync('user', JSON.stringify(data.user));
+          await SecureStore.setItemAsync("userToken", data.session.access_token);
+          await SecureStore.setItemAsync("user", JSON.stringify(data.user));
 
           dispatch({
-            type: 'SIGN_IN',
+            type: "SIGN_IN",
             token: data.session.access_token,
             user: {
               id: data.user.id,
-              email: data.user.email || '',
+              email: data.user.email || "",
             },
           });
         }
       } catch (e) {
-        dispatch({ type: 'AUTH_ERROR', error: 'An unexpected error occurred' });
+        dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" });
       }
     },
     signUp: async (email: string, password: string, bookCode: string) => {
       try {
         // First validate the book code
         const { data: bookCodeData, error: bookCodeError } = await supabase
-          .from('book_codes')
-          .select('*')
-          .eq('code', bookCode)
+          .from("book_codes")
+          .select("*")
+          .eq("code", bookCode)
           .single();
 
         if (bookCodeError || !bookCodeData) {
-          dispatch({ type: 'AUTH_ERROR', error: 'Invalid book code' });
+          dispatch({ type: "AUTH_ERROR", error: "Invalid book code" });
           return;
         }
 
         if (bookCodeData.activations_used >= bookCodeData.max_activations) {
           dispatch({
-            type: 'AUTH_ERROR',
-            error: 'This book code has reached its maximum number of activations',
+            type: "AUTH_ERROR",
+            error: "This book code has reached its maximum number of activations",
           });
           return;
         }
@@ -196,60 +196,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-          dispatch({ type: 'AUTH_ERROR', error: error.message });
+          dispatch({ type: "AUTH_ERROR", error: error.message });
           return;
         }
 
         if (data?.user && data?.session) {
           // Store the session
-          await SecureStore.setItemAsync('userToken', data.session.access_token);
-          await SecureStore.setItemAsync('user', JSON.stringify(data.user));
+          await SecureStore.setItemAsync("userToken", data.session.access_token);
+          await SecureStore.setItemAsync("user", JSON.stringify(data.user));
 
           // Associate the user with the book code
           const { data: bookCodeData } = await supabase
-            .from('book_codes')
-            .select('id')
-            .eq('code', bookCode)
+            .from("book_codes")
+            .select("id")
+            .eq("code", bookCode)
             .single();
 
           if (bookCodeData) {
             // Create user activation record
-            await supabase.from('user_activations').insert({
+            await supabase.from("user_activations").insert({
               user_id: data.user.id,
               book_code_id: bookCodeData.id,
             });
 
             // Increment the activations_used counter
-            await supabase.rpc('increment_book_code_activation', {
+            await supabase.rpc("increment_book_code_activation", {
               code_param: bookCode,
             });
           }
 
           dispatch({
-            type: 'SIGN_IN',
+            type: "SIGN_IN",
             token: data.session.access_token,
             user: {
               id: data.user.id,
-              email: data.user.email || '',
+              email: data.user.email || "",
             },
           });
         }
       } catch (e) {
-        dispatch({ type: 'AUTH_ERROR', error: 'An unexpected error occurred' });
+        dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" });
       }
     },
     signOut: async () => {
       try {
         await supabase.auth.signOut();
-        await SecureStore.deleteItemAsync('userToken');
-        await SecureStore.deleteItemAsync('user');
-        dispatch({ type: 'SIGN_OUT' });
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("user");
+        dispatch({ type: "SIGN_OUT" });
       } catch (e) {
-        console.error('Error signing out:', e);
+        console.error("Error signing out:", e);
       }
     },
     clearError: () => {
-      dispatch({ type: 'AUTH_ERROR', error: '' });
+      dispatch({ type: "AUTH_ERROR", error: "" });
     },
   };
 

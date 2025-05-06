@@ -9,9 +9,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from
 import { ActivityIndicator } from "react-native-paper";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
+import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { useAudio } from "../context/NewAudioContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getAudioUri } from "../lib/mediaUtils";

@@ -3,7 +3,7 @@ import Slider from "@react-native-community/slider";
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
 
-import { useAudio } from "../context/NewAudioContext";
+import { useAudio } from "../context/AudioContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { PlaybackSpeed } from "../lib/AudioService";
 

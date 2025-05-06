@@ -9,9 +9,9 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } fr
 import { Searchbar, ActivityIndicator } from "react-native-paper";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
+import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { useAudio } from "../context/NewAudioContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";

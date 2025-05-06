@@ -18,9 +18,9 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 
 import FullAudioPlayer from "../components/FullAudioPlayer";
+import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { useAudio } from "../context/NewAudioContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getAudioUri, getSonogramUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";

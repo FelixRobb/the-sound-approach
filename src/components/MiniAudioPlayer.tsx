@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 
-import { useAudio } from "../context/NewAudioContext";
+import { useAudio } from "../context/AudioContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 
 interface MiniAudioPlayerProps {

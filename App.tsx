@@ -4,10 +4,10 @@ import React, { useContext } from "react";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { AudioProvider } from "./src/context/AudioContext";
 import { AuthProvider } from "./src/context/AuthContext";
 import { DownloadProvider } from "./src/context/DownloadContext";
 import { NetworkProvider } from "./src/context/NetworkContext";
-import { NewAudioProvider } from "./src/context/NewAudioContext";
 import { ThemeProvider, ThemeContext } from "./src/context/ThemeContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { lightTheme, darkTheme } from "./src/theme";
@@ -28,9 +28,9 @@ const AppContent = () => {
           <NetworkProvider>
             <AuthProvider>
               <DownloadProvider>
-                <NewAudioProvider>
+                <AudioProvider>
                   <AppNavigator />
-                </NewAudioProvider>
+                </AudioProvider>
               </DownloadProvider>
             </AuthProvider>
           </NetworkProvider>

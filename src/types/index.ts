@@ -64,10 +64,10 @@ export type AuthState = {
 };
 
 export type AuthAction =
-  | { type: 'RESTORE_TOKEN'; token: string | null; user: User | null }
-  | { type: 'SIGN_IN'; token: string; user: User }
-  | { type: 'SIGN_OUT' }
-  | { type: 'AUTH_ERROR'; error: string };
+  | { type: "RESTORE_TOKEN"; token: string | null; user: User | null }
+  | { type: "SIGN_IN"; token: string; user: User }
+  | { type: "SIGN_OUT" }
+  | { type: "AUTH_ERROR"; error: string };
 
 export type AuthContextType = {
   state: AuthState;
@@ -81,7 +81,7 @@ export type AuthContextType = {
 // Download Types
 // ==========================================
 
-export type DownloadStatus = 'idle' | 'downloading' | 'completed' | 'error';
+export type DownloadStatus = "idle" | "downloading" | "completed" | "error";
 
 export type DownloadInfo = {
   recordingId: string;
@@ -153,7 +153,7 @@ export type NetworkContextType = {
 // Theme Types
 // ==========================================
 
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = "light" | "dark" | "system";
 
 export type ThemeContextType = {
   theme: ThemeMode;
@@ -239,6 +239,6 @@ export type StorageInfo = {
   free: number;
 };
 
-export type SearchFilter = 'all' | 'species' | 'recordings' | 'pages';
+export type SearchFilter = "all" | "species" | "recordings" | "pages";
 
-export type SortOption = 'book' | 'name' | 'recent';
+export type SortOption = "book" | "name" | "recent";

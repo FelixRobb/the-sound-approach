@@ -18,8 +18,8 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
+import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
-import { useAudio } from "../context/NewAudioContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
