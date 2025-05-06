@@ -4,26 +4,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import { useContext } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-  Alert,
-} from "react-native";
+import { useContext, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
-import { AudioContext } from "../context/AudioContext";
+import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
+import { useAudio } from "../context/NewAudioContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { fetchRecordingsBySpecies, supabase } from "../lib/supabase";
+import { getAudioUri } from "../lib/mediaUtils";
+import { fetchRecordingsBySpecies } from "../lib/supabase";
 import { RootStackParamList } from "../types";
-
 const { width } = Dimensions.get("window");
 
 const SpeciesDetailsScreen = () => {
@@ -31,12 +24,15 @@ const SpeciesDetailsScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
   const { isConnected } = useContext(NetworkContext);
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext);
+  const { notifyScreenChange } = useAudio();
   const { isDarkMode } = useContext(ThemeContext);
   const { theme } = useThemedStyles();
 
   const { speciesId } = route.params;
-
+  // Notify audio context about screen change
+  useEffect(() => {
+    notifyScreenChange(`SpeciesDetails-${route.params.speciesId}`);
+  }, [notifyScreenChange, route.params.speciesId]);
   // Fetch recordings for this species
   const {
     data: recordings,
@@ -216,20 +212,6 @@ const SpeciesDetailsScreen = () => {
       fontSize: 12,
       marginLeft: 4,
     },
-    playButton: {
-      marginLeft: 12,
-    },
-    playButtonInner: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 24,
-      height: 48,
-      justifyContent: "center",
-      width: 48,
-    },
-    playingButton: {
-      backgroundColor: isDarkMode ? `${theme.colors.primary}DD` : `${theme.colors.primary}AA`,
-    },
     recordingContent: {
       flex: 1,
       paddingRight: 12,
@@ -303,47 +285,6 @@ const SpeciesDetailsScreen = () => {
       marginBottom: 4,
     },
   });
-
-  // Handle audio preview
-  const handleAudioPreview = async (audioId: string, recordingId: string) => {
-    try {
-      if (audioState.currentAudioId === audioId) {
-        // Toggle play/pause if it's the same audio
-        if (audioState.isPlaying) {
-          await pauseAudio();
-        } else {
-          await playAudio();
-        }
-      } else {
-        // Load and play new audio
-        let audioUri;
-
-        if (isDownloaded(recordingId)) {
-          // Use local file
-          audioUri = getDownloadPath(audioId, true);
-        } else if (isConnected) {
-          const { data } = supabase.storage.from("audio").getPublicUrl(`${audioId}.mp3`);
-          audioUri = data?.publicUrl;
-        } else {
-          // No audio available offline
-          Alert.alert(
-            "Audio Unavailable",
-            "This recording is not available offline. Please download it or connect to the internet.",
-            [{ text: "OK" }]
-          );
-          return;
-        }
-
-        if (audioUri) {
-          await loadAudio(audioUri, audioId, true);
-          await playAudio();
-        }
-      }
-    } catch (error) {
-      console.error("Audio preview error:", error);
-      Alert.alert("Audio Error", "Failed to play audio. Please try again.", [{ text: "OK" }]);
-    }
-  };
 
   // Handle retry
   const handleRetry = () => {
@@ -454,9 +395,6 @@ const SpeciesDetailsScreen = () => {
           ) : (
             <View style={styles.recordingsList}>
               {recordings.map((item) => {
-                const isCurrentlyPlaying =
-                  audioState.isPlaying && audioState.currentAudioId === item.audio_id;
-
                 return (
                   <View key={item.id}>
                     <TouchableOpacity
@@ -484,23 +422,17 @@ const SpeciesDetailsScreen = () => {
                         </Text>
                       </View>
 
-                      <TouchableOpacity
-                        style={styles.playButton}
-                        onPress={() => handleAudioPreview(item.audio_id, item.id)}
-                      >
-                        <View
-                          style={[
-                            styles.playButtonInner,
-                            isCurrentlyPlaying && styles.playingButton,
-                          ]}
-                        >
-                          <Ionicons
-                            name={isCurrentlyPlaying ? "pause" : "play"}
-                            size={24}
-                            color="#FFFFFF"
+                      {(() => {
+                        const uri = getAudioUri(item, isDownloaded, getDownloadPath, isConnected);
+                        return uri ? (
+                          <MiniAudioPlayer
+                            trackId={item.audio_id}
+                            audioUri={uri}
+                            size={36}
+                            showLoading={false}
                           />
-                        </View>
-                      </TouchableOpacity>
+                        ) : null;
+                      })()}
                     </TouchableOpacity>
                     {recordings.indexOf(item) < recordings.length - 1 && (
                       <View style={styles.divider} />

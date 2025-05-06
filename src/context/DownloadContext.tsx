@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
-import type React from 'react';
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system";
+import type React from "react";
+import { createContext, useState, useEffect, useContext, useCallback } from "react";
 
-import { supabase } from '../lib/supabase';
-import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from '../types';
+import { supabase } from "../lib/supabase";
+import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types";
 
-import { AuthContext } from './AuthContext';
+import { AuthContext } from "./AuthContext";
 
 // Create context
 export const DownloadContext = createContext<DownloadContextType>({
@@ -34,7 +34,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const loadDownloadedRecordings = useCallback(async () => {
     try {
       // Get the downloads list key
-      const downloadsListKey = `downloads_list_${authState.user?.id || 'anonymous'}`;
+      const downloadsListKey = `downloads_list_${authState.user?.id || "anonymous"}`;
       const downloadsList = await AsyncStorage.getItem(downloadsListKey);
 
       if (downloadsList) {
@@ -44,7 +44,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setDownloadedRecordings([]);
       }
     } catch (error) {
-      console.error('Error loading downloaded recordings:', error);
+      console.error("Error loading downloaded recordings:", error);
       setDownloadedRecordings([]);
     }
   }, [authState.user?.id]);
@@ -60,19 +60,19 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Calculate total storage used
   const calculateStorageUsed = async () => {
     try {
-      const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + 'downloads/');
+      const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "downloads/");
       if (info.exists && info.isDirectory) {
         setTotalStorageUsed(info.size || 0);
       }
     } catch (error) {
-      console.error('Error calculating storage:', error);
+      console.error("Error calculating storage:", error);
     }
   };
 
   // Get all downloaded recordings with metadata
   const getDownloadedRecordings = async (): Promise<DownloadRecord[]> => {
     try {
-      const userId = authState.user?.id || 'anonymous';
+      const userId = authState.user?.id || "anonymous";
       const result: DownloadRecord[] = [];
 
       // Iterate through downloaded recording IDs
@@ -87,7 +87,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       return result;
     } catch (error) {
-      console.error('Error getting downloaded recordings:', error);
+      console.error("Error getting downloaded recordings:", error);
       return [];
     }
   };
@@ -97,50 +97,55 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (isDownloaded(recording.id)) return;
 
     // Create downloads directory if it doesn't exist
-    const downloadsDir = FileSystem.documentDirectory + 'downloads/';
+    const downloadsDir = FileSystem.documentDirectory + "downloads/";
     const dirInfo = await FileSystem.getInfoAsync(downloadsDir);
     if (!dirInfo.exists) {
       await FileSystem.makeDirectoryAsync(downloadsDir, { intermediates: true });
     }
 
     // Update download status
-    setDownloads(prev => ({
+    setDownloads((prev) => ({
       ...prev,
       [recording.id]: {
         recordingId: recording.id,
-        status: 'downloading',
+        status: "downloading",
         progress: 0,
       },
     }));
 
     try {
       // Download audio file
-      // Download audio file
       const audioPath = `${downloadsDir}audio_${recording.audio_id}.mp3`;
-      const { data: audioUrlData } = await supabase.storage
-        .from('audio')
+      const { data: audioUrlData } = supabase.storage
+        .from("audio")
         .getPublicUrl(`${recording.audio_id}.mp3`);
 
-      if (!audioUrlData?.publicUrl) throw new Error('Failed to get audio URL');
+      if (!audioUrlData?.publicUrl) throw new Error("Failed to get audio URL");
+
+      // Actually download the audio file
+      await FileSystem.downloadAsync(audioUrlData.publicUrl, audioPath);
 
       // Download sonogram image
       const sonogramPath = `${downloadsDir}sonogram_${recording.sonogram_id}.png`;
-      const { data: sonogramUrlData } = await supabase.storage
-        .from('sonograms')
+      const { data: sonogramUrlData } = supabase.storage
+        .from("sonograms")
         .getPublicUrl(`${recording.sonogram_id}.png`);
 
-      if (!sonogramUrlData?.publicUrl) throw new Error('Failed to get sonogram URL');
+      if (!sonogramUrlData?.publicUrl) throw new Error("Failed to get sonogram URL");
+
+      // Actually download the sonogram file
+      await FileSystem.downloadAsync(sonogramUrlData.publicUrl, sonogramPath);
 
       // Get species info if available
-      let speciesName = '';
-      let scientificName = '';
+      let speciesName = "";
+      let scientificName = "";
 
       if (recording.species_id) {
         try {
           const { data: speciesData } = await supabase
-            .from('species')
-            .select('common_name, scientific_name')
-            .eq('id', recording.species_id)
+            .from("species")
+            .select("common_name, scientific_name")
+            .eq("id", recording.species_id)
             .single();
 
           if (speciesData) {
@@ -148,12 +153,12 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             scientificName = speciesData.scientific_name;
           }
         } catch (error) {
-          console.error('Error fetching species data:', error);
+          console.error("Error fetching species data:", error);
         }
       }
 
       // Save download info to AsyncStorage
-      const userId = authState.user?.id || 'anonymous';
+      const userId = authState.user?.id || "anonymous";
       const downloadRecord: DownloadRecord = {
         recording_id: recording.id,
         audio_path: audioPath,
@@ -179,11 +184,11 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await AsyncStorage.setItem(downloadsListKey, JSON.stringify(newDownloadedRecordings));
 
       // Update download status
-      setDownloads(prev => ({
+      setDownloads((prev) => ({
         ...prev,
         [recording.id]: {
           recordingId: recording.id,
-          status: 'completed',
+          status: "completed",
           progress: 1,
         },
       }));
@@ -191,14 +196,14 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Update storage usage
       calculateStorageUsed();
     } catch (error) {
-      console.error('Download error:', error);
-      setDownloads(prev => ({
+      console.error("Download error:", error);
+      setDownloads((prev) => ({
         ...prev,
         [recording.id]: {
           recordingId: recording.id,
-          status: 'error',
+          status: "error",
           progress: 0,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         },
       }));
     }
@@ -207,7 +212,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Delete a downloaded recording
   const deleteDownload = async (recordingId: string) => {
     try {
-      const userId = authState.user?.id || 'anonymous';
+      const userId = authState.user?.id || "anonymous";
       const downloadKey = `download_${userId}_${recordingId}`;
 
       // Get the download record
@@ -231,7 +236,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         await AsyncStorage.removeItem(downloadKey);
 
         // Update the downloads list
-        const newDownloadedRecordings = downloadedRecordings.filter(id => id !== recordingId);
+        const newDownloadedRecordings = downloadedRecordings.filter((id) => id !== recordingId);
         setDownloadedRecordings(newDownloadedRecordings);
 
         // Store the updated downloads list
@@ -239,7 +244,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         await AsyncStorage.setItem(downloadsListKey, JSON.stringify(newDownloadedRecordings));
 
         // Update downloads state
-        setDownloads(prev => {
+        setDownloads((prev) => {
           const newDownloads = { ...prev };
           delete newDownloads[recordingId];
           return newDownloads;
@@ -249,14 +254,14 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         calculateStorageUsed();
       }
     } catch (error) {
-      console.error('Delete download error:', error);
+      console.error("Delete download error:", error);
     }
   };
 
   // Clear all downloads
   const clearAllDownloads = async () => {
     try {
-      const userId = authState.user?.id || 'anonymous';
+      const userId = authState.user?.id || "anonymous";
 
       // Delete all download records
       for (const recordingId of downloadedRecordings) {
@@ -278,7 +283,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               await FileSystem.deleteAsync(downloadRecord.sonogram_path);
             }
           } catch (e) {
-            console.error('Error deleting files:', e);
+            console.error("Error deleting files:", e);
           }
 
           // Remove from AsyncStorage
@@ -295,7 +300,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setDownloads({});
 
       // Recreate downloads directory
-      const downloadsDir = FileSystem.documentDirectory + 'downloads/';
+      const downloadsDir = FileSystem.documentDirectory + "downloads/";
       const dirInfo = await FileSystem.getInfoAsync(downloadsDir);
       if (dirInfo.exists) {
         await FileSystem.deleteAsync(downloadsDir);
@@ -305,7 +310,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Update storage usage
       setTotalStorageUsed(0);
     } catch (error) {
-      console.error('Clear downloads error:', error);
+      console.error("Clear downloads error:", error);
     }
   };
 
@@ -318,7 +323,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const getDownloadPath = (fileId: string, isAudio: boolean) => {
     if (!fileId) return null;
 
-    const downloadsDir = FileSystem.documentDirectory + 'downloads/';
+    const downloadsDir = FileSystem.documentDirectory + "downloads/";
     return isAudio ? `${downloadsDir}audio_${fileId}.mp3` : `${downloadsDir}sonogram_${fileId}.png`;
   };
 

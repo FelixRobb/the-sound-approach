@@ -8,11 +8,13 @@ import { useState, useEffect, useContext } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from "react-native";
 import { Searchbar, ActivityIndicator } from "react-native-paper";
 
-import { AudioContext } from "../context/AudioContext";
+import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
+import { useAudio } from "../context/NewAudioContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { fetchRecordingsByBookOrder, fetchSpecies, supabase } from "../lib/supabase";
+import { getAudioUri } from "../lib/mediaUtils";
+import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
 
@@ -20,7 +22,7 @@ const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isConnected } = useContext(NetworkContext);
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext);
+  const { notifyScreenChange } = useAudio();
   const { theme, isDarkMode } = useThemedStyles();
 
   const [activeTab, setActiveTab] = useState("book");
@@ -33,10 +35,6 @@ const RecordingsListScreen = () => {
     },
     activeTabText: {
       color: theme.colors.onSurface,
-    },
-    audioControls: {
-      alignItems: "center",
-      justifyContent: "center",
     },
     backgroundPattern: {
       backgroundColor: isDarkMode
@@ -169,23 +167,6 @@ const RecordingsListScreen = () => {
     pageText: {
       color: theme.colors.onSurface,
       fontSize: 12,
-    },
-    playButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 18,
-      height: 36,
-      justifyContent: "center",
-      width: 36,
-    },
-    playButtonActive: {
-      backgroundColor: theme.colors.primary,
-    },
-    playButtonContainer: {
-      alignItems: "center",
-      height: 40,
-      justifyContent: "center",
-      width: 40,
     },
     recordingCard: {
       backgroundColor: theme.colors.surface,
@@ -340,46 +321,15 @@ const RecordingsListScreen = () => {
     );
   });
 
-  // Handle audio preview
-  const handleAudioPreview = async (recording: Recording) => {
-    try {
-      if (audioState.currentAudioId === recording.audio_id) {
-        // Toggle play/pause if it's the same audio
-        if (audioState.isPlaying) {
-          await pauseAudio();
-        } else {
-          await playAudio();
-        }
-      } else {
-        // Load and play new audio
-        let audioUri;
-
-        if (isDownloaded(recording.id)) {
-          // Use local file
-          audioUri = getDownloadPath(recording.audio_id, true);
-        } else if (isConnected) {
-          const { data } = await supabase.storage
-            .from("audio")
-            .getPublicUrl(`${recording.audio_id}.mp3`);
-          audioUri = data?.publicUrl;
-        } else {
-          // No audio available offline
-          return;
-        }
-
-        if (audioUri) {
-          await loadAudio(audioUri, recording.audio_id, true);
-        }
-      }
-    } catch (error) {
-      console.error("Audio preview error:", error);
-    }
-  };
+  // Notify audio context about screen change
+  useEffect(() => {
+    notifyScreenChange("RecordingsList");
+  }, [notifyScreenChange]);
 
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
-    const isCurrentlyPlaying = audioState.isPlaying && audioState.currentAudioId === item.audio_id;
     const isItemDownloaded = isDownloaded(item.id);
+    const audioUri = getAudioUri(item, isDownloaded, getDownloadPath, isConnected);
 
     return (
       <TouchableOpacity
@@ -411,13 +361,14 @@ const RecordingsListScreen = () => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.audioControls} onPress={() => handleAudioPreview(item)}>
-            <View style={styles.playButtonContainer}>
-              <View style={[styles.playButton, isCurrentlyPlaying && styles.playButtonActive]}>
-                <Ionicons name={isCurrentlyPlaying ? "pause" : "play"} size={20} color="#FFFFFF" />
-              </View>
-            </View>
-          </TouchableOpacity>
+          {audioUri && (
+            <MiniAudioPlayer
+              trackId={item.audio_id}
+              audioUri={audioUri}
+              size={36}
+              showLoading={false}
+            />
+          )}
         </View>
       </TouchableOpacity>
     );

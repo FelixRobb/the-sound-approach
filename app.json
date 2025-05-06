@@ -12,15 +12,11 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ]
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {
@@ -50,6 +46,10 @@
         "projectId": "7f33bec7-30da-4d56-b98d-52c01f621e3b"
       }
     },
+    "packagerOpts": {
+      "config": "metro.config.js"
+    },
+    "modulePathProxyList": ["expo-av", "uuid"],
     "owner": "robbfelix"
   }
 }

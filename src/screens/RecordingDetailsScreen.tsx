@@ -1,11 +1,10 @@
 "use client";
 
 import { Ionicons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,23 +17,16 @@ import {
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
-import { AudioContext } from "../context/AudioContext";
-import type { AudioState } from "../context/AudioContext";
+import FullAudioPlayer from "../components/FullAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
+import { useAudio } from "../context/NewAudioContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { fetchRecordingById, supabase } from "../lib/supabase";
-import { PlaybackSpeed, RootStackParamList } from "../types";
+import { getAudioUri, getSonogramUri } from "../lib/mediaUtils";
+import { fetchRecordingById } from "../lib/supabase";
+import { RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
-
-// Format time in mm:ss
-const formatTime = (milliseconds: number) => {
-  const totalSeconds = Math.floor(milliseconds / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-};
 
 const RecordingDetailsScreen = () => {
   const { theme } = useThemedStyles();
@@ -43,44 +35,16 @@ const RecordingDetailsScreen = () => {
   const { isConnected } = useContext(NetworkContext);
   const { downloadRecording, isDownloaded, getDownloadPath, downloads } =
     useContext(DownloadContext);
-  const {
-    audioState,
-    loadAudio,
-    playAudio,
-    pauseAudio,
-    seekAudio,
-    setPlaybackSpeed,
-    toggleLooping,
-    resetAudio,
-    setAudioState,
-  } = useContext(AudioContext);
+  const { notifyScreenChange } = useAudio();
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
+  // Notify audio context about screen change
+  useEffect(() => {
+    notifyScreenChange(`RecordingDetails-${route.params.recordingId}`);
+  }, [notifyScreenChange, route.params.recordingId]);
+
   const styles = StyleSheet.create({
-    activeControlButton: {
-      backgroundColor: theme.colors.primary,
-    },
-    activeControlText: {
-      color: theme.colors.onPrimary,
-    },
-    activeSpeedOption: {
-      backgroundColor: theme.colors.primary,
-    },
-    activeSpeedOptionText: {
-      color: theme.colors.onPrimary,
-    },
-    audioErrorContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      padding: 16,
-    },
-    audioErrorText: {
-      color: theme.colors.error,
-      fontSize: 16,
-      marginLeft: 8,
-    },
     backButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primaryContainer,
@@ -127,19 +91,7 @@ const RecordingDetailsScreen = () => {
       padding: 16,
       paddingBottom: 32,
     },
-    controlButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 30,
-      justifyContent: "center",
-    },
-    disabledControlButton: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-    },
     disabledDownloadButton: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-    },
-    disabledOption: {
       opacity: 0.5,
     },
     downloadButtonContainer: {
@@ -263,17 +215,6 @@ const RecordingDetailsScreen = () => {
       fontSize: 18,
       fontWeight: "bold",
     },
-    loadingAudioContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingVertical: 24,
-    },
-    loadingAudioText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginLeft: 8,
-    },
     loadingCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -296,14 +237,6 @@ const RecordingDetailsScreen = () => {
       color: theme.colors.onSurfaceVariant,
       fontSize: 16,
       marginTop: 16,
-    },
-    loopButton: {
-      marginLeft: 24,
-    },
-    mainButton: {
-      backgroundColor: theme.colors.primary,
-      height: 72,
-      width: 72,
     },
     offlineText: {
       color: theme.colors.error,
@@ -329,28 +262,11 @@ const RecordingDetailsScreen = () => {
       fontSize: 12,
       fontWeight: "500",
     },
-    playButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 100,
-      height: 72,
-      justifyContent: "center",
-      width: 72,
-    },
-    playerContainer: {
-      borderRadius: 8,
-    },
     playerHeader: {
       borderRadius: 12,
       height: 80,
       marginBottom: 16,
       overflow: "hidden",
-    },
-    primaryControls: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      marginBottom: 20,
     },
     retryButton: {
       alignItems: "center",
@@ -386,15 +302,6 @@ const RecordingDetailsScreen = () => {
       fontWeight: "600",
       marginBottom: 12,
     },
-    slider: {
-      height: 40,
-      marginBottom: 2,
-    },
-    smallButton: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-      height: 44,
-      width: 44,
-    },
     sonogramContainer: {
       backgroundColor: theme.colors.onSurfaceVariant,
       borderRadius: 12,
@@ -426,49 +333,6 @@ const RecordingDetailsScreen = () => {
       fontWeight: "bold",
       marginBottom: 4,
     },
-    speedButton: {
-      marginRight: 24,
-    },
-    speedControlContainer: {
-      marginBottom: 8,
-    },
-    speedLabel: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginBottom: 8,
-    },
-    speedOption: {
-      alignItems: "center",
-      backgroundColor: theme.colors.onSurfaceVariant,
-      borderRadius: 20,
-      flex: 1,
-      marginHorizontal: 4,
-      paddingVertical: 8,
-    },
-    speedOptionText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontWeight: "500",
-    },
-    speedOptions: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    speedText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontWeight: "bold",
-    },
-    timeContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 16,
-      paddingHorizontal: 2,
-    },
-    timeText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-    },
     waveformPlaceholder: {
       alignItems: "center",
       backgroundColor: theme.colors.onSurfaceVariant,
@@ -492,143 +356,6 @@ const RecordingDetailsScreen = () => {
     queryKey: ["recording", route.params.recordingId],
     queryFn: () => fetchRecordingById(route.params.recordingId),
   });
-
-  // Cleanup function when leaving screen
-  useEffect(() => {
-    return () => {
-      pauseAudio();
-      resetAudio();
-    };
-  }, [pauseAudio, resetAudio]);
-
-  // Handle audio loading and playback
-  const handlePlayPause = async () => {
-    if (!recording) {
-      console.log("⚠️ [Player] Cannot play/pause - no recording");
-      return;
-    }
-
-    try {
-      console.log("🎵 [Player] HandlePlayPause:", {
-        currentAudioId: audioState.currentAudioId,
-        recordingAudioId: recording.audio_id,
-        isPlaying: audioState.isPlaying,
-        isLoaded: audioState.isLoaded,
-      });
-
-      // If we're already playing this audio, just toggle play/pause
-      if (audioState.currentAudioId === recording.audio_id && audioState.isLoaded) {
-        if (audioState.isPlaying) {
-          console.log("⏸️ [Player] Pausing current audio");
-          await pauseAudio();
-        } else {
-          console.log("▶️ [Player] Playing current audio");
-          await playAudio();
-        }
-        return;
-      }
-
-      // Load and play new audio
-      let audioUri = null;
-
-      // Reset any previous error state before starting
-      console.log("🎵 [Player] Resetting audio state before load");
-      setAudioState((prevState: AudioState) => ({
-        ...prevState,
-        loadError: null,
-        isBuffering: true,
-        loadProgress: 0,
-      }));
-
-      // First determine the audio URI
-      if (isDownloaded(recording.id)) {
-        // Use local file
-        audioUri = getDownloadPath(recording.audio_id, true);
-        console.log("🎵 [Player] Using local audio file:", audioUri);
-      } else if (isConnected) {
-        // Use public URL from Supabase
-        const { data } = supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`);
-        audioUri = data?.publicUrl;
-        console.log("🎵 [Player] Using remote audio URL:", audioUri);
-      } else {
-        console.log("❌ [Player] No internet connection available");
-        throw new Error("No internet connection available");
-      }
-
-      if (!audioUri) {
-        console.log("❌ [Player] Could not get audio URL");
-        throw new Error("Could not get audio URL");
-      }
-
-      // Now load the audio and start playback - REMOVED the pause attempt
-      console.log("🎵 [Player] Loading audio:", audioUri);
-      const success = await loadAudio(audioUri, recording.audio_id, true); // Use autoPlay=true parameter
-      console.log("🎵 [Player] Load result:", success);
-
-      if (!success) {
-        console.log("❌ [Player] Failed to load audio");
-        throw new Error("Failed to load audio");
-      }
-    } catch (error) {
-      console.error("❌ [Player] Error controlling playback:", error);
-      setAudioState((prevState: AudioState) => ({
-        ...prevState,
-        loadError: error instanceof Error ? error.message : "Unknown error occurred",
-        isBuffering: false,
-        loadProgress: 0,
-        isLoaded: false,
-        isPlaying: false,
-      }));
-    }
-  };
-
-  // Handle seek with additional checks
-  const handleSeek = async (value: number) => {
-    console.log("🎵 [Player] Seeking to:", value);
-    if (!audioState.isLoaded) {
-      console.log("⚠️ [Player] Cannot seek - audio not loaded");
-      return;
-    }
-
-    try {
-      await seekAudio(value);
-    } catch (error) {
-      console.error("❌ [Player] Error seeking:", error);
-    }
-  };
-
-  // Handle playback speed change
-  const handleSpeedChange = async (speed: PlaybackSpeed) => {
-    console.log("🎵 [Player] Changing speed to:", speed);
-    if (!audioState.isLoaded) {
-      console.log("⚠️ [Player] Cannot change speed - audio not loaded");
-      return;
-    }
-
-    try {
-      await setPlaybackSpeed(speed);
-    } catch (error) {
-      console.error("❌ [Player] Error changing speed:", error);
-    }
-  };
-
-  // Handle loop toggle
-  const handleLoopToggle = async () => {
-    console.log("🎵 [Player] Toggling loop");
-    if (!audioState.isLoaded) {
-      console.log("⚠️ [Player] Cannot toggle loop - audio not loaded");
-      return;
-    }
-
-    try {
-      await toggleLooping();
-    } catch (error) {
-      console.error("❌ [Player] Error toggling loop:", error);
-    }
-  };
-
-  // Check if audio is actually loaded and ready
-  const isAudioReady = audioState.isLoaded && audioState.currentAudioId === recording?.audio_id;
 
   // Get download status
   const getDownloadStatus = () => {
@@ -655,23 +382,17 @@ const RecordingDetailsScreen = () => {
     }
   };
 
-  // Get sonogram image URI
-  const getSonogramUri = () => {
+  // Get audio URI for the player - memoized to prevent repeated requests
+  const audioUri = useMemo(() => {
     if (!recording) return null;
+    return getAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
+  }, [recording, isDownloaded, isConnected, getDownloadPath]);
 
-    if (isDownloaded(recording.id)) {
-      // Use local file
-      return getDownloadPath(recording.sonogram_id, false);
-    } else if (isConnected) {
-      // Use public URL from Supabase
-      const { data } = supabase.storage
-        .from("sonograms")
-        .getPublicUrl(`${recording.sonogram_id}.png`);
-      return data?.publicUrl || null;
-    }
-
-    return null;
-  };
+  // Get sonogram image URI - memoized to prevent repeated requests
+  const sonogramUri = useMemo(() => {
+    if (!recording) return null;
+    return getSonogramUri(recording, isDownloaded, getDownloadPath, isConnected);
+  }, [recording, isDownloaded, isConnected, getDownloadPath]);
 
   // Render loading state
   if (isLoading) {
@@ -740,7 +461,7 @@ const RecordingDetailsScreen = () => {
           </TouchableOpacity>
           <Image
             source={{
-              uri: getSonogramUri() || "https://placeholder.svg?height=400&width=800&text=Sonogram",
+              uri: sonogramUri || "https://placeholder.svg?height=400&width=800&text=Sonogram",
             }}
             style={styles.fullscreenImage}
             resizeMode="contain"
@@ -787,11 +508,11 @@ const RecordingDetailsScreen = () => {
             <View style={styles.card}>
               {/* Player Visualization */}
               <View style={styles.playerHeader}>
-                {getSonogramUri() ? (
+                {sonogramUri ? (
                   <Image
                     source={{
                       uri:
-                        getSonogramUri() ||
+                        sonogramUri ||
                         "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
                     }}
                     style={styles.waveformPreview}
@@ -804,145 +525,12 @@ const RecordingDetailsScreen = () => {
                 )}
               </View>
 
-              {/* Player Controls */}
-              <View style={styles.playerContainer}>
-                {audioState.loadError ? (
-                  <View style={styles.audioErrorContainer}>
-                    <Ionicons name="alert-circle" size={24} color={theme.colors.error} />
-                    <Text style={styles.audioErrorText}>
-                      Failed to load audio: {audioState.loadError}
-                    </Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={() => handlePlayPause()}>
-                      <Text style={styles.retryText}>Retry</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : audioState.isBuffering ? (
-                  <View style={styles.loadingAudioContainer}>
-                    <ActivityIndicator size="small" color="#2E7D32" />
-                    <Text style={styles.loadingAudioText}>
-                      {audioState.loadProgress < 1
-                        ? `Loading audio (${Math.round(audioState.loadProgress * 100)}%)`
-                        : "Preparing playback..."}
-                    </Text>
-                  </View>
-                ) : (
-                  <>
-                    {/* Playback Progress */}
-                    <Slider
-                      value={audioState.position}
-                      minimumValue={0}
-                      maximumValue={audioState.duration || 1}
-                      onSlidingComplete={handleSeek}
-                      disabled={!isAudioReady}
-                      minimumTrackTintColor="#2E7D32"
-                      maximumTrackTintColor="#EEEEEE"
-                      thumbTintColor="#2E7D32"
-                      style={styles.slider}
-                    />
-
-                    <View style={styles.timeContainer}>
-                      <Text style={styles.timeText}>{formatTime(audioState.position)}</Text>
-                      <Text style={styles.timeText}>{formatTime(audioState.duration)}</Text>
-                    </View>
-
-                    {/* Primary Controls */}
-                    <View style={styles.primaryControls}>
-                      <TouchableOpacity
-                        style={styles.speedButton}
-                        onPress={() => handleSpeedChange(audioState.playbackSpeed === 1 ? 1.5 : 1)}
-                        disabled={!isAudioReady}
-                      >
-                        <View
-                          style={[
-                            styles.controlButton,
-                            styles.smallButton,
-                            audioState.playbackSpeed !== 1 && styles.activeControlButton,
-                            !isAudioReady && styles.disabledControlButton,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.speedText,
-                              audioState.playbackSpeed !== 1 && styles.activeControlText,
-                            ]}
-                          >
-                            {audioState.playbackSpeed}x
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.playButton}
-                        onPress={handlePlayPause}
-                        disabled={!recording}
-                      >
-                        <View
-                          style={[
-                            styles.controlButton,
-                            styles.mainButton,
-                            !recording && styles.disabledControlButton,
-                          ]}
-                        >
-                          <Ionicons
-                            name={audioState.isPlaying ? "pause" : "play"}
-                            size={36}
-                            color="#FFFFFF"
-                          />
-                        </View>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.loopButton}
-                        onPress={handleLoopToggle}
-                        disabled={!isAudioReady}
-                      >
-                        <View
-                          style={[
-                            styles.controlButton,
-                            styles.smallButton,
-                            audioState.isLooping && styles.activeControlButton,
-                            !isAudioReady && styles.disabledControlButton,
-                          ]}
-                        >
-                          <Ionicons
-                            name="repeat"
-                            size={20}
-                            color={audioState.isLooping ? "#FFFFFF" : "#999999"}
-                          />
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* Speed Options */}
-                    <View style={styles.speedControlContainer}>
-                      <Text style={styles.speedLabel}>Playback Speed:</Text>
-                      <View style={styles.speedOptions}>
-                        {([0.5, 1, 1.5, 2] as PlaybackSpeed[]).map((speed) => (
-                          <TouchableOpacity
-                            key={speed}
-                            style={[
-                              styles.speedOption,
-                              audioState.playbackSpeed === speed && styles.activeSpeedOption,
-                              !isAudioReady && styles.disabledOption,
-                            ]}
-                            onPress={() => handleSpeedChange(speed)}
-                            disabled={!isAudioReady}
-                          >
-                            <Text
-                              style={[
-                                styles.speedOptionText,
-                                audioState.playbackSpeed === speed && styles.activeSpeedOptionText,
-                              ]}
-                            >
-                              {speed}x
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-                  </>
-                )}
-              </View>
+              {/* Audio Player Component */}
+              <FullAudioPlayer
+                trackId={recording.audio_id}
+                audioUri={audioUri}
+                hasNetworkConnection={isConnected}
+              />
             </View>
 
             {/* Description Card */}
@@ -955,7 +543,7 @@ const RecordingDetailsScreen = () => {
             <View style={styles.card}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Sonogram</Text>
-                {getSonogramUri() && (
+                {sonogramUri && (
                   <TouchableOpacity
                     style={styles.expandButton}
                     onPress={() => setIsImageFullscreen(true)}
@@ -969,7 +557,7 @@ const RecordingDetailsScreen = () => {
                 <Image
                   source={{
                     uri:
-                      getSonogramUri() ||
+                      sonogramUri ||
                       "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
                   }}
                   style={styles.sonogramImage}

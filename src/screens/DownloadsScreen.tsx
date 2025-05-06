@@ -17,8 +17,9 @@ import {
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
-import { AudioContext } from "../context/AudioContext";
+import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
+import { useAudio } from "../context/NewAudioContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
@@ -30,8 +31,8 @@ const DownloadsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
     useContext(DownloadContext);
-  const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext);
   const { isDarkMode } = useContext(ThemeContext);
+  const { notifyScreenChange } = useAudio();
   const { theme } = useThemedStyles();
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
@@ -94,25 +95,10 @@ const DownloadsScreen = () => {
     loadDownloads();
   }, [loadDownloads]);
 
-  // Handle audio playback
-  const handleAudioPlayback = async (item: DownloadRecord) => {
-    try {
-      if (audioState.currentAudioId === item.audio_path) {
-        // Toggle play/pause if it's the same audio
-        if (audioState.isPlaying) {
-          await pauseAudio();
-        } else {
-          await playAudio();
-        }
-      } else {
-        // Load and play new audio
-        await loadAudio(`file://${item.audio_path}`, item.audio_path, true);
-        await playAudio();
-      }
-    } catch (error) {
-      console.error("Audio playback error:", error);
-    }
-  };
+  // Notify audio context about screen change
+  useEffect(() => {
+    notifyScreenChange("Downloads");
+  }, [notifyScreenChange]);
 
   // Handle delete download
   const handleDeleteDownload = (item: DownloadRecord) => {
@@ -558,8 +544,12 @@ const DownloadsScreen = () => {
 
   // Render download item
   const renderDownloadItem = ({ item }: { item: DownloadRecord }) => {
-    const isCurrentlyPlaying =
-      audioState.isPlaying && audioState.currentAudioId === item.audio_path;
+    // Ensure the audioUri has the file:// prefix
+    const audioUri = item.audio_path
+      ? item.audio_path.startsWith("file://")
+        ? item.audio_path
+        : `file://${item.audio_path}`
+      : null;
 
     return (
       <View>
@@ -590,17 +580,12 @@ const DownloadsScreen = () => {
             </View>
 
             <View style={styles.downloadActions}>
-              <TouchableOpacity style={styles.playButton} onPress={() => handleAudioPlayback(item)}>
-                <View
-                  style={[styles.playButtonInner, isCurrentlyPlaying && styles.playButtonActive]}
-                >
-                  <Ionicons
-                    name={isCurrentlyPlaying ? "pause" : "play"}
-                    size={20}
-                    color={theme.colors.onPrimary}
-                  />
+              {/* Replace with MiniAudioPlayer */}
+              {audioUri && (
+                <View style={styles.playButton}>
+                  <MiniAudioPlayer trackId={item.audio_path} audioUri={audioUri} size={40} />
                 </View>
-              </TouchableOpacity>
+              )}
 
               <TouchableOpacity
                 style={styles.deleteButton}
