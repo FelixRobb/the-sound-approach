@@ -1,12 +1,22 @@
 {
-"extends": "expo/tsconfig.base",
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "App.tsx",
-    "index.js"
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".expo",
+    "web-build",
+    "babel.config.js",
+    "metro.config.js",
+    "*.config.js",
+    "*.d.ts",
+    "assets",
+    "recordings",
+    "sonograms",
+    ".eslintrc.js"
   ]
 }

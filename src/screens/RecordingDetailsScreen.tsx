@@ -1,290 +1,398 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useState, useEffect, useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Dimensions } from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
-import { useQuery } from "@tanstack/react-query"
-import Slider from '@react-native-community/slider'
-import { ActivityIndicator } from "react-native-paper"
-import { fetchRecordingById } from "../lib/supabase"
-import { NetworkContext } from "../context/NetworkContext"
-import { DownloadContext } from "../context/DownloadContext"
-import { AudioContext } from "../context/AudioContext"
-import { supabase } from "../lib/supabase"
-import { PlaybackSpeed, RootStackParamList } from "../types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import { useThemedStyles } from "../hooks/useThemedStyles"
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useQuery } from "@tanstack/react-query";
+import React, { useState, useContext, useEffect, useMemo } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Alert,
+  Dimensions,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
-const { width } = Dimensions.get("window")
+import FullAudioPlayer from "../components/FullAudioPlayer";
+import { useAudio } from "../context/AudioContext";
+import { DownloadContext } from "../context/DownloadContext";
+import { NetworkContext } from "../context/NetworkContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import { getAudioUri, getSonogramUri } from "../lib/mediaUtils";
+import { fetchRecordingById } from "../lib/supabase";
+import { RootStackParamList } from "../types";
 
-// Format time in mm:ss
-const formatTime = (milliseconds: number) => {
-  const totalSeconds = Math.floor(milliseconds / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`
-}
+const { width } = Dimensions.get("window");
 
 const RecordingDetailsScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>()
-  const { isConnected } = useContext(NetworkContext)
-  const { downloadRecording, isDownloaded, getDownloadPath, downloads } = useContext(DownloadContext)
-  const { audioState, loadAudio, playAudio, pauseAudio, seekAudio, setPlaybackSpeed, toggleLooping, resetAudio } =
-    useContext(AudioContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const { theme } = useThemedStyles();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
+  const { isConnected } = useContext(NetworkContext);
+  const { downloadRecording, isDownloaded, getDownloadPath, downloads } =
+    useContext(DownloadContext);
+  const { notifyScreenChange } = useAudio();
 
-  const [isImageFullscreen, setIsImageFullscreen] = useState(false)
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false)
-  const [audioLoadRetries, setAudioLoadRetries] = useState(0)
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
-  // Dynamic style helpers
-  const backButtonBg = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-  const backgroundPatternColor = isDarkMode
-    ? `${theme.colors.primary}08`
-    : `${theme.colors.primary}05`;
-  const headerDownloadedIndicatorBg = isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)';
-  const scientificNameColor = isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
-  const pageReferenceBg = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-  const pageTextColor = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
-  const playerHeaderBg = isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)';
-  const loadingAudioTextColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-  const timeTextColor = isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
-  const controlButtonBg = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-  const speedTextColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-  const speedLabelColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-  const speedOptionBg = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-  const speedOptionTextColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-  const captionColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-  const expandButtonBg = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-  const sonogramContainerBg = isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)';
-  const downloadingTextColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-  const disabledDownloadButtonBg = isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
-  const fullscreenContainerBg = isDarkMode ? '#000000' : '#FFFFFF';
-  const closeButtonBg = 'rgba(0, 0, 0, 0.5)';
-  const errorTextColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-  const goBackButtonBg = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+  // Notify audio context about screen change
+  useEffect(() => {
+    notifyScreenChange(`RecordingDetails-${route.params.recordingId}`);
+  }, [notifyScreenChange, route.params.recordingId]);
 
-  // Dynamic color for icons/text
-  const cloudDoneColor = isDarkMode ? '#81C784' : '#2E7D32';
-  const expandIconColor = '#2E7D32';
-  const downloadIconColor = '#FFFFFF';
-  const downloadTextColor = '#FFFFFF';
-  const playPauseIconColor = '#FFFFFF';
-  const loopInactiveColor = '#999999';
-  const refreshIconColor = '#FFFFFF';
-  const wifiIconColor = '#B00020';
+  const styles = StyleSheet.create({
+    backButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      marginRight: 12,
+      width: 40,
+    },
+    caption: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 16,
+      lineHeight: 24,
+    },
+    card: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 3,
+      marginBottom: 16,
+      overflow: "hidden",
+      padding: 16,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.22,
+      shadowRadius: 2.22,
+    },
+    closeButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      position: "absolute",
+      right: 20,
+      top: 40,
+      width: 40,
+      zIndex: 20,
+    },
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
+    content: {
+      padding: 16,
+      paddingBottom: 32,
+    },
+    disabledDownloadButton: {
+      opacity: 0.5,
+    },
+    downloadButtonContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingVertical: 16,
+    },
+    downloadButtonText: {
+      color: theme.colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    downloadedContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingVertical: 12,
+    },
+    downloadedIndicator: {
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: 16,
+      marginLeft: 8,
+      padding: 8,
+    },
+    downloadedText: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      fontWeight: "500",
+      marginLeft: 12,
+    },
+    downloadingContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingVertical: 16,
+    },
+    downloadingText: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      marginLeft: 12,
+    },
+    errorCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 4,
+      padding: 24,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      width: width * 0.8,
+    },
+    errorContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: 24,
+    },
+    errorText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 16,
+      lineHeight: 22,
+      marginBottom: 24,
+      textAlign: "center",
+    },
+    errorTitle: {
+      color: theme.colors.error,
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 8,
+      marginTop: 16,
+    },
+    expandButton: {
+      padding: 4,
+    },
+    fullscreenContainer: {
+      backgroundColor: theme.colors.surface,
+      flex: 1,
+      zIndex: 10,
+    },
+    fullscreenImage: {
+      flex: 1,
+    },
+    goBackButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      marginRight: 12,
+      width: 40,
+    },
+    goBackText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "bold",
+    },
+    header: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderBottomLeftRadius: 20,
+      borderBottomRightRadius: 20,
+      elevation: 4,
+      flexDirection: "row",
+      paddingBottom: 16,
+      paddingHorizontal: 16,
+      paddingTop: 50,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+    },
+    headerTitle: {
+      color: theme.colors.onSurfaceVariant,
+      flex: 1,
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    loadingCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 4,
+      padding: 24,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      width: width * 0.8,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: 24,
+    },
+    loadingText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 16,
+      marginTop: 16,
+    },
+    offlineText: {
+      color: theme.colors.error,
+      fontSize: 14,
+      marginLeft: 6,
+    },
+    offlineWarning: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 8,
+    },
+    pageReference: {
+      alignSelf: "flex-start",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: 12,
+      marginTop: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    pageText: {
+      color: theme.colors.primary,
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    playerHeader: {
+      borderRadius: 12,
+      height: 80,
+      marginBottom: 16,
+      overflow: "hidden",
+    },
+    retryButton: {
+      alignItems: "center",
+      alignSelf: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    retryText: {
+      color: theme.colors.onPrimary,
+      fontSize: 14,
+      marginLeft: 8,
+    },
+    scientificName: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      fontStyle: "italic",
+      marginBottom: 8,
+    },
+    sectionHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 12,
+    },
+    sectionTitle: {
+      color: theme.colors.primary,
+      fontSize: 18,
+      fontWeight: "600",
+      marginBottom: 12,
+    },
+    sonogramContainer: {
+      backgroundColor: theme.colors.onSurfaceVariant,
+      borderRadius: 12,
+      overflow: "hidden",
+    },
+    sonogramImage: {
+      height: 200,
+      width: "100%",
+    },
+    speciesActionButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 16,
+      height: 32,
+      justifyContent: "center",
+      width: 32,
+    },
+    speciesHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    speciesInfo: {
+      flex: 1,
+    },
+    speciesName: {
+      color: theme.colors.primary,
+      fontSize: 22,
+      fontWeight: "bold",
+      marginBottom: 4,
+    },
+    waveformPlaceholder: {
+      alignItems: "center",
+      backgroundColor: theme.colors.onSurfaceVariant,
+      height: "100%",
+      justifyContent: "center",
+      width: "100%",
+    },
+    waveformPreview: {
+      height: "100%",
+      width: "100%",
+    },
+  });
 
   // Fetch recording details
   const {
     data: recording,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: ["recording", route.params.recordingId],
     queryFn: () => fetchRecordingById(route.params.recordingId),
-  })
-
-  // Cleanup function
-  useEffect(() => {
-    return () => {
-      pauseAudio()
-      resetAudio()
-    }
-  }, [pauseAudio, resetAudio])
-
-  // Handle audio loading
-  useEffect(() => {
-    let isMounted = true
-    let loadAttemptInProgress = false
-
-    const loadRecordingAudio = async () => {
-      // Skip if already loading, no recording, or loading in progress
-      if (!recording || isLoadingAudio || loadAttemptInProgress) return
-
-      loadAttemptInProgress = true
-
-      try {
-        setIsLoadingAudio(true)
-        let audioUri = null
-
-        if (isDownloaded(recording.id)) {
-          // Use local file
-          audioUri = getDownloadPath(recording.audio_id, true)
-        } else if (isConnected) {
-          // Use public URL from Supabase
-          const { data } = supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`)
-          audioUri = data?.publicUrl
-        } else {
-          // No audio available offline
-          setIsLoadingAudio(false)
-          loadAttemptInProgress = false
-          return
-        }
-
-        if (!audioUri) {
-          setIsLoadingAudio(false)
-          loadAttemptInProgress = false
-          return
-        }
-
-        // Direct load without setTimeout
-        const success = await loadAudio(audioUri, recording.audio_id || '')
-
-        if (isMounted) {
-          if (success) {
-            setAudioLoadRetries(0)
-          } else {
-            // Retry logic - but only if component is still mounted
-            if (audioLoadRetries < 2 && isMounted) {
-              setAudioLoadRetries(prev => prev + 1)
-            } else if (isMounted) {
-              // Show error alert after retries
-              Alert.alert(
-                "Audio Error",
-                "Failed to load audio file. Please try again later.",
-                [{ text: "OK" }]
-              )
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Error in audio loading:", err)
-      } finally {
-        if (isMounted) {
-          setIsLoadingAudio(false)
-        }
-        loadAttemptInProgress = false
-      }
-    }
-
-    // Load audio when recording is available and we have network/local file
-    if (recording && (isConnected || isDownloaded(recording.id))) {
-      loadRecordingAudio()
-    }
-
-    // Clean up function
-    return () => {
-      isMounted = false
-    }
-  }, [recording, isConnected, audioLoadRetries, isDownloaded, isLoadingAudio, loadAudio, getDownloadPath])
-  
-  // Check if audio is actually loaded
-  const isAudioReady = audioState.isLoaded && audioState.currentAudioId === recording?.audio_id
+  });
 
   // Get download status
   const getDownloadStatus = () => {
-    if (!recording) return "idle"
+    if (!recording) return "idle";
 
     if (isDownloaded(recording.id)) {
-      return "completed"
+      return "completed";
     }
 
-    return downloads[recording.id]?.status || "idle"
-  }
+    return downloads[recording.id]?.status || "idle";
+  };
 
   // Handle download button press
   const handleDownload = async () => {
-    if (!recording || !isConnected) return
+    if (!recording || !isConnected) return;
 
     try {
-      await downloadRecording(recording)
-      // After download is complete, try to load audio again
-      setTimeout(() => {
-        setAudioLoadRetries(0)
-      }, 1000)
+      await downloadRecording(recording);
     } catch (error) {
-      console.error("Download error:", error)
-      Alert.alert(
-        "Download Error",
-        "Failed to download the recording. Please try again.",
-        [{ text: "OK" }]
-      )
+      console.error("Download error:", error);
+      Alert.alert("Download Error", "Failed to download the recording. Please try again.", [
+        { text: "OK" },
+      ]);
     }
-  }
+  };
 
-  // Handle play/pause button press
-  const handlePlayPause = async () => {
-    if (!isAudioReady) {
-      // If we have recording but audio isn't ready, try loading again
-      if (recording && !isLoadingAudio) {
-        setAudioLoadRetries(0)
-      }
-      return
-    }
+  // Get audio URI for the player - memoized to prevent repeated requests
+  const audioUri = useMemo(() => {
+    if (!recording) return null;
+    return getAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
+  }, [recording, isDownloaded, isConnected, getDownloadPath]);
 
-    try {
-      if (audioState.isPlaying) {
-        await pauseAudio()
-      } else {
-        const success = await playAudio()
-        if (!success && recording) {
-          // Try reloading if play fails
-          setAudioLoadRetries(0)
-        }
-      }
-    } catch (error) {
-      console.error("Error controlling playback:", error)
-    }
-  }
-
-  // Handle seek with additional checks
-  const handleSeek = async (value: number) => {
-    if (!isAudioReady) return
-
-    try {
-      await seekAudio(value)
-    } catch (error) {
-      console.error("Error seeking:", error)
-    }
-  }
-
-  // Handle playback speed change
-  const handleSpeedChange = async (speed: PlaybackSpeed) => {
-    if (!isAudioReady) return
-
-    try {
-      await setPlaybackSpeed(speed)
-    } catch (error) {
-      console.error("Error changing speed:", error)
-    }
-  }
-
-  // Handle loop toggle
-  const handleLoopToggle = async () => {
-    if (!isAudioReady) return
-
-    try {
-      await toggleLooping()
-    } catch (error) {
-      console.error("Error toggling loop:", error)
-    }
-  }
-
-  // Handle retry
-  const handleRetry = () => {
-    setAudioLoadRetries(0)
-    refetch()
-  }
-
-  // Get sonogram image URI
-  const getSonogramUri = () => {
-    if (!recording) return null
-
-    if (isDownloaded(recording.id)) {
-      // Use local file
-      return getDownloadPath(recording.sonogram_id, false)
-    } else if (isConnected) {
-      // Use public URL from Supabase
-      const { data } = supabase.storage.from("sonograms").getPublicUrl(`${recording.sonogram_id}.png`)
-      return data?.publicUrl || null
-    }
-
-    return null
-  }
+  // Get sonogram image URI - memoized to prevent repeated requests
+  const sonogramUri = useMemo(() => {
+    if (!recording) return null;
+    return getSonogramUri(recording, isDownloaded, getDownloadPath, isConnected);
+  }, [recording, isDownloaded, isConnected, getDownloadPath]);
 
   // Only static values in StyleSheet
   const styles = StyleSheet.create({
@@ -668,14 +776,10 @@ const RecordingDetailsScreen = () => {
   // Render loading state
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={[styles.backgroundPattern, { backgroundColor: backgroundPatternColor }]} />
-        <View style={[styles.header, { backgroundColor: theme.colors.surface, shadowOpacity: isDarkMode ? 0.3 : 0.1 }]}>
-          <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: backButtonBg }]} 
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#2E7D32" />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>Loading...</Text>
         </View>
@@ -687,20 +791,16 @@ const RecordingDetailsScreen = () => {
           </View>
         </View>
       </View>
-    )
+    );
   }
 
   // Render error state
   if (error || !recording) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={[styles.backgroundPattern, { backgroundColor: backgroundPatternColor }]} />
-        <View style={[styles.header, { backgroundColor: theme.colors.surface, shadowOpacity: isDarkMode ? 0.3 : 0.1 }]}>
-          <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: backButtonBg }]} 
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#2E7D32" />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>Error</Text>
         </View>
@@ -714,48 +814,43 @@ const RecordingDetailsScreen = () => {
                 ? "You're offline. This recording is not available offline."
                 : "Something went wrong. Please try again."}
             </Text>
-            <TouchableOpacity
-              style={[styles.retryButton, { backgroundColor: theme.colors.primary }]}
-              onPress={handleRetry}
-            >
+            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.goBackButton, { backgroundColor: goBackButtonBg }]}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={[styles.goBackText, { color: theme.colors.onSurface }]}>Go Back</Text>
+            <TouchableOpacity style={styles.goBackButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.goBackText}>Go Back</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
-    )
+    );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {isImageFullscreen ? (
-        <View style={[styles.fullscreenContainer, { backgroundColor: fullscreenContainerBg }]}>
-          <TouchableOpacity style={[styles.closeButton, { backgroundColor: closeButtonBg }]} onPress={() => {
-            setIsImageFullscreen(false);
-          }}>
+        <View style={styles.fullscreenContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => {
+              setIsImageFullscreen(false);
+            }}
+          >
             <Ionicons name="close" size={24} color="#FFFFFF" />
           </TouchableOpacity>
           <Image
-            source={{ uri: getSonogramUri() || "https://placeholder.svg?height=400&width=800&text=Sonogram" }}
-            style={[styles.fullscreenImage, { height: width * 0.8 }]}
+            source={{
+              uri: sonogramUri || "https://placeholder.svg?height=400&width=800&text=Sonogram",
+            }}
+            style={styles.fullscreenImage}
             resizeMode="contain"
           />
         </View>
       ) : (
         <>
-          <View style={[styles.backgroundPattern, { backgroundColor: backgroundPatternColor }]} />
-          <View style={[styles.header, { backgroundColor: theme.colors.surface, shadowOpacity: isDarkMode ? 0.3 : 0.1 }]}>
-            <TouchableOpacity 
-              style={[styles.backButton, { backgroundColor: backButtonBg }]} 
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={24} color="#2E7D32" />
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>{recording.title}</Text>
             {isDownloaded(recording.id) && (
@@ -782,7 +877,7 @@ const RecordingDetailsScreen = () => {
               <TouchableOpacity
                 style={[styles.speciesHeader, { backgroundColor: theme.colors.surface }]}
                 onPress={() => {
-                  navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
+                  navigation.navigate("SpeciesDetails", { speciesId: recording.species_id });
                 }}
               >
                 <View style={[styles.speciesInfo, { backgroundColor: theme.colors.surface }]}>
@@ -802,11 +897,15 @@ const RecordingDetailsScreen = () => {
             {/* Audio Player Card */}
             <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
               {/* Player Visualization */}
-              <View style={[styles.playerHeader, { backgroundColor: playerHeaderBg }]}>
-                {getSonogramUri() ? (
+              <View style={styles.playerHeader}>
+                {sonogramUri ? (
                   <Image
-                    source={{ uri: getSonogramUri() || "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available" }}
-                    style={[styles.waveformPreview, { height: '100%', width: '100%' }]}
+                    source={{
+                      uri:
+                        sonogramUri ||
+                        "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
+                    }}
+                    style={styles.waveformPreview}
                     resizeMode="cover"
                   />
                 ) : (
@@ -815,138 +914,13 @@ const RecordingDetailsScreen = () => {
                   </View>
                 )}
               </View>
-              
-              {/* Player Controls */}
-              <View style={[styles.playerContainer, { backgroundColor: theme.colors.surface }]}>
-                {isLoadingAudio ? (
-                  <View style={[styles.loadingAudioContainer, { backgroundColor: theme.colors.surface }]}>
-                    <ActivityIndicator size="small" color={theme.colors.primary} />
-                    <Text style={[styles.loadingAudioText, { color: loadingAudioTextColor }]}>Loading audio...</Text>
-                  </View>
-                ) : (
-                  <>
-                    {/* Playback Progress */}
-                    <Slider
-                      value={audioState.position}
-                      minimumValue={0}
-                      maximumValue={audioState.duration || 1}
-                      onSlidingComplete={handleSeek}
-                      disabled={!isAudioReady}
-                      minimumTrackTintColor={theme.colors.primary}
-                      maximumTrackTintColor={isDarkMode ? '#555555' : '#EEEEEE'}
-                      thumbTintColor={theme.colors.primary}
-                      style={[styles.slider, { backgroundColor: theme.colors.surface }]}
-                    />
-                    
-                    <View style={[styles.timeContainer, { backgroundColor: theme.colors.surface }]}>
-                      <Text style={[styles.timeText, { color: timeTextColor }]}>{formatTime(audioState.position)}</Text>
-                      <Text style={[styles.timeText, { color: timeTextColor }]}>{formatTime(audioState.duration)}</Text>
-                    </View>
-                    
-                    {/* Primary Controls */}
-                    <View style={[styles.primaryControls, { backgroundColor: theme.colors.surface }]}>
-                      <TouchableOpacity
-                        style={[styles.speedButton, { backgroundColor: theme.colors.surface }]}
-                        onPress={() => handleSpeedChange(audioState.playbackSpeed === 1 ? 1.5 : 1)}
-                        disabled={!isAudioReady}
-                      >
-                        <View style={[
-                          styles.controlButton, 
-                          styles.smallButton,
-                          { backgroundColor: controlButtonBg },
-                          audioState.playbackSpeed !== 1 && styles.activeControlButton,
-                          !isAudioReady && styles.disabledControlButton
-                        ]}>
-                          <Text style={[
-                            styles.speedText,
-                            { color: speedTextColor },
-                            audioState.playbackSpeed !== 1 && styles.activeControlText
-                          ]}>
-                            {audioState.playbackSpeed}x
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity
-                        style={[styles.playButton, { backgroundColor: theme.colors.surface }]}
-                        onPress={handlePlayPause}
-                        disabled={!isAudioReady}
-                      >
-                        <View style={[
-                          styles.controlButton, 
-                          styles.mainButton,
-                          { backgroundColor: controlButtonBg },
-                          !isAudioReady && styles.disabledControlButton
-                        ]}>
-                          <Ionicons
-                            name={audioState.isPlaying ? "pause" : "play"}
-                            size={36}
-                            color={playPauseIconColor}
-                          />
-                        </View>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity
-                        style={[styles.loopButton, { backgroundColor: theme.colors.surface }]}
-                        onPress={handleLoopToggle}
-                        disabled={!isAudioReady}
-                      >
-                        <View style={[
-                          styles.controlButton, 
-                          styles.smallButton,
-                          { backgroundColor: controlButtonBg },
-                          audioState.isLooping && styles.activeControlButton,
-                          !isAudioReady && styles.disabledControlButton
-                        ]}>
-                          <Ionicons 
-                            name="repeat" 
-                            size={20} 
-                            color={loopInactiveColor} 
-                          />
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-                    
-                    {/* Speed Options */}
-                    <View style={[styles.speedControlContainer, { backgroundColor: theme.colors.surface }]}>
-                      <Text style={[styles.speedLabel, { color: speedLabelColor }]}>Playback Speed:</Text>
-                      <View style={[styles.speedOptions, { backgroundColor: theme.colors.surface }]}>
-                        {([0.5, 1, 1.5, 2] as PlaybackSpeed[]).map((speed) => (
-                          <TouchableOpacity
-                            key={speed}
-                            style={[
-                              styles.speedOption, 
-                              { backgroundColor: speedOptionBg },
-                              audioState.playbackSpeed === speed && styles.activeControlButton,
-                              !isAudioReady && styles.disabledControlButton
-                            ]}
-                            onPress={() => handleSpeedChange(speed)}
-                            disabled={!isAudioReady}
-                          >
-                            <Text style={[
-                              styles.speedOptionText, 
-                              { color: speedOptionTextColor },
-                              audioState.playbackSpeed === speed && styles.activeControlText
-                            ]}>
-                              {speed}x
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
 
-                    {!isAudioReady && !isLoadingAudio && audioLoadRetries > 0 && (
-                      <TouchableOpacity
-                        style={[styles.audioRetryButton, { backgroundColor: theme.colors.primary }]}
-                        onPress={() => setAudioLoadRetries(0)}
-                      >
-                        <Ionicons name="refresh" size={16} color={refreshIconColor} />
-                        <Text style={styles.audioRetryText}>Retry loading audio</Text>
-                      </TouchableOpacity>
-                    )}
-                  </>
-                )}
-              </View>
+              {/* Audio Player Component */}
+              <FullAudioPlayer
+                trackId={recording.audio_id}
+                audioUri={audioUri}
+                hasNetworkConnection={isConnected}
+              />
             </View>
 
             {/* Description Card */}
@@ -956,23 +930,25 @@ const RecordingDetailsScreen = () => {
             </View>
 
             {/* Sonogram Card */}
-            <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-              <View style={[styles.sectionHeader, { backgroundColor: theme.colors.surface }]}>
-                <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Sonogram</Text>
-                {getSonogramUri() && (
-                  <TouchableOpacity 
-                    style={[styles.expandButton, { backgroundColor: expandButtonBg }]}
+            <View style={styles.card}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Sonogram</Text>
+                {sonogramUri && (
+                  <TouchableOpacity
+                    style={styles.expandButton}
                     onPress={() => setIsImageFullscreen(true)}
                   >
                     <Ionicons name="expand" size={20} color={expandIconColor} />
                   </TouchableOpacity>
                 )}
               </View>
-              
-              <View style={[styles.sonogramContainer, { backgroundColor: sonogramContainerBg }]}>
+
+              <View style={styles.sonogramContainer}>
                 <Image
                   source={{
-                    uri: getSonogramUri() || "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
+                    uri:
+                      sonogramUri ||
+                      "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
                   }}
                   style={[styles.sonogramImage, { backgroundColor: theme.colors.surface }]}
                   resizeMode="contain"
@@ -994,7 +970,10 @@ const RecordingDetailsScreen = () => {
                 </View>
               ) : (
                 <TouchableOpacity
-                  style={[styles.downloadButtonContainer, { backgroundColor: theme.colors.primary }, !isConnected && { backgroundColor: disabledDownloadButtonBg }]}
+                  style={[
+                    styles.downloadButtonContainer,
+                    !isConnected && styles.disabledDownloadButton,
+                  ]}
                   onPress={handleDownload}
                   disabled={!isConnected}
                 >
@@ -1014,7 +993,7 @@ const RecordingDetailsScreen = () => {
         </>
       )}
     </View>
-  )
-}
+  );
+};
 
-export default RecordingDetailsScreen
+export default RecordingDetailsScreen;

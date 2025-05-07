@@ -1,44 +1,44 @@
 // src/screens/SignUpScreen.tsx
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native"
-import { TextInput, Button, HelperText } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { AuthContext } from "../context/AuthContext"
-import { RootStackParamList } from "../types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import { useThemedStyles } from "../hooks/useThemedStyles"
-import React from "react"
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState, useContext } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { TextInput, Button, HelperText } from "react-native-paper";
 
-const { width } = Dimensions.get("window")
+import { AuthContext } from "../context/AuthContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import { RootStackParamList } from "../types";
+
+const { width } = Dimensions.get("window");
 
 const SignUpScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const { signUp, state: authState, clearError } = useContext(AuthContext)
-  const { theme, isDarkMode } = useThemedStyles()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signUp, state: authState, clearError } = useContext(AuthContext);
+  const { theme, isDarkMode } = useThemedStyles();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [bookCode, setBookCode] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const [bookCodeError, setBookCodeError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [showTooltip, setShowTooltip] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [bookCode, setBookCode] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [bookCodeError, setBookCodeError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const styles = StyleSheet.create({
     backButton: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      backgroundColor: theme.colors.surface,
       borderRadius: 20,
       padding: 8,
     },
     backgroundPattern: {
-      backgroundColor: isDarkMode ?
-        `${theme.colors.primary}08` : // Very transparent primary color
-        `${theme.colors.primary}05`,
+      backgroundColor: isDarkMode
+        ? `${theme.colors.primary}08` // Very transparent primary color
+        : `${theme.colors.primary}05`,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -59,7 +59,7 @@ const SignUpScreen = () => {
       elevation: 4,
       marginHorizontal: 4,
       padding: 24,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 8,
@@ -69,10 +69,10 @@ const SignUpScreen = () => {
       flex: 1,
     },
     errorContainer: {
-      alignItems: 'center',
-      backgroundColor: isDarkMode ? 'rgba(176, 0, 32, 0.2)' : 'rgba(176, 0, 32, 0.1)',
+      alignItems: "center",
+      backgroundColor: theme.colors.errorContainer,
       borderRadius: 8,
-      flexDirection: 'row',
+      flexDirection: "row",
       marginBottom: 16,
       padding: 12,
     },
@@ -91,7 +91,7 @@ const SignUpScreen = () => {
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomColor: theme.colors.surface,
       borderBottomWidth: 1,
       elevation: 2,
       paddingBottom: 8,
@@ -99,18 +99,18 @@ const SignUpScreen = () => {
       paddingTop: 50,
     },
     headerContent: {
-      alignItems: 'center',
-      flexDirection: 'row',
+      alignItems: "center",
+      flexDirection: "row",
     },
     headerTitle: {
       color: theme.colors.onSurface,
       fontSize: 20,
-      fontWeight: '600',
+      fontWeight: "600",
       marginLeft: 8,
     },
     headerTitleContainer: {
-      alignItems: 'center',
-      flexDirection: 'row',
+      alignItems: "center",
+      flexDirection: "row",
       marginLeft: 12,
     },
     input: {
@@ -119,33 +119,33 @@ const SignUpScreen = () => {
       paddingLeft: 40,
     },
     inputContainer: {
-      alignItems: 'center',
-      flexDirection: 'row',
+      alignItems: "center",
+      flexDirection: "row",
       marginBottom: 16,
-      position: 'relative',
+      position: "relative",
     },
     inputIconContainer: {
-      height: '100%',
-      justifyContent: 'center',
+      height: "100%",
+      justifyContent: "center",
       left: 8,
       paddingTop: 8,
-      position: 'absolute',
+      position: "absolute",
       zIndex: 1,
     },
     inputOutline: {
       borderRadius: 8,
     },
     loginContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
       marginTop: 24,
     },
     loginLink: {
       color: theme.colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     loginText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      color: theme.colors.onSurface,
     },
     scrollContent: {
       flexGrow: 1,
@@ -153,26 +153,26 @@ const SignUpScreen = () => {
       paddingVertical: 24,
     },
     subtitle: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      color: theme.colors.onSurface,
       fontSize: 16,
       marginBottom: 24,
-      textAlign: 'center',
+      textAlign: "center",
     },
     title: {
       color: theme.colors.onSurface,
       fontSize: 24,
-      fontWeight: '700',
+      fontWeight: "700",
       marginBottom: 8,
-      textAlign: 'center',
+      textAlign: "center",
     },
     tooltip: {
-      backgroundColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+      backgroundColor: theme.colors.surface,
       borderRadius: 8,
       elevation: 5,
       padding: 12,
       position: "absolute",
       right: 0,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
@@ -180,8 +180,9 @@ const SignUpScreen = () => {
       width: width * 0.7,
       zIndex: 20,
     },
+    // eslint-disable-next-line react-native/no-color-literals
     tooltipArrow: {
-      borderBottomColor: isDarkMode ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+      borderBottomColor: theme.colors.surface,
       borderBottomWidth: 10,
       borderLeftColor: "transparent",
       borderLeftWidth: 10,
@@ -200,7 +201,7 @@ const SignUpScreen = () => {
       zIndex: 10,
     },
     tooltipText: {
-      color: isDarkMode ? '#fff' : '#333',
+      color: theme.colors.onSurface,
       fontSize: 14,
       lineHeight: 20,
     },
@@ -208,81 +209,76 @@ const SignUpScreen = () => {
 
   // Validate email format
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   // Validate password (at least 6 characters)
   const validatePassword = (password: string) => {
-    return password.length >= 6
-  }
+    return password.length >= 6;
+  };
 
   // Validate book code format (example: 8 characters alphanumeric)
   const validateBookCode = (code: string) => {
-    const codeRegex = /^[A-Za-z0-9]{8}$/
-    return codeRegex.test(code)
-  }
+    const codeRegex = /^[A-Za-z0-9]{8}$/;
+    return codeRegex.test(code);
+  };
 
   const handleSubmit = async () => {
     // Reset errors
-    setEmailError("")
-    setPasswordError("")
-    setBookCodeError("")
-    clearError()
+    setEmailError("");
+    setPasswordError("");
+    setBookCodeError("");
+    clearError();
 
     // Validate inputs
-    let isValid = true
+    let isValid = true;
 
     if (!email) {
-      setEmailError("Email is required")
-      isValid = false
+      setEmailError("Email is required");
+      isValid = false;
     } else if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address")
-      isValid = false
+      setEmailError("Please enter a valid email address");
+      isValid = false;
     }
 
     if (!password) {
-      setPasswordError("Password is required")
-      isValid = false
+      setPasswordError("Password is required");
+      isValid = false;
     } else if (!validatePassword(password)) {
-      setPasswordError("Password must be at least 6 characters")
-      isValid = false
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
     }
 
     if (!bookCode) {
-      setBookCodeError("Book code is required")
-      isValid = false
+      setBookCodeError("Book code is required");
+      isValid = false;
     } else if (!validateBookCode(bookCode)) {
-      setBookCodeError("Book code must be 8 characters (letters and numbers)")
-      isValid = false
+      setBookCodeError("Book code must be 8 characters (letters and numbers)");
+      isValid = false;
     }
 
-    if (!isValid) return
+    if (!isValid) return;
 
     // Submit form
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await signUp(email, password, bookCode)
+      await signUp(email, password, bookCode);
     } catch (error) {
-      console.error("Signup error:", error)
+      console.error("Signup error:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Background pattern
-  const BackgroundPattern = () => (
-    <View style={styles.backgroundPattern} />
-  )
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Custom header
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
@@ -291,17 +287,14 @@ const SignUpScreen = () => {
         </View>
       </View>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
       <BackgroundPattern />
       <Header />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.title}>Join The Sound Approach</Text>
           <Text style={styles.subtitle}>Enter your details to create a new account</Text>
@@ -315,8 +308,8 @@ const SignUpScreen = () => {
                 label="Email"
                 value={email}
                 onChangeText={(text) => {
-                  setEmail(text)
-                  setEmailError("")
+                  setEmail(text);
+                  setEmailError("");
                 }}
                 mode="outlined"
                 keyboardType="email-address"
@@ -340,8 +333,8 @@ const SignUpScreen = () => {
                 label="Password"
                 value={password}
                 onChangeText={(text) => {
-                  setPassword(text)
-                  setPasswordError("")
+                  setPassword(text);
+                  setPasswordError("");
                 }}
                 mode="outlined"
                 secureTextEntry={!showPassword}
@@ -371,8 +364,8 @@ const SignUpScreen = () => {
                 label="Book Code"
                 value={bookCode}
                 onChangeText={(text) => {
-                  setBookCode(text.toUpperCase())
-                  setBookCodeError("")
+                  setBookCode(text.toUpperCase());
+                  setBookCodeError("");
                 }}
                 mode="outlined"
                 autoCapitalize="characters"
@@ -393,7 +386,8 @@ const SignUpScreen = () => {
                       <View style={styles.tooltip}>
                         <View style={styles.tooltipArrow} />
                         <Text style={styles.tooltipText}>
-                          The book code is an 8-character code found on the inside cover of &quot;The Sound Approach to Birding&quot; book.
+                          The book code is an 8-character code found on the inside cover of
+                          &quot;The Sound Approach to Birding&quot; book.
                         </Text>
                       </View>
                     )}
@@ -427,9 +421,11 @@ const SignUpScreen = () => {
 
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => {
-                navigation.navigate("Login")
-              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate("Login");
+                }}
+              >
                 <Text style={styles.loginLink}>Sign In</Text>
               </TouchableOpacity>
             </View>
@@ -437,7 +433,7 @@ const SignUpScreen = () => {
         </View>
       </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default SignUpScreen
+export default SignUpScreen;

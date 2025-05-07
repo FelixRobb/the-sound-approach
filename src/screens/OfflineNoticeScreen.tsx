@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { useContext } from "react"
-import { View, Text, StyleSheet } from "react-native"
-import { Button } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { NetworkContext } from "../context/NetworkContext"
-import { DownloadContext } from "../context/DownloadContext"
-import { RootStackParamList } from "../types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import { useThemedStyles } from "../hooks/useThemedStyles"
-import React from "react"
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useContext } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
+
+import { DownloadContext } from "../context/DownloadContext";
+import { NetworkContext } from "../context/NetworkContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import { RootStackParamList } from "../types";
 
 const OfflineNoticeScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const { isConnected } = useContext(NetworkContext)
-  const { downloadedRecordings } = useContext(DownloadContext)
-  const { theme, colors, isDarkMode } = useThemedStyles()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { isConnected } = useContext(NetworkContext);
+  const { downloadedRecordings } = useContext(DownloadContext);
+  const { theme } = useThemedStyles();
 
   const styles = StyleSheet.create({
     button: {
@@ -25,7 +25,7 @@ const OfflineNoticeScreen = () => {
     },
     container: {
       alignItems: "center",
-      backgroundColor: colors.dark.overlay,
+      backgroundColor: theme.colors.background,
       flex: 1,
       justifyContent: "center",
     },
@@ -35,14 +35,14 @@ const OfflineNoticeScreen = () => {
       borderRadius: 16,
       elevation: 6,
       padding: 24,
-      shadowColor: theme.colors.onSurface,
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
       width: "80%",
     },
     description: {
-      color: colors.textSecondary,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 16,
       marginBottom: 24,
       textAlign: "center",
@@ -52,7 +52,7 @@ const OfflineNoticeScreen = () => {
       width: "100%",
     },
     noDownloadsText: {
-      color: colors.textSecondary,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 14,
       fontStyle: "italic",
       marginBottom: 24,
@@ -60,7 +60,7 @@ const OfflineNoticeScreen = () => {
     },
     reconnectedContainer: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? colors.alpha.success[20] : colors.alpha.success[10],
+      backgroundColor: theme.colors.primaryContainer,
       borderRadius: 8,
       flexDirection: "row",
       marginTop: 24,
@@ -68,11 +68,10 @@ const OfflineNoticeScreen = () => {
       width: "100%",
     },
     reconnectedText: {
-      color: isDarkMode ? colors.dark.text : colors.light.text,
+      color: theme.colors.onPrimary,
       flex: 1,
       fontSize: 14,
       marginLeft: 8,
-      opacity: 0.8,
     },
     title: {
       color: theme.colors.onSurface,
@@ -83,7 +82,7 @@ const OfflineNoticeScreen = () => {
     },
   });
 
-  const hasDownloads = downloadedRecordings.length > 0
+  const hasDownloads = downloadedRecordings.length > 0;
 
   return (
     <View style={styles.container}>
@@ -103,7 +102,7 @@ const OfflineNoticeScreen = () => {
             mode="contained"
             icon="download"
             onPress={() => {
-              navigation.navigate("Downloads")
+              navigation.navigate("Downloads");
             }}
             style={styles.button}
           >
@@ -127,12 +126,14 @@ const OfflineNoticeScreen = () => {
         {isConnected && (
           <View style={styles.reconnectedContainer}>
             <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
-            <Text style={styles.reconnectedText}>You&apos;re back online! You can now access all content.</Text>
+            <Text style={styles.reconnectedText}>
+              You&apos;re back online! You can now access all content.
+            </Text>
           </View>
         )}
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default OfflineNoticeScreen
+export default OfflineNoticeScreen;

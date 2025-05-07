@@ -1,51 +1,54 @@
-"use client"
+"use client";
 
-import { useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from "react-native"
-import { ActivityIndicator } from "react-native-paper"
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { useQuery } from "@tanstack/react-query"
-import { fetchRecordingsBySpecies } from "../lib/supabase"
-import { NetworkContext } from "../context/NetworkContext"
-import { DownloadContext } from "../context/DownloadContext"
-import { AudioContext } from "../context/AudioContext"
-import { ThemeContext } from "../context/ThemeContext"
-import { useThemedStyles } from "../hooks/useThemedStyles"
-import { supabase } from "../lib/supabase"
-import { RootStackParamList } from "../types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import React from "react"
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useQuery } from "@tanstack/react-query";
+import { useContext, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
-const { width } = Dimensions.get("window")
+import MiniAudioPlayer from "../components/MiniAudioPlayer";
+import { useAudio } from "../context/AudioContext";
+import { DownloadContext } from "../context/DownloadContext";
+import { NetworkContext } from "../context/NetworkContext";
+import { ThemeContext } from "../context/ThemeContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import { getAudioUri } from "../lib/mediaUtils";
+import { fetchRecordingsBySpecies } from "../lib/supabase";
+import { RootStackParamList } from "../types";
+const { width } = Dimensions.get("window");
 
 const SpeciesDetailsScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>()
-  const { isConnected } = useContext(NetworkContext)
-  const { isDownloaded, getDownloadPath } = useContext(DownloadContext)
-  const { loadAudio, playAudio, pauseAudio, audioState } = useContext(AudioContext)
-  const { isDarkMode } = useContext(ThemeContext)
-  const { theme } = useThemedStyles()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
+  const { isConnected } = useContext(NetworkContext);
+  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
+  const { notifyScreenChange } = useAudio();
+  const { isDarkMode } = useContext(ThemeContext);
+  const { theme } = useThemedStyles();
 
-  const { speciesId } = route.params
-
+  const { speciesId } = route.params;
+  // Notify audio context about screen change
+  useEffect(() => {
+    notifyScreenChange(`SpeciesDetails-${route.params.speciesId}`);
+  }, [notifyScreenChange, route.params.speciesId]);
   // Fetch recordings for this species
   const {
     data: recordings,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: ["species-recordings", speciesId],
     queryFn: () => fetchRecordingsBySpecies(speciesId),
-  })
+  });
 
   // Create styles with theme support
   const styles = StyleSheet.create({
     backButton: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(46, 125, 50, 0.1)',
+      backgroundColor: theme.colors.surface,
       borderRadius: 20,
       height: 40,
       justifyContent: "center",
@@ -53,9 +56,9 @@ const SpeciesDetailsScreen = () => {
       width: 40,
     },
     backgroundPattern: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}08` : // Very transparent primary color
-        `${theme.colors.primary}05`,
+      backgroundColor: isDarkMode
+        ? `${theme.colors.primary}08` // Very transparent primary color
+        : `${theme.colors.primary}05`,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -64,7 +67,7 @@ const SpeciesDetailsScreen = () => {
       top: 0,
     },
     caption: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: theme.colors.onSurface,
       fontSize: 14,
       lineHeight: 20,
     },
@@ -75,7 +78,7 @@ const SpeciesDetailsScreen = () => {
       marginBottom: 16,
       overflow: "hidden",
       padding: 16,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: isDarkMode ? 0.3 : 0.22,
       shadowRadius: 2.22,
@@ -84,12 +87,20 @@ const SpeciesDetailsScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
+    goBackButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    goBackText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "500",
     content: {
       padding: 16,
       paddingBottom: 32,
     },
     divider: {
-      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#EEEEEE',
+      backgroundColor: theme.colors.surface,
       height: 1,
     },
     downloadedBadge: {
@@ -107,7 +118,7 @@ const SpeciesDetailsScreen = () => {
       padding: 32,
     },
     emptyText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: theme.colors.onSurface,
       fontSize: 16,
       marginTop: 16,
       textAlign: "center",
@@ -118,7 +129,7 @@ const SpeciesDetailsScreen = () => {
       borderRadius: 16,
       elevation: 4,
       padding: 24,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
@@ -131,7 +142,7 @@ const SpeciesDetailsScreen = () => {
       padding: 24,
     },
     errorText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: theme.colors.onSurface,
       fontSize: 16,
       lineHeight: 22,
       marginBottom: 24,
@@ -156,7 +167,7 @@ const SpeciesDetailsScreen = () => {
     header: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      borderBottomColor: theme.colors.surface,
       borderBottomLeftRadius: 20,
       borderBottomRightRadius: 20,
       borderBottomWidth: 1,
@@ -165,7 +176,7 @@ const SpeciesDetailsScreen = () => {
       paddingBottom: 16,
       paddingHorizontal: 16,
       paddingTop: 50,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
@@ -182,7 +193,7 @@ const SpeciesDetailsScreen = () => {
       borderRadius: 16,
       elevation: 4,
       padding: 24,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 3,
@@ -195,7 +206,7 @@ const SpeciesDetailsScreen = () => {
       padding: 24,
     },
     loadingText: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: theme.colors.onSurface,
       fontSize: 16,
       marginTop: 16,
     },
@@ -209,30 +220,12 @@ const SpeciesDetailsScreen = () => {
       fontSize: 12,
       marginLeft: 4,
     },
-    playButton: {
-      marginLeft: 12,
-    },
-    playButtonInner: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 24,
-      height: 48,
-      justifyContent: "center",
-      width: 48,
-    },
-    playingButton: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}DD` : 
-        `${theme.colors.primary}AA`,
-    },
     recordingContent: {
       flex: 1,
       paddingRight: 12,
     },
     recordingCountBadge: {
-      backgroundColor: isDarkMode ? 
-        `${theme.colors.primary}20` :
-        `${theme.colors.primary}10`,
+      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
       borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 4,
@@ -273,12 +266,12 @@ const SpeciesDetailsScreen = () => {
       paddingVertical: 8,
     },
     retryText: {
-      color: "#FFFFFF",
+      color: theme.colors.onSurface,
       fontSize: 14,
       marginLeft: 8,
     },
     scientificName: {
-      color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#666666',
+      color: theme.colors.onSurface,
       fontSize: 16,
       fontStyle: "italic",
     },
@@ -298,63 +291,16 @@ const SpeciesDetailsScreen = () => {
       fontSize: 24,
       fontWeight: "bold",
       marginBottom: 4,
-    }
+    },
   });
-
-  // Handle audio preview
-  const handleAudioPreview = async (audioId: string, recordingId: string) => {
-    try {
-      if (audioState.currentAudioId === audioId) {
-        // Toggle play/pause if it's the same audio
-        if (audioState.isPlaying) {
-          await pauseAudio()
-        } else {
-          await playAudio()
-        }
-      } else {
-        // Load and play new audio
-        let audioUri
-
-        if (isDownloaded(recordingId)) {
-          // Use local file
-          audioUri = getDownloadPath(audioId, true)
-        } else if (isConnected) {
-          const { data } = supabase.storage.from("audio").getPublicUrl(`${audioId}.mp3`)
-          audioUri = data?.publicUrl
-        } else {
-          // No audio available offline
-          Alert.alert(
-            "Audio Unavailable",
-            "This recording is not available offline. Please download it or connect to the internet.",
-            [{ text: "OK" }]
-          )
-          return
-        }
-
-        if (audioUri) {
-          await loadAudio(audioUri, audioId, true)
-          await playAudio()
-        }
-      }
-    } catch (error) {
-      console.error("Audio preview error:", error)
-      Alert.alert(
-        "Audio Error",
-        "Failed to play audio. Please try again.",
-        [{ text: "OK" }]
-      )
-    }
-  }
 
   // Handle retry
   const handleRetry = () => {
-    refetch()
-  }
+    refetch();
+  };
 
   // Background pattern
-  const BackgroundPattern = () => (
-    <View style={styles.backgroundPattern} />
-  )
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Render loading state
   if (isLoading) {
@@ -362,10 +308,7 @@ const SpeciesDetailsScreen = () => {
       <View style={styles.container}>
         <BackgroundPattern />
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Loading...</Text>
@@ -378,7 +321,7 @@ const SpeciesDetailsScreen = () => {
           </View>
         </View>
       </View>
-    )
+    );
   }
 
   // Render error state
@@ -387,10 +330,7 @@ const SpeciesDetailsScreen = () => {
       <View style={styles.container}>
         <BackgroundPattern />
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Error</Text>
@@ -405,40 +345,34 @@ const SpeciesDetailsScreen = () => {
                 ? "You're offline. This species is not available offline."
                 : "Something went wrong. Please try again."}
             </Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={handleRetry}
-            >
+            <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
               <Ionicons name="refresh" size={18} color="#FFFFFF" />
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.goBackButton}
-              onPress={() => navigation.goBack()}
-            >
+            <TouchableOpacity style={styles.goBackButton} onPress={() => navigation.goBack()}>
               <Text style={styles.goBackText}>Go Back</Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
-    )
+    );
   }
 
   // Get species name from first recording
   const speciesName =
-    recordings.length > 0 && recordings[0].species ? recordings[0].species.common_name : "Unknown Species"
+    recordings.length > 0 && recordings[0].species
+      ? recordings[0].species.common_name
+      : "Unknown Species";
 
   // Get scientific name from first recording
-  const scientificName = recordings.length > 0 && recordings[0].species ? recordings[0].species.scientific_name : ""
+  const scientificName =
+    recordings.length > 0 && recordings[0].species ? recordings[0].species.scientific_name : "";
 
   return (
     <View style={styles.container}>
       <BackgroundPattern />
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
         <View>
@@ -459,20 +393,22 @@ const SpeciesDetailsScreen = () => {
 
           {recordings.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="musical-notes" size={48} color={isDarkMode ? 'rgba(255, 255, 255, 0.3)' : '#E0E0E0'} />
+              <Ionicons
+                name="musical-notes"
+                size={48}
+                color={isDarkMode ? "rgba(255, 255, 255, 0.3)" : "#E0E0E0"}
+              />
               <Text style={styles.emptyText}>No recordings available</Text>
             </View>
           ) : (
             <View style={styles.recordingsList}>
               {recordings.map((item) => {
-                const isCurrentlyPlaying = audioState.isPlaying && audioState.currentAudioId === item.audio_id
-
                 return (
                   <View key={item.id}>
                     <TouchableOpacity
                       style={styles.recordingItem}
                       onPress={() => {
-                        navigation.navigate("RecordingDetails", { recordingId: item.id })
+                        navigation.navigate("RecordingDetails", { recordingId: item.id });
                       }}
                     >
                       <View style={styles.recordingContent}>
@@ -494,32 +430,30 @@ const SpeciesDetailsScreen = () => {
                         </Text>
                       </View>
 
-                      <TouchableOpacity
-                        style={styles.playButton}
-                        onPress={() => handleAudioPreview(item.audio_id, item.id)}
-                      >
-                        <View style={[
-                          styles.playButtonInner,
-                          isCurrentlyPlaying && styles.playingButton
-                        ]}>
-                          <Ionicons
-                            name={isCurrentlyPlaying ? "pause" : "play"}
-                            size={24}
-                            color="#FFFFFF"
+                      {(() => {
+                        const uri = getAudioUri(item, isDownloaded, getDownloadPath, isConnected);
+                        return uri ? (
+                          <MiniAudioPlayer
+                            trackId={item.audio_id}
+                            audioUri={uri}
+                            size={36}
+                            showLoading={false}
                           />
-                        </View>
-                      </TouchableOpacity>
+                        ) : null;
+                      })()}
                     </TouchableOpacity>
-                    {recordings.indexOf(item) < recordings.length - 1 && <View style={styles.divider} />}
+                    {recordings.indexOf(item) < recordings.length - 1 && (
+                      <View style={styles.divider} />
+                    )}
                   </View>
-                )
+                );
               })}
             </View>
           )}
         </View>
       </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default SpeciesDetailsScreen
+export default SpeciesDetailsScreen;

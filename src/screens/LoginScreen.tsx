@@ -1,39 +1,38 @@
 // src/screens/LoginScreen.tsx
-"use client"
+"use client";
 
-import { useState, useContext } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native"
-import { TextInput, Button, HelperText } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { AuthContext } from "../context/AuthContext"
-import { RootStackParamList } from "../types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
-import { useThemedStyles } from "../hooks/useThemedStyles"
-import React from "react"
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState, useContext } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { TextInput, Button, HelperText } from "react-native-paper";
 
+import { AuthContext } from "../context/AuthContext";
+import { useThemedStyles } from "../hooks/useThemedStyles";
+import { RootStackParamList } from "../types";
 
 const LoginScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
-  const { signIn, state: authState, clearError } = useContext(AuthContext)
-  const { theme, colors, isDarkMode } = useThemedStyles()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signIn, state: authState, clearError } = useContext(AuthContext);
+  const { theme, isDarkMode } = useThemedStyles();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Create styles based on theme
   const styles = StyleSheet.create({
     backButton: {
-      backgroundColor: isDarkMode ? colors.alpha.white[8] : colors.alpha.black[5],
+      backgroundColor: theme.colors.surface,
       borderRadius: 20,
       padding: 8,
     },
     backgroundPattern: {
-      backgroundColor: isDarkMode ? colors.alpha.primary[8] : colors.alpha.primary[5],
+      backgroundColor: theme.colors.background,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -54,7 +53,7 @@ const LoginScreen = () => {
       elevation: 4,
       marginHorizontal: 4,
       padding: 24,
-      shadowColor: theme.colors.onSurface,
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
       shadowRadius: 8,
@@ -64,10 +63,10 @@ const LoginScreen = () => {
       flex: 1,
     },
     errorContainer: {
-      alignItems: 'center',
-      backgroundColor: isDarkMode ? colors.alpha.error[20] : colors.alpha.error[10],
+      alignItems: "center",
+      backgroundColor: theme.colors.errorContainer,
       borderRadius: 8,
-      flexDirection: 'row',
+      flexDirection: "row",
       marginBottom: 16,
       padding: 12,
     },
@@ -85,27 +84,26 @@ const LoginScreen = () => {
       marginTop: 8,
     },
     header: {
-      backgroundColor: theme.colors.surface,
-      borderBottomColor: isDarkMode ? colors.alpha.white[10] : colors.alpha.black[5],
+      backgroundColor: theme.colors.background,
+      borderBottomColor: theme.colors.surfaceVariant,
       borderBottomWidth: 1,
-      elevation: 2,
       paddingBottom: 8,
       paddingHorizontal: 16,
       paddingTop: 50,
     },
     headerContent: {
-      alignItems: 'center',
-      flexDirection: 'row',
+      alignItems: "center",
+      flexDirection: "row",
     },
     headerTitle: {
-      color: theme.colors.onSurface,
+      color: theme.colors.onBackground,
       fontSize: 20,
-      fontWeight: '600',
+      fontWeight: "600",
       marginLeft: 8,
     },
     headerTitleContainer: {
-      alignItems: 'center',
-      flexDirection: 'row',
+      alignItems: "center",
+      flexDirection: "row",
       marginLeft: 12,
     },
     input: {
@@ -114,17 +112,17 @@ const LoginScreen = () => {
       paddingLeft: 40,
     },
     inputContainer: {
-      alignItems: 'center',
-      flexDirection: 'row',
+      alignItems: "center",
+      flexDirection: "row",
       marginBottom: 16,
-      position: 'relative',
+      position: "relative",
     },
     inputIconContainer: {
-      height: '100%',
-      justifyContent: 'center',
+      height: "100%",
+      justifyContent: "center",
       left: 8,
       paddingTop: 8,
-      position: 'absolute',
+      position: "absolute",
       zIndex: 1,
     },
     inputOutline: {
@@ -136,86 +134,81 @@ const LoginScreen = () => {
       paddingVertical: 24,
     },
     signupContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
+      flexDirection: "row",
+      justifyContent: "center",
       marginTop: 24,
     },
     signupLink: {
       color: theme.colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     signupText: {
-      color: colors.textSecondary,
+      color: theme.colors.onSurfaceVariant,
     },
     subtitle: {
-      color: colors.textSecondary,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 16,
       marginBottom: 24,
-      textAlign: 'center',
+      textAlign: "center",
     },
     title: {
       color: theme.colors.onSurface,
       fontSize: 24,
-      fontWeight: '700',
+      fontWeight: "700",
       marginBottom: 8,
-      textAlign: 'center',
+      textAlign: "center",
     },
   });
 
   // Validate email format
   const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = async () => {
     // Reset errors
-    setEmailError("")
-    setPasswordError("")
-    clearError()
+    setEmailError("");
+    setPasswordError("");
+    clearError();
 
     // Validate inputs
-    let isValid = true
+    let isValid = true;
 
     if (!email) {
-      setEmailError("Email is required")
-      isValid = false
+      setEmailError("Email is required");
+      isValid = false;
     } else if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address")
-      isValid = false
+      setEmailError("Please enter a valid email address");
+      isValid = false;
     }
 
     if (!password) {
-      setPasswordError("Password is required")
-      isValid = false
+      setPasswordError("Password is required");
+      isValid = false;
     }
 
-    if (!isValid) return
+    if (!isValid) return;
 
     // Submit form
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await signIn(email, password)
+      await signIn(email, password);
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("Login error:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Background pattern
-  const BackgroundPattern = () => (
-    <View style={styles.backgroundPattern} />
-  )
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Custom header
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.onBackground} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
@@ -224,17 +217,14 @@ const LoginScreen = () => {
         </View>
       </View>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
       <BackgroundPattern />
       <Header />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
@@ -248,8 +238,8 @@ const LoginScreen = () => {
                 label="Email"
                 value={email}
                 onChangeText={(text) => {
-                  setEmail(text)
-                  setEmailError("")
+                  setEmail(text);
+                  setEmailError("");
                 }}
                 mode="outlined"
                 keyboardType="email-address"
@@ -273,8 +263,8 @@ const LoginScreen = () => {
                 label="Password"
                 value={password}
                 onChangeText={(text) => {
-                  setPassword(text)
-                  setPasswordError("")
+                  setPassword(text);
+                  setPasswordError("");
                 }}
                 mode="outlined"
                 secureTextEntry={!showPassword}
@@ -314,9 +304,11 @@ const LoginScreen = () => {
 
             <View style={styles.signupContainer}>
               <Text style={styles.signupText}>Don&apos;t have an account? </Text>
-              <TouchableOpacity onPress={() => {
-                navigation.navigate("SignUp")
-              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate("SignUp");
+                }}
+              >
                 <Text style={styles.signupLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>
@@ -324,7 +316,7 @@ const LoginScreen = () => {
         </View>
       </ScrollView>
     </View>
-  )
-}
+  );
+};
 
-export default LoginScreen
+export default LoginScreen;
