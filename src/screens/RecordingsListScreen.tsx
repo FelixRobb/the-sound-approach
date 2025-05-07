@@ -38,6 +38,18 @@ const RecordingsListScreen = () => {
   const [showSearch, setShowSearch] = useState(false);
 
   const styles = StyleSheet.create({
+    activeTabRedesigned: {
+      backgroundColor: theme.colors.primary,
+      elevation: 3,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+    },
+    activeTabTextRedesigned: {
+      color: theme.colors.onPrimary,
+      fontWeight: "700",
+    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -59,9 +71,39 @@ const RecordingsListScreen = () => {
       flex: 1,
       marginRight: 12,
     },
+    clearButton: {
+      alignItems: "center",
+      borderRadius: 20,
+      justifyContent: "center",
+      padding: 8,
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
+    },
+    customSearchBar: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outlineVariant,
+      borderRadius: 24,
+      borderWidth: 1,
+      elevation: 3,
+      flexDirection: "row",
+      height: 48,
+      paddingHorizontal: 4,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    // eslint-disable-next-line react-native/no-color-literals
+    customSearchInput: {
+      backgroundColor: "transparent",
+      color: theme.colors.onSurface,
+      flex: 1,
+      fontSize: 17,
+      paddingHorizontal: 8,
+      paddingVertical: 0,
     },
     downloadedIndicator: {
       alignItems: "center",
@@ -93,6 +135,7 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
+
     emptyTitle: {
       color: theme.colors.onSurface,
       fontSize: 18,
@@ -113,19 +156,11 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
-    listContainer: {
-      flex: 1,
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-    },
-    loadingContainer: {
+    headerContentRedesigned: {
       alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      paddingTop: 40,
-    },
-    loadingText: {
-      color: theme.colors.onSurface,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 16,
     },
     headerRedesigned: {
       backgroundColor: isDarkMode ? `${theme.colors.surface}E6` : `${theme.colors.surface}F2`,
@@ -139,6 +174,45 @@ const RecordingsListScreen = () => {
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
       shadowRadius: 12,
+    },
+    headerSubtitle: {
+      color: theme.colors.onSurfaceVariant || theme.colors.onSurface,
+      fontSize: 15,
+      marginTop: 4,
+      opacity: 0.8,
+    },
+    headerTitleRedesigned: {
+      color: theme.colors.primary,
+      fontSize: 30,
+      fontWeight: "bold",
+      letterSpacing: 0.5,
+    },
+    iconButtonRedesigned: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      elevation: 3,
+      height: 40,
+      justifyContent: "center",
+      marginLeft: 12,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 3,
+      width: 40,
+    },
+    listContainer: {
+      flex: 1,
+      paddingHorizontal: 16,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      paddingTop: 40,
+    },
+    loadingText: {
+      color: theme.colors.onSurface,
     },
     pageReference: {
       alignSelf: "flex-start",
@@ -182,6 +256,13 @@ const RecordingsListScreen = () => {
       fontStyle: "italic",
       marginTop: 2,
     },
+
+    searchBarContainer: {
+      marginBottom: 10,
+      marginTop: -8,
+      paddingHorizontal: 16,
+      zIndex: 5,
+    },
     speciesAction: {
       marginLeft: 8,
     },
@@ -215,31 +296,7 @@ const RecordingsListScreen = () => {
       fontWeight: "700",
       marginBottom: 4,
     },
-    titleContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    headerContentRedesigned: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 16,
-    },
-    headerTitleRedesigned: {
-      color: theme.colors.primary,
-      fontSize: 30,
-      fontWeight: "bold",
-      letterSpacing: 0.5,
-    },
-    headerSubtitle: {
-      color: theme.colors.onSurfaceVariant || theme.colors.onSurface,
-      fontSize: 15,
-      marginTop: 4,
-      opacity: 0.8,
-    },
 
-    // Updated tab bar styles
     tabBarRedesigned: {
       alignSelf: "center",
       backgroundColor: theme.colors.surface,
@@ -257,6 +314,9 @@ const RecordingsListScreen = () => {
       shadowRadius: 6,
       width: "95%",
     },
+    tabIcon: {
+      marginRight: 2,
+    },
     // eslint-disable-next-line react-native/no-color-literals
     tabRedesigned: {
       alignItems: "center",
@@ -268,14 +328,6 @@ const RecordingsListScreen = () => {
       paddingHorizontal: 12,
       paddingVertical: 10,
     },
-    activeTabRedesigned: {
-      backgroundColor: theme.colors.primary,
-      elevation: 3,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-    },
     tabTextRedesigned: {
       color: isDarkMode
         ? theme.colors.onSurfaceVariant || theme.colors.onSurface
@@ -284,61 +336,10 @@ const RecordingsListScreen = () => {
       fontWeight: "600",
       marginLeft: 8,
     },
-    activeTabTextRedesigned: {
-      color: theme.colors.onPrimary,
-      fontWeight: "700",
-    },
-    tabIcon: {
-      marginRight: 2,
-    },
-
-    // Updated search bar styles
-    iconButtonRedesigned: {
+    titleContainer: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      elevation: 3,
-      height: 40,
-      justifyContent: "center",
-      marginLeft: 12,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 3,
-      width: 40,
-    },
-    searchBarContainer: {
-      marginBottom: 10,
-      marginTop: -8,
-      paddingHorizontal: 16,
-      zIndex: 5,
-    },
-    customSearchBar: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant || theme.colors.surface,
-      borderRadius: 24,
-      elevation: 3,
       flexDirection: "row",
-      height: 48,
-      paddingHorizontal: 4,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    customSearchInput: {
-      backgroundColor: "transparent",
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 17,
-      paddingHorizontal: 8,
-      paddingVertical: 0,
-    },
-    clearButton: {
-      alignItems: "center",
-      borderRadius: 20,
-      justifyContent: "center",
-      padding: 8,
+      justifyContent: "space-between",
     },
   });
 
@@ -504,7 +505,7 @@ const RecordingsListScreen = () => {
             />
             <TextInput
               placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
-              placeholderTextColor={isDarkMode ? "#aaa" : "#888"}
+              placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}
               onChangeText={setSearchQuery}
               style={styles.customSearchInput}
