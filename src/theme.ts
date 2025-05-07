@@ -49,16 +49,13 @@ export const lightTheme: MD3Theme = {
     primaryContainer: Colors.primaryLight,
     secondary: Colors.secondary,
     secondaryContainer: Colors.secondaryLight,
-    background: Colors.light.background,
-    surface: Colors.light.surface,
+    background: Colors.lightBackground,
+    surface: Colors.lightSurface,
     error: Colors.error,
-    onSurface: Colors.light.text,
-    onBackground: Colors.light.text,
-    onPrimary: Colors.light.text,
-    onSecondary: Colors.light.text,
-    elevation: Colors.light.elevation,
-    backdrop: Colors.light.backdrop,
-    outline: Colors.light.divider,
+    onSurface: Colors.lightText,
+    onBackground: Colors.lightText,
+    onPrimary: Colors.lightText,
+    onSecondary: Colors.lightText,
   },
 };
 
@@ -71,16 +68,13 @@ export const darkTheme: MD3Theme = {
     primaryContainer: Colors.primary,
     secondary: Colors.secondaryLight,
     secondaryContainer: Colors.secondary,
-    background: Colors.dark.background,
-    surface: Colors.dark.surface,
+    background: Colors.darkBackground,
+    surface: Colors.darkSurface,
     error: Colors.error,
-    onSurface: Colors.dark.text,
-    onBackground: Colors.dark.text,
-    onPrimary: Colors.dark.text,
-    onSecondary: Colors.dark.text,
-    elevation: Colors.dark.elevation,
-    backdrop: Colors.dark.backdrop,
-    outline: Colors.dark.divider,
+    onSurface: Colors.darkText,
+    onBackground: Colors.darkText,
+    onPrimary: Colors.darkText,
+    onSecondary: Colors.darkText,
   },
 };
 
@@ -110,9 +104,6 @@ export const navigationDarkTheme = {
     notification: Colors.accent,
   },
 };
-
-// Export colors for direct usage
-export { Colors }
 
 // Export the theme (for backward compatibility)
 export const theme = lightTheme;

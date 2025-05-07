@@ -1,4 +1,9 @@
-import { Audio, AVPlaybackStatus, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
+import {
+  Audio,
+  type AVPlaybackStatus,
+  InterruptionModeAndroid,
+  InterruptionModeIOS,
+} from "expo-av";
 
 // Types
 export type PlaybackSpeed = 0.5 | 1 | 1.5 | 2;
@@ -33,7 +38,7 @@ class AudioService {
   private sound: Audio.Sound | null = null;
   private state: AudioPlayerState = { ...initialState };
   private listeners: Map<string, AudioListenerCallback> = new Map();
-  private lastPositionUpdate: number = 0;
+  private lastPositionUpdate = 0;
   private updateIntervalId: NodeJS.Timeout | null = null;
 
   // Private constructor for singleton pattern

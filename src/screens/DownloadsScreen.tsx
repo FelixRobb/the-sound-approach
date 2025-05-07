@@ -167,6 +167,13 @@ const DownloadsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
+    activeTab: {
+      backgroundColor: theme.colors.primary,
+    },
+    activeTabText: {
+      color: theme.colors.onPrimary,
+      fontWeight: "600",
+    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -292,44 +299,27 @@ const DownloadsScreen = () => {
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      borderBottomWidth: 1,
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
       elevation: 4,
-      paddingBottom: 16,
       paddingTop: 50,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-      zIndex: 10,
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      zIndex: 1,
     },
-    headerActions: {
-      alignItems: "center",
-      flexDirection: "row",
+    headerInner: {
+      paddingHorizontal: 20,
     },
-    headerButton: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 20,
-      marginLeft: 8,
-      padding: 8,
-    },
-    headerContent: {
+    headerRow: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
+      marginBottom: 16,
     },
-    headerTitle: {
-      color: theme.colors.primary,
-      fontSize: 20,
-      fontWeight: "600",
-      marginLeft: 8,
-    },
-    headerTitleContainer: {
-      alignItems: "center",
-      flexDirection: "row",
+    iconButton: {
+      padding: 8,
     },
     listContent: {
       padding: 16,
@@ -432,15 +422,27 @@ const DownloadsScreen = () => {
       paddingVertical: 8,
     },
     searchBarContainer: {
-      paddingBottom: 12,
+      marginBottom: 8,
+      paddingHorizontal: 20,
+    },
+    searchContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outlineVariant,
+      borderRadius: 20,
+      borderWidth: 1,
+      flexDirection: "row",
+      height: 46,
+      marginHorizontal: 4,
+      marginVertical: 12,
       paddingHorizontal: 16,
-      paddingTop: 12,
     },
     searchInput: {
       color: theme.colors.onSurface,
       flex: 1,
       fontSize: 16,
-      marginLeft: 8,
+      marginLeft: 10,
+      paddingVertical: 10,
     },
     separator: {
       height: 16,
@@ -467,6 +469,41 @@ const DownloadsScreen = () => {
       fontSize: 14,
       fontWeight: "500",
     },
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 15,
+      marginTop: 2,
+    },
+    tab: {
+      alignItems: "center",
+      borderRadius: 20,
+      flexDirection: "row",
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    tabBar: {
+      alignSelf: "center",
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outlineVariant,
+      borderRadius: 24,
+      borderWidth: 1,
+      flexDirection: "row",
+      marginTop: 12,
+      padding: 4,
+      width: "94%",
+    },
+    tabText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      marginLeft: 6,
+    },
+    title: {
+      color: theme.colors.primary,
+      fontSize: 28,
+      fontWeight: "bold",
+    },
   });
 
   // Background pattern
@@ -475,53 +512,45 @@ const DownloadsScreen = () => {
   // Custom header component
   const Header = () => (
     <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <View style={styles.headerTitleContainer}>
-          <Ionicons name="cloud-download" size={24} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>Downloads</Text>
-        </View>
-
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton} onPress={() => setShowSearch(!showSearch)}>
+      <View style={styles.headerInner}>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>Downloads</Text>
+            <Text style={styles.subtitle}>Manage your offline recordings</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setShowSearch((prev) => !prev)}
+          >
             <Ionicons
               name={showSearch ? "close" : "search"}
               size={24}
-              color={theme.colors.onSurface}
+              color={theme.colors.primary}
             />
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => {
-              navigation.navigate("Profile");
-            }}
-          >
-            <View style={styles.profileButtonBackground}>
-              <Ionicons name="person" size={18} color={theme.colors.onPrimary} />
-            </View>
-          </TouchableOpacity>
         </View>
-      </View>
 
-      {showSearch && (
-        <View style={styles.searchBarContainer}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} />
+        {showSearch ? (
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color={theme.colors.primary} />
             <TextInput
-              style={styles.searchInput}
               placeholder="Search downloads..."
-              placeholderTextColor={theme.colors.onSurfaceDisabled}
+              placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              style={styles.searchInput}
+              autoFocus
+              selectionColor={theme.colors.primary}
+              returnKeyType="search"
             />
-            {searchQuery ? (
+            {searchQuery && (
               <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color={theme.colors.onSurfaceVariant} />
+                <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
-            ) : null}
+            )}
           </View>
-        </View>
-      )}
+        ) : null}
+      </View>
 
       <View style={styles.storageInfoContainer}>
         <View style={styles.storageInfo}>

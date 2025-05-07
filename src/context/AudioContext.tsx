@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
+"use client";
+
+import type React from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import "react-native-get-random-values";
 import { v4 as uuidv4 } from "uuid";
 
-import AudioService, { AudioPlayerState, PlaybackSpeed } from "../lib/AudioService";
+import AudioService, { type AudioPlayerState, type PlaybackSpeed } from "../lib/AudioService";
 
 // Context type definition
 type AudioContextType = {

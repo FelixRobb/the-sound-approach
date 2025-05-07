@@ -1,13 +1,14 @@
 "use client";
 
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
+import DetailHeader from "../components/DetailHeader";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -16,7 +17,8 @@ import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
-import { RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
+
 const { width } = Dimensions.get("window");
 
 const SpeciesDetailsScreen = () => {
@@ -46,15 +48,6 @@ const SpeciesDetailsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    backButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      marginRight: 12,
-      width: 40,
-    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -87,14 +80,6 @@ const SpeciesDetailsScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
-    goBackButton: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
-    goBackText: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: "500",
     content: {
       padding: 16,
       paddingBottom: 32,
@@ -163,29 +148,6 @@ const SpeciesDetailsScreen = () => {
       color: theme.colors.primary,
       fontSize: 14,
       fontWeight: "500",
-    },
-    header: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderBottomColor: theme.colors.surface,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      borderBottomWidth: 1,
-      elevation: 4,
-      flexDirection: "row",
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-      paddingTop: 50,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-    },
-    headerTitle: {
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 18,
-      fontWeight: "bold",
     },
     loadingCard: {
       alignItems: "center",
@@ -270,11 +232,6 @@ const SpeciesDetailsScreen = () => {
       fontSize: 14,
       marginLeft: 8,
     },
-    scientificName: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontStyle: "italic",
-    },
     sectionHeader: {
       alignItems: "center",
       flexDirection: "row",
@@ -285,12 +242,6 @@ const SpeciesDetailsScreen = () => {
       flex: 1,
       fontSize: 18,
       fontWeight: "600",
-    },
-    speciesName: {
-      color: theme.colors.primary,
-      fontSize: 24,
-      fontWeight: "bold",
-      marginBottom: 4,
     },
   });
 
@@ -307,12 +258,7 @@ const SpeciesDetailsScreen = () => {
     return (
       <View style={styles.container}>
         <BackgroundPattern />
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Loading...</Text>
-        </View>
+        <DetailHeader title="Loading..." />
 
         <View style={styles.loadingContainer}>
           <View style={styles.loadingCard}>
@@ -329,12 +275,7 @@ const SpeciesDetailsScreen = () => {
     return (
       <View style={styles.container}>
         <BackgroundPattern />
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Error</Text>
-        </View>
+        <DetailHeader title="Error" />
 
         <View style={styles.errorContainer}>
           <View style={styles.errorCard}>
@@ -371,15 +312,7 @@ const SpeciesDetailsScreen = () => {
   return (
     <View style={styles.container}>
       <BackgroundPattern />
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.speciesName}>{speciesName}</Text>
-          <Text style={styles.scientificName}>{scientificName}</Text>
-        </View>
-      </View>
+      <DetailHeader title={speciesName} subtitle={scientificName} />
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Recordings Card */}

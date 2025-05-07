@@ -2,8 +2,8 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useContext, useState } from "react";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useContext, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { List, Switch } from "react-native-paper";
 
@@ -12,7 +12,7 @@ import { DownloadContext } from "../context/DownloadContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { supabase } from "../lib/supabase";
-import { RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
 
 const ProfileSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -25,11 +25,6 @@ const ProfileSettingsScreen = () => {
 
   // Create styles based on theme
   const styles = StyleSheet.create({
-    backButton: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      padding: 8,
-    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -50,26 +45,27 @@ const ProfileSettingsScreen = () => {
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomWidth: 1,
-      elevation: 2,
-      paddingBottom: 8,
-      paddingHorizontal: 16,
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
+      elevation: 4,
+      paddingBottom: 20,
       paddingTop: 50,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      zIndex: 1,
     },
-    headerContent: {
+    headerInner: {
+      paddingHorizontal: 20,
+    },
+    headerRow: {
       alignItems: "center",
       flexDirection: "row",
+      justifyContent: "space-between",
     },
-    headerTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 20,
-      fontWeight: "600",
-      marginLeft: 8,
-    },
-    headerTitleContainer: {
-      alignItems: "center",
-      flexDirection: "row",
+    headerText: {
+      flex: 1,
       marginLeft: 12,
     },
     listItem: {
@@ -134,6 +130,11 @@ const ProfileSettingsScreen = () => {
       marginRight: 16,
       textAlign: "right",
     },
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 15,
+      marginTop: 2,
+    },
     themeOption: {
       alignItems: "center",
       flex: 1,
@@ -166,6 +167,11 @@ const ProfileSettingsScreen = () => {
     themeOptionTextSelected: {
       color: theme.colors.primary,
       fontWeight: "600",
+    },
+    title: {
+      color: theme.colors.primary,
+      fontSize: 28,
+      fontWeight: "bold",
     },
   });
 
@@ -253,13 +259,12 @@ const ProfileSettingsScreen = () => {
   // Header component
   const Header = () => (
     <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Ionicons name="settings-outline" size={24} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>Profile & Settings</Text>
+      <View style={styles.headerInner}>
+        <View style={styles.headerRow}>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>Profile & Settings</Text>
+            <Text style={styles.subtitle}>Customize your experience</Text>
+          </View>
         </View>
       </View>
     </View>

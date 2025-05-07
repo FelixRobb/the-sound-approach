@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import type React from "react";
 import { TouchableOpacity, StyleSheet, View } from "react-native";
 
 import { useAudio } from "../context/AudioContext";

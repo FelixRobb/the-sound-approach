@@ -1,5 +1,7 @@
+"use client";
+
 import { useContext } from "react";
-import { useTheme, MD3Theme } from "react-native-paper";
+import { useTheme, type MD3Theme } from "react-native-paper";
 
 import { ThemeContext } from "../context/ThemeContext";
 
@@ -15,9 +17,5 @@ export const useThemedStyles = () => {
   return {
     theme,
     isDarkMode,
-    colors: {
-      ...colors,
-      ...Colors,
-    },
   };
 };

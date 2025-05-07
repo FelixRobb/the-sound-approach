@@ -3,14 +3,14 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { TextInput, Button, HelperText } from "react-native-paper";
 
 import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
 
@@ -321,7 +321,7 @@ const SignUpScreen = () => {
             </View>
             {emailError ? (
               <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} />{emailError}
+                <Ionicons name="alert-circle-outline" size={14} /> {emailError}
               </HelperText>
             ) : null}
 
@@ -352,7 +352,7 @@ const SignUpScreen = () => {
             </View>
             {passwordError ? (
               <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} />{passwordError}
+                <Ionicons name="alert-circle-outline" size={14} /> {passwordError}
               </HelperText>
             ) : null}
 
@@ -397,7 +397,7 @@ const SignUpScreen = () => {
             </View>
             {bookCodeError ? (
               <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} />{bookCodeError}
+                <Ionicons name="alert-circle-outline" size={14} /> {bookCodeError}
               </HelperText>
             ) : null}
 
@@ -416,7 +416,7 @@ const SignUpScreen = () => {
               style={styles.button}
               contentStyle={styles.buttonContent}
             >
-              <Text>Create Account</Text>
+              Create Account
             </Button>
 
             <View style={styles.loginContainer}>

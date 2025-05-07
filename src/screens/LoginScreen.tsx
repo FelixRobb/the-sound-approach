@@ -3,14 +3,14 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { TextInput, Button, HelperText } from "react-native-paper";
 
 import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
 
 const LoginScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -251,7 +251,7 @@ const LoginScreen = () => {
             </View>
             {emailError ? (
               <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} />{emailError}
+                <Ionicons name="alert-circle-outline" size={14} /> {emailError}
               </HelperText>
             ) : null}
 
@@ -282,7 +282,7 @@ const LoginScreen = () => {
             </View>
             {passwordError ? (
               <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} />{passwordError}
+                <Ionicons name="alert-circle-outline" size={14} /> {passwordError}
               </HelperText>
             ) : null}
 
@@ -300,7 +300,9 @@ const LoginScreen = () => {
               disabled={isLoading}
               style={styles.button}
               contentStyle={styles.buttonContent}
-            ><Text>Sign In</Text></Button>
+            >
+              Sign In
+            </Button>
 
             <View style={styles.signupContainer}>
               <Text style={styles.signupText}>Don&apos;t have an account? </Text>

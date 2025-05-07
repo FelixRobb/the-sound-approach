@@ -2,16 +2,16 @@
 "use client";
 
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { Button, ActivityIndicator } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -171,7 +171,7 @@ const WelcomeScreen = () => {
               accessibilityLabel="Login to your account"
               buttonColor={theme.colors.primary}
             >
-              <Text>Login</Text>
+              Login
             </Button>
             <Button
               mode="outlined"
@@ -192,7 +192,7 @@ const WelcomeScreen = () => {
               )}
               accessibilityLabel="Create a new account"
             >
-              <Text>Sign Up</Text>
+              Sign Up
             </Button>
           </View>
         </View>

@@ -3,7 +3,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState, useEffect, useContext } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from "react-native";
 import { Appbar, Searchbar, Chip, ActivityIndicator, Divider } from "react-native-paper";
@@ -12,8 +12,7 @@ import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { searchRecordings } from "../lib/supabase";
-import type { Recording } from "../types";
-import { RootStackParamList } from "../types";
+import type { Recording, RootStackParamList } from "../types";
 
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -321,21 +320,21 @@ const SearchScreen = () => {
               onPress={() => setActiveFilter("species")}
               style={styles.filterChip}
             >
-              <Text>Species</Text>
+              Species
             </Chip>
             <Chip
               selected={activeFilter === "recordings"}
               onPress={() => setActiveFilter("recordings")}
               style={styles.filterChip}
             >
-              <Text>Recordings</Text>
+              Recordings
             </Chip>
             <Chip
               selected={activeFilter === "pages"}
               onPress={() => setActiveFilter("pages")}
               style={styles.filterChip}
             >
-              <Text>Pages</Text>
+              Pages
             </Chip>
           </ScrollView>
         </View>

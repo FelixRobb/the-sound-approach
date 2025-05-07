@@ -2,7 +2,7 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useContext } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
@@ -10,7 +10,7 @@ import { Button } from "react-native-paper";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
 
 const OfflineNoticeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -106,7 +106,7 @@ const OfflineNoticeScreen = () => {
             }}
             style={styles.button}
           >
-            <Text>View Downloads</Text>
+            View Downloads
           </Button>
         ) : (
           <Text style={styles.noDownloadsText}>
@@ -120,7 +120,7 @@ const OfflineNoticeScreen = () => {
           style={styles.dismissButton}
           textColor={theme.colors.primary}
         >
-          <Text>Dismiss</Text>
+          Dismiss
         </Button>
 
         {isConnected && (
