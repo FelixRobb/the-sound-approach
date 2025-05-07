@@ -18,6 +18,7 @@ import RecordingsListScreen from "../screens/RecordingsListScreen";
 import SearchScreen from "../screens/SearchScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import SpeciesDetailsScreen from "../screens/SpeciesDetailsScreen";
+import SplashScreen from "../screens/SplashScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { navigationDarkTheme, navigationLightTheme } from "../theme";
 
@@ -107,7 +108,13 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer theme={navTheme}>
-      {authState.userToken ? <MainNavigator /> : <AuthNavigator />}
+      {authState.isLoading ? (
+        <SplashScreen />
+      ) : authState.userToken ? (
+        <MainNavigator />
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   );
 };

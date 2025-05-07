@@ -26,6 +26,23 @@ import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
 
+// Custom debounce hook
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isConnected } = useContext(NetworkContext);
@@ -34,7 +51,8 @@ const RecordingsListScreen = () => {
   const { theme, isDarkMode } = useThemedStyles();
 
   const [activeTab, setActiveTab] = useState("book");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearchQuery = useDebounce(searchInput, 300); // 300ms debounce delay
   const [showSearch, setShowSearch] = useState(false);
 
   const styles = StyleSheet.create({
@@ -325,9 +343,9 @@ const RecordingsListScreen = () => {
 
   // Filter recordings based on search query
   const filteredRecordings = recordings?.filter((recording) => {
-    if (!searchQuery) return true;
+    if (!debouncedSearchQuery) return true;
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     return (
       recording.title.toLowerCase().includes(query) ||
       recording.caption.toLowerCase().includes(query) ||
@@ -339,9 +357,9 @@ const RecordingsListScreen = () => {
 
   // Filter species based on search query
   const filteredSpecies = species?.filter((species) => {
-    if (!searchQuery) return true;
+    if (!debouncedSearchQuery) return true;
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     return (
       species.common_name.toLowerCase().includes(query) ||
       species.scientific_name.toLowerCase().includes(query)
@@ -456,15 +474,15 @@ const RecordingsListScreen = () => {
             <TextInput
               placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
               placeholderTextColor={theme.colors.onSurfaceVariant}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
+              value={searchInput}
+              onChangeText={setSearchInput}
               style={styles.searchInput}
               autoFocus
               selectionColor={theme.colors.primary}
               returnKeyType="search"
             />
-            {searchQuery && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
+            {searchInput && (
+              <TouchableOpacity onPress={() => setSearchInput("")}>
                 <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
             )}

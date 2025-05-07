@@ -25,7 +25,7 @@ type AuthAction =
   | { type: "RESTORE_TOKEN"; token: string | null; user: User | null }
   | { type: "SIGN_IN"; token: string; user: User }
   | { type: "SIGN_OUT" }
-  | { type: "AUTH_ERROR"; error: string };
+  | { type: "AUTH_ERROR"; error: string | null };
 
 type AuthContextType = {
   state: AuthState;
@@ -94,30 +94,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Effect to check for stored token on app start
   useEffect(() => {
+    let authStateSubscription: { data: { subscription: { unsubscribe: () => void } } } | null =
+      null;
+
     const bootstrapAsync = async () => {
       let userToken = null;
       let user = null;
 
       try {
-        // Fetch the token from storage
-        userToken = await SecureStore.getItemAsync("userToken");
-        const userString = await SecureStore.getItemAsync("user");
+        // Fetch the token and user from storage efficiently
+        const [tokenResult, userResult] = await Promise.all([
+          SecureStore.getItemAsync("userToken"),
+          SecureStore.getItemAsync("user"),
+        ]);
 
-        if (userString) {
-          user = JSON.parse(userString);
+        userToken = tokenResult;
+
+        if (userResult) {
+          user = JSON.parse(userResult);
         }
 
-        // Validate the token with Supabase
+        // Only validate with Supabase if we have a token
         if (userToken) {
-          const { error } = await supabase.auth.getUser(userToken);
-
-          if (error) {
-            // Token is invalid or expired
-            await SecureStore.deleteItemAsync("userToken");
-            await SecureStore.deleteItemAsync("user");
-            userToken = null;
-            user = null;
-          }
+          // Set up a session refresh mechanism for token validation
+          authStateSubscription = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === "SIGNED_OUT") {
+              // Clear local storage and update state
+              SecureStore.deleteItemAsync("userToken");
+              SecureStore.deleteItemAsync("user");
+              dispatch({ type: "SIGN_OUT" });
+            } else if (event === "TOKEN_REFRESHED" && session) {
+              // Update the stored token
+              SecureStore.setItemAsync("userToken", session.access_token);
+            }
+          });
         }
       } catch (e) {
         console.error("Failed to restore authentication state:", e);
@@ -128,6 +138,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     bootstrapAsync();
+
+    // Clean up subscription to auth state when unmounting
+    return () => {
+      if (authStateSubscription) {
+        authStateSubscription.data.subscription.unsubscribe();
+      }
+    };
   }, []);
 
   // Auth actions
@@ -249,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     },
     clearError: () => {
-      dispatch({ type: "AUTH_ERROR", error: "" });
+      dispatch({ type: "AUTH_ERROR", error: null });
     },
   };
 

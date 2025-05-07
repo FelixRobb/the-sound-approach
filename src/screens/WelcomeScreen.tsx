@@ -4,18 +4,15 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
-import { useContext } from "react";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
-import { Button, ActivityIndicator } from "react-native-paper";
+import { Button } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
-import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { state: authState } = useContext(AuthContext);
   const { theme } = useThemedStyles();
 
   // Define styles first
@@ -58,19 +55,6 @@ const WelcomeScreen = () => {
     },
     iconStyle: {
       marginRight: 8,
-    },
-    loadingContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.background,
-      flex: 1,
-      justifyContent: "center",
-    },
-    loadingText: {
-      color: theme.colors.onBackground,
-      fontSize: 18,
-      fontWeight: "500",
-      marginTop: 18,
-      opacity: 0.85,
     },
     logoCircle: {
       alignItems: "center",
@@ -120,16 +104,6 @@ const WelcomeScreen = () => {
       textAlign: "center",
     },
   });
-
-  // If user is already authenticated, don't render the welcome screen
-  if (authState.userToken) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator animating size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Redirecting...</Text>
-      </View>
-    );
-  }
 
   return (
     <ImageBackground
