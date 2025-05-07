@@ -5,8 +5,16 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useContext } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from "react-native";
-import { Searchbar, ActivityIndicator } from "react-native-paper";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  TextInput,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { useAudio } from "../context/AudioContext";
@@ -30,12 +38,6 @@ const RecordingsListScreen = () => {
   const [showSearch, setShowSearch] = useState(false);
 
   const styles = StyleSheet.create({
-    activeTab: {
-      backgroundColor: theme.colors.primary,
-    },
-    activeTabText: {
-      color: theme.colors.onSurface,
-    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -111,38 +113,6 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
-    header: {
-      backgroundColor: theme.colors.surface,
-      elevation: 4,
-      paddingBottom: 10,
-      paddingTop: 45,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
-      zIndex: 10,
-    },
-    headerActions: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    headerContent: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: 16,
-    },
-    headerTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 22,
-      fontWeight: "700",
-    },
-    iconButton: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      marginLeft: 8,
-      padding: 8,
-    },
     listContainer: {
       flex: 1,
       paddingBottom: 16,
@@ -156,6 +126,19 @@ const RecordingsListScreen = () => {
     },
     loadingText: {
       color: theme.colors.onSurface,
+    },
+    headerRedesigned: {
+      backgroundColor: isDarkMode ? `${theme.colors.surface}E6` : `${theme.colors.surface}F2`,
+      borderBottomLeftRadius: 28,
+      borderBottomRightRadius: 28,
+      elevation: 6,
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+      paddingTop: 50,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
     },
     pageReference: {
       alignSelf: "flex-start",
@@ -199,15 +182,6 @@ const RecordingsListScreen = () => {
       fontStyle: "italic",
       marginTop: 2,
     },
-    searchBar: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 8,
-      elevation: 2,
-    },
-    searchContainer: {
-      marginVertical: 8,
-      paddingHorizontal: 16,
-    },
     speciesAction: {
       marginLeft: 8,
     },
@@ -241,29 +215,130 @@ const RecordingsListScreen = () => {
       fontWeight: "700",
       marginBottom: 4,
     },
-    tab: {
-      alignItems: "center",
-      flex: 1,
-      paddingVertical: 12,
-    },
-    tabBar: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 8,
-      flexDirection: "row",
-      marginBottom: 8,
-      marginHorizontal: 16,
-      marginTop: 12,
-      overflow: "hidden",
-    },
-    tabText: {
-      color: theme.colors.onSurface,
-      fontSize: 14,
-      fontWeight: "600",
-    },
     titleContainer: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
+    },
+    headerContentRedesigned: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 16,
+    },
+    headerTitleRedesigned: {
+      color: theme.colors.primary,
+      fontSize: 30,
+      fontWeight: "bold",
+      letterSpacing: 0.5,
+    },
+    headerSubtitle: {
+      color: theme.colors.onSurfaceVariant || theme.colors.onSurface,
+      fontSize: 15,
+      marginTop: 4,
+      opacity: 0.8,
+    },
+
+    // Updated tab bar styles
+    tabBarRedesigned: {
+      alignSelf: "center",
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outlineVariant,
+      borderRadius: 30,
+      borderWidth: 1,
+      elevation: 3,
+      flexDirection: "row",
+      marginBottom: 4,
+      marginTop: 8,
+      padding: 6,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.12,
+      shadowRadius: 6,
+      width: "95%",
+    },
+    // eslint-disable-next-line react-native/no-color-literals
+    tabRedesigned: {
+      alignItems: "center",
+      backgroundColor: "transparent",
+      borderRadius: 24,
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    activeTabRedesigned: {
+      backgroundColor: theme.colors.primary,
+      elevation: 3,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+    },
+    tabTextRedesigned: {
+      color: isDarkMode
+        ? theme.colors.onSurfaceVariant || theme.colors.onSurface
+        : theme.colors.onSurfaceVariant || theme.colors.onSurface,
+      fontSize: 15,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+    activeTabTextRedesigned: {
+      color: theme.colors.onPrimary,
+      fontWeight: "700",
+    },
+    tabIcon: {
+      marginRight: 2,
+    },
+
+    // Updated search bar styles
+    iconButtonRedesigned: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      elevation: 3,
+      height: 40,
+      justifyContent: "center",
+      marginLeft: 12,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 3,
+      width: 40,
+    },
+    searchBarContainer: {
+      marginBottom: 10,
+      marginTop: -8,
+      paddingHorizontal: 16,
+      zIndex: 5,
+    },
+    customSearchBar: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant || theme.colors.surface,
+      borderRadius: 24,
+      elevation: 3,
+      flexDirection: "row",
+      height: 48,
+      paddingHorizontal: 4,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    customSearchInput: {
+      backgroundColor: "transparent",
+      color: theme.colors.onSurface,
+      flex: 1,
+      fontSize: 17,
+      paddingHorizontal: 8,
+      paddingVertical: 0,
+    },
+    clearButton: {
+      alignItems: "center",
+      borderRadius: 20,
+      justifyContent: "center",
+      padding: 8,
     },
   });
 
@@ -402,46 +477,92 @@ const RecordingsListScreen = () => {
   // Background pattern
   const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
-  // Header component
+  // Redesigned Header component with search icon and conditional tab/search bar
   const Header = () => (
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <Text style={styles.headerTitle}>Library</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => setShowSearch(!showSearch)}>
-            <Ionicons name="search" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
+    <View style={styles.headerRedesigned}>
+      <View style={styles.headerContentRedesigned}>
+        <View>
+          <Text style={styles.headerTitleRedesigned}>Library</Text>
+          <Text style={styles.headerSubtitle}>Explore bird recordings and species</Text>
         </View>
-      </View>
-
-      <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "book" && styles.activeTab]}
-          onPress={() => setActiveTab("book")}
+          style={styles.iconButtonRedesigned}
+          onPress={() => setShowSearch((prev) => !prev)}
         >
-          <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>
-            By Book Order
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "species" && styles.activeTab]}
-          onPress={() => setActiveTab("species")}
-        >
-          <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>
-            By Species
-          </Text>
+          <Ionicons name="search" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
-
-      {showSearch && (
-        <View style={styles.searchContainer}>
-          <Searchbar
-            placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
-            onChangeText={setSearchQuery}
-            value={searchQuery}
-            style={styles.searchBar}
-            iconColor={theme.colors.primary}
-          />
+      {showSearch ? (
+        <View style={styles.searchBarContainer}>
+          <View style={styles.customSearchBar}>
+            <Ionicons
+              name="search"
+              size={22}
+              color={theme.colors.primary}
+              // eslint-disable-next-line react-native/no-inline-styles
+              style={{ marginLeft: 12, marginRight: 6 }}
+            />
+            <TextInput
+              placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
+              placeholderTextColor={isDarkMode ? "#aaa" : "#888"}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.customSearchInput}
+              autoFocus
+              selectionColor={theme.colors.primary}
+              returnKeyType="search"
+            />
+            {searchQuery ? (
+              <TouchableOpacity onPress={() => setSearchQuery("")} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={22} color={theme.colors.primary} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => setShowSearch(false)} style={styles.clearButton}>
+                <Ionicons name="close" size={22} color={theme.colors.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      ) : (
+        <View style={styles.tabBarRedesigned}>
+          <TouchableOpacity
+            style={[styles.tabRedesigned, activeTab === "book" && styles.activeTabRedesigned]}
+            onPress={() => setActiveTab("book")}
+          >
+            <Ionicons
+              name="book-outline"
+              size={18}
+              color={activeTab === "book" ? theme.colors.onPrimary : theme.colors.primary}
+              style={styles.tabIcon}
+            />
+            <Text
+              style={[
+                styles.tabTextRedesigned,
+                activeTab === "book" && styles.activeTabTextRedesigned,
+              ]}
+            >
+              By Book Order
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabRedesigned, activeTab === "species" && styles.activeTabRedesigned]}
+            onPress={() => setActiveTab("species")}
+          >
+            <Ionicons
+              name="leaf-outline"
+              size={18}
+              color={activeTab === "species" ? theme.colors.onPrimary : theme.colors.primary}
+              style={styles.tabIcon}
+            />
+            <Text
+              style={[
+                styles.tabTextRedesigned,
+                activeTab === "species" && styles.activeTabTextRedesigned,
+              ]}
+            >
+              By Species
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>

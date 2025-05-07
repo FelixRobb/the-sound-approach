@@ -48,6 +48,14 @@ module.exports = {
     "react-native/no-inline-styles": "warn",
     "react-native/no-color-literals": "warn",
     "react-native/no-raw-text": "off",
+    "react-native/sort-styles": [
+      "warn",
+      "asc",
+      {
+        ignoreClassNames: false,
+        ignoreStyleProperties: false,
+      },
+    ],
 
     // TypeScript
     "@typescript-eslint/no-unused-vars": [
