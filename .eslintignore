@@ -3,4 +3,6 @@ build/
 dist/
 .expo/
 assets/
-*.config.js 
+*.config.js
+android/
+ios/

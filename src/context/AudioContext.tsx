@@ -26,9 +26,7 @@ type AudioContextType = {
   seekTo: (position: number) => Promise<boolean>;
   setPlaybackSpeed: (speed: PlaybackSpeed) => Promise<boolean>;
   toggleLooping: () => Promise<boolean>;
-
-  // Track navigation changes
-  notifyScreenChange: (screenKey: string) => void;
+  loadTrackOnly: (uri: string, trackId: string) => Promise<boolean>;
 };
 
 // Create the context with default values
@@ -48,7 +46,7 @@ const AudioContext = createContext<AudioContextType>({
   seekTo: async () => false,
   setPlaybackSpeed: async () => false,
   toggleLooping: async () => false,
-  notifyScreenChange: () => {},
+  loadTrackOnly: async () => false,
 });
 
 // Provider component
@@ -70,9 +68,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     error: null,
   });
 
-  // Rather than using navigation hooks directly, we'll track screen changes via a ref
-  const currentScreenKey = useRef<string | null>(null);
-
   // Set up listener for audio state changes
   useEffect(() => {
     audioService.addListener(listenerId, setAudioState);
@@ -81,18 +76,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       audioService.removeListener(listenerId);
     };
   }, [listenerId, audioService]);
-
-  // Function to notify of screen change
-  const notifyScreenChange = useCallback(
-    (screenKey: string) => {
-      // If screen changed, stop audio
-      if (currentScreenKey.current !== screenKey) {
-        audioService.unloadTrack();
-        currentScreenKey.current = screenKey;
-      }
-    },
-    [audioService]
-  );
 
   // Play a track
   const playTrack = useCallback(
@@ -131,6 +114,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             return audioService.pause();
           } else if (audioState.playbackState === "paused") {
             return audioService.play();
+          } else if (audioState.playbackState === "error") {
+            // If there was an error, try loading again
+            const loadSuccess = await audioService.loadTrack(uri, trackId);
+            if (loadSuccess) {
+              return audioService.play();
+            }
+            return false;
           }
         }
 
@@ -170,6 +160,29 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return audioService.setLooping(!audioState.isLooping);
   }, [audioService, audioState.isLooping]);
 
+  // Load a track without playing it
+  const loadTrackOnly = useCallback(
+    async (uri: string, trackId: string): Promise<boolean> => {
+      try {
+        // If it's already the current track and loaded, return true
+        if (
+          audioState.trackId === trackId &&
+          audioState.playbackState !== "idle" &&
+          audioState.playbackState !== "error"
+        ) {
+          return true;
+        }
+
+        // Otherwise load the track without playing
+        return await audioService.loadTrack(uri, trackId);
+      } catch (error) {
+        console.error("Error loading track:", error);
+        return false;
+      }
+    },
+    [audioService, audioState.trackId, audioState.playbackState]
+  );
+
   // Context value
   const contextValue: AudioContextType = {
     isPlaying: audioState.playbackState === "playing",
@@ -187,7 +200,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     seekTo,
     setPlaybackSpeed,
     toggleLooping,
-    notifyScreenChange,
+    loadTrackOnly,
   };
 
   return <AudioContext.Provider value={contextValue}>{children}</AudioContext.Provider>;

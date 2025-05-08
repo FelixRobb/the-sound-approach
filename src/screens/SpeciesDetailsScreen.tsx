@@ -4,13 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { ThemeContext } from "../context/ThemeContext";
@@ -26,15 +25,10 @@ const SpeciesDetailsScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
   const { isConnected } = useContext(NetworkContext);
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { notifyScreenChange } = useAudio();
   const { isDarkMode } = useContext(ThemeContext);
   const { theme } = useThemedStyles();
 
   const { speciesId } = route.params;
-  // Notify audio context about screen change
-  useEffect(() => {
-    notifyScreenChange(`SpeciesDetails-${route.params.speciesId}`);
-  }, [notifyScreenChange, route.params.speciesId]);
   // Fetch recordings for this species
   const {
     data: recordings,

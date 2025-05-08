@@ -73,6 +73,9 @@ class AudioService {
   // Load an audio track
   public async loadTrack(uri: string, trackId: string): Promise<boolean> {
     try {
+      // Save current looping state before unloading
+      const currentLoopingState = this.state.isLooping;
+
       // Unload any existing audio first
       await this.unloadTrack();
 
@@ -83,6 +86,8 @@ class AudioService {
         position: 0,
         duration: 0,
         error: null,
+        // Restore looping state
+        isLooping: currentLoopingState,
       });
 
       // Create new sound object
@@ -91,6 +96,7 @@ class AudioService {
         {
           shouldPlay: false,
           progressUpdateIntervalMillis: 200,
+          isLooping: currentLoopingState,
         },
         this.onPlaybackStatusUpdate
       );
@@ -130,6 +136,9 @@ class AudioService {
       // Start position updates
       this.startPositionUpdates();
 
+      // Ensure looping state is correctly set before playing
+      await this.sound.setIsLoopingAsync(this.state.isLooping);
+
       await this.sound.playAsync();
       this.updateState({ playbackState: "playing" });
       return true;
@@ -166,15 +175,28 @@ class AudioService {
     }
 
     try {
+      // Save the current looping state
+      const wasLooping = this.state.isLooping;
+
       await this.sound.stopAsync();
       await this.sound.unloadAsync();
       this.sound = null;
-      this.updateState({ ...initialState });
+
+      // Reset state but preserve looping setting
+      this.updateState({
+        ...initialState,
+        isLooping: wasLooping,
+      });
+
       return true;
     } catch (error) {
       // Still reset the state even if unloading fails
+      const wasLooping = this.state.isLooping;
       this.sound = null;
-      this.updateState({ ...initialState });
+      this.updateState({
+        ...initialState,
+        isLooping: wasLooping,
+      });
       return false;
     }
   }
@@ -212,7 +234,10 @@ class AudioService {
   // Toggle looping
   public async setLooping(isLooping: boolean): Promise<boolean> {
     if (!this.sound) {
-      return false;
+      // Even if no sound is loaded, we still update the state
+      // so it will be applied to the next loaded sound
+      this.updateState({ isLooping });
+      return true;
     }
 
     try {
@@ -220,6 +245,7 @@ class AudioService {
       this.updateState({ isLooping });
       return true;
     } catch (error) {
+      console.error("Error setting looping state:", error);
       return false;
     }
   }
@@ -303,13 +329,28 @@ class AudioService {
       });
     }
 
-    // Handle playback completion
-    if (status.didJustFinish && !status.isLooping) {
+    // Update looping state from status if it's different from our state
+    if (status.isLooping !== this.state.isLooping) {
       this.updateState({
-        playbackState: "paused",
-        position: 0,
+        isLooping: status.isLooping,
       });
-      this.sound?.setPositionAsync(0).catch(() => {});
+    }
+
+    // Handle playback completion
+    if (status.didJustFinish) {
+      // Only reset position if not looping
+      if (!status.isLooping && !this.state.isLooping) {
+        // Force stop playback with multiple methods to ensure it stops
+        this.sound?.pauseAsync().catch(() => {});
+        this.sound?.stopAsync().catch(() => {});
+
+        this.updateState({
+          playbackState: "paused",
+          position: 0,
+        });
+
+        this.sound?.setPositionAsync(0).catch(() => {});
+      }
     }
   };
 }

@@ -3,7 +3,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
 
 import { useAudio } from "../context/AudioContext";
@@ -45,11 +45,23 @@ const FullAudioPlayer: React.FC<FullAudioPlayerProps> = ({
     seekTo,
     setPlaybackSpeed,
     toggleLooping,
+    loadTrackOnly,
   } = useAudio();
 
   const isCurrentTrack = currentTrackId === trackId;
   const hasError = error !== null;
   const isAudioReady = isLoaded && isCurrentTrack;
+
+  // Load audio track when component mounts
+  useEffect(() => {
+    const loadAudio = async () => {
+      if (audioUri && hasNetworkConnection && (!isCurrentTrack || !isLoaded)) {
+        await loadTrackOnly(audioUri, trackId);
+      }
+    };
+
+    loadAudio();
+  }, [audioUri, trackId, loadTrackOnly, hasNetworkConnection, isCurrentTrack, isLoaded]);
 
   // Handle play/pause button press
   const handlePlayPause = async () => {

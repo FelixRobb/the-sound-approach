@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import React, { useState, useContext, useEffect, useMemo } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,7 +19,6 @@ import { ActivityIndicator } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
 import FullAudioPlayer from "../components/FullAudioPlayer";
-import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
@@ -36,14 +35,8 @@ const RecordingDetailsScreen = () => {
   const { isConnected } = useContext(NetworkContext);
   const { downloadRecording, isDownloaded, getDownloadPath, downloads } =
     useContext(DownloadContext);
-  const { notifyScreenChange } = useAudio();
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
-
-  // Notify audio context about screen change
-  useEffect(() => {
-    notifyScreenChange(`RecordingDetails-${route.params.recordingId}`);
-  }, [notifyScreenChange, route.params.recordingId]);
 
   const styles = StyleSheet.create({
     caption: {
@@ -107,13 +100,13 @@ const RecordingDetailsScreen = () => {
       paddingVertical: 12,
     },
     downloadedIndicator: {
-      backgroundColor: theme.colors.primaryContainer,
+      backgroundColor: theme.colors.primary,
       borderRadius: 16,
       marginLeft: 8,
       padding: 8,
     },
     downloadedText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 16,
       fontWeight: "500",
       marginLeft: 12,
@@ -125,7 +118,7 @@ const RecordingDetailsScreen = () => {
       paddingVertical: 16,
     },
     downloadingText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 16,
       marginLeft: 12,
     },
@@ -222,14 +215,14 @@ const RecordingDetailsScreen = () => {
     },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.primaryContainer,
+      backgroundColor: theme.colors.primary,
       borderRadius: 12,
       marginTop: 8,
       paddingHorizontal: 10,
       paddingVertical: 4,
     },
     pageText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 12,
       fontWeight: "500",
     },
@@ -434,7 +427,7 @@ const RecordingDetailsScreen = () => {
             rightElement={
               isDownloaded(recording.id) && (
                 <View style={styles.downloadedIndicator}>
-                  <Ionicons name="cloud-done" size={16} color={theme.colors.primary} />
+                  <Ionicons name="cloud-done" size={16} color={theme.colors.onPrimary} />
                 </View>
               )
             }

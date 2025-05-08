@@ -17,7 +17,6 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
@@ -47,7 +46,6 @@ const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isConnected } = useContext(NetworkContext);
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { notifyScreenChange } = useAudio();
   const { theme, isDarkMode } = useThemedStyles();
 
   const [activeTab, setActiveTab] = useState("book");
@@ -62,15 +60,6 @@ const RecordingsListScreen = () => {
     activeTabText: {
       color: theme.colors.onPrimary,
       fontWeight: "600",
-    },
-    backgroundPattern: {
-      backgroundColor: isDarkMode ? `${theme.colors.primary}08` : `${theme.colors.primary}05`,
-      bottom: 0,
-      left: 0,
-      opacity: 0.5,
-      position: "absolute",
-      right: 0,
-      top: 0,
     },
     caption: {
       color: theme.colors.onSurface,
@@ -366,11 +355,6 @@ const RecordingsListScreen = () => {
     );
   });
 
-  // Notify audio context about screen change
-  useEffect(() => {
-    notifyScreenChange("RecordingsList");
-  }, [notifyScreenChange]);
-
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     const isItemDownloaded = isDownloaded(item.id);
@@ -444,87 +428,6 @@ const RecordingsListScreen = () => {
     );
   };
 
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
-
-  // Redesigned Header component with search icon and conditional tab/search bar
-  const Header = () => (
-    <View style={styles.header}>
-      <View style={styles.headerInner}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Library</Text>
-            <Text style={styles.subtitle}>Explore bird recordings and species</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => setShowSearch((prev) => !prev)}
-          >
-            <Ionicons
-              name={showSearch ? "close" : "search"}
-              size={24}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {showSearch ? (
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={theme.colors.primary} />
-            <TextInput
-              placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
-              placeholderTextColor={theme.colors.onSurfaceVariant}
-              value={searchInput}
-              onChangeText={setSearchInput}
-              style={styles.searchInput}
-              autoFocus
-              selectionColor={theme.colors.primary}
-              returnKeyType="search"
-            />
-            {searchInput && (
-              <TouchableOpacity onPress={() => setSearchInput("")}>
-                <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-            )}
-          </View>
-        ) : (
-          <View style={styles.tabBar}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "book" && styles.activeTab]}
-              onPress={() => setActiveTab("book")}
-            >
-              <Ionicons
-                name="book-outline"
-                size={18}
-                color={
-                  activeTab === "book" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
-                }
-              />
-              <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>
-                By Book Order
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === "species" && styles.activeTab]}
-              onPress={() => setActiveTab("species")}
-            >
-              <Ionicons
-                name="leaf-outline"
-                size={18}
-                color={
-                  activeTab === "species" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
-                }
-              />
-              <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>
-                By Species
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-
   // Empty state component
   const EmptyState = ({ type }: { type: "recordings" | "species" }) => (
     <View style={styles.emptyContainer}>
@@ -547,8 +450,80 @@ const RecordingsListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <BackgroundPattern />
-      <Header />
+      <View style={styles.header}>
+        <View style={styles.headerInner}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.title}>Library</Text>
+              <Text style={styles.subtitle}>Explore bird recordings and species</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowSearch((prev) => !prev)}
+            >
+              <Ionicons
+                name={showSearch ? "close" : "search"}
+                size={24}
+                color={theme.colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {showSearch ? (
+            <View style={styles.searchContainer}>
+              <Ionicons name="search" size={20} color={theme.colors.primary} />
+              <TextInput
+                placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
+                placeholderTextColor={theme.colors.onSurfaceVariant}
+                value={searchInput}
+                onChangeText={setSearchInput}
+                style={styles.searchInput}
+                autoFocus
+                selectionColor={theme.colors.primary}
+                returnKeyType="search"
+              />
+              {searchInput && (
+                <TouchableOpacity onPress={() => setSearchInput("")}>
+                  <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <View style={styles.tabBar}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === "book" && styles.activeTab]}
+                onPress={() => setActiveTab("book")}
+              >
+                <Ionicons
+                  name="book-outline"
+                  size={18}
+                  color={
+                    activeTab === "book" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+                  }
+                />
+                <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>
+                  By Book Order
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === "species" && styles.activeTab]}
+                onPress={() => setActiveTab("species")}
+              >
+                <Ionicons
+                  name="leaf-outline"
+                  size={18}
+                  color={
+                    activeTab === "species" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+                  }
+                />
+                <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>
+                  By Species
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
 
       {recordingsLoading || speciesLoading ? (
         <View style={styles.loadingContainer}>

@@ -12,12 +12,18 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
-      }
+        "UIBackgroundModes": [
+          "audio",
+          "audio"
+        ]
+      },
+      "bundleIdentifier": "com.robbfelix.soundapproachapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -49,7 +55,10 @@
     "packagerOpts": {
       "config": "metro.config.js"
     },
-    "modulePathProxyList": ["expo-av", "uuid"],
+    "modulePathProxyList": [
+      "expo-av",
+      "uuid"
+    ],
     "owner": "robbfelix"
   }
 }

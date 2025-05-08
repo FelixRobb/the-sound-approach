@@ -18,7 +18,6 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
@@ -32,7 +31,6 @@ const DownloadsScreen = () => {
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
     useContext(DownloadContext);
   const { isDarkMode } = useContext(ThemeContext);
-  const { notifyScreenChange } = useAudio();
   const { theme } = useThemedStyles();
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
@@ -94,11 +92,6 @@ const DownloadsScreen = () => {
   useEffect(() => {
     loadDownloads();
   }, [loadDownloads]);
-
-  // Notify audio context about screen change
-  useEffect(() => {
-    notifyScreenChange("Downloads");
-  }, [notifyScreenChange]);
 
   // Handle delete download
   const handleDeleteDownload = (item: DownloadRecord) => {
