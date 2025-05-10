@@ -641,41 +641,43 @@ const RecordingsListScreen = () => {
           </Text>
         </View>
       ) : (
-        <View style={styles.listContainer}>
-          {activeTab === "book" ? (
-            <FlatList
-              data={filteredRecordings}
-              renderItem={renderRecordingItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={recordingsLoading}
-                  onRefresh={refetchRecordings}
-                  colors={[theme.colors.primary]}
-                  tintColor={theme.colors.primary}
-                />
-              }
-              ListEmptyComponent={<EmptyState type="recordings" />}
-            />
-          ) : (
-            <FlatList
-              data={filteredSpecies}
-              renderItem={renderSpeciesItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={speciesLoading}
-                  onRefresh={refetchSpecies}
-                  colors={[theme.colors.primary]}
-                  tintColor={theme.colors.primary}
-                />
-              }
-              ListEmptyComponent={<EmptyState type="species" />}
-            />
-          )}
-        </View>
+        isConnected && (
+          <View style={styles.listContainer}>
+            {activeTab === "book" ? (
+              <FlatList
+                data={filteredRecordings}
+                renderItem={renderRecordingItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={recordingsLoading}
+                    onRefresh={refetchRecordings}
+                    colors={[theme.colors.primary]}
+                    tintColor={theme.colors.primary}
+                  />
+                }
+                ListEmptyComponent={<EmptyState type="recordings" />}
+              />
+            ) : (
+              <FlatList
+                data={filteredSpecies}
+                renderItem={renderSpeciesItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={speciesLoading}
+                    onRefresh={refetchSpecies}
+                    colors={[theme.colors.primary]}
+                    tintColor={theme.colors.primary}
+                  />
+                }
+                ListEmptyComponent={<EmptyState type="species" />}
+              />
+            )}
+          </View>
+        )
       )}
     </View>
   );
