@@ -391,7 +391,7 @@ const DownloadsScreen = () => {
       backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
       borderRadius: 8,
       flexDirection: "row",
-      marginLeft: 8,
+      marginTop: 4,
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
@@ -547,6 +547,12 @@ const DownloadsScreen = () => {
           <View>
             <Text style={styles.title}>Downloads</Text>
             <Text style={styles.subtitle}>Manage your offline recordings</Text>
+            {!isConnected && (
+              <View style={styles.offlineBadge}>
+                <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+              </View>
+            )}
           </View>
           <TouchableOpacity
             style={styles.iconButton}

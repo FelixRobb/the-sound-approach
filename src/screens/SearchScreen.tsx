@@ -47,39 +47,6 @@ const SearchScreen = () => {
   );
 
   const styles = StyleSheet.create({
-    HeaderHeader: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      elevation: 4,
-      flexDirection: "row",
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-      paddingTop: 50,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      zIndex: 1,
-    },
-    Headertitle: {
-      color: theme.colors.primary,
-      fontSize: 22,
-      fontWeight: "bold",
-    },
-    HeadertitleContainer: {
-      flex: 1,
-    },
-    backButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      marginRight: 12,
-      width: 40,
-    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -161,11 +128,21 @@ const SearchScreen = () => {
       borderBottomRightRadius: 24,
       elevation: 4,
       paddingBottom: 20,
+      paddingTop: 50,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
       zIndex: 1,
+    },
+    headerInner: {
+      paddingHorizontal: 20,
+    },
+    headerRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 16,
     },
     listContent: {
       padding: 16,
@@ -180,6 +157,20 @@ const SearchScreen = () => {
       color: theme.colors.onBackground,
       fontSize: 16,
       marginTop: 16,
+    },
+    offlineBadge: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    offlineBadgeText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginLeft: 4,
     },
     offlineButton: {
       alignItems: "center",
@@ -325,7 +316,7 @@ const SearchScreen = () => {
       borderWidth: 1,
       flexDirection: "row",
       height: 46,
-      marginHorizontal: 16,
+      marginHorizontal: 4,
       marginTop: 12,
       paddingHorizontal: 16,
     },
@@ -391,6 +382,11 @@ const SearchScreen = () => {
       fontSize: 15,
       fontStyle: "italic",
       marginTop: 2,
+    },
+    title: {
+      color: theme.colors.primary,
+      fontSize: 28,
+      fontWeight: "bold",
     },
     titleContainer: {
       flexDirection: "row",
@@ -710,14 +706,17 @@ const SearchScreen = () => {
 
       {/* Custom Header */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.HeaderHeader}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
-            <View style={styles.HeadertitleContainer}>
-              <Text style={styles.Headertitle}>Search</Text>
+        <View style={styles.headerInner}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.title}>Search</Text>
               <Text style={styles.subtitle}>Find recordings and species</Text>
+              {!isConnected && (
+                <View style={styles.offlineBadge}>
+                  <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                  <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+                </View>
+              )}
             </View>
           </View>
 

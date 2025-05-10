@@ -76,10 +76,6 @@ const ProfileSettingsScreen = () => {
       flexDirection: "row",
       justifyContent: "space-between",
     },
-    headerText: {
-      flex: 1,
-      marginLeft: 12,
-    },
     listItem: {
       paddingVertical: 6,
     },
@@ -103,7 +99,7 @@ const ProfileSettingsScreen = () => {
       backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
       borderRadius: 8,
       flexDirection: "row",
-      marginLeft: 8,
+      marginTop: 4,
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
@@ -319,7 +315,7 @@ const ProfileSettingsScreen = () => {
     <View style={styles.header}>
       <View style={styles.headerInner}>
         <View style={styles.headerRow}>
-          <View style={styles.headerText}>
+          <View>
             <Text style={styles.title}>Profile & Settings</Text>
             <Text style={styles.subtitle}>Customize your experience</Text>
             {!isConnected && (

@@ -61,6 +61,17 @@ const RecordingsListScreen = () => {
       color: theme.colors.onPrimary,
       fontWeight: "600",
     },
+    backgroundPattern: {
+      backgroundColor: isDarkMode
+        ? `${theme.colors.primary}08` // Very transparent primary color
+        : `${theme.colors.primary}05`,
+      bottom: 0,
+      left: 0,
+      opacity: 0.6,
+      position: "absolute",
+      right: 0,
+      top: 0,
+    },
     caption: {
       color: theme.colors.onSurface,
       fontSize: 14,
@@ -162,6 +173,20 @@ const RecordingsListScreen = () => {
     },
     loadingText: {
       color: theme.colors.onSurface,
+    },
+    offlineBadge: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    offlineBadgeText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginLeft: 4,
     },
     offlineBanner: {
       alignItems: "center",
@@ -520,14 +545,24 @@ const RecordingsListScreen = () => {
     </View>
   );
 
+  // Background pattern
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
+
   return (
     <View style={styles.container}>
+      <BackgroundPattern />
       <View style={styles.header}>
         <View style={styles.headerInner}>
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.title}>Library</Text>
               <Text style={styles.subtitle}>Explore bird recordings and species</Text>
+              {!isConnected && (
+                <View style={styles.offlineBadge}>
+                  <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                  <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+                </View>
+              )}
             </View>
             {isConnected && (
               <TouchableOpacity
