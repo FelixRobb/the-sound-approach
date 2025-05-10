@@ -12,11 +12,19 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["audio", "audio"]
+        "UIBackgroundModes": [
+          "audio",
+          "audio",
+          "audio",
+          "audio"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.robbfelix.soundapproachapp"
     },

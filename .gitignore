@@ -39,3 +39,4 @@ yarn-error.*
 /sonograms
 /recordings
 /.env
+/ios

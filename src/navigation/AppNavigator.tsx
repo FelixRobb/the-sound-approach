@@ -55,6 +55,8 @@ const MainTabNavigator = () => {
 
           if (route.name === "Downloads") {
             iconName = focused ? "download" : "download-outline";
+          } else if (route.name === "Search") {
+            iconName = focused ? "search" : "search-outline";
           } else if (route.name === "Profile") {
             iconName = focused ? "person" : "person-outline";
           }

@@ -22,13 +22,6 @@ import { useThemedStyles } from "../hooks/useThemedStyles";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
 import type { Recording, RootStackParamList, Species } from "../types";
 
-// Define a type for search history items
-type SearchHistoryItem = {
-  name: string;
-  timestamp: string;
-  query: string;
-};
-
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isConnected } = useContext(NetworkContext);
@@ -40,7 +33,7 @@ const SearchScreen = () => {
     recordings: [],
     species: [],
   });
-  const [recentSearches, setRecentSearches] = useState<SearchHistoryItem[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings" | "pages">(
     "all"
@@ -239,14 +232,6 @@ const SearchScreen = () => {
       marginRight: 12,
       width: 40,
     },
-    recentItemTextContainer: {
-      flex: 1,
-    },
-    recentItemTimestamp: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      marginTop: 4,
-    },
     recentQueryText: {
       color: theme.colors.onSurface,
       flex: 1,
@@ -360,7 +345,6 @@ const SearchScreen = () => {
       elevation: 2,
       marginVertical: 8,
       padding: 16,
-      position: "relative",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
@@ -395,18 +379,7 @@ const SearchScreen = () => {
       try {
         const savedSearches = await AsyncStorage.getItem("recentSearches");
         if (savedSearches) {
-          // Handle both old format (strings) and new format (objects)
-          const parsedSearches = JSON.parse(savedSearches);
-
-          // Convert if needed
-          const formattedSearches = parsedSearches.map((item: string | SearchHistoryItem) => {
-            if (typeof item === "string") {
-              return { name: item, timestamp: new Date().toISOString(), query: item };
-            }
-            return item;
-          });
-
-          setRecentSearches(formattedSearches);
+          setRecentSearches(JSON.parse(savedSearches));
         }
       } catch (error) {
         console.error("Error loading recent searches:", error);
@@ -416,27 +389,13 @@ const SearchScreen = () => {
     loadRecentSearches();
   }, []);
 
-  // Save recent searches to storage with additional metadata
-  const saveRecentSearch = async (itemName: string) => {
-    if (!itemName.trim()) return;
+  // Save recent searches to storage
+  const saveRecentSearch = async (query: string) => {
+    if (!query.trim()) return;
 
     try {
-      // Create a search item with metadata
-      const searchItem: SearchHistoryItem = {
-        name: itemName,
-        timestamp: new Date().toISOString(),
-        query: searchQuery, // Store the original query too
-      };
-
-      // Get existing searches
-      const savedSearches = await AsyncStorage.getItem("recentSearches");
-      const searches: SearchHistoryItem[] = savedSearches ? JSON.parse(savedSearches) : [];
-
-      // Add to recent searches (avoid duplicates by name and limit to 10)
-      const updatedSearches = [
-        searchItem,
-        ...searches.filter((s: SearchHistoryItem) => s.name !== itemName),
-      ].slice(0, 10);
+      // Add to recent searches (avoid duplicates and limit to 10)
+      const updatedSearches = [query, ...recentSearches.filter((s) => s !== query)].slice(0, 10);
 
       setRecentSearches(updatedSearches);
       await AsyncStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
@@ -464,7 +423,7 @@ const SearchScreen = () => {
     try {
       const results = await searchRecordings(query);
       setSearchResults(results);
-      // Don't save search yet - we'll save it when user clicks on a result
+      saveRecentSearch(query);
     } catch (error) {
       console.error("Search error:", error);
     } finally {
@@ -472,30 +431,8 @@ const SearchScreen = () => {
     }
   };
 
-  // Handle navigation to recording details and save search
-  const handleNavigateToRecording = (recordingId: string) => {
-    // Find the recording by ID
-    const recording = searchResults.recordings.find((rec) => rec.id === recordingId);
-    if (recording) {
-      // Save the recording title instead of the search query
-      saveRecentSearch(recording.title);
-    }
-    navigation.navigate("RecordingDetails", { recordingId });
-  };
-
-  // Handle navigation to species details and save search
-  const handleNavigateToSpecies = (speciesId: string) => {
-    // Find the species by ID
-    const species = searchResults.species.find((sp) => sp.id === speciesId);
-    if (species) {
-      // Save the species common name instead of the search query
-      saveRecentSearch(species.common_name);
-    }
-    navigation.navigate("SpeciesDetails", { speciesId });
-  };
-
   // Filter results based on active filter
-  const filteredResults = () => {
+  const filteredResults = (): { recordings: Recording[]; species: Species[] } => {
     if (activeFilter === "all") {
       return searchResults;
     } else if (activeFilter === "species") {
@@ -525,7 +462,7 @@ const SearchScreen = () => {
       <TouchableOpacity
         style={styles.resultCard}
         onPress={() => {
-          handleNavigateToRecording(item.id);
+          navigation.navigate("RecordingDetails", { recordingId: item.id });
         }}
       >
         <View style={styles.resultHeader}>
@@ -562,7 +499,7 @@ const SearchScreen = () => {
         <TouchableOpacity
           style={styles.chevronIcon}
           onPress={() => {
-            handleNavigateToRecording(item.id);
+            navigation.navigate("RecordingDetails", { recordingId: item.id });
           }}
         >
           <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
@@ -577,7 +514,7 @@ const SearchScreen = () => {
       <TouchableOpacity
         style={styles.speciesCard}
         onPress={() => {
-          handleNavigateToSpecies(item.id);
+          navigation.navigate("SpeciesDetails", { speciesId: item.id });
         }}
       >
         <View>
@@ -593,7 +530,7 @@ const SearchScreen = () => {
         <TouchableOpacity
           style={styles.speciesActionButton}
           onPress={() => {
-            handleNavigateToSpecies(item.id);
+            navigation.navigate("SpeciesDetails", { speciesId: item.id });
           }}
         >
           <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
@@ -602,7 +539,7 @@ const SearchScreen = () => {
     );
   };
 
-  // Render search results
+  // Render combined search results
   const renderSearchResults = () => {
     if (isLoading) {
       return (
@@ -685,10 +622,7 @@ const SearchScreen = () => {
               placeholder="Search species, recordings, or pages..."
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}
-              onChangeText={(text) => {
-                setSearchQuery(text);
-                handleSearch(text);
-              }}
+              onChangeText={setSearchQuery}
               style={styles.searchInput}
               autoFocus
               selectionColor={theme.colors.primary}
@@ -714,46 +648,47 @@ const SearchScreen = () => {
       )}
 
       {searchQuery ? (
-        <>
-          <View style={styles.filterContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <Chip
-                selected={activeFilter === "all"}
-                onPress={() => setActiveFilter("all")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-              >
-                All
-              </Chip>
-              <Chip
-                selected={activeFilter === "species"}
-                onPress={() => setActiveFilter("species")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-              >
-                Species
-              </Chip>
-              <Chip
-                selected={activeFilter === "recordings"}
-                onPress={() => setActiveFilter("recordings")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-              >
-                Recordings
-              </Chip>
-              <Chip
-                selected={activeFilter === "pages"}
-                onPress={() => setActiveFilter("pages")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-                disabled={!/^\d+$/.test(searchQuery.trim())}
-              >
-                Pages
-              </Chip>
-            </ScrollView>
-          </View>
-          {renderSearchResults()}
-        </>
+        <View style={styles.filterContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <Chip
+              selected={activeFilter === "all"}
+              onPress={() => setActiveFilter("all")}
+              style={styles.filterChip}
+              selectedColor={theme.colors.primary}
+            >
+              All
+            </Chip>
+            <Chip
+              selected={activeFilter === "species"}
+              onPress={() => setActiveFilter("species")}
+              style={styles.filterChip}
+              selectedColor={theme.colors.primary}
+            >
+              Species
+            </Chip>
+            <Chip
+              selected={activeFilter === "recordings"}
+              onPress={() => setActiveFilter("recordings")}
+              style={styles.filterChip}
+              selectedColor={theme.colors.primary}
+            >
+              Recordings
+            </Chip>
+            <Chip
+              selected={activeFilter === "pages"}
+              onPress={() => setActiveFilter("pages")}
+              style={styles.filterChip}
+              selectedColor={theme.colors.primary}
+              disabled={!/^\d+$/.test(searchQuery.trim())}
+            >
+              Pages
+            </Chip>
+          </ScrollView>
+        </View>
+      ) : null}
+
+      {searchQuery ? (
+        renderSearchResults()
       ) : (
         <View style={styles.recentContainer}>
           <View style={styles.recentHeader}>
@@ -772,19 +707,14 @@ const SearchScreen = () => {
                 <TouchableOpacity
                   style={styles.recentItem}
                   onPress={() => {
-                    setSearchQuery(item.query);
-                    handleSearch(item.query);
+                    setSearchQuery(item);
+                    handleSearch(item);
                   }}
                 >
                   <View style={styles.recentItemIcon}>
                     <Ionicons name="time-outline" size={22} color={theme.colors.primary} />
                   </View>
-                  <View style={styles.recentItemTextContainer}>
-                    <Text style={styles.recentQueryText}>{item.name}</Text>
-                    <Text style={styles.recentItemTimestamp}>
-                      {new Date(item.timestamp).toLocaleDateString()}
-                    </Text>
-                  </View>
+                  <Text style={styles.recentQueryText}>{item}</Text>
                   <Ionicons name="search" size={20} color={theme.colors.primary} />
                 </TouchableOpacity>
               )}
