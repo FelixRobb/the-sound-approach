@@ -439,8 +439,11 @@ const RecordingDetailsScreen = () => {
               <TouchableOpacity
                 style={styles.speciesHeader}
                 onPress={() => {
-                  navigation.navigate("SpeciesDetails", { speciesId: recording.species_id });
+                  if (isConnected) {
+                    navigation.navigate("SpeciesDetails", { speciesId: recording.species_id });
+                  }
                 }}
+                disabled={!isConnected}
               >
                 <View style={styles.speciesInfo}>
                   <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
@@ -450,9 +453,11 @@ const RecordingDetailsScreen = () => {
                     <Text style={styles.pageText}>Page {recording.book_page_number}</Text>
                   </View>
                 </View>
-                <View style={styles.speciesActionButton}>
-                  <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
-                </View>
+                {isConnected && (
+                  <View style={styles.speciesActionButton}>
+                    <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
 

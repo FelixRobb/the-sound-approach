@@ -5,8 +5,11 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useContext } from "react";
+import { StyleSheet, View } from "react-native";
 
+import OfflineIndicator from "../components/OfflineIndicator";
 import { AuthContext } from "../context/AuthContext";
+import { OfflineContext, OfflineProvider } from "../context/OfflineContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import DownloadsScreen from "../screens/DownloadsScreen";
@@ -21,8 +24,6 @@ import SpeciesDetailsScreen from "../screens/SpeciesDetailsScreen";
 import SplashScreen from "../screens/SplashScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { navigationDarkTheme, navigationLightTheme } from "../theme";
-
-// Context
 
 // Stack navigators
 const AuthStack = createNativeStackNavigator();
@@ -43,48 +44,61 @@ const AuthNavigator = () => {
 // Main tab navigator
 const MainTabNavigator = () => {
   const { theme } = useThemedStyles();
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+  });
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          // Define iconName with the correct type
-          let iconName: keyof typeof Ionicons.glyphMap = focused
-            ? "musical-notes"
-            : "musical-notes-outline"; // Default icon for Recordings
+    <View style={styles.container}>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            // Define iconName with the correct type
+            let iconName: keyof typeof Ionicons.glyphMap = focused
+              ? "musical-notes"
+              : "musical-notes-outline"; // Default icon for Recordings
 
-          if (route.name === "Downloads") {
-            iconName = focused ? "download" : "download-outline";
-          } else if (route.name === "Search") {
-            iconName = focused ? "search" : "search-outline";
-          } else if (route.name === "Profile") {
-            iconName = focused ? "person" : "person-outline";
-          }
+            if (route.name === "Downloads") {
+              iconName = focused ? "download" : "download-outline";
+            } else if (route.name === "Search") {
+              iconName = focused ? "search" : "search-outline";
+            } else if (route.name === "Profile") {
+              iconName = focused ? "person" : "person-outline";
+            }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.onSurface,
-      })}
-    >
-      <Tab.Screen
-        name="Recordings"
-        component={RecordingsListScreen}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen name="Search" component={SearchScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Downloads" component={DownloadsScreen} options={{ headerShown: false }} />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileSettingsScreen}
-        options={{ headerShown: false }}
-      />
-    </Tab.Navigator>
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.onSurface,
+        })}
+      >
+        <Tab.Screen
+          name="Recordings"
+          component={RecordingsListScreen}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen name="Search" component={SearchScreen} options={{ headerShown: false }} />
+        <Tab.Screen name="Downloads" component={DownloadsScreen} options={{ headerShown: false }} />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileSettingsScreen}
+          options={{ headerShown: false }}
+        />
+      </Tab.Navigator>
+      <OfflineIndicator />
+    </View>
   );
 };
 
 // Main stack navigator that includes the tab navigator
 const MainNavigator = () => {
+  const { handleOfflineRedirect } = useContext(OfflineContext);
+
+  // Handle offline redirect
+  handleOfflineRedirect();
+
   return (
     <MainStack.Navigator screenOptions={{ headerShown: false }}>
       <MainStack.Screen name="MainTabs" component={MainTabNavigator} />
@@ -110,13 +124,15 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer theme={navTheme}>
-      {authState.isLoading ? (
-        <SplashScreen />
-      ) : authState.userToken ? (
-        <MainNavigator />
-      ) : (
-        <AuthNavigator />
-      )}
+      <OfflineProvider>
+        {authState.isLoading ? (
+          <SplashScreen />
+        ) : authState.userToken ? (
+          <MainNavigator />
+        ) : (
+          <AuthNavigator />
+        )}
+      </OfflineProvider>
     </NavigationContainer>
   );
 };

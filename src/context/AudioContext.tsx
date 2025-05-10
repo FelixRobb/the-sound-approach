@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import AudioService, { type AudioPlayerState, type PlaybackSpeed } from "../lib/AudioService";
 
+import { NetworkContext } from "./NetworkContext";
+
 // Context type definition
 type AudioContextType = {
   // Current audio state
@@ -54,6 +56,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Get audio service instance
   const audioService = AudioService.getInstance();
 
+  // Get network status
+  const { isConnected } = useContext(NetworkContext);
+
   // Create a unique ID for this component instance
   const listenerId = useRef(uuidv4()).current;
 
@@ -68,6 +73,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     error: null,
   });
 
+  // Keep track of the current audio URI
+  const currentAudioUri = useRef<string | null>(null);
+
   // Set up listener for audio state changes
   useEffect(() => {
     audioService.addListener(listenerId, setAudioState);
@@ -77,10 +85,29 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [listenerId, audioService]);
 
+  // Stop playback when going offline if the current track is not downloaded
+  useEffect(() => {
+    if (!isConnected && audioState.playbackState === "playing") {
+      // Only pause playback if the current audio is not a local file
+      const audioUri = currentAudioUri.current;
+      if (!audioUri || !audioUri.startsWith("file://")) {
+        audioService.pause().catch(console.error);
+      }
+    }
+  }, [isConnected, audioState.playbackState, audioService]);
+
   // Play a track
   const playTrack = useCallback(
     async (uri: string, trackId: string): Promise<boolean> => {
       try {
+        // If offline and not a downloaded file (file:// URI), don't play
+        if (!isConnected && !uri.startsWith("file://")) {
+          return false;
+        }
+
+        // Store the current URI for later reference
+        currentAudioUri.current = uri;
+
         // If it's already the current track and loaded, just play it
         if (
           audioState.trackId === trackId &&
@@ -101,13 +128,21 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return false;
       }
     },
-    [audioService, audioState.trackId, audioState.playbackState]
+    [audioService, audioState.trackId, audioState.playbackState, isConnected]
   );
 
   // Toggle play/pause for a track
   const togglePlayPause = useCallback(
     async (uri: string, trackId: string): Promise<boolean> => {
       try {
+        // If offline and not a downloaded file (file:// URI), don't play
+        if (!isConnected && !uri.startsWith("file://")) {
+          return false;
+        }
+
+        // Store the current URI for later reference
+        currentAudioUri.current = uri;
+
         // If it's the current track, toggle play/pause
         if (audioState.trackId === trackId) {
           if (audioState.playbackState === "playing") {
@@ -131,7 +166,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return false;
       }
     },
-    [audioService, audioState.trackId, audioState.playbackState, playTrack]
+    [audioService, audioState.trackId, audioState.playbackState, playTrack, isConnected]
   );
 
   // Stop playback
@@ -164,6 +199,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadTrackOnly = useCallback(
     async (uri: string, trackId: string): Promise<boolean> => {
       try {
+        // If offline and not a downloaded file, don't load
+        if (!isConnected && !uri.startsWith("file://")) {
+          return false;
+        }
+
+        // Store the current URI for later reference
+        currentAudioUri.current = uri;
+
         // If it's already the current track and loaded, return true
         if (
           audioState.trackId === trackId &&
@@ -180,7 +223,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return false;
       }
     },
-    [audioService, audioState.trackId, audioState.playbackState]
+    [audioService, audioState.trackId, audioState.playbackState, isConnected]
   );
 
   // Context value
