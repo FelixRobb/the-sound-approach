@@ -14,7 +14,7 @@ import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getAudioUri } from "../lib/mediaUtils";
+import { getHighQualityAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
 
@@ -24,7 +24,7 @@ const SpeciesDetailsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
   const { isConnected } = useContext(NetworkContext);
-  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
+  const { isDownloaded } = useContext(DownloadContext);
   const { isDarkMode } = useContext(ThemeContext);
   const { theme } = useThemedStyles();
 
@@ -358,10 +358,10 @@ const SpeciesDetailsScreen = () => {
                       </View>
 
                       {(() => {
-                        const uri = getAudioUri(item, isDownloaded, getDownloadPath, isConnected);
+                        const uri = getHighQualityAudioUri(item, isConnected);
                         return uri ? (
                           <MiniAudioPlayer
-                            trackId={item.audio_id}
+                            trackId={item.id}
                             audioUri={uri}
                             size={36}
                             showLoading={false}

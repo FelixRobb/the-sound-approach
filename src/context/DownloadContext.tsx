@@ -5,6 +5,7 @@ import * as FileSystem from "expo-file-system";
 import type React from "react";
 import { createContext, useState, useEffect, useContext, useCallback } from "react";
 
+import { ENV } from "../config/env";
 import { supabase } from "../lib/supabase";
 import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types";
 
@@ -114,26 +115,26 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
 
     try {
-      // Download audio file
-      const audioPath = `${downloadsDir}audio_${recording.audio_id}.mp3`;
+      // Download low-quality audio file (MP3) only
+      const audioPath = `${downloadsDir}audio_${recording.audiolqid}.mp3`;
       const { data: audioUrlData } = supabase.storage
-        .from("audio")
-        .getPublicUrl(`${recording.audio_id}.mp3`);
+        .from(ENV.AUDIO_LQ_BUCKET) // Use environment variable for bucket name
+        .getPublicUrl(`${recording.audiolqid}.mp3`);
 
       if (!audioUrlData?.publicUrl) throw new Error("Failed to get audio URL");
 
       // Actually download the audio file
       await FileSystem.downloadAsync(audioUrlData.publicUrl, audioPath);
 
-      // Download sonogram image
-      const sonogramPath = `${downloadsDir}sonogram_${recording.sonogram_id}.png`;
+      // Download a frame from the sonogram video as thumbnail for offline viewing
+      const sonogramPath = `${downloadsDir}sonogram_${recording.sonogramvideoid}.png`;
       const { data: sonogramUrlData } = supabase.storage
-        .from("sonograms")
-        .getPublicUrl(`${recording.sonogram_id}.png`);
+        .from(ENV.SONOGRAM_THUMBNAILS_BUCKET) // Use environment variable for bucket name
+        .getPublicUrl(`${recording.sonogramvideoid}.png`);
 
-      if (!sonogramUrlData?.publicUrl) throw new Error("Failed to get sonogram URL");
+      if (!sonogramUrlData?.publicUrl) throw new Error("Failed to get sonogram thumbnail URL");
 
-      // Actually download the sonogram file
+      // Actually download the sonogram thumbnail
       await FileSystem.downloadAsync(sonogramUrlData.publicUrl, sonogramPath);
 
       // Get species info if available

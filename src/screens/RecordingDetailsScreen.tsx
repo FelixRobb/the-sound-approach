@@ -14,15 +14,15 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
-import FullAudioPlayer from "../components/FullAudioPlayer";
+import VideoPlayer from "../components/VideoPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getAudioUri, getSonogramUri } from "../lib/mediaUtils";
+import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
 
@@ -33,8 +33,7 @@ const RecordingDetailsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const { isConnected } = useContext(NetworkContext);
-  const { downloadRecording, isDownloaded, getDownloadPath, downloads } =
-    useContext(DownloadContext);
+  const { downloadRecording, isDownloaded, downloads } = useContext(DownloadContext);
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
@@ -154,9 +153,6 @@ const RecordingDetailsScreen = () => {
       marginBottom: 8,
       marginTop: 16,
     },
-    expandButton: {
-      padding: 4,
-    },
     fullscreenContainer: {
       backgroundColor: theme.colors.surface,
       flex: 1,
@@ -226,12 +222,6 @@ const RecordingDetailsScreen = () => {
       fontSize: 12,
       fontWeight: "500",
     },
-    playerHeader: {
-      borderRadius: 12,
-      height: 80,
-      marginBottom: 16,
-      overflow: "hidden",
-    },
     retryButton: {
       alignItems: "center",
       alignSelf: "center",
@@ -254,26 +244,11 @@ const RecordingDetailsScreen = () => {
       fontStyle: "italic",
       marginBottom: 8,
     },
-    sectionHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 12,
-    },
     sectionTitle: {
       color: theme.colors.primary,
       fontSize: 18,
       fontWeight: "600",
       marginBottom: 12,
-    },
-    sonogramContainer: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-      borderRadius: 12,
-      overflow: "hidden",
-    },
-    sonogramImage: {
-      height: 200,
-      width: "100%",
     },
     speciesActionButton: {
       alignItems: "center",
@@ -296,17 +271,6 @@ const RecordingDetailsScreen = () => {
       fontSize: 22,
       fontWeight: "bold",
       marginBottom: 4,
-    },
-    waveformPlaceholder: {
-      alignItems: "center",
-      backgroundColor: theme.colors.onSurfaceVariant,
-      height: "100%",
-      justifyContent: "center",
-      width: "100%",
-    },
-    waveformPreview: {
-      height: "100%",
-      width: "100%",
     },
   });
 
@@ -345,18 +309,11 @@ const RecordingDetailsScreen = () => {
       ]);
     }
   };
-
-  // Get audio URI for the player - memoized to prevent repeated requests
-  const audioUri = useMemo(() => {
+  // Get sonogram video URI - memoized to prevent repeated requests
+  const sonogramVideoUri = useMemo(() => {
     if (!recording) return null;
-    return getAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
-  }, [recording, isDownloaded, isConnected, getDownloadPath]);
-
-  // Get sonogram image URI - memoized to prevent repeated requests
-  const sonogramUri = useMemo(() => {
-    if (!recording) return null;
-    return getSonogramUri(recording, isDownloaded, getDownloadPath, isConnected);
-  }, [recording, isDownloaded, isConnected, getDownloadPath]);
+    return getSonogramVideoUri(recording, isConnected);
+  }, [recording, isConnected]);
 
   // Render loading state
   if (isLoading) {
@@ -413,7 +370,7 @@ const RecordingDetailsScreen = () => {
           </TouchableOpacity>
           <Image
             source={{
-              uri: sonogramUri || "https://placeholder.svg?height=400&width=800&text=Sonogram",
+              uri: sonogramVideoUri || "https://placeholder.svg?height=400&width=800&text=Sonogram",
             }}
             style={styles.fullscreenImage}
             resizeMode="contain"
@@ -463,64 +420,13 @@ const RecordingDetailsScreen = () => {
 
             {/* Audio Player Card */}
             <View style={styles.card}>
-              {/* Player Visualization */}
-              <View style={styles.playerHeader}>
-                {sonogramUri ? (
-                  <Image
-                    source={{
-                      uri:
-                        sonogramUri ||
-                        "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
-                    }}
-                    style={styles.waveformPreview}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.waveformPlaceholder}>
-                    <Ionicons name="musical-notes" size={32} color="#E0E0E0" />
-                  </View>
-                )}
-              </View>
-
-              {/* Audio Player Component */}
-              <FullAudioPlayer
-                trackId={recording.audio_id}
-                audioUri={audioUri}
-                hasNetworkConnection={isConnected}
-              />
+              <VideoPlayer videoId={recording.sonogramvideoid} hasNetworkConnection={isConnected} />
             </View>
 
             {/* Description Card */}
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Description</Text>
               <Text style={styles.caption}>{recording.caption}</Text>
-            </View>
-
-            {/* Sonogram Card */}
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Sonogram</Text>
-                {sonogramUri && (
-                  <TouchableOpacity
-                    style={styles.expandButton}
-                    onPress={() => setIsImageFullscreen(true)}
-                  >
-                    <Ionicons name="expand" size={20} color="#2E7D32" />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <View style={styles.sonogramContainer}>
-                <Image
-                  source={{
-                    uri:
-                      sonogramUri ||
-                      "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
-                  }}
-                  style={styles.sonogramImage}
-                  resizeMode="contain"
-                />
-              </View>
             </View>
 
             {/* Download Card */}
