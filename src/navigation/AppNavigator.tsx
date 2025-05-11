@@ -38,8 +38,13 @@ const AuthNavigator = () => {
     <AuthStack.Navigator
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right",
         contentStyle: { backgroundColor: theme.colors.background },
+        animation: "fade",
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+        presentation: "card",
+        animationTypeForReplace: "push",
+        navigationBarColor: theme.colors.background,
       }}
     >
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />

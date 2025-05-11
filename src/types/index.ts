@@ -96,7 +96,6 @@ export type DownloadInfo = {
 export type DownloadRecord = {
   recording_id: string;
   audio_path: string;
-  sonogram_path: string;
   downloaded_at: number;
   title?: string;
   species_name?: string;

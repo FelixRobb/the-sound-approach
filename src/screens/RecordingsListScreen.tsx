@@ -20,6 +20,7 @@ import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
+import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
@@ -44,7 +45,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isConnected } = useContext(NetworkContext);
-  const { isDownloaded } = useContext(DownloadContext);
+  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
   const { theme, isDarkMode } = useThemedStyles();
 
   const [activeTab, setActiveTab] = useState("book");
@@ -463,9 +464,10 @@ const RecordingsListScreen = () => {
             </View>
           </View>
 
-          {item.audiohqid && (
-            <MiniAudioPlayer trackId={item.id} audioUri={item.audiohqid} size={36} />
-          )}
+          {(() => {
+            const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
+            return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={36} /> : null;
+          })()}
         </View>
       </TouchableOpacity>
     );

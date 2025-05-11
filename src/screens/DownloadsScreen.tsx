@@ -63,7 +63,6 @@ const DownloadsScreen = () => {
       const formattedRecordings = downloadedRecordings.map((record) => ({
         recording_id: record.recording_id,
         audio_path: record.audio_path,
-        sonogram_path: record.sonogram_path,
         downloaded_at: record.downloaded_at,
         title: record.title,
         species_name: record.species_name,

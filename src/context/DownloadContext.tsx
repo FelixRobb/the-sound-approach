@@ -126,17 +126,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Actually download the audio file
       await FileSystem.downloadAsync(audioUrlData.publicUrl, audioPath);
 
-      // Download a frame from the sonogram video as thumbnail for offline viewing
-      const sonogramPath = `${downloadsDir}sonogram_${recording.sonogramvideoid}.png`;
-      const { data: sonogramUrlData } = supabase.storage
-        .from(ENV.SONOGRAM_THUMBNAILS_BUCKET) // Use environment variable for bucket name
-        .getPublicUrl(`${recording.sonogramvideoid}.png`);
-
-      if (!sonogramUrlData?.publicUrl) throw new Error("Failed to get sonogram thumbnail URL");
-
-      // Actually download the sonogram thumbnail
-      await FileSystem.downloadAsync(sonogramUrlData.publicUrl, sonogramPath);
-
       // Get species info if available
       let speciesName = "";
       let scientificName = "";
@@ -163,7 +152,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const downloadRecord: DownloadRecord = {
         recording_id: recording.id,
         audio_path: audioPath,
-        sonogram_path: sonogramPath,
         downloaded_at: Date.now(),
         title: recording.title,
         species_name: speciesName,
@@ -228,11 +216,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           await FileSystem.deleteAsync(downloadRecord.audio_path);
         }
 
-        const sonogramInfo = await FileSystem.getInfoAsync(downloadRecord.sonogram_path);
-        if (sonogramInfo.exists) {
-          await FileSystem.deleteAsync(downloadRecord.sonogram_path);
-        }
-
         // Remove from AsyncStorage
         await AsyncStorage.removeItem(downloadKey);
 
@@ -277,11 +260,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const audioInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
             if (audioInfo.exists) {
               await FileSystem.deleteAsync(downloadRecord.audio_path);
-            }
-
-            const sonogramInfo = await FileSystem.getInfoAsync(downloadRecord.sonogram_path);
-            if (sonogramInfo.exists) {
-              await FileSystem.deleteAsync(downloadRecord.sonogram_path);
             }
           } catch (e) {
             console.error("Error deleting files:", e);
