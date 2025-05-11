@@ -3,9 +3,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from "react-native";
-import { List, Switch } from "react-native-paper";
+import { List } from "react-native-paper";
 
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -22,8 +22,6 @@ const ProfileSettingsScreen = () => {
   const { theme: themeMode, isDarkMode, setTheme } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
-
-  const [showThemeOptions, setShowThemeOptions] = useState(false);
 
   // Create styles based on theme
   const styles = StyleSheet.create({
@@ -168,33 +166,30 @@ const ProfileSettingsScreen = () => {
       alignItems: "center",
       flex: 1,
       flexDirection: "row",
+      gap: 6,
       justifyContent: "center",
-      padding: 12,
-    },
-    themeOptionBorder: {
-      borderColor: theme.colors.outline,
-      borderRightWidth: 1,
+      paddingHorizontal: 4,
+      paddingVertical: 8,
     },
     themeOptionContainer: {
+      backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 12,
       flexDirection: "row",
+      marginBottom: 8,
       marginHorizontal: 16,
       marginTop: 8,
       overflow: "hidden",
     },
-    themeOptionIcon: {
-      marginRight: 8,
-    },
     themeOptionSelected: {
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.primary,
     },
     themeOptionText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: "500",
     },
     themeOptionTextSelected: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontWeight: "600",
     },
     title: {
@@ -334,13 +329,6 @@ const ProfileSettingsScreen = () => {
 
   // Theme options component
   const ThemeOptions = () => {
-    const getIconColor = (mode: string) => {
-      if (themeMode === mode) {
-        return theme.colors.primary;
-      }
-      return isDarkMode ? theme.colors.onSurfaceVariant : theme.colors.onSurfaceVariant;
-    };
-
     const themeOptions = [
       { mode: "light", icon: "sunny-outline" as const, label: "Light" },
       { mode: "system", icon: "contrast-outline" as const, label: "System" },
@@ -348,30 +336,28 @@ const ProfileSettingsScreen = () => {
     ];
 
     return (
-      <View style={[styles.themeOptionContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
-        {themeOptions.map((item, index) => (
+      <View style={styles.themeOptionContainer}>
+        {themeOptions.map((option) => (
           <TouchableOpacity
-            key={item.mode}
-            style={[
-              styles.themeOption,
-              themeMode === item.mode && styles.themeOptionSelected,
-              index < 2 && styles.themeOptionBorder,
-            ]}
-            onPress={() => setTheme(item.mode as "light" | "dark" | "system")}
+            key={option.mode}
+            style={[styles.themeOption, themeMode === option.mode && styles.themeOptionSelected]}
+            onPress={() => setTheme(option.mode as "light" | "dark" | "system")}
+            activeOpacity={0.7}
           >
             <Ionicons
-              name={item.icon}
-              size={20}
-              color={getIconColor(item.mode)}
-              style={styles.themeOptionIcon}
+              name={option.icon}
+              size={18}
+              color={
+                themeMode === option.mode ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+              }
             />
             <Text
               style={[
                 styles.themeOptionText,
-                themeMode === item.mode && styles.themeOptionTextSelected,
+                themeMode === option.mode && styles.themeOptionTextSelected,
               ]}
             >
-              {item.label}
+              {option.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -424,41 +410,17 @@ const ProfileSettingsScreen = () => {
           </View>
 
           <List.Item
-            title="Dark Mode"
+            title="Theme"
+            description="Choose your preferred theme"
             left={(props) => (
               <List.Icon {...props} icon="theme-light-dark" color={theme.colors.primary} />
             )}
-            right={() => (
-              <Switch
-                value={isDarkMode}
-                onValueChange={() => setTheme(isDarkMode ? "light" : "dark")}
-                color={theme.colors.primary}
-              />
-            )}
-            style={styles.listItem}
-            titleStyle={styles.listItemTitle}
-          />
-
-          <List.Item
-            title="Theme"
-            description={
-              themeMode === "system" ? "Follow system" : themeMode === "dark" ? "Dark" : "Light"
-            }
-            left={(props) => <List.Icon {...props} icon="palette" color={theme.colors.primary} />}
-            onPress={() => setShowThemeOptions(!showThemeOptions)}
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}
-            right={(props) => (
-              <List.Icon
-                {...props}
-                icon={showThemeOptions ? "chevron-up" : "chevron-down"}
-                color={theme.colors.primary}
-              />
-            )}
           />
 
-          {showThemeOptions && <ThemeOptions />}
+          <ThemeOptions />
         </View>
 
         {/* Storage Section */}

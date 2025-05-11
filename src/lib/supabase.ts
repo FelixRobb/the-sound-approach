@@ -104,12 +104,24 @@ export type SearchResults = {
   species: Species[];
 };
 
+// Sanitize search query to prevent SQL injection
+const sanitizeSearchQuery = (query: string): string => {
+  // Remove any special characters that might be used for SQL injection
+  return query.replace(/[%_'"\\[\]{}()*+?.,^$|#\s]/g, " ").trim();
+};
+
 export const searchRecordings = async (query: string): Promise<SearchResults> => {
   if (!query || query.trim() === "") {
     return { recordings: [], species: [] };
   }
 
-  const searchTerm = `%${query.trim()}%`;
+  // Sanitize the search query
+  const sanitizedQuery = sanitizeSearchQuery(query);
+  if (!sanitizedQuery) {
+    return { recordings: [], species: [] };
+  }
+
+  const searchTerm = `%${sanitizedQuery}%`;
 
   try {
     // Search for species by common name or scientific name
@@ -154,7 +166,7 @@ export const searchRecordings = async (query: string): Promise<SearchResults> =>
 
     // Search for book page numbers if the query is numeric
     let pageResults: Recording[] = [];
-    if (/^\d+$/.test(query.trim())) {
+    if (/^\d+$/.test(sanitizedQuery)) {
       const { data: pageData, error: pageError } = await supabase
         .from("recordings")
         .select(
@@ -167,7 +179,7 @@ export const searchRecordings = async (query: string): Promise<SearchResults> =>
           )
         `
         )
-        .eq("book_page_number", parseInt(query.trim(), 10))
+        .eq("book_page_number", parseInt(sanitizedQuery, 10))
         .order("order_in_book", { ascending: true });
 
       if (!pageError && pageData) {

@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useContext, useEffect } from "react";
-import { StyleSheet, View, Platform } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import OfflineIndicator from "../components/OfflineIndicator";
 import { AuthContext } from "../context/AuthContext";
@@ -59,11 +59,9 @@ const MainTabNavigator = () => {
     },
     tabBar: {
       backgroundColor: theme.colors.surface,
-      borderTopColor: theme.colors.outlineVariant,
-      borderTopWidth: 1,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
       elevation: 8,
-      height: Platform.OS === "ios" ? 88 : 65,
-      paddingBottom: Platform.OS === "ios" ? 28 : 8,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: -2 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
@@ -146,7 +144,6 @@ const MainNavigator = () => {
           presentation: "card",
           animationTypeForReplace: "push",
           navigationBarColor: theme.colors.background,
-          statusBarStyle: isDarkMode ? "light" : "dark",
         }}
       >
         <MainStack.Screen name="MainTabs" component={MainTabNavigator} />

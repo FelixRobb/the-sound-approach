@@ -460,6 +460,11 @@ const SearchScreen = () => {
     }
   };
 
+  // Add a sanitize function at the component level
+  const sanitizeQuery = (query: string): string => {
+    return query.replace(/[%_'"\\[\]{}()*+?.,^$|#\s]/g, " ").trim();
+  };
+
   // Handle search
   const handleSearch = async (query: string) => {
     if (!query.trim() || !isConnected) return;
@@ -505,15 +510,17 @@ const SearchScreen = () => {
 
   // Filter results based on active filter
   const filteredResults = () => {
+    const sanitizedQuery = sanitizeQuery(searchQuery);
+
     if (activeFilter === "all") {
       return searchResults;
     } else if (activeFilter === "species") {
       return { recordings: [], species: searchResults.species };
     } else if (activeFilter === "recordings") {
       return { recordings: searchResults.recordings, species: [] };
-    } else if (activeFilter === "pages" && /^\d+$/.test(searchQuery.trim())) {
+    } else if (activeFilter === "pages" && /^\d+$/.test(sanitizedQuery)) {
       // Filter recordings by page number
-      const pageNumber = parseInt(searchQuery.trim(), 10);
+      const pageNumber = parseInt(sanitizedQuery, 10);
       const pageRecordings = searchResults.recordings.filter(
         (rec) => rec.book_page_number === pageNumber
       );
@@ -662,7 +669,7 @@ const SearchScreen = () => {
           />
           <Text style={styles.emptyTitle}>No Results Found</Text>
           <Text style={styles.emptyText}>
-            We couldn&apos;t find any results for &quot;{searchQuery}&quot;
+            We couldn&apos;t find any results for &quot;{sanitizeQuery(searchQuery)}&quot;
           </Text>
         </View>
       );
@@ -787,7 +794,7 @@ const SearchScreen = () => {
                 onPress={() => setActiveFilter("pages")}
                 style={styles.filterChip}
                 selectedColor={theme.colors.primary}
-                disabled={!/^\d+$/.test(searchQuery.trim())}
+                disabled={!/^\d+$/.test(sanitizeQuery(searchQuery))}
               >
                 Pages
               </Chip>
