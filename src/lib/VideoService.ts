@@ -33,6 +33,7 @@ class VideoService {
   private listeners: Map<string, VideoListenerCallback> = new Map();
   private lastPositionUpdate = 0;
   private updateIntervalId: NodeJS.Timeout | null = null;
+  private loadingTimeout: NodeJS.Timeout | null = null;
 
   // Private constructor for singleton pattern
   private constructor() {
@@ -70,9 +71,20 @@ class VideoService {
     }
   }
 
+  // Cancel any pending timeouts
+  private clearTimeouts() {
+    if (this.loadingTimeout) {
+      clearTimeout(this.loadingTimeout);
+      this.loadingTimeout = null;
+    }
+  }
+
   // Load a video
   public async loadVideo(uri: string, videoId: string): Promise<boolean> {
     try {
+      // Clear any existing timeouts
+      this.clearTimeouts();
+
       // Unload any existing video first
       await this.unloadVideo();
 
@@ -95,15 +107,28 @@ class VideoService {
 
       this.video = this.videoRef.current;
 
+      // Set up timeout for loading
+      this.loadingTimeout = setTimeout(() => {
+        // Only update state if we're still loading the same video
+        if (this.state.videoId === videoId && this.state.playbackState === "loading") {
+          this.updateState({
+            playbackState: "error",
+            error: "Video loading timed out",
+          });
+        }
+      }, 15000);
+
       // Load the video
       await this.video.loadAsync(
         { uri },
         {
           shouldPlay: false,
           progressUpdateIntervalMillis: 200,
-        },
-        false
+        }
       );
+
+      // Clear the timeout since loading succeeded
+      this.clearTimeouts();
 
       // Set up status update listener
       this.video.setOnPlaybackStatusUpdate(this.onPlaybackStatusUpdate);
@@ -118,17 +143,17 @@ class VideoService {
         });
         return true;
       } else {
-        this.updateState({
-          playbackState: "error",
-          error: "Failed to load video",
-        });
-        return false;
+        throw new Error("Failed to load video: Video not loaded after loadAsync");
       }
     } catch (error) {
+      // Clear the timeout since we got an error
+      this.clearTimeouts();
+
       this.updateState({
         playbackState: "error",
         error: error instanceof Error ? error.message : "Unknown error loading video",
       });
+      console.error("Video loading error:", error);
       return false;
     }
   }
@@ -173,14 +198,27 @@ class VideoService {
   // Stop and unload the current video
   public async unloadVideo(): Promise<boolean> {
     this.stopPositionUpdates();
+    this.clearTimeouts();
 
     if (!this.video) {
       return true;
     }
 
     try {
-      await this.video.stopAsync();
-      await this.video.unloadAsync();
+      // First try to stop gracefully
+      try {
+        await this.video.stopAsync();
+      } catch (e) {
+        console.warn("Error stopping video:", e);
+        // Continue with unload even if stop fails
+      }
+
+      try {
+        await this.video.unloadAsync();
+      } catch (e) {
+        console.warn("Error unloading video:", e);
+        // Continue even if unload fails
+      }
 
       // Reset state
       this.updateState({
@@ -189,6 +227,7 @@ class VideoService {
 
       return true;
     } catch (error) {
+      console.error("Error in unloadVideo:", error);
       // Still reset the state even if unloading fails
       this.updateState({
         ...initialState,
@@ -322,10 +361,13 @@ class VideoService {
       duration: status.durationMillis || 0,
     });
 
-    // Update playback state
+    // Update playback state based on actual status
     if (status.isPlaying) {
       this.updateState({ playbackState: "playing" });
-    } else if (this.state.playbackState !== "loading") {
+    } else if (this.state.playbackState === "loading") {
+      // If we were loading and now we're not playing, we should be paused
+      this.updateState({ playbackState: "paused" });
+    } else if (this.state.playbackState !== "idle" && this.state.playbackState !== "error") {
       this.updateState({ playbackState: "paused" });
     }
 

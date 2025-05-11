@@ -80,6 +80,8 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     return () => {
       videoService.removeListener(listenerId);
+      // Ensure we unload video when provider is unmounted
+      videoService.unloadVideo().catch(console.error);
     };
   }, [listenerId, videoService]);
 
@@ -97,7 +99,9 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Set video ref
   const setVideoRef = useCallback(
     (ref: React.RefObject<Video>) => {
-      videoService.setVideoRef(ref);
+      if (ref && ref.current) {
+        videoService.setVideoRef(ref);
+      }
     },
     [videoService]
   );
@@ -106,8 +110,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const playVideo = useCallback(
     async (uri: string, videoId: string): Promise<boolean> => {
       try {
+        if (!uri || uri === "") {
+          console.error("Invalid video URI provided");
+          return false;
+        }
+
         // If offline and not a downloaded file (file:// URI), don't play
         if (!isConnected && !uri.startsWith("file://")) {
+          console.warn("Cannot play online video when offline");
           return false;
         }
 
@@ -124,6 +134,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         // Otherwise load and play the video
+        console.log(`Loading video: ${videoId} from ${uri}`);
         const loadSuccess = await videoService.loadVideo(uri, videoId);
         if (loadSuccess) {
           return videoService.play();
@@ -141,8 +152,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const togglePlayPause = useCallback(
     async (uri: string, videoId: string): Promise<boolean> => {
       try {
+        if (!uri || uri === "") {
+          console.error("Invalid video URI provided");
+          return false;
+        }
+
         // If offline and not a downloaded file (file:// URI), don't play
         if (!isConnected && !uri.startsWith("file://")) {
+          console.warn("Cannot play online video when offline");
           return false;
         }
 
@@ -157,6 +174,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             return videoService.play();
           } else if (videoState.playbackState === "error") {
             // If there was an error, try loading again
+            console.log(`Retrying video: ${videoId} from ${uri} after error`);
             const loadSuccess = await videoService.loadVideo(uri, videoId);
             if (loadSuccess) {
               return videoService.play();
@@ -177,6 +195,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Stop playback
   const stopPlayback = useCallback(async (): Promise<boolean> => {
+    currentVideoUri.current = null;
     return videoService.unloadVideo();
   }, [videoService]);
 

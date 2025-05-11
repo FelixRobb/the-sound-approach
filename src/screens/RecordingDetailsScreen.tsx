@@ -420,7 +420,11 @@ const RecordingDetailsScreen = () => {
 
             {/* Audio Player Card */}
             <View style={styles.card}>
-              <VideoPlayer videoId={recording.sonogramvideoid} hasNetworkConnection={isConnected} />
+              <VideoPlayer
+                videoId={recording.sonogramvideoid}
+                hasNetworkConnection={isConnected}
+                videoUri={sonogramVideoUri || ""}
+              />
             </View>
 
             {/* Description Card */}

@@ -24,13 +24,15 @@ const formatTime = (milliseconds: number) => {
 
 interface VideoPlayerProps {
   videoId: string;
+  videoUri: string; // Added videoUri prop
   hasNetworkConnection: boolean;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, videoUri, hasNetworkConnection }) => {
   const videoRef = useRef<Video>(null);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const {
     isPlaying,
@@ -51,7 +53,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
 
   // Set video ref when component mounts
   useEffect(() => {
-    setVideoRef(videoRef);
+    if (videoRef.current) {
+      setVideoRef(videoRef);
+    }
   }, [setVideoRef]);
 
   // Auto-hide controls after a delay
@@ -84,13 +88,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
 
   const isCurrentVideo = currentVideoId === videoId;
   const isCurrentlyPlaying = isPlaying && isCurrentVideo;
-  const hasError = error !== null;
+  const hasAnyError = error !== null || localError !== null;
+  const errorMessage = error || localError;
   const isVideoReady = isLoaded && isCurrentVideo;
 
   // Handle play/pause
   const handlePlayPause = async () => {
-    await togglePlayPause(videoId, videoId);
-    setControlsVisible(true);
+    setLocalError(null); // Reset local error state when attempting to play
+    try {
+      if (!videoUri) {
+        setLocalError("No video source provided");
+        return;
+      }
+      await togglePlayPause(videoUri, videoId);
+      setControlsVisible(true);
+    } catch (err) {
+      setLocalError(err instanceof Error ? err.message : "Failed to play video");
+    }
   };
 
   // Handle seek
@@ -145,7 +159,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
     },
     controlsContainer: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
       bottom: 0,
       justifyContent: "center",
       left: 0,
@@ -170,7 +184,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
     },
     fullscreenButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
       borderRadius: 20,
       height: 40,
       justifyContent: "center",
@@ -210,7 +224,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
     },
     playButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
       borderRadius: 30,
       height: 60,
       justifyContent: "center",
@@ -234,7 +248,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
       width: `${progressPercentage}%`,
     },
     progressBarOutline: {
-      backgroundColor: theme.colors.onSurfaceVariant,
+      backgroundColor: "rgba(255, 255, 255, 0.3)",
       borderRadius: 3,
       height: 6,
       marginHorizontal: 20,
@@ -258,7 +272,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
     },
     skipButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
       borderRadius: 25,
       height: 50,
       justifyContent: "center",
@@ -278,7 +292,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
       right: 20,
     },
     timeText: {
-      color: theme.colors.onSurfaceVariant,
+      color: "#fff",
       fontSize: 12,
       fontWeight: "500",
     },
@@ -290,7 +304,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
   });
 
   // Show error if no videoUri is provided
-  if (!videoId) {
+  if (!videoUri) {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={28} color={theme.colors.error} />
@@ -300,7 +314,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
   }
 
   // Show error if not connected and not current video
-  if (!hasNetworkConnection && !isCurrentVideo) {
+  if (!hasNetworkConnection && !videoUri.startsWith("file://") && !isCurrentVideo) {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="cloud-offline" size={28} color={theme.colors.error} />
@@ -312,11 +326,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
   }
 
   // Show error if there was an error loading the video
-  if (isCurrentVideo && hasError) {
+  if (isCurrentVideo && hasAnyError) {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={32} color={theme.colors.error} />
-        <Text style={styles.errorText}>Failed to load video: {error}</Text>
+        <Text style={styles.errorText}>Failed to load video: {errorMessage}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => handlePlayPause()}>
           <Ionicons name="refresh" size={18} color={theme.colors.onPrimary} />
           <Text style={styles.retryText}>Retry</Text>
@@ -342,6 +356,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, hasNetworkConnection
       <TouchableOpacity activeOpacity={1} onPress={handleVideoPress}>
         <Video
           ref={videoRef}
+          source={{ uri: videoUri }}
           style={styles.video}
           resizeMode={isFullscreen ? ResizeMode.CONTAIN : ResizeMode.COVER}
           useNativeControls={false}
