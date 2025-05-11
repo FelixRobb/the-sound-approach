@@ -19,6 +19,7 @@ import { ActivityIndicator } from "react-native-paper";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
+import { NetworkContext } from "../context/NetworkContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
@@ -31,6 +32,7 @@ const DownloadsScreen = () => {
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
     useContext(DownloadContext);
   const { isDarkMode } = useContext(ThemeContext);
+  const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
@@ -95,6 +97,15 @@ const DownloadsScreen = () => {
 
   // Handle delete download
   const handleDeleteDownload = (item: DownloadRecord) => {
+    if (!isConnected) {
+      Alert.alert(
+        "Cannot Delete While Offline",
+        "You need to be online to delete downloaded recordings.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
     Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
       {
         text: "Cancel",
@@ -120,6 +131,15 @@ const DownloadsScreen = () => {
 
   // Handle clear all downloads
   const handleClearAllDownloads = () => {
+    if (!isConnected) {
+      Alert.alert(
+        "Cannot Clear Downloads While Offline",
+        "You need to be online to clear all downloaded recordings.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
     Alert.alert(
       "Clear All Downloads",
       "Are you sure you want to delete all downloads? This cannot be undone.",
@@ -211,6 +231,9 @@ const DownloadsScreen = () => {
       height: 40,
       justifyContent: "center",
       width: 40,
+    },
+    deleteButtonDisabled: {
+      backgroundColor: theme.colors.surfaceDisabled,
     },
     disabledButton: {
       backgroundColor: theme.colors.surfaceDisabled,
@@ -363,6 +386,20 @@ const DownloadsScreen = () => {
       fontWeight: "bold",
       marginRight: 8,
     },
+    offlineBadge: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    offlineBadgeText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginLeft: 4,
+    },
     pageReference: {
       alignSelf: "flex-start",
       backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
@@ -510,6 +547,12 @@ const DownloadsScreen = () => {
           <View>
             <Text style={styles.title}>Downloads</Text>
             <Text style={styles.subtitle}>Manage your offline recordings</Text>
+            {!isConnected && (
+              <View style={styles.offlineBadge}>
+                <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+              </View>
+            )}
           </View>
           <TouchableOpacity
             style={styles.iconButton}
@@ -549,12 +592,18 @@ const DownloadsScreen = () => {
         <View style={styles.storageInfo}>
           <Text style={styles.storageText}>Storage used: {formatBytes(totalStorageUsed)}</Text>
           <TouchableOpacity
-            style={[styles.clearAllButton, downloads.length === 0 && styles.disabledButton]}
-            disabled={downloads.length === 0}
+            style={[
+              styles.clearAllButton,
+              (downloads.length === 0 || !isConnected) && styles.disabledButton,
+            ]}
+            disabled={downloads.length === 0 || !isConnected}
             onPress={handleClearAllDownloads}
           >
             <Text
-              style={[styles.clearAllText, downloads.length === 0 && styles.disabledButtonText]}
+              style={[
+                styles.clearAllText,
+                (downloads.length === 0 || !isConnected) && styles.disabledButtonText,
+              ]}
             >
               Clear All
             </Text>
@@ -573,17 +622,31 @@ const DownloadsScreen = () => {
         : `file://${item.audio_path}`
       : null;
 
+    const handleItemPress = () => {
+      if (!isConnected) {
+        Alert.alert(
+          "Offline Mode",
+          "Recording details are not available while offline. You can still play downloaded recordings.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
+    };
+
     return (
       <View>
-        <TouchableOpacity
-          style={styles.downloadCard}
-          onPress={() => {
-            navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
-          }}
-        >
+        <TouchableOpacity style={styles.downloadCard} onPress={handleItemPress}>
           <View style={styles.downloadHeader}>
             <Text style={styles.downloadTitle}>{item.title || "Unknown Recording"}</Text>
             <Text style={styles.scientificName}>{item.scientific_name || ""}</Text>
+            {!isConnected && (
+              <View style={styles.offlineBadge}>
+                <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.downloadContent}>
@@ -605,15 +668,20 @@ const DownloadsScreen = () => {
               {/* Replace with MiniAudioPlayer */}
               {audioUri && (
                 <View style={styles.playButton}>
-                  <MiniAudioPlayer trackId={item.audio_path} audioUri={audioUri} size={40} />
+                  <MiniAudioPlayer trackId={audioUri} audioUri={audioUri} size={40} />
                 </View>
               )}
 
               <TouchableOpacity
-                style={styles.deleteButton}
+                style={[styles.deleteButton, !isConnected && styles.deleteButtonDisabled]}
                 onPress={() => handleDeleteDownload(item)}
+                disabled={!isConnected}
               >
-                <Ionicons name="trash-outline" size={22} color={theme.colors.error} />
+                <Ionicons
+                  name="trash-outline"
+                  size={22}
+                  color={isConnected ? theme.colors.error : theme.colors.onSurfaceDisabled}
+                />
               </TouchableOpacity>
             </View>
           </View>

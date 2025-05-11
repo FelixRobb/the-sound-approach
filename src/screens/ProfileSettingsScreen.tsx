@@ -3,12 +3,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from "react-native";
-import { List, Switch } from "react-native-paper";
+import { List } from "react-native-paper";
 
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
+import { NetworkContext } from "../context/NetworkContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { supabase } from "../lib/supabase";
@@ -19,12 +20,18 @@ const ProfileSettingsScreen = () => {
   const { state: authState, signOut } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
   const { theme: themeMode, isDarkMode, setTheme } = useContext(ThemeContext);
+  const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
-
-  const [showThemeOptions, setShowThemeOptions] = useState(false);
 
   // Create styles based on theme
   const styles = StyleSheet.create({
+    accountOfflineText: {
+      color: theme.colors.error,
+      fontSize: 12,
+    },
+    accountOfflineView: {
+      marginLeft: "auto",
+    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -42,6 +49,9 @@ const ProfileSettingsScreen = () => {
     },
     content: {
       padding: 16,
+    },
+    disabledItem: {
+      opacity: 0.5,
     },
     header: {
       backgroundColor: theme.colors.surface,
@@ -64,10 +74,6 @@ const ProfileSettingsScreen = () => {
       flexDirection: "row",
       justifyContent: "space-between",
     },
-    headerText: {
-      flex: 1,
-      marginLeft: 12,
-    },
     listItem: {
       paddingVertical: 6,
     },
@@ -85,6 +91,20 @@ const ProfileSettingsScreen = () => {
       marginBottom: 32,
       marginHorizontal: 16,
       marginTop: 24,
+    },
+    offlineBadge: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    offlineBadgeText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginLeft: 4,
     },
     sectionCard: {
       backgroundColor: theme.colors.surface,
@@ -109,6 +129,13 @@ const ProfileSettingsScreen = () => {
       fontSize: 16,
       fontWeight: "600",
       marginLeft: 8,
+    },
+    securityOfflineText: {
+      color: theme.colors.error,
+      fontSize: 12,
+    },
+    securityOfflineView: {
+      marginLeft: "auto",
     },
     storageBar: {
       backgroundColor: theme.colors.surfaceVariant,
@@ -139,33 +166,30 @@ const ProfileSettingsScreen = () => {
       alignItems: "center",
       flex: 1,
       flexDirection: "row",
+      gap: 6,
       justifyContent: "center",
-      padding: 12,
-    },
-    themeOptionBorder: {
-      borderColor: theme.colors.outline,
-      borderRightWidth: 1,
+      paddingHorizontal: 4,
+      paddingVertical: 8,
     },
     themeOptionContainer: {
+      backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 12,
       flexDirection: "row",
+      marginBottom: 8,
       marginHorizontal: 16,
       marginTop: 8,
       overflow: "hidden",
     },
-    themeOptionIcon: {
-      marginRight: 8,
-    },
     themeOptionSelected: {
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.primary,
     },
     themeOptionText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: "500",
     },
     themeOptionTextSelected: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontWeight: "600",
     },
     title: {
@@ -190,6 +214,13 @@ const ProfileSettingsScreen = () => {
 
   // Handle sign out
   const handleSignOut = async () => {
+    if (!isConnected) {
+      Alert.alert("Cannot Sign Out While Offline", "You need to be online to sign out.", [
+        { text: "OK" },
+      ]);
+      return;
+    }
+
     try {
       await signOut();
     } catch (error) {
@@ -199,6 +230,15 @@ const ProfileSettingsScreen = () => {
 
   // Handle account deletion
   const handleDeleteAccount = () => {
+    if (!isConnected) {
+      Alert.alert(
+        "Cannot Delete Account While Offline",
+        "You need to be online to delete your account.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
     Alert.alert(
       "Delete Account",
       "Are you sure you want to delete your account? This action cannot be undone.",
@@ -228,6 +268,15 @@ const ProfileSettingsScreen = () => {
 
   // Handle clear all downloads
   const handleClearAllDownloads = () => {
+    if (!isConnected) {
+      Alert.alert(
+        "Cannot Clear Downloads While Offline",
+        "You need to be online to clear all downloaded recordings.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
     Alert.alert(
       "Clear All Downloads",
       "Are you sure you want to delete all downloads? This action cannot be undone.",
@@ -261,9 +310,17 @@ const ProfileSettingsScreen = () => {
     <View style={styles.header}>
       <View style={styles.headerInner}>
         <View style={styles.headerRow}>
-          <View style={styles.headerText}>
+          <View>
             <Text style={styles.title}>Profile & Settings</Text>
             <Text style={styles.subtitle}>Customize your experience</Text>
+            {!isConnected && (
+              <View style={styles.offlineBadge}>
+                <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                <Text style={styles.offlineBadgeText}>
+                  Offline Mode - Some features unavailable
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -272,13 +329,6 @@ const ProfileSettingsScreen = () => {
 
   // Theme options component
   const ThemeOptions = () => {
-    const getIconColor = (mode: string) => {
-      if (themeMode === mode) {
-        return theme.colors.primary;
-      }
-      return isDarkMode ? theme.colors.onSurfaceVariant : theme.colors.onSurfaceVariant;
-    };
-
     const themeOptions = [
       { mode: "light", icon: "sunny-outline" as const, label: "Light" },
       { mode: "system", icon: "contrast-outline" as const, label: "System" },
@@ -286,30 +336,28 @@ const ProfileSettingsScreen = () => {
     ];
 
     return (
-      <View style={[styles.themeOptionContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
-        {themeOptions.map((item, index) => (
+      <View style={styles.themeOptionContainer}>
+        {themeOptions.map((option) => (
           <TouchableOpacity
-            key={item.mode}
-            style={[
-              styles.themeOption,
-              themeMode === item.mode && styles.themeOptionSelected,
-              index < 2 && styles.themeOptionBorder,
-            ]}
-            onPress={() => setTheme(item.mode as "light" | "dark" | "system")}
+            key={option.mode}
+            style={[styles.themeOption, themeMode === option.mode && styles.themeOptionSelected]}
+            onPress={() => setTheme(option.mode as "light" | "dark" | "system")}
+            activeOpacity={0.7}
           >
             <Ionicons
-              name={item.icon}
-              size={20}
-              color={getIconColor(item.mode)}
-              style={styles.themeOptionIcon}
+              name={option.icon}
+              size={18}
+              color={
+                themeMode === option.mode ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+              }
             />
             <Text
               style={[
                 styles.themeOptionText,
-                themeMode === item.mode && styles.themeOptionTextSelected,
+                themeMode === option.mode && styles.themeOptionTextSelected,
               ]}
             >
-              {item.label}
+              {option.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -328,6 +376,11 @@ const ProfileSettingsScreen = () => {
           <View style={styles.sectionHeader}>
             <Ionicons name="person-circle-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle}>Account</Text>
+            {!isConnected && (
+              <View style={styles.accountOfflineView}>
+                <Text style={styles.accountOfflineText}>Limited in offline mode</Text>
+              </View>
+            )}
           </View>
 
           <List.Item
@@ -357,41 +410,17 @@ const ProfileSettingsScreen = () => {
           </View>
 
           <List.Item
-            title="Dark Mode"
+            title="Theme"
+            description="Choose your preferred theme"
             left={(props) => (
               <List.Icon {...props} icon="theme-light-dark" color={theme.colors.primary} />
             )}
-            right={() => (
-              <Switch
-                value={isDarkMode}
-                onValueChange={() => setTheme(isDarkMode ? "light" : "dark")}
-                color={theme.colors.primary}
-              />
-            )}
-            style={styles.listItem}
-            titleStyle={styles.listItemTitle}
-          />
-
-          <List.Item
-            title="Theme"
-            description={
-              themeMode === "system" ? "Follow system" : themeMode === "dark" ? "Dark" : "Light"
-            }
-            left={(props) => <List.Icon {...props} icon="palette" color={theme.colors.primary} />}
-            onPress={() => setShowThemeOptions(!showThemeOptions)}
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}
-            right={(props) => (
-              <List.Icon
-                {...props}
-                icon={showThemeOptions ? "chevron-up" : "chevron-down"}
-                color={theme.colors.primary}
-              />
-            )}
           />
 
-          {showThemeOptions && <ThemeOptions />}
+          <ThemeOptions />
         </View>
 
         {/* Storage Section */}
@@ -426,7 +455,8 @@ const ProfileSettingsScreen = () => {
             description="Free up storage space"
             left={(props) => <List.Icon {...props} icon="delete" color={theme.colors.error} />}
             onPress={handleClearAllDownloads}
-            style={styles.listItem}
+            disabled={!isConnected}
+            style={[styles.listItem, !isConnected && styles.disabledItem]}
             titleStyle={[styles.listItemTitle, { color: theme.colors.error }]}
             descriptionStyle={styles.listItemDescription}
           />
@@ -437,15 +467,29 @@ const ProfileSettingsScreen = () => {
           <View style={styles.sectionHeader}>
             <Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle}>Security</Text>
+            {!isConnected && (
+              <View style={styles.securityOfflineView}>
+                <Text style={styles.securityOfflineText}>Unavailable offline</Text>
+              </View>
+            )}
           </View>
 
           <List.Item
             title="Change Password"
             left={(props) => <List.Icon {...props} icon="key" color={theme.colors.primary} />}
-            onPress={() =>
-              Alert.alert("Coming Soon", "This feature will be available in a future update.")
-            }
-            style={styles.listItem}
+            onPress={() => {
+              if (!isConnected) {
+                Alert.alert(
+                  "Cannot Change Password While Offline",
+                  "You need to be online to change your password.",
+                  [{ text: "OK" }]
+                );
+                return;
+              }
+              Alert.alert("Coming Soon", "This feature will be available in a future update.");
+            }}
+            disabled={!isConnected}
+            style={[styles.listItem, !isConnected && styles.disabledItem]}
             titleStyle={styles.listItemTitle}
           />
 
@@ -456,18 +500,19 @@ const ProfileSettingsScreen = () => {
               <List.Icon {...props} icon="account-remove" color={theme.colors.error} />
             )}
             onPress={handleDeleteAccount}
-            style={styles.listItem}
+            disabled={!isConnected}
+            style={[styles.listItem, !isConnected && styles.disabledItem]}
             titleStyle={[styles.listItemTitle, { color: theme.colors.error }]}
             descriptionStyle={styles.listItemDescription}
           />
         </View>
 
         {/* Sign Out Button */}
-        <TouchableOpacity onPress={handleSignOut}>
+        <TouchableOpacity onPress={handleSignOut} disabled={!isConnected}>
           <List.Item
             title="Sign Out"
             left={(props) => <List.Icon {...props} icon="logout" color={theme.colors.primary} />}
-            style={[styles.sectionCard, styles.logoutButton]}
+            style={[styles.sectionCard, styles.logoutButton, !isConnected && styles.disabledItem]}
             titleStyle={[styles.listItemTitle, styles.listItemSignOut]}
           />
         </TouchableOpacity>

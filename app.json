@@ -12,18 +12,12 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio",
-          "audio",
-          "audio",
-          "audio"
-        ],
+        "UIBackgroundModes": ["audio", "audio", "audio", "audio"],
+        "UIViewControllerBasedStatusBarAppearance": true,
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.robbfelix.soundapproachapp"
@@ -54,9 +48,6 @@
       "eas": {
         "projectId": "7f33bec7-30da-4d56-b98d-52c01f621e3b"
       }
-    },
-    "packagerOpts": {
-      "config": "metro.config.js"
     },
     "owner": "robbfelix"
   }

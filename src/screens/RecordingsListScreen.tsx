@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -61,6 +61,17 @@ const RecordingsListScreen = () => {
       color: theme.colors.onPrimary,
       fontWeight: "600",
     },
+    backgroundPattern: {
+      backgroundColor: isDarkMode
+        ? `${theme.colors.primary}08` // Very transparent primary color
+        : `${theme.colors.primary}05`,
+      bottom: 0,
+      left: 0,
+      opacity: 0.6,
+      position: "absolute",
+      right: 0,
+      top: 0,
+    },
     caption: {
       color: theme.colors.onSurface,
       fontSize: 14,
@@ -95,7 +106,6 @@ const RecordingsListScreen = () => {
       justifyContent: "center",
       paddingTop: 40,
     },
-
     emptyIcon: {
       marginBottom: 16,
     },
@@ -113,7 +123,6 @@ const RecordingsListScreen = () => {
       marginBottom: 8,
       textAlign: "center",
     },
-
     errorContainer: {
       alignItems: "center",
       flex: 1,
@@ -164,6 +173,77 @@ const RecordingsListScreen = () => {
     },
     loadingText: {
       color: theme.colors.onSurface,
+    },
+    offlineBadge: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    offlineBadgeText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginLeft: 4,
+    },
+    offlineBanner: {
+      alignItems: "center",
+      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      borderColor: theme.colors.error,
+      borderRadius: 12,
+      borderWidth: 1,
+      flex: 1,
+      justifyContent: "center",
+      margin: 16,
+      padding: 16,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+    },
+    offlineBannerButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      flexDirection: "row",
+      marginTop: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+    },
+    offlineBannerButtonText: {
+      color: theme.colors.onPrimary,
+      fontWeight: "bold",
+      marginLeft: 8,
+    },
+    offlineBannerIcon: {
+      marginBottom: 16,
+    },
+    offlineBannerText: {
+      color: theme.colors.onSurface,
+      fontSize: 18,
+      marginHorizontal: 20,
+      textAlign: "center",
+    },
+    offlineTab: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceDisabled,
+      borderRadius: 20,
+      flexDirection: "row",
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    offlineTabText: {
+      color: theme.colors.onSurfaceDisabled,
+      fontSize: 14,
+      marginLeft: 6,
     },
     pageReference: {
       alignSelf: "flex-start",
@@ -310,6 +390,7 @@ const RecordingsListScreen = () => {
   } = useQuery({
     queryKey: ["recordings"],
     queryFn: fetchRecordingsByBookOrder,
+    enabled: isConnected, // Only fetch when online
   });
 
   // Fetch species
@@ -321,14 +402,8 @@ const RecordingsListScreen = () => {
   } = useQuery({
     queryKey: ["species"],
     queryFn: fetchSpecies,
+    enabled: isConnected, // Only fetch when online
   });
-
-  // Check if offline and no data
-  useEffect(() => {
-    if (!isConnected && (!recordings || recordings.length === 0)) {
-      navigation.navigate("OfflineNotice");
-    }
-  }, [isConnected, recordings, navigation]);
 
   // Filter recordings based on search query
   const filteredRecordings = recordings?.filter((recording) => {
@@ -448,28 +523,62 @@ const RecordingsListScreen = () => {
     </View>
   );
 
+  // Offline banner component
+  const OfflineBanner = () => (
+    <View style={styles.offlineBanner}>
+      <Ionicons
+        name="cloud-offline"
+        size={48}
+        color={theme.colors.error}
+        style={styles.offlineBannerIcon}
+      />
+      <Text style={styles.offlineBannerText}>
+        You&apos;re currently offline. Only downloaded content is available.
+      </Text>
+      <TouchableOpacity
+        style={styles.offlineBannerButton}
+        onPress={() => navigation.navigate("Downloads")}
+      >
+        <Ionicons name="download" size={20} color={theme.colors.onPrimary} />
+        <Text style={styles.offlineBannerButtonText}>View Downloads</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Background pattern
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
+
   return (
     <View style={styles.container}>
+      <BackgroundPattern />
       <View style={styles.header}>
         <View style={styles.headerInner}>
           <View style={styles.headerRow}>
             <View>
               <Text style={styles.title}>Library</Text>
               <Text style={styles.subtitle}>Explore bird recordings and species</Text>
+              {!isConnected && (
+                <View style={styles.offlineBadge}>
+                  <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                  <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+                </View>
+              )}
             </View>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => setShowSearch((prev) => !prev)}
-            >
-              <Ionicons
-                name={showSearch ? "close" : "search"}
-                size={24}
-                color={theme.colors.primary}
-              />
-            </TouchableOpacity>
+            {isConnected && (
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setShowSearch((prev) => !prev)}
+              >
+                <Ionicons
+                  name={showSearch ? "close" : "search"}
+                  size={24}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
           </View>
 
-          {showSearch ? (
+          {showSearch && isConnected ? (
             <View style={styles.searchContainer}>
               <Ionicons name="search" size={20} color={theme.colors.primary} />
               <TextInput
@@ -490,42 +599,69 @@ const RecordingsListScreen = () => {
             </View>
           ) : (
             <View style={styles.tabBar}>
-              <TouchableOpacity
-                style={[styles.tab, activeTab === "book" && styles.activeTab]}
-                onPress={() => setActiveTab("book")}
-              >
-                <Ionicons
-                  name="book-outline"
-                  size={18}
-                  color={
-                    activeTab === "book" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
-                  }
-                />
-                <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>
-                  By Book Order
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, activeTab === "species" && styles.activeTab]}
-                onPress={() => setActiveTab("species")}
-              >
-                <Ionicons
-                  name="leaf-outline"
-                  size={18}
-                  color={
-                    activeTab === "species" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
-                  }
-                />
-                <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>
-                  By Species
-                </Text>
-              </TouchableOpacity>
+              {isConnected ? (
+                <>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === "book" && styles.activeTab]}
+                    onPress={() => setActiveTab("book")}
+                  >
+                    <Ionicons
+                      name="book-outline"
+                      size={18}
+                      color={
+                        activeTab === "book"
+                          ? theme.colors.onPrimary
+                          : theme.colors.onSurfaceVariant
+                      }
+                    />
+                    <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>
+                      By Book Order
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === "species" && styles.activeTab]}
+                    onPress={() => setActiveTab("species")}
+                  >
+                    <Ionicons
+                      name="leaf-outline"
+                      size={18}
+                      color={
+                        activeTab === "species"
+                          ? theme.colors.onPrimary
+                          : theme.colors.onSurfaceVariant
+                      }
+                    />
+                    <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>
+                      By Species
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <View style={styles.offlineTab}>
+                  <Ionicons
+                    name="cloud-offline-outline"
+                    size={18}
+                    color={theme.colors.onSurfaceDisabled}
+                  />
+                  <Text style={styles.offlineTabText}>Offline Mode</Text>
+                </View>
+              )}
             </View>
           )}
         </View>
       </View>
 
-      {recordingsLoading || speciesLoading ? (
+      {!isConnected && <OfflineBanner />}
+
+      {!isConnected ? (
+        <View style={styles.listContainer}>
+          <FlatList
+            data={[]}
+            renderItem={() => null}
+            ListEmptyComponent={<EmptyState type="recordings" />}
+          />
+        </View>
+      ) : recordingsLoading || speciesLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>
@@ -540,41 +676,43 @@ const RecordingsListScreen = () => {
           </Text>
         </View>
       ) : (
-        <View style={styles.listContainer}>
-          {activeTab === "book" ? (
-            <FlatList
-              data={filteredRecordings}
-              renderItem={renderRecordingItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={recordingsLoading}
-                  onRefresh={refetchRecordings}
-                  colors={[theme.colors.primary]}
-                  tintColor={theme.colors.primary}
-                />
-              }
-              ListEmptyComponent={<EmptyState type="recordings" />}
-            />
-          ) : (
-            <FlatList
-              data={filteredSpecies}
-              renderItem={renderSpeciesItem}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={speciesLoading}
-                  onRefresh={refetchSpecies}
-                  colors={[theme.colors.primary]}
-                  tintColor={theme.colors.primary}
-                />
-              }
-              ListEmptyComponent={<EmptyState type="species" />}
-            />
-          )}
-        </View>
+        isConnected && (
+          <View style={styles.listContainer}>
+            {activeTab === "book" ? (
+              <FlatList
+                data={filteredRecordings}
+                renderItem={renderRecordingItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={recordingsLoading}
+                    onRefresh={refetchRecordings}
+                    colors={[theme.colors.primary]}
+                    tintColor={theme.colors.primary}
+                  />
+                }
+                ListEmptyComponent={<EmptyState type="recordings" />}
+              />
+            ) : (
+              <FlatList
+                data={filteredSpecies}
+                renderItem={renderSpeciesItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={speciesLoading}
+                    onRefresh={refetchSpecies}
+                    colors={[theme.colors.primary]}
+                    tintColor={theme.colors.primary}
+                  />
+                }
+                ListEmptyComponent={<EmptyState type="species" />}
+              />
+            )}
+          </View>
+        )
       )}
     </View>
   );

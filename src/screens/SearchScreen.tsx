@@ -47,39 +47,6 @@ const SearchScreen = () => {
   );
 
   const styles = StyleSheet.create({
-    HeaderHeader: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      elevation: 4,
-      flexDirection: "row",
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-      paddingTop: 50,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      zIndex: 1,
-    },
-    Headertitle: {
-      color: theme.colors.primary,
-      fontSize: 22,
-      fontWeight: "bold",
-    },
-    HeadertitleContainer: {
-      flex: 1,
-    },
-    backButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      marginRight: 12,
-      width: 40,
-    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -161,11 +128,21 @@ const SearchScreen = () => {
       borderBottomRightRadius: 24,
       elevation: 4,
       paddingBottom: 20,
+      paddingTop: 50,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
       zIndex: 1,
+    },
+    headerInner: {
+      paddingHorizontal: 20,
+    },
+    headerRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 16,
     },
     listContent: {
       padding: 16,
@@ -181,18 +158,34 @@ const SearchScreen = () => {
       fontSize: 16,
       marginTop: 16,
     },
-    offlineNotice: {
+    offlineBadge: {
       alignItems: "center",
       backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
-      borderRadius: 12,
+      borderRadius: 8,
       flexDirection: "row",
-      marginHorizontal: 16,
-      marginTop: 16,
-      padding: 12,
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
     },
-    offlineText: {
+    offlineBadgeText: {
       color: theme.colors.error,
-      flex: 1,
+      fontSize: 12,
+      marginLeft: 4,
+    },
+    offlineButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: 24,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    offlineButtonText: {
+      color: theme.colors.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
       marginLeft: 8,
     },
     pageReference: {
@@ -323,9 +316,13 @@ const SearchScreen = () => {
       borderWidth: 1,
       flexDirection: "row",
       height: 46,
-      marginHorizontal: 16,
+      marginHorizontal: 4,
       marginTop: 12,
       paddingHorizontal: 16,
+    },
+    searchContainerDisabled: {
+      backgroundColor: theme.colors.surfaceDisabled,
+      borderColor: theme.colors.outlineVariant,
     },
     searchInput: {
       color: theme.colors.onSurface,
@@ -333,6 +330,9 @@ const SearchScreen = () => {
       fontSize: 16,
       marginLeft: 10,
       paddingVertical: 10,
+    },
+    searchInputDisabled: {
+      color: theme.colors.onSurfaceDisabled,
     },
     sectionDivider: {
       backgroundColor: isDarkMode
@@ -382,6 +382,11 @@ const SearchScreen = () => {
       fontSize: 15,
       fontStyle: "italic",
       marginTop: 2,
+    },
+    title: {
+      color: theme.colors.primary,
+      fontSize: 28,
+      fontWeight: "bold",
     },
     titleContainer: {
       flexDirection: "row",
@@ -455,6 +460,11 @@ const SearchScreen = () => {
     }
   };
 
+  // Add a sanitize function at the component level
+  const sanitizeQuery = (query: string): string => {
+    return query.replace(/[%_'"\\[\]{}()*+?.,^$|#\s]/g, " ").trim();
+  };
+
   // Handle search
   const handleSearch = async (query: string) => {
     if (!query.trim() || !isConnected) return;
@@ -474,6 +484,8 @@ const SearchScreen = () => {
 
   // Handle navigation to recording details and save search
   const handleNavigateToRecording = (recordingId: string) => {
+    if (!isConnected) return;
+
     // Find the recording by ID
     const recording = searchResults.recordings.find((rec) => rec.id === recordingId);
     if (recording) {
@@ -485,6 +497,8 @@ const SearchScreen = () => {
 
   // Handle navigation to species details and save search
   const handleNavigateToSpecies = (speciesId: string) => {
+    if (!isConnected) return;
+
     // Find the species by ID
     const species = searchResults.species.find((sp) => sp.id === speciesId);
     if (species) {
@@ -496,15 +510,17 @@ const SearchScreen = () => {
 
   // Filter results based on active filter
   const filteredResults = () => {
+    const sanitizedQuery = sanitizeQuery(searchQuery);
+
     if (activeFilter === "all") {
       return searchResults;
     } else if (activeFilter === "species") {
       return { recordings: [], species: searchResults.species };
     } else if (activeFilter === "recordings") {
       return { recordings: searchResults.recordings, species: [] };
-    } else if (activeFilter === "pages" && /^\d+$/.test(searchQuery.trim())) {
+    } else if (activeFilter === "pages" && /^\d+$/.test(sanitizedQuery)) {
       // Filter recordings by page number
-      const pageNumber = parseInt(searchQuery.trim(), 10);
+      const pageNumber = parseInt(sanitizedQuery, 10);
       const pageRecordings = searchResults.recordings.filter(
         (rec) => rec.book_page_number === pageNumber
       );
@@ -527,6 +543,7 @@ const SearchScreen = () => {
         onPress={() => {
           handleNavigateToRecording(item.id);
         }}
+        disabled={!isConnected}
       >
         <View style={styles.resultHeader}>
           <View style={styles.titleContainer}>
@@ -559,14 +576,16 @@ const SearchScreen = () => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.chevronIcon}
-          onPress={() => {
-            handleNavigateToRecording(item.id);
-          }}
-        >
-          <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
+        {isConnected && (
+          <TouchableOpacity
+            style={styles.chevronIcon}
+            onPress={() => {
+              handleNavigateToRecording(item.id);
+            }}
+          >
+            <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     );
   };
@@ -579,6 +598,7 @@ const SearchScreen = () => {
         onPress={() => {
           handleNavigateToSpecies(item.id);
         }}
+        disabled={!isConnected}
       >
         <View>
           <Text style={styles.speciesName}>{item.common_name}</Text>
@@ -590,17 +610,42 @@ const SearchScreen = () => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.speciesActionButton}
-          onPress={() => {
-            handleNavigateToSpecies(item.id);
-          }}
-        >
-          <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        {isConnected && (
+          <TouchableOpacity
+            style={styles.speciesActionButton}
+            onPress={() => {
+              handleNavigateToSpecies(item.id);
+            }}
+          >
+            <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     );
   };
+
+  // Render offline state
+  const renderOfflineState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons
+        name="cloud-offline"
+        size={60}
+        color={theme.colors.error}
+        style={styles.emptyIcon}
+      />
+      <Text style={styles.emptyTitle}>Search Unavailable</Text>
+      <Text style={styles.emptyText}>
+        You&apos;re currently offline. Search functionality is unavailable while offline.
+      </Text>
+      <TouchableOpacity
+        style={styles.offlineButton}
+        onPress={() => navigation.navigate("Downloads")}
+      >
+        <Ionicons name="download" size={20} color={theme.colors.onPrimary} />
+        <Text style={styles.offlineButtonText}>View Downloads</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   // Render search results
   const renderSearchResults = () => {
@@ -624,7 +669,7 @@ const SearchScreen = () => {
           />
           <Text style={styles.emptyTitle}>No Results Found</Text>
           <Text style={styles.emptyText}>
-            We couldn&apos;t find any results for &quot;{searchQuery}&quot;
+            We couldn&apos;t find any results for &quot;{sanitizeQuery(searchQuery)}&quot;
           </Text>
         </View>
       );
@@ -668,34 +713,44 @@ const SearchScreen = () => {
 
       {/* Custom Header */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.HeaderHeader}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
-            <View style={styles.HeadertitleContainer}>
-              <Text style={styles.Headertitle}>Search</Text>
+        <View style={styles.headerInner}>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.title}>Search</Text>
               <Text style={styles.subtitle}>Find recordings and species</Text>
+              {!isConnected && (
+                <View style={styles.offlineBadge}>
+                  <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
+                  <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+                </View>
+              )}
             </View>
           </View>
 
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={theme.colors.primary} />
+          <View style={[styles.searchContainer, !isConnected && styles.searchContainerDisabled]}>
+            <Ionicons
+              name="search"
+              size={20}
+              color={isConnected ? theme.colors.primary : theme.colors.onSurfaceDisabled}
+            />
             <TextInput
               placeholder="Search species, recordings, or pages..."
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}
               onChangeText={(text) => {
-                setSearchQuery(text);
-                handleSearch(text);
+                if (isConnected) {
+                  setSearchQuery(text);
+                  handleSearch(text);
+                }
               }}
-              style={styles.searchInput}
-              autoFocus
+              style={[styles.searchInput, !isConnected && styles.searchInputDisabled]}
+              autoFocus={isConnected}
               selectionColor={theme.colors.primary}
               returnKeyType="search"
               onSubmitEditing={() => handleSearch(searchQuery)}
+              editable={isConnected}
             />
-            {searchQuery && (
+            {searchQuery && isConnected && (
               <TouchableOpacity onPress={() => setSearchQuery("")}>
                 <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
@@ -704,16 +759,9 @@ const SearchScreen = () => {
         </View>
       </View>
 
-      {!isConnected && (
-        <View style={styles.offlineNotice}>
-          <Ionicons name="cloud-offline-outline" size={20} color={theme.colors.error} />
-          <Text style={styles.offlineText}>
-            You&apos;re offline. Search is unavailable while offline.
-          </Text>
-        </View>
-      )}
-
-      {searchQuery ? (
+      {!isConnected ? (
+        renderOfflineState()
+      ) : searchQuery ? (
         <>
           <View style={styles.filterContainer}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -746,7 +794,7 @@ const SearchScreen = () => {
                 onPress={() => setActiveFilter("pages")}
                 style={styles.filterChip}
                 selectedColor={theme.colors.primary}
-                disabled={!/^\d+$/.test(searchQuery.trim())}
+                disabled={!/^\d+$/.test(sanitizeQuery(searchQuery))}
               >
                 Pages
               </Chip>
@@ -772,9 +820,12 @@ const SearchScreen = () => {
                 <TouchableOpacity
                   style={styles.recentItem}
                   onPress={() => {
-                    setSearchQuery(item.query);
-                    handleSearch(item.query);
+                    if (isConnected) {
+                      setSearchQuery(item.query);
+                      handleSearch(item.query);
+                    }
                   }}
+                  disabled={!isConnected}
                 >
                   <View style={styles.recentItemIcon}>
                     <Ionicons name="time-outline" size={22} color={theme.colors.primary} />
@@ -785,7 +836,11 @@ const SearchScreen = () => {
                       {new Date(item.timestamp).toLocaleDateString()}
                     </Text>
                   </View>
-                  <Ionicons name="search" size={20} color={theme.colors.primary} />
+                  <Ionicons
+                    name="search"
+                    size={20}
+                    color={isConnected ? theme.colors.primary : theme.colors.onSurfaceDisabled}
+                  />
                 </TouchableOpacity>
               )}
               keyExtractor={(item, index) => `recent-${index}`}
