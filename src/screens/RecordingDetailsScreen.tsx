@@ -5,8 +5,9 @@ import Slider from "@react-native-community/slider";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import { AVPlaybackStatus, ResizeMode, Video } from "expo-av";
+import { useEventListener } from "expo";
 import * as ScreenOrientation from "expo-screen-orientation";
+import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useState, useContext, useMemo, useRef, useEffect } from "react";
 import {
   View,
@@ -44,64 +45,9 @@ const RecordingDetailsScreen = () => {
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
 
-  const videoRef = useRef<Video>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  // Handle orientation and fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = async () => {
-      if (isVideoFullscreen) {
-        StatusBar.setHidden(true);
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.spring(scaleAnim, {
-            toValue: 1.1,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      } else {
-        StatusBar.setHidden(false);
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }
-    };
-
-    handleFullscreenChange();
-
-    return () => {
-      StatusBar.setHidden(false);
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-    };
-  }, [isVideoFullscreen, fadeAnim, scaleAnim]);
-
-  // Handle back button
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (isVideoFullscreen) {
-        setIsVideoFullscreen(false);
-        return true;
-      }
-      return false;
-    });
-
-    return () => backHandler.remove();
-  }, [isVideoFullscreen]);
+  const videoViewRef = useRef(null);
 
   const styles = StyleSheet.create({
     container: {
@@ -119,7 +65,7 @@ const RecordingDetailsScreen = () => {
       flexDirection: "row",
       left: 12,
       paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingVertical: 2,
       position: "absolute",
       right: 12,
     },
@@ -233,14 +179,13 @@ const RecordingDetailsScreen = () => {
     fullScreenVideoOverlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: "center",
-      backgroundColor: theme.colors.backdrop,
       justifyContent: "center",
     },
     fullscreenButton: {
       marginLeft: 12,
     },
     fullscreenContainer: {
-      backgroundColor: theme.colors.backdrop,
+      backgroundColor: theme.colors.background,
       height: "100%",
       position: "absolute",
       width: "100%",
@@ -259,7 +204,9 @@ const RecordingDetailsScreen = () => {
       zIndex: 1000,
     },
     fullscreenHeader: {
-      backgroundColor: theme.colors.backdrop,
+      backgroundColor: theme.colors.background,
+      borderBottomColor: theme.colors.backdrop,
+      borderBottomWidth: 1,
       padding: 20,
       position: "absolute",
       top: 0,
@@ -431,6 +378,83 @@ const RecordingDetailsScreen = () => {
     return getSonogramVideoUri(recording, isConnected);
   }, [recording, isConnected]);
 
+  // Initialize the video player
+  const videoPlayer = useVideoPlayer(sonogramVideoUri || null, (player) => {
+    player.timeUpdateEventInterval = 0.5;
+    player.loop = false;
+  });
+
+  // Listen for timeUpdate event to update the position
+  useEventListener(videoPlayer, "timeUpdate", (payload) => {
+    if (!isSeeking) {
+      setVideoPosition(payload.currentTime);
+      if (videoDuration === 0 && payload.bufferedPosition > 0) {
+        setVideoDuration(videoPlayer.duration || 0);
+        setIsVideoLoaded(true);
+      }
+    }
+  });
+
+  // Listen for status changes
+  useEventListener(videoPlayer, "playingChange", (payload) => {
+    setIsPlaying(payload.isPlaying);
+  });
+
+  // Handle orientation and fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = async () => {
+      if (isVideoFullscreen) {
+        StatusBar.setHidden(true);
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1.1,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      } else {
+        StatusBar.setHidden(false);
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    };
+
+    handleFullscreenChange();
+
+    return () => {
+      StatusBar.setHidden(false);
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    };
+  }, [isVideoFullscreen, fadeAnim, scaleAnim]);
+
+  // Handle back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (isVideoFullscreen) {
+        setIsVideoFullscreen(false);
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [isVideoFullscreen]);
+
   const getDownloadStatus = () => {
     if (!recording) return "idle";
     if (isDownloaded(recording.id)) return "completed";
@@ -454,26 +478,15 @@ const RecordingDetailsScreen = () => {
   };
 
   const togglePlayPause = async () => {
-    if (!videoRef.current) return;
     if (isPlaying) {
-      await videoRef.current.pauseAsync();
+      videoPlayer.pause();
     } else {
-      await videoRef.current.playAsync();
+      videoPlayer.play();
     }
-    setIsPlaying(!isPlaying);
   };
 
   const toggleFullscreen = () => {
     setIsVideoFullscreen(!isVideoFullscreen);
-  };
-
-  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    if (status.isLoaded) {
-      setIsVideoLoaded(true);
-      setIsPlaying(status.isPlaying);
-      setVideoDuration(status.durationMillis ? status.durationMillis / 1000 : 0);
-      setVideoPosition(status.positionMillis ? status.positionMillis / 1000 : 0);
-    }
   };
 
   const onSeekStart = () => {
@@ -481,10 +494,9 @@ const RecordingDetailsScreen = () => {
   };
 
   const onSeekComplete = async (value: number) => {
-    if (!videoRef.current) return;
     setIsSeeking(false);
     setVideoPosition(value);
-    await videoRef.current.setPositionAsync(value * 1000);
+    videoPlayer.currentTime = value;
   };
 
   const renderVideoControls = (isFullscreen = false) => {
@@ -506,6 +518,7 @@ const RecordingDetailsScreen = () => {
           onSlidingComplete={onSeekComplete}
           minimumTrackTintColor={theme.colors.primary}
           maximumTrackTintColor={theme.colors.surfaceVariant}
+          tapToSeek
           thumbTintColor={theme.colors.primary}
         />
 
@@ -536,17 +549,12 @@ const RecordingDetailsScreen = () => {
 
     return (
       <View style={styles.playerContainer}>
-        <Video
-          ref={videoRef}
-          source={{ uri: sonogramVideoUri }}
-          rate={1.0}
-          volume={1.0}
-          isMuted={false}
-          resizeMode={isVideoFullscreen ? ResizeMode.CONTAIN : ResizeMode.COVER}
-          shouldPlay={false}
-          isLooping={false}
+        <VideoView
+          ref={videoViewRef}
+          player={videoPlayer}
           style={styles.video}
-          onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+          contentFit={isVideoFullscreen ? "contain" : "fill"}
+          nativeControls={false}
         />
 
         <TouchableOpacity style={styles.videoOverlay} onPress={togglePlayPause} activeOpacity={0.8}>
@@ -607,17 +615,11 @@ const RecordingDetailsScreen = () => {
           <Text style={styles.fullscreenTitle}>{recording.title}</Text>
           <Text style={styles.fullscreenSubtitle}>{recording.species?.common_name}</Text>
         </View>
-        <Video
-          ref={videoRef}
-          source={{ uri: sonogramVideoUri }}
-          rate={1.0}
-          volume={1.0}
-          isMuted={false}
-          resizeMode={ResizeMode.CONTAIN}
-          shouldPlay={isPlaying}
-          isLooping={false}
+        <VideoView
+          player={videoPlayer}
           style={styles.fullscreenVideo}
-          onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+          contentFit="contain"
+          nativeControls={false}
         />
 
         <TouchableOpacity

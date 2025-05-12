@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { List } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -22,6 +23,7 @@ const ProfileSettingsScreen = () => {
   const { theme: themeMode, isDarkMode, setTheme } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
+  const insets = useSafeAreaInsets();
 
   // Create styles based on theme
   const styles = StyleSheet.create({
@@ -59,7 +61,7 @@ const ProfileSettingsScreen = () => {
       borderBottomRightRadius: 24,
       elevation: 4,
       paddingBottom: 20,
-      paddingTop: 50,
+      paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,

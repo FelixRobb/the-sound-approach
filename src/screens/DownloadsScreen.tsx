@@ -16,6 +16,7 @@ import {
   TextInput as RNTextInput,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
@@ -34,6 +35,7 @@ const DownloadsScreen = () => {
   const { isDarkMode } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
+  const insets = useSafeAreaInsets();
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -317,7 +319,7 @@ const DownloadsScreen = () => {
       borderBottomLeftRadius: 24,
       borderBottomRightRadius: 24,
       elevation: 4,
-      paddingTop: 50,
+      paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,

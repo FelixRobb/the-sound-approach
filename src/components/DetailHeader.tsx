@@ -38,7 +38,7 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
       flexDirection: "row",
       paddingBottom: 16,
       paddingHorizontal: 16,
-      paddingTop: 16,
+      paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -62,7 +62,7 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
   });
 
   return (
-    <View style={[styles.header, { marginTop: insets.top }]}>
+    <View style={styles.header}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
