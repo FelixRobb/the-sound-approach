@@ -164,6 +164,7 @@ export type VideoPlayerState = {
 
 export type NetworkContextType = {
   isConnected: boolean;
+  onNetworkRestore: (callback: () => void) => () => void;
 };
 
 // ==========================================
@@ -199,6 +200,11 @@ export type MainTabParamList = {
   Recordings: undefined;
   Downloads: undefined;
   Profile: undefined;
+};
+
+export type OfflineStackParamList = {
+  Downloads: undefined;
+  OfflineNotice: undefined;
 };
 
 // ==========================================

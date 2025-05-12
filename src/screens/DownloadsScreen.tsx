@@ -1,9 +1,9 @@
 "use client";
 
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useEffect, useContext, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -364,6 +364,23 @@ const DownloadsScreen = () => {
       fontSize: 12,
       marginLeft: 4,
     },
+    offlineBanner: {
+      alignItems: "center",
+      backgroundColor: `${theme.colors.error}20`,
+      borderRadius: 8,
+      flexDirection: "row",
+      marginTop: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      width: "100%",
+    },
+    offlineBannerText: {
+      color: theme.colors.error,
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "500",
+      marginLeft: 8,
+    },
     pageReference: {
       alignSelf: "flex-start",
       backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
@@ -435,9 +452,11 @@ const DownloadsScreen = () => {
             <Text style={styles.title}>Downloads</Text>
             <Text style={styles.subtitle}>Manage your offline recordings</Text>
             {!isConnected && (
-              <View style={styles.offlineBadge}>
-                <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
-                <Text style={styles.offlineBadgeText}>Offline Mode</Text>
+              <View style={styles.offlineBanner}>
+                <Ionicons name="cloud-offline" size={20} color={theme.colors.error} />
+                <Text style={styles.offlineBannerText}>
+                  Offline Mode - Only downloaded content is available
+                </Text>
               </View>
             )}
           </View>

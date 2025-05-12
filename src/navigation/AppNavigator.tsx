@@ -9,9 +9,11 @@ import { StyleSheet, View } from "react-native";
 
 import OfflineIndicator from "../components/OfflineIndicator";
 import { AuthContext } from "../context/AuthContext";
+import { NetworkContext } from "../context/NetworkContext";
 import { OfflineContext, OfflineProvider } from "../context/OfflineContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
+import OfflineNavigator from "../navigation/OfflineNavigator";
 import DownloadsScreen from "../screens/DownloadsScreen";
 import LoginScreen from "../screens/LoginScreen";
 import OfflineNoticeScreen from "../screens/OfflineNoticeScreen";
@@ -124,11 +126,14 @@ const MainTabNavigator = () => {
 const MainNavigator = () => {
   const { handleOfflineRedirect } = useContext(OfflineContext);
   const { theme, isDarkMode } = useThemedStyles();
+  const { isConnected } = useContext(NetworkContext);
 
-  // Move handleOfflineRedirect to useEffect instead of calling during render
+  // Redirect to Downloads when going offline
   useEffect(() => {
-    handleOfflineRedirect();
-  }, [handleOfflineRedirect]);
+    if (!isConnected) {
+      handleOfflineRedirect();
+    }
+  }, [isConnected, handleOfflineRedirect]);
 
   const backgroundStyle = StyleSheet.create({
     screen: {
@@ -208,6 +213,7 @@ const MainNavigator = () => {
 const AppNavigator = () => {
   const { state: authState } = useContext(AuthContext);
   const { isDarkMode } = useContext(ThemeContext);
+  const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
   const navTheme = isDarkMode ? navigationDarkTheme : navigationLightTheme;
 
@@ -226,7 +232,11 @@ const AppNavigator = () => {
           {authState.isLoading ? (
             <SplashScreen />
           ) : authState.userToken ? (
-            <MainNavigator />
+            isConnected ? (
+              <MainNavigator />
+            ) : (
+              <OfflineNavigator />
+            )
           ) : (
             <AuthNavigator />
           )}

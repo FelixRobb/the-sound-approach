@@ -93,7 +93,7 @@ const OfflineNoticeScreen = () => {
 
         <Text style={styles.description}>
           {hasDownloads
-            ? "You can still access your downloaded recordings while offline."
+            ? "You are in offline mode. You can only access your downloaded recordings."
             : "You don't have any downloaded recordings to access offline."}
         </Text>
 
@@ -106,7 +106,7 @@ const OfflineNoticeScreen = () => {
             }}
             style={styles.button}
           >
-            View Downloads
+            Return to Downloads
           </Button>
         ) : (
           <Text style={styles.noDownloadsText}>
@@ -127,7 +127,7 @@ const OfflineNoticeScreen = () => {
           <View style={styles.reconnectedContainer}>
             <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
             <Text style={styles.reconnectedText}>
-              You&apos;re back online! You can now access all content.
+              You&apos;re back online! The app will automatically switch to online mode.
             </Text>
           </View>
         )}

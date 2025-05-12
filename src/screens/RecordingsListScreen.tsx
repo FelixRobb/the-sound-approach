@@ -407,6 +407,15 @@ const RecordingsListScreen = () => {
     enabled: isConnected, // Only fetch when online
   });
 
+  // Effect to refetch data when connection is restored
+  useEffect(() => {
+    if (isConnected) {
+      // Refetch data when we come back online
+      refetchRecordings();
+      refetchSpecies();
+    }
+  }, [isConnected, refetchRecordings, refetchSpecies]);
+
   // Filter recordings based on search query
   const filteredRecordings = recordings?.filter((recording) => {
     if (!debouncedSearchQuery) return true;
