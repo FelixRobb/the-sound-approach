@@ -79,6 +79,7 @@ const WelcomeScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
       justifyContent: "center",
+      opacity: 0.75,
     },
     secondaryButton: {
       backgroundColor: theme.colors.surface,

@@ -8,6 +8,7 @@ import { useState, useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { TextInput, Button, HelperText } from "react-native-paper";
 
+import DetailHeader from "../components/DetailHeader";
 import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
@@ -30,11 +31,6 @@ const SignUpScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const styles = StyleSheet.create({
-    backButton: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      padding: 8,
-    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -89,30 +85,6 @@ const SignUpScreen = () => {
     form: {
       marginTop: 8,
     },
-    header: {
-      backgroundColor: theme.colors.surface,
-      borderBottomColor: theme.colors.surface,
-      borderBottomWidth: 1,
-      elevation: 2,
-      paddingBottom: 8,
-      paddingHorizontal: 16,
-      paddingTop: 50,
-    },
-    headerContent: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    headerTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 20,
-      fontWeight: "600",
-      marginLeft: 8,
-    },
-    headerTitleContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginLeft: 12,
-    },
     input: {
       backgroundColor: theme.colors.surface,
       flex: 1,
@@ -149,6 +121,7 @@ const SignUpScreen = () => {
     },
     scrollContent: {
       flexGrow: 1,
+      justifyContent: "center",
       paddingHorizontal: 16,
       paddingVertical: 24,
     },
@@ -274,25 +247,10 @@ const SignUpScreen = () => {
   // Background pattern
   const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
-  // Custom header
-  const Header = () => (
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.onSurface} />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Ionicons name="person-add" size={24} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>Create Account</Text>
-        </View>
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <BackgroundPattern />
-      <Header />
+      <DetailHeader title="Create Account" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
