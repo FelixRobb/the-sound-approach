@@ -158,22 +158,6 @@ export type VideoPlayerState = {
   error: string | null;
 };
 
-export type VideoContextType = {
-  isPlaying: boolean;
-  isLoaded: boolean;
-  duration: number;
-  position: number;
-  currentVideoId: string | null;
-  isFullscreen: boolean;
-  error: string | null;
-  playVideo: (uri: string, videoId: string) => Promise<boolean>;
-  togglePlayPause: (uri: string, videoId: string) => Promise<boolean>;
-  stopPlayback: () => Promise<boolean>;
-  seekTo: (position: number) => Promise<boolean>;
-  toggleFullscreen: () => Promise<boolean>;
-  exitFullscreen: () => Promise<boolean>;
-};
-
 // ==========================================
 // Network Types
 // ==========================================

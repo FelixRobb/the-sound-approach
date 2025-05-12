@@ -9,7 +9,6 @@ import { AuthProvider } from "./src/context/AuthContext";
 import { DownloadProvider } from "./src/context/DownloadContext";
 import { NetworkProvider } from "./src/context/NetworkContext";
 import { ThemeProvider, ThemeContext } from "./src/context/ThemeContext";
-import { VideoProvider } from "./src/context/VideoContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { lightTheme, darkTheme } from "./src/theme";
 
@@ -30,9 +29,7 @@ const AppContent = () => {
             <AuthProvider>
               <DownloadProvider>
                 <AudioProvider>
-                  <VideoProvider>
-                    <AppNavigator />
-                  </VideoProvider>
+                  <AppNavigator />
                 </AudioProvider>
               </DownloadProvider>
             </AuthProvider>
