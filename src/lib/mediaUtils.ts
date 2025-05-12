@@ -1,30 +1,28 @@
+import { ENV } from "../config/env";
 import type { Recording } from "../types";
 
 import { supabase } from "./supabase";
 
-/**
- * Gets the audio URI for a recording
- * Will return the local file URI if downloaded, otherwise returns the public URL
- * @param recording The recording to get the audio URI for
- * @param isDownloaded Function to check if a recording is downloaded
- * @param getDownloadPath Function to get the path to a downloaded file
- * @param isConnected Boolean indicating if there's an internet connection
- * @returns The URI to the audio file or null if not available
- */
-export const getAudioUri = (
+export const getBestAudioUri = (
   recording: Recording,
   isDownloaded: (recordingId: string) => boolean,
   getDownloadPath: (fileId: string, isAudio: boolean) => string | null,
   isConnected: boolean
 ): string | null => {
-  if (!recording || !recording.audio_id) return null;
+  if (!recording) return null;
 
-  if (isDownloaded(recording.id)) {
-    // Use local file
-    return getDownloadPath(recording.audio_id, true);
-  } else if (isConnected) {
-    // Use public URL from Supabase
-    const { data } = supabase.storage.from("audio").getPublicUrl(`${recording.audio_id}.mp3`);
+  // First try to use downloaded audio if available
+  if (recording.audiolqid && isDownloaded(recording.id)) {
+    const localPath = getDownloadPath(recording.audiolqid, true);
+    if (localPath) return localPath;
+  }
+
+  // If not downloaded or download path not available, use high-quality streaming
+  if (isConnected && recording.audiohqid) {
+    // Use public URL from Supabase for high-quality audio (WAV)
+    const { data } = supabase.storage
+      .from(ENV.AUDIO_HQ_BUCKET)
+      .getPublicUrl(`${recording.audiohqid}.wav`);
     return data?.publicUrl || null;
   }
 
@@ -32,32 +30,17 @@ export const getAudioUri = (
 };
 
 /**
- * Gets the sonogram URI for a recording
- * Will return the local file URI if downloaded, otherwise returns the public URL
- * @param recording The recording to get the sonogram URI for
- * @param isDownloaded Function to check if a recording is downloaded
- * @param getDownloadPath Function to get the path to a downloaded file
+ * Gets the sonogram video URI for a recording
+ * @param recording The recording to get the sonogram video URI for
  * @param isConnected Boolean indicating if there's an internet connection
- * @returns The URI to the sonogram image or null if not available
+ * @returns The URI to the sonogram video or null if not available
  */
-export const getSonogramUri = (
-  recording: Recording,
-  isDownloaded: (recordingId: string) => boolean,
-  getDownloadPath: (fileId: string, isAudio: boolean) => string | null,
-  isConnected: boolean
-): string | null => {
-  if (!recording || !recording.sonogram_id) return null;
+export const getSonogramVideoUri = (recording: Recording, isConnected: boolean): string | null => {
+  if (!recording || !recording.sonogramvideoid || !isConnected) return null;
 
-  if (isDownloaded(recording.id)) {
-    // Use local file
-    return getDownloadPath(recording.sonogram_id, false);
-  } else if (isConnected) {
-    // Use public URL from Supabase
-    const { data } = supabase.storage
-      .from("sonograms")
-      .getPublicUrl(`${recording.sonogram_id}.png`);
-    return data?.publicUrl || null;
-  }
-
-  return null;
+  // Use public URL from Supabase for sonogram video
+  const { data } = supabase.storage
+    .from(ENV.SONOGRAMS_BUCKET)
+    .getPublicUrl(`${recording.sonogramvideoid}.mp4`);
+  return data?.publicUrl || null;
 };

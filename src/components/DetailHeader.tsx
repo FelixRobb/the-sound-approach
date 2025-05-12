@@ -3,6 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { ReactNode } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
@@ -16,6 +17,7 @@ interface DetailHeaderProps {
 const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useThemedStyles();
+  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
     backButton: {
@@ -36,7 +38,7 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
       flexDirection: "row",
       paddingBottom: 16,
       paddingHorizontal: 16,
-      paddingTop: 50,
+      paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,

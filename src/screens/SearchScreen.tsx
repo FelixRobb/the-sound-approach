@@ -15,6 +15,7 @@ import {
   TextInput,
 } from "react-native";
 import { ActivityIndicator, Chip } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
@@ -45,6 +46,7 @@ const SearchScreen = () => {
   const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings" | "pages">(
     "all"
   );
+  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -128,7 +130,7 @@ const SearchScreen = () => {
       borderBottomRightRadius: 24,
       elevation: 4,
       paddingBottom: 20,
-      paddingTop: 50,
+      paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,

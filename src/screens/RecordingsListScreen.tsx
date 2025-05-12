@@ -15,12 +15,13 @@ import {
   TextInput,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getAudioUri } from "../lib/mediaUtils";
+import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
@@ -52,6 +53,7 @@ const RecordingsListScreen = () => {
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearchQuery = useDebounce(searchInput, 300); // 300ms debounce delay
   const [showSearch, setShowSearch] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
     activeTab: {
@@ -142,7 +144,7 @@ const RecordingsListScreen = () => {
       borderBottomRightRadius: 24,
       elevation: 4,
       paddingBottom: 20,
-      paddingTop: 50,
+      paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -433,7 +435,6 @@ const RecordingsListScreen = () => {
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     const isItemDownloaded = isDownloaded(item.id);
-    const audioUri = getAudioUri(item, isDownloaded, getDownloadPath, isConnected);
 
     return (
       <TouchableOpacity
@@ -465,14 +466,10 @@ const RecordingsListScreen = () => {
             </View>
           </View>
 
-          {audioUri && (
-            <MiniAudioPlayer
-              trackId={item.audio_id}
-              audioUri={audioUri}
-              size={36}
-              showLoading={false}
-            />
-          )}
+          {(() => {
+            const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
+            return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={36} /> : null;
+          })()}
         </View>
       </TouchableOpacity>
     );

@@ -13,9 +13,9 @@ import {
   RefreshControl,
   Dimensions,
   Alert,
-  TextInput as RNTextInput,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
@@ -34,11 +34,10 @@ const DownloadsScreen = () => {
   const { isDarkMode } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
+  const insets = useSafeAreaInsets();
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Format bytes to human-readable size
@@ -63,7 +62,6 @@ const DownloadsScreen = () => {
       const formattedRecordings = downloadedRecordings.map((record) => ({
         recording_id: record.recording_id,
         audio_path: record.audio_path,
-        sonogram_path: record.sonogram_path,
         downloaded_at: record.downloaded_at,
         title: record.title,
         species_name: record.species_name,
@@ -165,28 +163,8 @@ const DownloadsScreen = () => {
     );
   };
 
-  // Filter downloads based on search query
-  const filteredDownloads = downloads.filter((download) => {
-    if (!searchQuery) return true;
-
-    const query = searchQuery.toLowerCase();
-    return (
-      download.title?.toLowerCase().includes(query) ||
-      download.species_name?.toLowerCase().includes(query) ||
-      download.scientific_name?.toLowerCase().includes(query) ||
-      (download.book_page_number && download.book_page_number.toString().includes(query))
-    );
-  });
-
   // Create styles with theme support
   const styles = StyleSheet.create({
-    activeTab: {
-      backgroundColor: theme.colors.primary,
-    },
-    activeTabText: {
-      color: theme.colors.onPrimary,
-      fontWeight: "600",
-    },
     backgroundPattern: {
       backgroundColor: isDarkMode
         ? `${theme.colors.primary}08` // Very transparent primary color
@@ -207,17 +185,6 @@ const DownloadsScreen = () => {
     clearAllText: {
       color: theme.colors.primary,
       fontSize: 14,
-      fontWeight: "bold",
-    },
-    clearSearchButton: {
-      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
-      borderRadius: 8,
-      marginTop: 16,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
-    clearSearchText: {
-      color: theme.colors.primary,
       fontWeight: "bold",
     },
     container: {
@@ -318,7 +285,7 @@ const DownloadsScreen = () => {
       borderBottomLeftRadius: 24,
       borderBottomRightRadius: 24,
       elevation: 4,
-      paddingTop: 50,
+      paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -333,9 +300,6 @@ const DownloadsScreen = () => {
       flexDirection: "row",
       justifyContent: "space-between",
       marginBottom: 16,
-    },
-    iconButton: {
-      padding: 8,
     },
     listContent: {
       padding: 16,
@@ -416,63 +380,11 @@ const DownloadsScreen = () => {
     playButton: {
       marginRight: 16,
     },
-    playButtonActive: {
-      backgroundColor: isDarkMode ? `${theme.colors.primary}DD` : `${theme.colors.primary}AA`,
-    },
-    playButtonInner: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      width: 40,
-    },
-    profileButton: {
-      borderRadius: 18,
-      marginLeft: 8,
-      overflow: "hidden",
-    },
-    profileButtonBackground: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      padding: 8,
-    },
     scientificName: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 14,
       fontStyle: "italic",
       marginTop: 2,
-    },
-    searchBar: {
-      alignItems: "center",
-      backgroundColor: isDarkMode ? theme.colors.surfaceVariant : theme.colors.surfaceVariant,
-      borderRadius: 12,
-      flexDirection: "row",
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    searchBarContainer: {
-      marginBottom: 8,
-      paddingHorizontal: 20,
-    },
-    searchContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outlineVariant,
-      borderRadius: 20,
-      borderWidth: 1,
-      flexDirection: "row",
-      height: 46,
-      marginHorizontal: 4,
-      marginVertical: 12,
-      paddingHorizontal: 16,
-    },
-    searchInput: {
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 16,
-      marginLeft: 10,
-      paddingVertical: 10,
     },
     separator: {
       height: 16,
@@ -504,31 +416,6 @@ const DownloadsScreen = () => {
       fontSize: 15,
       marginTop: 2,
     },
-    tab: {
-      alignItems: "center",
-      borderRadius: 20,
-      flexDirection: "row",
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
-    tabBar: {
-      alignSelf: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outlineVariant,
-      borderRadius: 24,
-      borderWidth: 1,
-      flexDirection: "row",
-      marginTop: 12,
-      padding: 4,
-      width: "94%",
-    },
-    tabText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginLeft: 6,
-    },
     title: {
       color: theme.colors.primary,
       fontSize: 28,
@@ -554,38 +441,7 @@ const DownloadsScreen = () => {
               </View>
             )}
           </View>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => setShowSearch((prev) => !prev)}
-          >
-            <Ionicons
-              name={showSearch ? "close" : "search"}
-              size={24}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
         </View>
-
-        {showSearch ? (
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={theme.colors.primary} />
-            <TextInput
-              placeholder="Search downloads..."
-              placeholderTextColor={theme.colors.onSurfaceVariant}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={styles.searchInput}
-              autoFocus
-              selectionColor={theme.colors.primary}
-              returnKeyType="search"
-            />
-            {searchQuery && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-            )}
-          </View>
-        ) : null}
       </View>
 
       <View style={styles.storageInfoContainer}>
@@ -665,10 +521,10 @@ const DownloadsScreen = () => {
             </View>
 
             <View style={styles.downloadActions}>
-              {/* Replace with MiniAudioPlayer */}
+              {/* Use MiniAudioPlayer with the downloaded audio file path */}
               {audioUri && (
                 <View style={styles.playButton}>
-                  <MiniAudioPlayer trackId={audioUri} audioUri={audioUri} size={40} />
+                  <MiniAudioPlayer trackId={item.recording_id} audioUri={audioUri} size={40} />
                 </View>
               )}
 
@@ -695,17 +551,10 @@ const DownloadsScreen = () => {
     <View style={styles.emptyContainer}>
       <View style={styles.emptyCard}>
         <Ionicons name="cloud-download-outline" size={60} color={theme.colors.primary} />
-        <Text style={styles.emptyTitle}>{searchQuery ? "No results found" : "No Downloads"}</Text>
+        <Text style={styles.emptyTitle}>No Downloads</Text>
         <Text style={styles.emptyText}>
-          {searchQuery
-            ? `We couldn't find any downloads matching "${searchQuery}"`
-            : "Downloaded recordings will appear here for offline listening."}
+          Downloaded recordings will appear here for offline listening.
         </Text>
-        {searchQuery && (
-          <TouchableOpacity style={styles.clearSearchButton} onPress={() => setSearchQuery("")}>
-            <Text style={styles.clearSearchText}>Clear Search</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );
@@ -733,7 +582,7 @@ const DownloadsScreen = () => {
       <Header />
 
       <FlatList
-        data={filteredDownloads}
+        data={downloads}
         renderItem={renderDownloadItem}
         keyExtractor={(item) => item.recording_id.toString()}
         contentContainerStyle={styles.listContent}
@@ -762,26 +611,6 @@ const DownloadsScreen = () => {
         <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
-  );
-};
-
-// TextInput implementation
-const TextInput = (props: React.ComponentProps<typeof RNTextInput>) => {
-  const { theme } = useThemedStyles();
-  const styles = StyleSheet.create({
-    RNTextInput: {
-      backgroundColor: theme.colors.surface,
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 16,
-    },
-  });
-  return (
-    <RNTextInput
-      {...props}
-      style={styles.RNTextInput}
-      placeholderTextColor={theme.colors.onSurfaceDisabled}
-    />
   );
 };
 

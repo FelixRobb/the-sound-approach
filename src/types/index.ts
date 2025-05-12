@@ -11,16 +11,19 @@ export type Species = {
   created_at: string;
 };
 
+export type MediaType = "audio-hq" | "audio_lq" | "sonogram_video";
+
 export type Recording = {
   id: string;
   species_id: string;
   title: string;
-  audio_id: string;
-  sonogram_id: string;
+  audiohqid: string;
+  audiolqid: string;
+  sonogramvideoid: string;
   book_page_number: number;
   caption: string;
-  order_in_book: number;
-  created_at: string;
+  orderInBook: number;
+  createdAt: string;
   species?: Species;
 };
 
@@ -93,7 +96,6 @@ export type DownloadInfo = {
 export type DownloadRecord = {
   recording_id: string;
   audio_path: string;
-  sonogram_path: string;
   downloaded_at: number;
   title?: string;
   species_name?: string;
@@ -139,6 +141,21 @@ export type AudioContextType = {
   seekAudio: (position: number) => Promise<void>;
   setPlaybackSpeed: (speed: PlaybackSpeed) => Promise<void>;
   toggleLooping: () => Promise<void>;
+};
+
+// ==========================================
+// Video Types
+// ==========================================
+
+export type VideoPlaybackState = "idle" | "loading" | "playing" | "paused" | "error";
+
+export type VideoPlayerState = {
+  videoId: string | null;
+  playbackState: VideoPlaybackState;
+  position: number;
+  duration: number;
+  isFullscreen: boolean;
+  error: string | null;
 };
 
 // ==========================================

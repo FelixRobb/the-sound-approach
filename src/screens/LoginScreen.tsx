@@ -8,6 +8,7 @@ import { useState, useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { TextInput, Button, HelperText } from "react-native-paper";
 
+import DetailHeader from "../components/DetailHeader";
 import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
@@ -26,11 +27,6 @@ const LoginScreen = () => {
 
   // Create styles based on theme
   const styles = StyleSheet.create({
-    backButton: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      padding: 8,
-    },
     backgroundPattern: {
       backgroundColor: theme.colors.background,
       bottom: 0,
@@ -83,29 +79,6 @@ const LoginScreen = () => {
     form: {
       marginTop: 8,
     },
-    header: {
-      backgroundColor: theme.colors.background,
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomWidth: 1,
-      paddingBottom: 8,
-      paddingHorizontal: 16,
-      paddingTop: 50,
-    },
-    headerContent: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    headerTitle: {
-      color: theme.colors.onBackground,
-      fontSize: 20,
-      fontWeight: "600",
-      marginLeft: 8,
-    },
-    headerTitleContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginLeft: 12,
-    },
     input: {
       backgroundColor: theme.colors.surface,
       flex: 1,
@@ -130,6 +103,7 @@ const LoginScreen = () => {
     },
     scrollContent: {
       flexGrow: 1,
+      justifyContent: "center",
       paddingHorizontal: 16,
       paddingVertical: 24,
     },
@@ -204,25 +178,10 @@ const LoginScreen = () => {
   // Background pattern
   const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
-  // Custom header
-  const Header = () => (
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.onBackground} />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Ionicons name="log-in" size={24} color={theme.colors.primary} />
-          <Text style={styles.headerTitle}>Sign In</Text>
-        </View>
-      </View>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <BackgroundPattern />
-      <Header />
+      <DetailHeader title="Sign In" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>

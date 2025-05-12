@@ -1,312 +1,364 @@
 "use client";
 
 import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import React, { useState, useContext, useMemo } from "react";
+import { useEventListener } from "expo";
+import * as ScreenOrientation from "expo-screen-orientation";
+import { useVideoPlayer, VideoView } from "expo-video";
+import React, { useState, useContext, useMemo, useRef, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   Alert,
-  Dimensions,
+  ActivityIndicator,
+  BackHandler,
+  StatusBar,
+  Animated,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
-import FullAudioPlayer from "../components/FullAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getAudioUri, getSonogramUri } from "../lib/mediaUtils";
+import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
-
-const { width } = Dimensions.get("window");
 
 const RecordingDetailsScreen = () => {
   const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const { isConnected } = useContext(NetworkContext);
-  const { downloadRecording, isDownloaded, getDownloadPath, downloads } =
-    useContext(DownloadContext);
+  const { downloadRecording, isDownloaded, downloads } = useContext(DownloadContext);
 
-  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [videoPosition, setVideoPosition] = useState(0);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [seekValue, setSeekValue] = useState(0);
+
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const videoViewRef = useRef(null);
 
   const styles = StyleSheet.create({
-    caption: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 24,
-    },
-    card: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 3,
-      marginBottom: 16,
-      overflow: "hidden",
-      padding: 16,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.22,
-      shadowRadius: 2.22,
-    },
-    closeButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      position: "absolute",
-      right: 20,
-      top: 40,
-      width: 40,
-      zIndex: 20,
-    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
     content: {
       padding: 16,
-      paddingBottom: 32,
     },
-    disabledDownloadButton: {
-      opacity: 0.5,
+    controlsContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.backdrop,
+      borderRadius: 30,
+      bottom: 12,
+      flexDirection: "row",
+      left: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      position: "absolute",
+      right: 12,
     },
-    downloadButtonContainer: {
+    descriptionCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 24,
+      elevation: 4,
+      marginBottom: 20,
+      overflow: "hidden",
+      padding: 20,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+    },
+    descriptionText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 16,
+      lineHeight: 24,
+    },
+    descriptionTextError: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 16,
+      lineHeight: 24,
+      marginTop: 12,
+    },
+    descriptionTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 20,
+      fontWeight: "600",
+      marginBottom: 12,
+    },
+    detailHeaderDownloaded: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      padding: 8,
+    },
+    downloadButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
+      borderRadius: 16,
       flexDirection: "row",
-      justifyContent: "center",
+      paddingHorizontal: 24,
       paddingVertical: 16,
+      width: "100%",
     },
     downloadButtonText: {
       color: theme.colors.onPrimary,
       fontSize: 16,
       fontWeight: "600",
-      marginLeft: 8,
+      marginLeft: 12,
+    },
+    downloadCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 24,
+      elevation: 4,
+      marginBottom: 20,
+      overflow: "hidden",
+      padding: 20,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
     },
     downloadedContainer: {
       alignItems: "center",
       flexDirection: "row",
-      justifyContent: "center",
-      paddingVertical: 12,
-    },
-    downloadedIndicator: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 16,
-      marginLeft: 8,
-      padding: 8,
     },
     downloadedText: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.primary,
       fontSize: 16,
-      fontWeight: "500",
-      marginLeft: 12,
-    },
-    downloadingContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingVertical: 16,
-    },
-    downloadingText: {
-      color: theme.colors.onPrimary,
-      fontSize: 16,
+      fontWeight: "600",
       marginLeft: 12,
     },
     errorCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: 24,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.1,
-      shadowRadius: 3,
-      width: width * 0.8,
+      shadowRadius: 8,
+      width: "90%",
     },
     errorContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      padding: 24,
+      padding: 20,
+    },
+    errorIcon: {
+      color: theme.colors.error,
+      marginBottom: 16,
     },
     errorText: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 16,
-      lineHeight: 22,
       marginBottom: 24,
       textAlign: "center",
     },
     errorTitle: {
-      color: theme.colors.error,
-      fontSize: 18,
-      fontWeight: "bold",
+      color: theme.colors.onSurface,
+      fontSize: 20,
+      fontWeight: "600",
       marginBottom: 8,
-      marginTop: 16,
+      textAlign: "center",
     },
-    expandButton: {
-      padding: 4,
+    fullScreenVideoOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    fullscreenButton: {
+      marginLeft: 12,
     },
     fullscreenContainer: {
-      backgroundColor: theme.colors.surface,
-      flex: 1,
-      zIndex: 10,
+      backgroundColor: theme.colors.background,
+      height: "100%",
+      position: "absolute",
+      width: "100%",
+      zIndex: 999,
     },
-    fullscreenImage: {
-      flex: 1,
-    },
-    goBackButton: {
+    fullscreenControls: {
       alignItems: "center",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      marginRight: 12,
-      width: 40,
+      backgroundColor: theme.colors.backdrop,
+      borderRadius: 30,
+      bottom: 40,
+      flexDirection: "row",
+      left: 20,
+      padding: 12,
+      position: "absolute",
+      right: 20,
+      zIndex: 1000,
     },
-    goBackText: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: "bold",
+    fullscreenHeader: {
+      backgroundColor: theme.colors.background,
+      borderBottomColor: theme.colors.backdrop,
+      borderBottomWidth: 1,
+      padding: 20,
+      position: "absolute",
+      top: 0,
+      width: "100%",
+      zIndex: 1000,
     },
-    loadingCard: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 4,
-      padding: 24,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      width: width * 0.8,
-    },
-    loadingContainer: {
-      alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      padding: 24,
-    },
-    loadingText: {
+    fullscreenSubtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      marginTop: 16,
+      fontSize: 14,
+      marginTop: 4,
+    },
+    fullscreenTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    fullscreenVideo: {
+      flex: 1,
     },
     offlineText: {
       color: theme.colors.error,
       fontSize: 14,
-      marginLeft: 6,
+      marginLeft: 8,
     },
     offlineWarning: {
       alignItems: "center",
       flexDirection: "row",
-      justifyContent: "center",
-      marginTop: 8,
+      marginTop: 12,
     },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.primaryContainer,
       borderRadius: 12,
-      marginTop: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
     },
     pageText: {
-      color: theme.colors.onPrimary,
-      fontSize: 12,
-      fontWeight: "500",
+      color: theme.colors.onPrimaryContainer,
+      fontSize: 14,
+      fontWeight: "600",
     },
-    playerHeader: {
-      borderRadius: 12,
-      height: 80,
-      marginBottom: 16,
-      overflow: "hidden",
+    playButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 30,
+      height: 60,
+      justifyContent: "center",
+      width: 60,
+    },
+    playerContainer: {
+      aspectRatio: 16 / 9,
+      backgroundColor: theme.colors.surfaceVariant,
+      width: "100%",
+    },
+    playerContainerError: {
+      alignItems: "center",
+      aspectRatio: 16 / 9,
+      backgroundColor: theme.colors.surfaceVariant,
+      justifyContent: "center",
+      width: "100%",
     },
     retryButton: {
       alignItems: "center",
-      alignSelf: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      flexDirection: "row",
-      justifyContent: "center",
-      marginTop: 16,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      borderRadius: 16,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
     },
     retryText: {
       color: theme.colors.onPrimary,
-      fontSize: 14,
-      marginLeft: 8,
+      fontSize: 16,
+      fontWeight: "600",
     },
     scientificName: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: 16,
       fontStyle: "italic",
-      marginBottom: 8,
+      marginBottom: 12,
     },
-    sectionHeader: {
+    slider: {
+      flex: 1,
+      height: 40,
+      marginHorizontal: 12,
+    },
+    speciesButton: {
       alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderTopColor: theme.colors.outlineVariant,
+      borderTopWidth: 1,
       flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 12,
-    },
-    sectionTitle: {
-      color: theme.colors.primary,
-      fontSize: 18,
-      fontWeight: "600",
-      marginBottom: 12,
-    },
-    sonogramContainer: {
-      backgroundColor: theme.colors.onSurfaceVariant,
-      borderRadius: 12,
-      overflow: "hidden",
-    },
-    sonogramImage: {
-      height: 200,
-      width: "100%",
-    },
-    speciesActionButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 16,
-      height: 32,
       justifyContent: "center",
-      width: 32,
+      padding: 16,
+    },
+    speciesButtonText: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      fontWeight: "600",
+      marginRight: 8,
+    },
+    speciesCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 24,
+      elevation: 4,
+      marginBottom: 20,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
     },
     speciesHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    speciesInfo: {
-      flex: 1,
+      padding: 20,
     },
     speciesName: {
-      color: theme.colors.primary,
-      fontSize: 22,
-      fontWeight: "bold",
+      color: theme.colors.onSurface,
+      fontSize: 24,
+      fontWeight: "700",
       marginBottom: 4,
     },
-    waveformPlaceholder: {
-      alignItems: "center",
-      backgroundColor: theme.colors.onSurfaceVariant,
-      height: "100%",
-      justifyContent: "center",
-      width: "100%",
+    timeText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      marginLeft: 8,
     },
-    waveformPreview: {
-      height: "100%",
-      width: "100%",
+    video: {
+      flex: 1,
+    },
+    videoContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 24,
+      elevation: 4,
+      marginBottom: 20,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+    },
+    videoHeader: {
+      padding: 20,
+    },
+    videoOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: "center",
+      backgroundColor: theme.colors.backdrop,
+      justifyContent: "center",
+    },
+
+    videoTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 20,
+      fontWeight: "600",
     },
   });
 
@@ -321,66 +373,221 @@ const RecordingDetailsScreen = () => {
     queryFn: () => fetchRecordingById(route.params.recordingId),
   });
 
-  // Get download status
+  const sonogramVideoUri = useMemo(() => {
+    if (!recording) return null;
+    return getSonogramVideoUri(recording, isConnected);
+  }, [recording, isConnected]);
+
+  // Initialize the video player
+  const videoPlayer = useVideoPlayer(sonogramVideoUri || null, (player) => {
+    player.timeUpdateEventInterval = 0.5;
+    player.loop = false;
+  });
+
+  // Listen for timeUpdate event to update the position
+  useEventListener(videoPlayer, "timeUpdate", (payload) => {
+    if (!isSeeking) {
+      setVideoPosition(payload.currentTime);
+      if (videoDuration === 0 && payload.bufferedPosition > 0) {
+        setVideoDuration(videoPlayer.duration || 0);
+        setIsVideoLoaded(true);
+      }
+    }
+  });
+
+  // Listen for status changes
+  useEventListener(videoPlayer, "playingChange", (payload) => {
+    setIsPlaying(payload.isPlaying);
+  });
+
+  // Handle orientation and fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = async () => {
+      if (isVideoFullscreen) {
+        StatusBar.setHidden(true);
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1.1,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      } else {
+        StatusBar.setHidden(false);
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    };
+
+    handleFullscreenChange();
+
+    return () => {
+      StatusBar.setHidden(false);
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    };
+  }, [isVideoFullscreen, fadeAnim, scaleAnim]);
+
+  // Handle back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (isVideoFullscreen) {
+        setIsVideoFullscreen(false);
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [isVideoFullscreen]);
+
   const getDownloadStatus = () => {
     if (!recording) return "idle";
-
-    if (isDownloaded(recording.id)) {
-      return "completed";
-    }
-
+    if (isDownloaded(recording.id)) return "completed";
     return downloads[recording.id]?.status || "idle";
   };
 
-  // Handle download button press
   const handleDownload = async () => {
     if (!recording || !isConnected) return;
-
     try {
       await downloadRecording(recording);
     } catch (error) {
       console.error("Download error:", error);
-      Alert.alert("Download Error", "Failed to download the recording. Please try again.", [
-        { text: "OK" },
-      ]);
+      Alert.alert("Download Error", "Failed to download the recording. Please try again.");
     }
   };
 
-  // Get audio URI for the player - memoized to prevent repeated requests
-  const audioUri = useMemo(() => {
-    if (!recording) return null;
-    return getAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
-  }, [recording, isDownloaded, isConnected, getDownloadPath]);
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
 
-  // Get sonogram image URI - memoized to prevent repeated requests
-  const sonogramUri = useMemo(() => {
-    if (!recording) return null;
-    return getSonogramUri(recording, isDownloaded, getDownloadPath, isConnected);
-  }, [recording, isDownloaded, isConnected, getDownloadPath]);
+  const togglePlayPause = async () => {
+    if (isPlaying) {
+      videoPlayer.pause();
+    } else {
+      videoPlayer.play();
+    }
+  };
 
-  // Render loading state
+  const toggleFullscreen = () => {
+    setIsVideoFullscreen(!isVideoFullscreen);
+  };
+
+  const onSeekStart = () => {
+    setIsSeeking(true);
+  };
+
+  const onSeekComplete = async (value: number) => {
+    setIsSeeking(false);
+    setVideoPosition(value);
+    videoPlayer.currentTime = value;
+  };
+
+  const renderVideoControls = (isFullscreen = false) => {
+    const containerStyle = isFullscreen ? styles.fullscreenControls : styles.controlsContainer;
+
+    return (
+      <View style={containerStyle}>
+        <TouchableOpacity onPress={togglePlayPause}>
+          <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.onPrimary} />
+        </TouchableOpacity>
+
+        <Slider
+          style={styles.slider}
+          minimumValue={0}
+          maximumValue={videoDuration}
+          value={isSeeking ? seekValue : videoPosition}
+          onSlidingStart={onSeekStart}
+          onValueChange={setSeekValue}
+          onSlidingComplete={onSeekComplete}
+          minimumTrackTintColor={theme.colors.primary}
+          maximumTrackTintColor={theme.colors.surfaceVariant}
+          tapToSeek
+          thumbTintColor={theme.colors.primary}
+        />
+
+        <Text style={styles.timeText}>
+          {formatTime(isSeeking ? seekValue : videoPosition)}/{formatTime(videoDuration)}
+        </Text>
+
+        <TouchableOpacity style={styles.fullscreenButton} onPress={toggleFullscreen}>
+          <Ionicons
+            name={isVideoFullscreen ? "contract" : "expand"}
+            size={24}
+            color={theme.colors.onPrimary}
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const renderVideoPlayer = () => {
+    if (!sonogramVideoUri) {
+      return (
+        <View style={styles.playerContainerError}>
+          <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
+          <Text style={styles.descriptionTextError}>Video source not available</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.playerContainer}>
+        <VideoView
+          ref={videoViewRef}
+          player={videoPlayer}
+          style={styles.video}
+          contentFit={isVideoFullscreen ? "contain" : "fill"}
+          nativeControls={false}
+        />
+
+        <TouchableOpacity style={styles.videoOverlay} onPress={togglePlayPause} activeOpacity={0.8}>
+          {(!isPlaying || !isVideoLoaded) && (
+            <View style={styles.playButton}>
+              <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {renderVideoControls(false)}
+      </View>
+    );
+  };
+
   if (isLoading) {
     return (
       <View style={styles.container}>
         <DetailHeader title="Loading..." />
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Loading recording details...</Text>
-          </View>
+        <View style={styles.errorContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       </View>
     );
   }
 
-  // Render error state
   if (error || !recording) {
     return (
       <View style={styles.container}>
         <DetailHeader title="Error" />
         <View style={styles.errorContainer}>
           <View style={styles.errorCard}>
-            <Ionicons name="alert-circle" size={60} color={theme.colors.error} />
+            <Ionicons name="alert-circle" size={48} style={styles.errorIcon} />
             <Text style={styles.errorTitle}>Unable to Load Recording</Text>
             <Text style={styles.errorText}>
               {!isConnected
@@ -388,10 +595,7 @@ const RecordingDetailsScreen = () => {
                 : "Something went wrong. Please try again."}
             </Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-              <Text style={styles.retryText}>Retry</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.goBackButton} onPress={() => navigation.goBack()}>
-              <Text style={styles.goBackText}>Go Back</Text>
+              <Text style={styles.retryText}>Try Again</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -399,166 +603,131 @@ const RecordingDetailsScreen = () => {
     );
   }
 
+  if (isVideoFullscreen) {
+    if (!sonogramVideoUri) {
+      setIsVideoFullscreen(false);
+      return null;
+    }
+
+    return (
+      <View style={styles.fullscreenContainer}>
+        <View style={styles.fullscreenHeader}>
+          <Text style={styles.fullscreenTitle}>{recording.title}</Text>
+          <Text style={styles.fullscreenSubtitle}>{recording.species?.common_name}</Text>
+        </View>
+        <VideoView
+          player={videoPlayer}
+          style={styles.fullscreenVideo}
+          contentFit="contain"
+          nativeControls={false}
+        />
+
+        <TouchableOpacity
+          style={styles.fullScreenVideoOverlay}
+          onPress={togglePlayPause}
+          activeOpacity={1}
+        >
+          {(!isPlaying || !isVideoLoaded) && (
+            <View style={styles.playButton}>
+              <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {renderVideoControls(true)}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {isImageFullscreen ? (
-        <View style={styles.fullscreenContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => {
-              setIsImageFullscreen(false);
-            }}
-          >
-            <Ionicons name="close" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Image
-            source={{
-              uri: sonogramUri || "https://placeholder.svg?height=400&width=800&text=Sonogram",
-            }}
-            style={styles.fullscreenImage}
-            resizeMode="contain"
-          />
-        </View>
-      ) : (
-        <>
-          <DetailHeader
-            title={recording.title}
-            subtitle={recording.species?.scientific_name}
-            rightElement={
-              isDownloaded(recording.id) && (
-                <View style={styles.downloadedIndicator}>
-                  <Ionicons name="cloud-done" size={16} color={theme.colors.onPrimary} />
-                </View>
-              )
-            }
-          />
+      <DetailHeader
+        title={recording.title}
+        subtitle={recording.species?.scientific_name}
+        rightElement={
+          isDownloaded(recording.id) && (
+            <View style={styles.detailHeaderDownloaded}>
+              <Ionicons name="cloud-done" size={20} color={theme.colors.onPrimary} />
+            </View>
+          )
+        }
+      />
 
-          <ScrollView contentContainerStyle={styles.content}>
-            {/* Species Card */}
-            <View style={styles.card}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Animated.View
+          style={[
+            styles.speciesCard,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <View style={styles.speciesHeader}>
+            <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
+            <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
+            <View style={styles.pageReference}>
+              <Text style={styles.pageText}>Page {recording.book_page_number}</Text>
+            </View>
+          </View>
+          {isConnected && (
+            <TouchableOpacity
+              style={styles.speciesButton}
+              onPress={() =>
+                navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
+              }
+            >
+              <Text style={styles.speciesButtonText}>View Species Details</Text>
+              <Ionicons name="arrow-forward" size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
+          )}
+        </Animated.View>
+
+        <View style={styles.videoContainer}>
+          <View style={styles.videoHeader}>
+            <Text style={styles.videoTitle}>Sonogram</Text>
+          </View>
+          {renderVideoPlayer()}
+        </View>
+
+        <View style={styles.descriptionCard}>
+          <Text style={styles.descriptionTitle}>Description</Text>
+          <Text style={styles.descriptionText}>{recording.caption}</Text>
+        </View>
+
+        <View style={styles.downloadCard}>
+          {getDownloadStatus() === "completed" ? (
+            <View style={styles.downloadedContainer}>
+              <Ionicons name="cloud-done" size={24} color={theme.colors.primary} />
+              <Text style={styles.downloadedText}>Available Offline</Text>
+            </View>
+          ) : getDownloadStatus() === "downloading" ? (
+            <View style={styles.downloadedContainer}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={styles.downloadedText}>Downloading...</Text>
+            </View>
+          ) : (
+            <>
               <TouchableOpacity
-                style={styles.speciesHeader}
-                onPress={() => {
-                  if (isConnected) {
-                    navigation.navigate("SpeciesDetails", { speciesId: recording.species_id });
-                  }
-                }}
+                // eslint-disable-next-line react-native/no-inline-styles
+                style={[styles.downloadButton, !isConnected && { opacity: 0.5 }]}
+                onPress={handleDownload}
                 disabled={!isConnected}
               >
-                <View style={styles.speciesInfo}>
-                  <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
-                  <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
-
-                  <View style={styles.pageReference}>
-                    <Text style={styles.pageText}>Page {recording.book_page_number}</Text>
-                  </View>
-                </View>
-                {isConnected && (
-                  <View style={styles.speciesActionButton}>
-                    <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
-                  </View>
-                )}
+                <Ionicons name="cloud-download" size={24} color={theme.colors.onPrimary} />
+                <Text style={styles.downloadButtonText}>Download for Offline Use</Text>
               </TouchableOpacity>
-            </View>
 
-            {/* Audio Player Card */}
-            <View style={styles.card}>
-              {/* Player Visualization */}
-              <View style={styles.playerHeader}>
-                {sonogramUri ? (
-                  <Image
-                    source={{
-                      uri:
-                        sonogramUri ||
-                        "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
-                    }}
-                    style={styles.waveformPreview}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.waveformPlaceholder}>
-                    <Ionicons name="musical-notes" size={32} color="#E0E0E0" />
-                  </View>
-                )}
-              </View>
-
-              {/* Audio Player Component */}
-              <FullAudioPlayer
-                trackId={recording.audio_id}
-                audioUri={audioUri}
-                hasNetworkConnection={isConnected}
-              />
-            </View>
-
-            {/* Description Card */}
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Description</Text>
-              <Text style={styles.caption}>{recording.caption}</Text>
-            </View>
-
-            {/* Sonogram Card */}
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Sonogram</Text>
-                {sonogramUri && (
-                  <TouchableOpacity
-                    style={styles.expandButton}
-                    onPress={() => setIsImageFullscreen(true)}
-                  >
-                    <Ionicons name="expand" size={20} color="#2E7D32" />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <View style={styles.sonogramContainer}>
-                <Image
-                  source={{
-                    uri:
-                      sonogramUri ||
-                      "https://placeholder.svg?height=200&width=400&text=Sonogram+Not+Available",
-                  }}
-                  style={styles.sonogramImage}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
-
-            {/* Download Card */}
-            <View style={styles.card}>
-              {getDownloadStatus() === "completed" ? (
-                <View style={styles.downloadedContainer}>
-                  <Ionicons name="cloud-done" size={28} color="#2E7D32" />
-                  <Text style={styles.downloadedText}>Available Offline</Text>
-                </View>
-              ) : getDownloadStatus() === "downloading" ? (
-                <View style={styles.downloadingContainer}>
-                  <ActivityIndicator size="small" color="#2E7D32" />
-                  <Text style={styles.downloadingText}>Downloading...</Text>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={[
-                    styles.downloadButtonContainer,
-                    !isConnected && styles.disabledDownloadButton,
-                  ]}
-                  onPress={handleDownload}
-                  disabled={!isConnected}
-                >
-                  <Ionicons name="cloud-download" size={22} color="#FFFFFF" />
-                  <Text style={styles.downloadButtonText}>Download for Offline Use</Text>
-                </TouchableOpacity>
-              )}
-
-              {!isConnected && getDownloadStatus() === "idle" && (
+              {!isConnected && (
                 <View style={styles.offlineWarning}>
-                  <Ionicons name="wifi" size={16} color="#B00020" />
+                  <Ionicons name="wifi" size={16} color={theme.colors.error} />
                   <Text style={styles.offlineText}>Connect to download this recording</Text>
                 </View>
               )}
-            </View>
-          </ScrollView>
-        </>
-      )}
+            </>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 };

@@ -14,7 +14,7 @@ import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getAudioUri } from "../lib/mediaUtils";
+import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
 
@@ -358,10 +358,15 @@ const SpeciesDetailsScreen = () => {
                       </View>
 
                       {(() => {
-                        const uri = getAudioUri(item, isDownloaded, getDownloadPath, isConnected);
+                        const uri = getBestAudioUri(
+                          item,
+                          isDownloaded,
+                          getDownloadPath,
+                          isConnected
+                        );
                         return uri ? (
                           <MiniAudioPlayer
-                            trackId={item.audio_id}
+                            trackId={item.id}
                             audioUri={uri}
                             size={36}
                             showLoading={false}

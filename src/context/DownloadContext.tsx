@@ -5,6 +5,7 @@ import * as FileSystem from "expo-file-system";
 import type React from "react";
 import { createContext, useState, useEffect, useContext, useCallback } from "react";
 
+import { ENV } from "../config/env";
 import { supabase } from "../lib/supabase";
 import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types";
 
@@ -114,27 +115,16 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }));
 
     try {
-      // Download audio file
-      const audioPath = `${downloadsDir}audio_${recording.audio_id}.mp3`;
+      // Download low-quality audio file (MP3) only
+      const audioPath = `${downloadsDir}audio_${recording.audiolqid}.mp3`;
       const { data: audioUrlData } = supabase.storage
-        .from("audio")
-        .getPublicUrl(`${recording.audio_id}.mp3`);
+        .from(ENV.AUDIO_LQ_BUCKET) // Use environment variable for bucket name
+        .getPublicUrl(`${recording.audiolqid}.mp3`);
 
       if (!audioUrlData?.publicUrl) throw new Error("Failed to get audio URL");
 
       // Actually download the audio file
       await FileSystem.downloadAsync(audioUrlData.publicUrl, audioPath);
-
-      // Download sonogram image
-      const sonogramPath = `${downloadsDir}sonogram_${recording.sonogram_id}.png`;
-      const { data: sonogramUrlData } = supabase.storage
-        .from("sonograms")
-        .getPublicUrl(`${recording.sonogram_id}.png`);
-
-      if (!sonogramUrlData?.publicUrl) throw new Error("Failed to get sonogram URL");
-
-      // Actually download the sonogram file
-      await FileSystem.downloadAsync(sonogramUrlData.publicUrl, sonogramPath);
 
       // Get species info if available
       let speciesName = "";
@@ -162,7 +152,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const downloadRecord: DownloadRecord = {
         recording_id: recording.id,
         audio_path: audioPath,
-        sonogram_path: sonogramPath,
         downloaded_at: Date.now(),
         title: recording.title,
         species_name: speciesName,
@@ -227,11 +216,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           await FileSystem.deleteAsync(downloadRecord.audio_path);
         }
 
-        const sonogramInfo = await FileSystem.getInfoAsync(downloadRecord.sonogram_path);
-        if (sonogramInfo.exists) {
-          await FileSystem.deleteAsync(downloadRecord.sonogram_path);
-        }
-
         // Remove from AsyncStorage
         await AsyncStorage.removeItem(downloadKey);
 
@@ -276,11 +260,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const audioInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
             if (audioInfo.exists) {
               await FileSystem.deleteAsync(downloadRecord.audio_path);
-            }
-
-            const sonogramInfo = await FileSystem.getInfoAsync(downloadRecord.sonogram_path);
-            if (sonogramInfo.exists) {
-              await FileSystem.deleteAsync(downloadRecord.sonogram_path);
             }
           } catch (e) {
             console.error("Error deleting files:", e);
