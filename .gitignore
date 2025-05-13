@@ -40,3 +40,4 @@ yarn-error.*
 /recordings
 /.env
 /ios
+package-lock.json

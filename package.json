@@ -6,10 +6,13 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "build Android preview": "eas build --platform android --profile preview",
+    "build Android production": "eas build --platform android --profile production",
+    "build iOS preview": "eas build --platform ios --profile preview",
+    "build iOS production": "eas build --platform ios --profile production"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -22,6 +25,7 @@
     "@tanstack/react-query": "^5.74.4",
     "eas-cli": "^16.3.2",
     "expo": "~52.0.46",
+    "expo-asset": "^11.1.5",
     "expo-av": "~15.0.2",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.8",
@@ -29,9 +33,11 @@
     "expo-linear-gradient": "~14.0.2",
     "expo-screen-orientation": "~8.0.4",
     "expo-secure-store": "~14.0.1",
+    "expo-splash-screen": "^0.30.8",
     "expo-sqlite": "~15.1.4",
     "expo-status-bar": "~2.0.1",
     "expo-system-ui": "~4.0.9",
+    "expo-video": "~2.0.6",
     "expo-video-player": "^2.2.0",
     "react": "18.3.1",
     "react-native": "0.76.9",
@@ -43,8 +49,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-uuid": "^2.0.3",
-    "react-native-vector-icons": "^10.2.0",
-    "expo-video": "~2.0.6"
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

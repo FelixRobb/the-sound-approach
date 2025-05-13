@@ -553,7 +553,7 @@ const RecordingDetailsScreen = () => {
           ref={videoViewRef}
           player={videoPlayer}
           style={styles.video}
-          contentFit={isVideoFullscreen ? "contain" : "fill"}
+          contentFit={isVideoFullscreen ? "contain" : "cover"}
           nativeControls={false}
         />
 

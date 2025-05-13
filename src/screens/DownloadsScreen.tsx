@@ -1,9 +1,9 @@
 "use client";
 
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useFocusEffect, useRoute } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useState, useEffect, useContext, useCallback, useRef } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
   View,
   Text,
@@ -166,9 +166,7 @@ const DownloadsScreen = () => {
   // Create styles with theme support
   const styles = StyleSheet.create({
     backgroundPattern: {
-      backgroundColor: isDarkMode
-        ? `${theme.colors.primary}08` // Very transparent primary color
-        : `${theme.colors.primary}05`,
+      backgroundColor: theme.colors.background,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -350,36 +348,29 @@ const DownloadsScreen = () => {
       fontWeight: "bold",
       marginRight: 8,
     },
-    offlineBadge: {
-      alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
-      borderRadius: 8,
-      flexDirection: "row",
-      marginTop: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    offlineBadgeText: {
-      color: theme.colors.error,
-      fontSize: 12,
-      marginLeft: 4,
-    },
     offlineBanner: {
       alignItems: "center",
-      backgroundColor: `${theme.colors.error}20`,
-      borderRadius: 8,
+      backgroundColor: isDarkMode ? `${theme.colors.error}15` : `${theme.colors.error}10`,
+      borderColor: `${theme.colors.error}30`,
+      borderRadius: 12,
+      borderWidth: 1,
       flexDirection: "row",
-      marginTop: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      width: "100%",
+      marginBottom: 20,
+      marginHorizontal: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      shadowColor: theme.colors.error,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      width: Dimensions.get("window").width - 40,
     },
     offlineBannerText: {
       color: theme.colors.error,
       flex: 1,
-      fontSize: 14,
-      fontWeight: "500",
-      marginLeft: 8,
+      fontSize: 15,
+      fontWeight: "600",
+      marginLeft: 12,
     },
     pageReference: {
       alignSelf: "flex-start",
@@ -451,17 +442,18 @@ const DownloadsScreen = () => {
           <View>
             <Text style={styles.title}>Downloads</Text>
             <Text style={styles.subtitle}>Manage your offline recordings</Text>
-            {!isConnected && (
-              <View style={styles.offlineBanner}>
-                <Ionicons name="cloud-offline" size={20} color={theme.colors.error} />
-                <Text style={styles.offlineBannerText}>
-                  Offline Mode - Only downloaded content is available
-                </Text>
-              </View>
-            )}
           </View>
         </View>
       </View>
+
+      {!isConnected && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline-outline" size={22} color={theme.colors.error} />
+          <Text style={styles.offlineBannerText}>
+            Offline Mode - Only downloaded content is available
+          </Text>
+        </View>
+      )}
 
       <View style={styles.storageInfoContainer}>
         <View style={styles.storageInfo}>
@@ -516,12 +508,6 @@ const DownloadsScreen = () => {
           <View style={styles.downloadHeader}>
             <Text style={styles.downloadTitle}>{item.title || "Unknown Recording"}</Text>
             <Text style={styles.scientificName}>{item.scientific_name || ""}</Text>
-            {!isConnected && (
-              <View style={styles.offlineBadge}>
-                <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
-                <Text style={styles.offlineBadgeText}>Offline Mode</Text>
-              </View>
-            )}
           </View>
 
           <View style={styles.downloadContent}>
@@ -619,16 +605,17 @@ const DownloadsScreen = () => {
           />
         }
       />
-
-      <TouchableOpacity
-        style={styles.manageStorageButton}
-        onPress={() => {
-          navigation.navigate("Profile");
-        }}
-      >
-        <Text style={styles.manageStorageText}>Manage Storage</Text>
-        <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
-      </TouchableOpacity>
+      {isConnected && (
+        <TouchableOpacity
+          style={styles.manageStorageButton}
+          onPress={() => {
+            navigation.navigate("Profile");
+          }}
+        >
+          <Text style={styles.manageStorageText}>Manage Storage</Text>
+          <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

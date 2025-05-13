@@ -14,7 +14,7 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
-import { ActivityIndicator, Chip } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DownloadContext } from "../context/DownloadContext";
@@ -43,9 +43,7 @@ const SearchScreen = () => {
   });
   const [recentSearches, setRecentSearches] = useState<SearchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings" | "pages">(
-    "all"
-  );
+  const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings">("all");
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
@@ -60,11 +58,14 @@ const SearchScreen = () => {
       right: 0,
       top: 0,
     },
-    chevronIcon: {
-      marginTop: -12,
-      position: "absolute",
-      right: 16,
-      top: "50%",
+    cardFooter: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderTopColor: theme.colors.outlineVariant,
+      borderTopWidth: 1,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      padding: 12,
     },
     clearText: {
       color: theme.colors.primary,
@@ -76,16 +77,16 @@ const SearchScreen = () => {
     },
     downloadedBadge: {
       alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 4,
+      backgroundColor: isDarkMode ? `${theme.colors.primary}30` : `${theme.colors.primary}15`,
+      borderRadius: 8,
       flexDirection: "row",
-      marginLeft: 8,
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
     downloadedText: {
-      color: theme.colors.onSurface,
+      color: theme.colors.primary,
       fontSize: 12,
+      fontWeight: "500",
       marginLeft: 4,
     },
     emptyContainer: {
@@ -115,14 +116,39 @@ const SearchScreen = () => {
       marginBottom: 8,
       textAlign: "center",
     },
-    filterChip: {
-      backgroundColor: isDarkMode ? theme.colors.surfaceVariant : theme.colors.surface,
-      marginRight: 8,
-    },
     filterContainer: {
-      marginBottom: 12,
-      marginTop: 8,
+      backgroundColor: theme.colors.surface,
+      borderBottomColor: isDarkMode ? `${theme.colors.outline}20` : `${theme.colors.outline}15`,
+      borderBottomWidth: 1,
+      flexDirection: "row",
+      justifyContent: "space-around",
       paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    filterTab: {
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 80,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    filterTabIndicator: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 1,
+      bottom: -1,
+      height: 2,
+      left: 0,
+      position: "absolute",
+      right: 0,
+    },
+    filterTabText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      textAlign: "center",
+    },
+    filterTabTextActive: {
+      color: theme.colors.primary,
+      fontWeight: "600",
     },
     header: {
       backgroundColor: theme.colors.surface,
@@ -192,15 +218,16 @@ const SearchScreen = () => {
     },
     pageReference: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
-      borderRadius: 12,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
       flexDirection: "row",
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
     pageText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 12,
+      fontWeight: "500",
       marginLeft: 4,
     },
     recentContainer: {
@@ -254,14 +281,19 @@ const SearchScreen = () => {
     },
     resultCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
-      elevation: 2,
-      marginVertical: 8,
-      padding: 16,
+      borderLeftColor: theme.colors.primary,
+      borderLeftWidth: 4,
+      borderRadius: 16,
+      elevation: 3,
+      marginVertical: 10,
+      overflow: "hidden",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.4 : 0.15,
+      shadowRadius: 6,
+    },
+    resultCardContent: {
+      padding: 16,
     },
     resultCount: {
       color: theme.colors.onSurfaceVariant,
@@ -269,25 +301,31 @@ const SearchScreen = () => {
       marginTop: 8,
     },
     resultHeader: {
-      marginBottom: 8,
+      alignItems: "flex-start",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 10,
     },
     resultMeta: {
-      alignItems: "center",
       flexDirection: "row",
-      marginTop: 8,
+      flexWrap: "wrap",
+      gap: 8,
+      marginTop: 10,
     },
     resultTitle: {
       color: theme.colors.onSurface,
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: "700",
+    },
+    resultTitleContainer: {
+      flex: 1,
+      marginRight: 8,
     },
     resultTypeIndicator: {
       alignItems: "center",
-      alignSelf: "flex-start",
       backgroundColor: isDarkMode ? `${theme.colors.secondary}20` : `${theme.colors.secondary}10`,
-      borderRadius: 12,
+      borderRadius: 8,
       flexDirection: "row",
-      marginTop: 12,
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
@@ -308,13 +346,13 @@ const SearchScreen = () => {
       color: theme.colors.onSurface,
       fontSize: 14,
       fontStyle: "italic",
-      marginTop: 4,
+      marginTop: 2,
     },
     searchContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.outlineVariant,
-      borderRadius: 20,
+      borderRadius: 50,
       borderWidth: 1,
       flexDirection: "row",
       height: 46,
@@ -344,29 +382,21 @@ const SearchScreen = () => {
       marginVertical: 16,
       width: "100%",
     },
-    speciesActionButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      position: "absolute",
-      right: 16,
-      top: "50%",
-      transform: [{ translateY: -20 }],
-      width: 40,
-    },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
-      elevation: 2,
-      marginVertical: 8,
-      padding: 16,
-      position: "relative",
+      borderLeftColor: theme.colors.secondary,
+      borderLeftWidth: 4,
+      borderRadius: 16,
+      elevation: 3,
+      marginVertical: 10,
+      overflow: "hidden",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.4 : 0.15,
+      shadowRadius: 6,
+    },
+    speciesCardContent: {
+      padding: 16,
     },
     speciesName: {
       color: theme.colors.onSurface,
@@ -377,7 +407,8 @@ const SearchScreen = () => {
       color: theme.colors.onSurface,
       fontSize: 14,
       fontStyle: "italic",
-      marginTop: 4,
+      marginBottom: 10,
+      marginTop: 2,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
@@ -385,14 +416,21 @@ const SearchScreen = () => {
       fontStyle: "italic",
       marginTop: 2,
     },
+
     title: {
       color: theme.colors.primary,
       fontSize: 28,
       fontWeight: "bold",
     },
-    titleContainer: {
+    viewDetailButton: {
+      alignItems: "center",
       flexDirection: "row",
-      justifyContent: "space-between",
+    },
+    viewDetailText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "600",
+      marginRight: 4,
     },
   });
 
@@ -547,46 +585,48 @@ const SearchScreen = () => {
         }}
         disabled={!isConnected}
       >
-        <View style={styles.resultHeader}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.resultTitle}>{item.title}</Text>
+        <View style={styles.resultCardContent}>
+          <View style={styles.resultHeader}>
+            <View style={styles.resultTitleContainer}>
+              <Text style={styles.resultTitle}>{item.title}</Text>
+              {item.species && (
+                <Text style={styles.scientificName}>{item.species.scientific_name}</Text>
+              )}
+            </View>
             {isDownloaded(item.id) && (
               <View style={styles.downloadedBadge}>
-                <Ionicons
-                  name="cloud-done-outline"
-                  size={14}
-                  color={isDarkMode ? "#81C784" : "#2E7D32"}
-                />
+                <Ionicons name="cloud-done-outline" size={14} color={theme.colors.primary} />
                 <Text style={styles.downloadedText}>Downloaded</Text>
               </View>
             )}
           </View>
-          {item.species && (
-            <Text style={styles.scientificName}>{item.species.scientific_name}</Text>
-          )}
-        </View>
 
-        <View style={styles.resultMeta}>
-          <View style={styles.pageReference}>
-            <Ionicons name="book-outline" size={14} color={theme.colors.primary} />
-            <Text style={styles.pageText}>Page {item.book_page_number}</Text>
-          </View>
+          <View style={styles.resultMeta}>
+            <View style={styles.pageReference}>
+              <Ionicons name="book-outline" size={14} color={theme.colors.tertiary} />
+              <Text style={styles.pageText}>Page {item.book_page_number}</Text>
+            </View>
 
-          <View style={styles.resultTypeIndicator}>
-            <Ionicons name="musical-notes-outline" size={12} color={theme.colors.secondary} />
-            <Text style={styles.resultTypeText}>Recording</Text>
+            <View style={styles.resultTypeIndicator}>
+              <Ionicons name="musical-notes-outline" size={12} color={theme.colors.secondary} />
+              <Text style={styles.resultTypeText}>Recording</Text>
+            </View>
           </View>
         </View>
 
         {isConnected && (
-          <TouchableOpacity
-            style={styles.chevronIcon}
-            onPress={() => {
-              handleNavigateToRecording(item.id);
-            }}
-          >
-            <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.cardFooter}>
+            <View>{/* You could add additional info here if needed */}</View>
+            <TouchableOpacity
+              style={styles.viewDetailButton}
+              onPress={() => {
+                handleNavigateToRecording(item.id);
+              }}
+            >
+              <Text style={styles.viewDetailText}>View Details</Text>
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
         )}
       </TouchableOpacity>
     );
@@ -602,25 +642,32 @@ const SearchScreen = () => {
         }}
         disabled={!isConnected}
       >
-        <View>
-          <Text style={styles.speciesName}>{item.common_name}</Text>
-          <Text style={styles.speciesScientificName}>{item.scientific_name}</Text>
-
-          <View style={styles.resultTypeIndicator}>
-            <Ionicons name="leaf-outline" size={12} color={theme.colors.secondary} />
-            <Text style={styles.resultTypeText}>Species</Text>
+        <View style={styles.speciesCardContent}>
+          <View>
+            <Text style={styles.speciesName}>{item.common_name}</Text>
+            <Text style={styles.speciesScientificName}>{item.scientific_name}</Text>
+            <View style={styles.resultMeta}>
+              <View style={styles.resultTypeIndicator}>
+                <Ionicons name="leaf-outline" size={12} color={theme.colors.secondary} />
+                <Text style={styles.resultTypeText}>Species</Text>
+              </View>
+            </View>
           </View>
         </View>
 
         {isConnected && (
-          <TouchableOpacity
-            style={styles.speciesActionButton}
-            onPress={() => {
-              handleNavigateToSpecies(item.id);
-            }}
-          >
-            <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View style={styles.cardFooter}>
+            <View>{/* You could add additional info here if needed */}</View>
+            <TouchableOpacity
+              style={styles.viewDetailButton}
+              onPress={() => {
+                handleNavigateToSpecies(item.id);
+              }}
+            >
+              <Text style={styles.viewDetailText}>View Details</Text>
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
         )}
       </TouchableOpacity>
     );
@@ -746,7 +793,6 @@ const SearchScreen = () => {
                 }
               }}
               style={[styles.searchInput, !isConnected && styles.searchInputDisabled]}
-              autoFocus={isConnected}
               selectionColor={theme.colors.primary}
               returnKeyType="search"
               onSubmitEditing={() => handleSearch(searchQuery)}
@@ -758,52 +804,60 @@ const SearchScreen = () => {
               </TouchableOpacity>
             )}
           </View>
+          {searchQuery && (
+            <>
+              <View style={styles.filterContainer}>
+                <TouchableOpacity onPress={() => setActiveFilter("all")} style={styles.filterTab}>
+                  <Text
+                    style={[
+                      styles.filterTabText,
+                      activeFilter === "all" && styles.filterTabTextActive,
+                    ]}
+                  >
+                    All
+                  </Text>
+                  {activeFilter === "all" && <View style={styles.filterTabIndicator} />}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setActiveFilter("species")}
+                  style={styles.filterTab}
+                >
+                  <Text
+                    style={[
+                      styles.filterTabText,
+                      activeFilter === "species" && styles.filterTabTextActive,
+                    ]}
+                  >
+                    Species
+                  </Text>
+                  {activeFilter === "species" && <View style={styles.filterTabIndicator} />}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setActiveFilter("recordings")}
+                  style={styles.filterTab}
+                >
+                  <Text
+                    style={[
+                      styles.filterTabText,
+                      activeFilter === "recordings" && styles.filterTabTextActive,
+                    ]}
+                  >
+                    Recordings
+                  </Text>
+                  {activeFilter === "recordings" && <View style={styles.filterTabIndicator} />}
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
       </View>
 
       {!isConnected ? (
         renderOfflineState()
       ) : searchQuery ? (
-        <>
-          <View style={styles.filterContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <Chip
-                selected={activeFilter === "all"}
-                onPress={() => setActiveFilter("all")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-              >
-                All
-              </Chip>
-              <Chip
-                selected={activeFilter === "species"}
-                onPress={() => setActiveFilter("species")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-              >
-                Species
-              </Chip>
-              <Chip
-                selected={activeFilter === "recordings"}
-                onPress={() => setActiveFilter("recordings")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-              >
-                Recordings
-              </Chip>
-              <Chip
-                selected={activeFilter === "pages"}
-                onPress={() => setActiveFilter("pages")}
-                style={styles.filterChip}
-                selectedColor={theme.colors.primary}
-                disabled={!/^\d+$/.test(sanitizeQuery(searchQuery))}
-              >
-                Pages
-              </Chip>
-            </ScrollView>
-          </View>
-          {renderSearchResults()}
-        </>
+        <>{renderSearchResults()}</>
       ) : (
         <View style={styles.recentContainer}>
           <View style={styles.recentHeader}>

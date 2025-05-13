@@ -8,6 +8,7 @@ import { useContext, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 
 import OfflineIndicator from "../components/OfflineIndicator";
+import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { OfflineContext, OfflineProvider } from "../context/OfflineContext";
@@ -228,19 +229,21 @@ const AppNavigator = () => {
   return (
     <View style={backgroundStyle.container}>
       <NavigationContainer theme={navTheme}>
-        <OfflineProvider>
-          {authState.isLoading ? (
-            <SplashScreen />
-          ) : authState.userToken ? (
-            isConnected ? (
-              <MainNavigator />
+        <AudioProvider>
+          <OfflineProvider>
+            {authState.isLoading ? (
+              <SplashScreen />
+            ) : authState.userToken ? (
+              isConnected ? (
+                <MainNavigator />
+              ) : (
+                <OfflineNavigator />
+              )
             ) : (
-              <OfflineNavigator />
-            )
-          ) : (
-            <AuthNavigator />
-          )}
-        </OfflineProvider>
+              <AuthNavigator />
+            )}
+          </OfflineProvider>
+        </AudioProvider>
       </NavigationContainer>
     </View>
   );

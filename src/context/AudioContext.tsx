@@ -1,5 +1,6 @@
 "use client";
 
+import { useNavigationState } from "@react-navigation/native";
 import type React from "react";
 import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import "react-native-get-random-values";
@@ -73,6 +74,10 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     error: null,
   });
 
+  // Track navigation state to detect screen changes
+  const currentRouteName = useNavigationState((state) => state?.routes[state.index]?.name);
+  const previousRouteRef = useRef<string | null>(null);
+
   // Keep track of the current audio URI
   const currentAudioUri = useRef<string | null>(null);
 
@@ -80,10 +85,29 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     audioService.addListener(listenerId, setAudioState);
 
+    // Cleanup function to ensure audio is unloaded when provider unmounts
     return () => {
       audioService.removeListener(listenerId);
+      audioService.unloadTrack().catch(console.error);
     };
   }, [listenerId, audioService]);
+
+  // Stop playback when route changes
+  useEffect(() => {
+    // Skip on first render
+    if (
+      previousRouteRef.current !== null &&
+      previousRouteRef.current !== currentRouteName &&
+      audioState.playbackState === "playing"
+    ) {
+      // Use stopPlayback for clean state reset when changing screens
+      audioService.unloadTrack().catch((error) => {
+        console.error("Error stopping playback during navigation:", error);
+      });
+    }
+
+    previousRouteRef.current = currentRouteName;
+  }, [currentRouteName, audioService, audioState.playbackState]);
 
   // Stop playback when going offline if the current track is not downloaded
   useEffect(() => {
