@@ -13,7 +13,6 @@ import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { supabase } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
 
 const ProfileSettingsScreen = () => {
@@ -132,13 +131,6 @@ const ProfileSettingsScreen = () => {
       fontWeight: "600",
       marginLeft: 8,
     },
-    securityOfflineText: {
-      color: theme.colors.error,
-      fontSize: 12,
-    },
-    securityOfflineView: {
-      marginLeft: "auto",
-    },
     storageBar: {
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 4,
@@ -229,45 +221,6 @@ const ProfileSettingsScreen = () => {
       console.error("Sign out error:", error);
     }
   };
-
-  // Handle account deletion
-  const handleDeleteAccount = () => {
-    if (!isConnected) {
-      Alert.alert(
-        "Cannot Delete Account While Offline",
-        "You need to be online to delete your account.",
-        [{ text: "OK" }]
-      );
-      return;
-    }
-
-    Alert.alert(
-      "Delete Account",
-      "Are you sure you want to delete your account? This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await supabase.functions.invoke("delete-account");
-
-              // Sign out after deletion
-              await signOut();
-            } catch (error) {
-              console.error("Delete account error:", error);
-              Alert.alert("Error", "Failed to delete account. Please try again later.");
-            }
-          },
-        },
-      ]
-    );
-  };
-
   // Handle clear all downloads
   const handleClearAllDownloads = () => {
     if (!isConnected) {
@@ -457,51 +410,6 @@ const ProfileSettingsScreen = () => {
             description="Free up storage space"
             left={(props) => <List.Icon {...props} icon="delete" color={theme.colors.error} />}
             onPress={handleClearAllDownloads}
-            disabled={!isConnected}
-            style={[styles.listItem, !isConnected && styles.disabledItem]}
-            titleStyle={[styles.listItemTitle, { color: theme.colors.error }]}
-            descriptionStyle={styles.listItemDescription}
-          />
-        </View>
-
-        {/* Security Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>Security</Text>
-            {!isConnected && (
-              <View style={styles.securityOfflineView}>
-                <Text style={styles.securityOfflineText}>Unavailable offline</Text>
-              </View>
-            )}
-          </View>
-
-          <List.Item
-            title="Change Password"
-            left={(props) => <List.Icon {...props} icon="key" color={theme.colors.primary} />}
-            onPress={() => {
-              if (!isConnected) {
-                Alert.alert(
-                  "Cannot Change Password While Offline",
-                  "You need to be online to change your password.",
-                  [{ text: "OK" }]
-                );
-                return;
-              }
-              Alert.alert("Coming Soon", "This feature will be available in a future update.");
-            }}
-            disabled={!isConnected}
-            style={[styles.listItem, !isConnected && styles.disabledItem]}
-            titleStyle={styles.listItemTitle}
-          />
-
-          <List.Item
-            title="Delete Account"
-            description="Permanently remove all your data"
-            left={(props) => (
-              <List.Icon {...props} icon="account-remove" color={theme.colors.error} />
-            )}
-            onPress={handleDeleteAccount}
             disabled={!isConnected}
             style={[styles.listItem, !isConnected && styles.disabledItem]}
             titleStyle={[styles.listItemTitle, { color: theme.colors.error }]}
