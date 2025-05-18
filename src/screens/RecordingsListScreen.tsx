@@ -573,7 +573,10 @@ const RecordingsListScreen = () => {
             {isConnected && (
               <TouchableOpacity
                 style={styles.iconButton}
-                onPress={() => setShowSearch((prev) => !prev)}
+                onPress={() => {
+                  setShowSearch((prev) => !prev);
+                  setSearchInput("");
+                }}
               >
                 <Ionicons
                   name={showSearch ? "close" : "search"}

@@ -20,6 +20,7 @@ const OfflineIndicator = () => {
     button: {
       backgroundColor: theme.colors.onError,
       borderRadius: 12,
+      marginBottom: 12,
       marginLeft: 8,
       paddingHorizontal: 8,
       paddingVertical: 2,
@@ -32,13 +33,12 @@ const OfflineIndicator = () => {
     container: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-
       borderTopColor: isDarkMode ? `${theme.colors.onError}30` : theme.colors.onError,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       elevation: 8,
       flexDirection: "row",
-      height: 50,
+      height: 60,
       justifyContent: "space-between",
       paddingHorizontal: 16,
       paddingVertical: 10,
@@ -49,6 +49,7 @@ const OfflineIndicator = () => {
       alignItems: "center",
       flexDirection: "row",
       flex: 1,
+      marginBottom: 12,
     },
     text: {
       color: theme.colors.error,

@@ -41,3 +41,9 @@ yarn-error.*
 /.env
 /ios
 package-lock.json
+
+/captions
+/e-sonagrams
+/high quality recordings
+/mp3s
+.env

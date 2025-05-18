@@ -108,6 +108,7 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.primary,
       borderRadius: 16,
       flexDirection: "row",
+      justifyContent: "center",
       paddingHorizontal: 24,
       paddingVertical: 16,
       width: "100%",
@@ -258,7 +259,7 @@ const RecordingDetailsScreen = () => {
     },
     playerContainer: {
       aspectRatio: 16 / 9,
-      backgroundColor: theme.colors.surfaceVariant,
+      backgroundColor: theme.colors.background,
       width: "100%",
     },
     playerContainerError: {
@@ -351,7 +352,6 @@ const RecordingDetailsScreen = () => {
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: "center",
-      backgroundColor: theme.colors.backdrop,
       justifyContent: "center",
     },
 
@@ -557,7 +557,14 @@ const RecordingDetailsScreen = () => {
           nativeControls={false}
         />
 
-        <TouchableOpacity style={styles.videoOverlay} onPress={togglePlayPause} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={[
+            styles.videoOverlay,
+            (!isPlaying || !isVideoLoaded) && { backgroundColor: theme.colors.backdrop },
+          ]}
+          onPress={togglePlayPause}
+          activeOpacity={0.8}
+        >
           {(!isPlaying || !isVideoLoaded) && (
             <View style={styles.playButton}>
               <Ionicons name="play" size={30} color={theme.colors.onPrimary} />

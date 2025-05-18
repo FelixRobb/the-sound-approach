@@ -1,7 +1,5 @@
-// src/context/AuthContext.tsx
 "use client";
 
-import * as SecureStore from "expo-secure-store";
 import type React from "react";
 import { createContext, useReducer, useEffect } from "react";
 
@@ -98,48 +96,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       null;
 
     const bootstrapAsync = async () => {
-      let userToken = null;
-      let user = null;
-
       try {
-        // Fetch the token and user from storage efficiently
-        const [tokenResult, userResult] = await Promise.all([
-          SecureStore.getItemAsync("userToken"),
-          SecureStore.getItemAsync("user"),
-        ]);
+        // Get the current session from Supabase
+        const { data: sessionData } = await supabase.auth.getSession();
 
-        userToken = tokenResult;
-
-        if (userResult) {
-          user = JSON.parse(userResult);
-        }
-
-        // Only validate with Supabase if we have a token
-        if (userToken) {
-          // Set up a session refresh mechanism for token validation
-          authStateSubscription = supabase.auth.onAuthStateChange((event, session) => {
-            if (event === "SIGNED_OUT") {
-              // Clear local storage and update state
-              SecureStore.deleteItemAsync("userToken");
-              SecureStore.deleteItemAsync("user");
-              dispatch({ type: "SIGN_OUT" });
-            } else if (event === "TOKEN_REFRESHED" && session) {
-              // Update the stored token
-              SecureStore.setItemAsync("userToken", session.access_token);
-            }
+        if (sessionData?.session) {
+          // Session exists, restore the user state
+          dispatch({
+            type: "RESTORE_TOKEN",
+            token: sessionData.session.access_token,
+            user: sessionData.session.user
+              ? {
+                  id: sessionData.session.user.id,
+                  email: sessionData.session.user.email || "",
+                }
+              : null,
           });
+        } else {
+          // No active session
+          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
         }
+
+        // Subscribe to auth state changes
+        authStateSubscription = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "SIGNED_OUT") {
+            // User signed out or was deleted
+            dispatch({ type: "SIGN_OUT" });
+          } else if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
+            // User signed in or token was refreshed
+            dispatch({
+              type: "RESTORE_TOKEN",
+              token: session.access_token,
+              user: session.user
+                ? {
+                    id: session.user.id,
+                    email: session.user.email || "",
+                  }
+                : null,
+            });
+          }
+        });
       } catch (e) {
         console.error("Failed to restore authentication state:", e);
+        dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
       }
-
-      // After restoring token, update state
-      dispatch({ type: "RESTORE_TOKEN", token: userToken, user });
     };
 
     bootstrapAsync();
 
-    // Clean up subscription to auth state when unmounting
+    // Clean up subscription when unmounting
     return () => {
       if (authStateSubscription) {
         authStateSubscription.data.subscription.unsubscribe();
@@ -162,10 +167,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (data?.user && data?.session) {
-          // Store the session
-          await SecureStore.setItemAsync("userToken", data.session.access_token);
-          await SecureStore.setItemAsync("user", JSON.stringify(data.user));
-
           dispatch({
             type: "SIGN_IN",
             token: data.session.access_token,
@@ -218,10 +219,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (data?.user && data?.session) {
-          // Store the session
-          await SecureStore.setItemAsync("userToken", data.session.access_token);
-          await SecureStore.setItemAsync("user", JSON.stringify(data.user));
-
           // Associate the user with the book code
           const { data: bookCodeData } = await supabase
             .from("book_codes")
@@ -258,8 +255,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: async () => {
       try {
         await supabase.auth.signOut();
-        await SecureStore.deleteItemAsync("userToken");
-        await SecureStore.deleteItemAsync("user");
         dispatch({ type: "SIGN_OUT" });
       } catch (e) {
         console.error("Error signing out:", e);
