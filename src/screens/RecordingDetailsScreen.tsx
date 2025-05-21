@@ -28,14 +28,15 @@ import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
-import type { RootStackParamList } from "../types";
+import type { Recording, RootStackParamList } from "../types";
 
 const RecordingDetailsScreen = () => {
   const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const { isConnected } = useContext(NetworkContext);
-  const { downloadRecording, isDownloaded, downloads } = useContext(DownloadContext);
+  const { downloadRecording, isDownloaded, downloads, deleteDownload } =
+    useContext(DownloadContext);
 
   const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -471,6 +472,33 @@ const RecordingDetailsScreen = () => {
     }
   };
 
+  const handleDeleteDownload = async (item: Recording) => {
+    if (!isConnected) {
+      Alert.alert(
+        "Cannot Delete While Offline",
+        "You need to be online to delete downloaded recordings.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteDownload(item.id).catch((error) => {
+            console.error("Delete error:", error);
+          });
+        },
+      },
+    ]);
+  };
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
@@ -653,9 +681,12 @@ const RecordingDetailsScreen = () => {
         subtitle={recording.species?.scientific_name}
         rightElement={
           isDownloaded(recording.id) && (
-            <View style={styles.detailHeaderDownloaded}>
+            <TouchableOpacity
+              style={styles.detailHeaderDownloaded}
+              onPress={() => navigation.navigate("Downloads")}
+            >
               <Ionicons name="cloud-done" size={20} color={theme.colors.onPrimary} />
-            </View>
+            </TouchableOpacity>
           )
         }
       />
@@ -705,8 +736,15 @@ const RecordingDetailsScreen = () => {
         <View style={styles.downloadCard}>
           {getDownloadStatus() === "completed" ? (
             <View style={styles.downloadedContainer}>
-              <Ionicons name="cloud-done" size={24} color={theme.colors.primary} />
-              <Text style={styles.downloadedText}>Available Offline</Text>
+              <TouchableOpacity
+                // eslint-disable-next-line react-native/no-inline-styles
+                style={[styles.downloadButton, !isConnected && { opacity: 0.5 }]}
+                onPress={() => handleDeleteDownload(recording)}
+                disabled={!isConnected}
+              >
+                <Ionicons name="trash-outline" size={24} color={theme.colors.onPrimary} />
+                <Text style={styles.downloadButtonText}>Remove Download</Text>
+              </TouchableOpacity>
             </View>
           ) : getDownloadStatus() === "downloading" ? (
             <View style={styles.downloadedContainer}>

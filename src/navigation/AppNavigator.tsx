@@ -59,10 +59,9 @@ const AuthNavigator = () => {
 
 // Main tab navigator
 const MainTabNavigator = () => {
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme } = useThemedStyles();
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: theme.colors.background,
       flex: 1,
     },
     tabBar: {
@@ -70,10 +69,6 @@ const MainTabNavigator = () => {
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       elevation: 8,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 4,
     },
     tabIcon: {
       marginTop: 4,
@@ -111,6 +106,14 @@ const MainTabNavigator = () => {
           tabBarLabelStyle: styles.tabLabel,
           headerShown: false,
           tabBarHideOnKeyboard: true,
+          contentStyle: { backgroundColor: theme.colors.background },
+          tabBarActiveBackgroundColor: theme.colors.surface,
+          tabBarInactiveBackgroundColor: theme.colors.surface,
+          animation: "fade",
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+          presentation: "card",
+          animationTypeForReplace: "push",
         })}
       >
         <Tab.Screen name="Recordings" component={RecordingsListScreen} />

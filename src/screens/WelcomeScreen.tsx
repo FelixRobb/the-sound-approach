@@ -25,11 +25,12 @@ const WelcomeScreen = () => {
     },
     button: {
       borderRadius: 24,
-      elevation: 2,
+      elevation: 4,
       marginVertical: 8,
+      opacity: 0.9,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.13,
+      shadowOpacity: 0.25,
       shadowRadius: 4,
     },
     buttonContainer: {

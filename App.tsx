@@ -64,7 +64,7 @@ const AppContent = () => {
 
   return (
     <View style={styles.container} onLayout={onLayoutRootView}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
+      <StatusBar style="auto" />
       <PaperProvider theme={paperTheme}>
         <QueryClientProvider client={queryClient}>
           <NetworkProvider>
