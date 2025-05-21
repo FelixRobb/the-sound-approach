@@ -40,6 +40,7 @@ yarn-error.*
 /recordings
 /.env
 /ios
+/android
 package-lock.json
 
 /captions
@@ -47,3 +48,4 @@ package-lock.json
 /high quality recordings
 /mp3s
 .env
+package-lock.json
