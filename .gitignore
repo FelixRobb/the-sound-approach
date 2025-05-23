@@ -41,8 +41,6 @@ yarn-error.*
 /.env
 /ios
 /android
-package-lock.json
-
 /captions
 /e-sonagrams
 /high quality recordings

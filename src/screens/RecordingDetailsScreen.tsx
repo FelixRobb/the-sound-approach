@@ -49,6 +49,7 @@ const RecordingDetailsScreen = () => {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const videoViewRef = useRef(null);
+  const [isSeekingOperation, setIsSeekingOperation] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -389,16 +390,19 @@ const RecordingDetailsScreen = () => {
   useEventListener(videoPlayer, "timeUpdate", (payload) => {
     if (!isSeeking) {
       setVideoPosition(payload.currentTime);
-      if (videoDuration === 0 && payload.bufferedPosition > 0) {
-        setVideoDuration(videoPlayer.duration || 0);
-        setIsVideoLoaded(true);
-      }
+      setSeekValue(payload.currentTime); // Keep seekValue in sync when not seeking
+    }
+    if (videoDuration === 0 && payload.bufferedPosition > 0) {
+      setVideoDuration(videoPlayer.duration || 0);
+      setIsVideoLoaded(true);
     }
   });
 
   // Listen for status changes
   useEventListener(videoPlayer, "playingChange", (payload) => {
-    setIsPlaying(payload.isPlaying);
+    if (!isSeekingOperation) {
+      setIsPlaying(payload.isPlaying);
+    }
   });
 
   // Handle orientation and fullscreen changes
@@ -519,12 +523,27 @@ const RecordingDetailsScreen = () => {
 
   const onSeekStart = () => {
     setIsSeeking(true);
+    setIsSeekingOperation(true);
   };
 
+  // Update the onSeekComplete function:
   const onSeekComplete = async (value: number) => {
     setIsSeeking(false);
     setVideoPosition(value);
+    setSeekValue(value);
     videoPlayer.currentTime = value;
+
+    // Use a small delay to allow the video player to settle before listening to playingChange again
+    setTimeout(() => {
+      setIsSeekingOperation(false);
+    }, 100);
+  };
+
+  // Update the onValueChange for the slider:
+  const onSeekValueChange = (value: number) => {
+    if (isSeeking) {
+      setSeekValue(value);
+    }
   };
 
   const renderVideoControls = (isFullscreen = false) => {
@@ -542,7 +561,7 @@ const RecordingDetailsScreen = () => {
           maximumValue={videoDuration}
           value={isSeeking ? seekValue : videoPosition}
           onSlidingStart={onSeekStart}
-          onValueChange={setSeekValue}
+          onValueChange={onSeekValueChange}
           onSlidingComplete={onSeekComplete}
           minimumTrackTintColor={theme.colors.primary}
           maximumTrackTintColor={theme.colors.surfaceVariant}
@@ -593,7 +612,7 @@ const RecordingDetailsScreen = () => {
           onPress={togglePlayPause}
           activeOpacity={0.8}
         >
-          {(!isPlaying || !isVideoLoaded) && (
+          {(!isPlaying || !isVideoLoaded) && !isSeekingOperation && (
             <View style={styles.playButton}>
               <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
             </View>
@@ -662,7 +681,7 @@ const RecordingDetailsScreen = () => {
           onPress={togglePlayPause}
           activeOpacity={1}
         >
-          {(!isPlaying || !isVideoLoaded) && (
+          {(!isPlaying || !isVideoLoaded) && !isSeekingOperation && (
             <View style={styles.playButton}>
               <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
             </View>

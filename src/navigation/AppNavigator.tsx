@@ -4,8 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useContext, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { useContext, useEffect, useState } from "react";
+import { Platform, Text, View, StyleSheet } from "react-native";
 
 import OfflineIndicator from "../components/OfflineIndicator";
 import { AudioProvider } from "../context/AudioContext";
@@ -58,25 +58,50 @@ const AuthNavigator = () => {
 };
 
 // Main tab navigator
+// Simple, modern MainTabNavigator
 const MainTabNavigator = () => {
   const { theme } = useThemedStyles();
+
   const styles = StyleSheet.create({
+    activeLabel: {
+      color: theme.colors.primary,
+      fontWeight: "600",
+    },
     container: {
       flex: 1,
+    },
+    iconContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 2,
+    },
+    inactiveLabel: {
+      color: theme.colors.onSurfaceVariant,
     },
     tabBar: {
       backgroundColor: theme.colors.surface,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
-      elevation: 8,
+      borderTopWidth: 0,
+      elevation: 12,
+      height: Platform.OS === "ios" ? 88 : 68,
+      paddingBottom: Platform.OS === "ios" ? 24 : 8,
+      paddingTop: 8,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
     },
-    tabIcon: {
-      marginTop: 4,
+    tabItem: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      paddingVertical: 4,
     },
     tabLabel: {
       fontSize: 12,
       fontWeight: "500",
-      marginBottom: 4,
+      textAlign: "center",
     },
   });
 
@@ -84,36 +109,42 @@ const MainTabNavigator = () => {
     <View style={styles.container}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            // Define iconName with the correct type
-            let iconName: keyof typeof Ionicons.glyphMap = focused
-              ? "musical-notes"
-              : "musical-notes-outline"; // Default icon for Recordings
+          tabBarIcon: ({ focused, color }) => {
+            let iconName: keyof typeof Ionicons.glyphMap = "ellipse";
 
-            if (route.name === "Downloads") {
-              iconName = focused ? "download" : "download-outline";
-            } else if (route.name === "Search") {
-              iconName = focused ? "search" : "search-outline";
-            } else if (route.name === "Profile") {
-              iconName = focused ? "person" : "person-outline";
+            switch (route.name) {
+              case "Recordings":
+                iconName = focused ? "musical-notes" : "musical-notes-outline";
+                break;
+              case "Search":
+                iconName = focused ? "search" : "search-outline";
+                break;
+              case "Downloads":
+                iconName = focused ? "download" : "download-outline";
+                break;
+              case "Profile":
+                iconName = focused ? "person" : "person-outline";
+                break;
             }
 
-            return <Ionicons name={iconName} size={size} color={color} style={styles.tabIcon} />;
+            return (
+              <View style={styles.iconContainer}>
+                <Ionicons name={iconName} size={focused ? 24 : 22} color={color} />
+              </View>
+            );
           },
+          tabBarLabel: ({ focused, children }) => (
+            <Text style={[styles.tabLabel, focused ? styles.activeLabel : styles.inactiveLabel]}>
+              {children}
+            </Text>
+          ),
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
           tabBarStyle: styles.tabBar,
-          tabBarLabelStyle: styles.tabLabel,
+          // Remove function, use just the style object
+          tabBarItemStyle: styles.tabItem,
           headerShown: false,
           tabBarHideOnKeyboard: true,
-          contentStyle: { backgroundColor: theme.colors.background },
-          tabBarActiveBackgroundColor: theme.colors.surface,
-          tabBarInactiveBackgroundColor: theme.colors.surface,
-          animation: "fade",
-          gestureEnabled: true,
-          gestureDirection: "horizontal",
-          presentation: "card",
-          animationTypeForReplace: "push",
         })}
       >
         <Tab.Screen name="Recordings" component={RecordingsListScreen} />
@@ -221,6 +252,9 @@ const AppNavigator = () => {
   const { theme } = useThemedStyles();
   const navTheme = isDarkMode ? navigationDarkTheme : navigationLightTheme;
 
+  // State to control splash screen visibility
+  const [showSplash, setShowSplash] = useState(true);
+
   // Add background color to ensure no white flashes
   const backgroundStyle = StyleSheet.create({
     container: {
@@ -229,13 +263,18 @@ const AppNavigator = () => {
     },
   });
 
+  // Handle splash screen finish
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+  };
+
   return (
     <View style={backgroundStyle.container}>
       <NavigationContainer theme={navTheme}>
         <AudioProvider>
           <OfflineProvider>
-            {authState.isLoading ? (
-              <SplashScreen />
+            {showSplash ? (
+              <SplashScreen onFinish={handleSplashFinish} />
             ) : authState.userToken ? (
               isConnected ? (
                 <MainNavigator />

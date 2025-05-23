@@ -8,6 +8,16 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#000000"
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -19,7 +29,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-icon/foreground.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -27,9 +37,6 @@
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "package": "com.robbfelix.soundapproachapp"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [

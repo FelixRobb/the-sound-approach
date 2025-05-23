@@ -1,18 +1,32 @@
 "use client";
 
 import { StatusBar } from "expo-status-bar";
-import React from "react";
-import { View, Text, StyleSheet, ImageBackground } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { useThemedStyles } from "../hooks/useThemedStyles";
 
-const SplashScreen = () => {
+interface SplashScreenProps {
+  onFinish: () => void;
+}
+
+const SplashScreen = ({ onFinish }: SplashScreenProps) => {
   const { theme } = useThemedStyles();
 
+  // Effect to handle the splash screen timing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onFinish();
+    }, 1000); // Show for 2 seconds
+
+    return () => clearTimeout(timer);
+  }, [onFinish]);
+
   const styles = StyleSheet.create({
-    backgroundImage: {
+    background: {
+      backgroundColor: theme.colors.background,
       flex: 1,
       height: "100%",
       justifyContent: "center",
@@ -49,11 +63,7 @@ const SplashScreen = () => {
   });
 
   return (
-    <ImageBackground
-      source={require("../../assets/image.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
+    <View style={styles.background}>
       <StatusBar style="light" />
       <View style={styles.overlay}>
         <View style={styles.logoCircle}>
@@ -62,7 +72,7 @@ const SplashScreen = () => {
         <Text style={styles.title}>The Sound Approach</Text>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 

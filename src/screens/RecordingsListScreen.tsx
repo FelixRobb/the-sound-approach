@@ -55,7 +55,23 @@ const RecordingsListScreen = () => {
   const [showSearch, setShowSearch] = useState(false);
   const insets = useSafeAreaInsets();
 
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<"title" | "species" | "page">("page");
+  const [showFilters, setShowFilters] = useState(false);
+  const [downloadedFilter, setDownloadedFilter] = useState<"all" | "downloaded" | "not_downloaded">(
+    "all"
+  );
+
   const styles = StyleSheet.create({
+    activeBadge: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 4,
+      height: 8,
+      position: "absolute",
+      right: 6,
+      top: 6,
+      width: 8,
+    },
     activeTab: {
       backgroundColor: theme.colors.primary,
     },
@@ -102,6 +118,70 @@ const RecordingsListScreen = () => {
       fontSize: 12,
       marginLeft: 4,
     },
+    dropdownArrow: {
+      backgroundColor: theme.colors.surface,
+      height: 8,
+      position: "absolute",
+      right: 20,
+      top: -4,
+      transform: [{ rotate: "45deg" }],
+      width: 8,
+    },
+    dropdownDivider: {
+      backgroundColor: theme.colors.outlineVariant,
+      height: 1,
+      marginVertical: 8,
+      opacity: 0.5,
+    },
+    dropdownOption: {
+      alignItems: "center",
+      borderRadius: 8,
+      flexDirection: "row",
+      minHeight: 36,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    dropdownOptionActive: {
+      backgroundColor: `${theme.colors.primary}15`,
+    },
+    dropdownOptionText: {
+      color: theme.colors.onSurface,
+      flex: 1,
+      fontSize: 14,
+      marginLeft: 10,
+    },
+    dropdownOptionTextActive: {
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
+    dropdownOptions: {
+      gap: 2,
+    },
+    dropdownResetButton: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+      marginHorizontal: 8,
+      marginTop: 4,
+      paddingVertical: 8,
+    },
+    dropdownResetText: {
+      color: theme.colors.primary,
+      fontSize: 13,
+      fontWeight: "500",
+      marginLeft: 6,
+    },
+    dropdownSection: {
+      paddingHorizontal: 4,
+    },
+    dropdownSectionTitle: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+      fontWeight: "600",
+      marginBottom: 8,
+      marginLeft: 12,
+      textTransform: "uppercase",
+    },
     emptyContainer: {
       alignItems: "center",
       flex: 1,
@@ -138,6 +218,31 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
+    filterDropdown: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 8,
+      minWidth: 200,
+      paddingVertical: 12,
+      position: "absolute" as const,
+      right: 20,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      top: 80 + insets.top,
+      zIndex: 1000,
+    },
+    // eslint-disable-next-line react-native/no-color-literals
+    filterOverlay: {
+      backgroundColor: "transparent",
+      bottom: 0,
+      left: 0,
+      position: "absolute",
+      right: 0,
+      top: 0,
+      zIndex: 999,
+    },
     header: {
       backgroundColor: theme.colors.surface,
       borderBottomLeftRadius: 24,
@@ -151,6 +256,23 @@ const RecordingsListScreen = () => {
       shadowRadius: 4,
       zIndex: 1,
     },
+    headerActions: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
+    },
+    headerButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 12,
+      height: 40,
+      justifyContent: "center",
+      position: "relative",
+      width: 40,
+    },
+    headerButtonActive: {
+      backgroundColor: `${theme.colors.primary}15`,
+    },
     headerInner: {
       paddingHorizontal: 20,
     },
@@ -159,9 +281,6 @@ const RecordingsListScreen = () => {
       flexDirection: "row",
       justifyContent: "space-between",
       marginBottom: 16,
-    },
-    iconButton: {
-      padding: 8,
     },
     listContainer: {
       flex: 1,
@@ -416,30 +535,326 @@ const RecordingsListScreen = () => {
     }
   }, [isConnected, refetchRecordings, refetchSpecies]);
 
-  // Filter recordings based on search query
-  const filteredRecordings = recordings?.filter((recording) => {
-    if (!debouncedSearchQuery) return true;
+  // Calculate search score for recordings based on match quality
+  const getRecordingSearchScore = (recording: Recording, query: string): number => {
+    if (!query) return 1; // Return high score if no query (show all)
 
-    const query = debouncedSearchQuery.toLowerCase();
-    return (
-      recording.title.toLowerCase().includes(query) ||
-      recording.caption.toLowerCase().includes(query) ||
-      recording.species?.common_name.toLowerCase().includes(query) ||
-      recording.species?.scientific_name.toLowerCase().includes(query) ||
-      recording.book_page_number.toString().includes(query)
-    );
-  });
+    const lowerQuery = query.toLowerCase();
+    let score = 0;
 
-  // Filter species based on search query
-  const filteredSpecies = species?.filter((species) => {
-    if (!debouncedSearchQuery) return true;
+    // Exact title match (highest priority)
+    if (recording.title.toLowerCase() === lowerQuery) {
+      score += 100;
+    }
+    // Title starts with query
+    else if (recording.title.toLowerCase().startsWith(lowerQuery)) {
+      score += 80;
+    }
+    // Title contains query
+    else if (recording.title.toLowerCase().includes(lowerQuery)) {
+      score += 60;
+    }
 
-    const query = debouncedSearchQuery.toLowerCase();
-    return (
-      species.common_name.toLowerCase().includes(query) ||
-      species.scientific_name.toLowerCase().includes(query)
-    );
-  });
+    // Exact scientific name match (high priority)
+    if (recording.species?.scientific_name.toLowerCase() === lowerQuery) {
+      score += 90;
+    }
+    // Scientific name starts with query
+    else if (recording.species?.scientific_name.toLowerCase().startsWith(lowerQuery)) {
+      score += 70;
+    }
+    // Scientific name contains query
+    else if (recording.species?.scientific_name.toLowerCase().includes(lowerQuery)) {
+      score += 50;
+    }
+
+    // Exact common name match (medium-high priority)
+    if (recording.species?.common_name.toLowerCase() === lowerQuery) {
+      score += 85;
+    }
+    // Common name starts with query
+    else if (recording.species?.common_name.toLowerCase().startsWith(lowerQuery)) {
+      score += 65;
+    }
+    // Common name contains query
+    else if (recording.species?.common_name.toLowerCase().includes(lowerQuery)) {
+      score += 45;
+    }
+
+    // Caption contains query (lower priority)
+    if (recording.caption.toLowerCase().includes(lowerQuery)) {
+      score += 30;
+    }
+
+    // Book page number exact match (lowest priority but still relevant)
+    if (recording.book_page_number.toString() === lowerQuery) {
+      score += 35;
+    }
+    // Book page number contains query
+    else if (recording.book_page_number.toString().includes(lowerQuery)) {
+      score += 15;
+    }
+
+    return score;
+  };
+
+  const getSpeciesSearchScore = (species: Species, query: string): number => {
+    if (!query) return 1; // Return high score if no query (show all)
+
+    const lowerQuery = query.toLowerCase();
+    let score = 0;
+
+    // Exact common name match (highest priority)
+    if (species.common_name.toLowerCase() === lowerQuery) {
+      score += 100;
+    }
+    // Common name starts with query
+    else if (species.common_name.toLowerCase().startsWith(lowerQuery)) {
+      score += 80;
+    }
+    // Common name contains query
+    else if (species.common_name.toLowerCase().includes(lowerQuery)) {
+      score += 60;
+    }
+
+    // Exact scientific name match (high priority)
+    if (species.scientific_name.toLowerCase() === lowerQuery) {
+      score += 90;
+    }
+    // Scientific name starts with query
+    else if (species.scientific_name.toLowerCase().startsWith(lowerQuery)) {
+      score += 70;
+    }
+    // Scientific name contains query
+    else if (species.scientific_name.toLowerCase().includes(lowerQuery)) {
+      score += 50;
+    }
+
+    return score;
+  };
+
+  const filteredAndSortedRecordings = recordings
+    ?.map((recording) => ({
+      item: recording,
+      score: getRecordingSearchScore(recording, debouncedSearchQuery),
+    }))
+    .filter(({ item, score }) => {
+      // Search filter
+      if (debouncedSearchQuery && score === 0) return false;
+
+      // Download status filter
+      if (downloadedFilter === "downloaded" && !isDownloaded(item.id)) return false;
+      if (downloadedFilter === "not_downloaded" && isDownloaded(item.id)) return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      // If there's a search query, prioritize by search score first
+      if (debouncedSearchQuery) {
+        if (a.score !== b.score) {
+          return b.score - a.score;
+        }
+      }
+
+      // Then sort by selected criteria
+      let comparison = 0;
+
+      switch (sortBy) {
+        case "title":
+          comparison = a.item.title.localeCompare(b.item.title);
+          break;
+        case "species":
+          comparison = (a.item.species?.common_name || "").localeCompare(
+            b.item.species?.common_name || ""
+          );
+          break;
+        case "page":
+          comparison = a.item.book_page_number - b.item.book_page_number;
+          break;
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    })
+    .map(({ item }) => item);
+
+  // Enhanced species filtering and sorting
+  const filteredAndSortedSpecies = species
+    ?.map((species) => ({
+      item: species,
+      score: getSpeciesSearchScore(species, debouncedSearchQuery),
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => {
+      // If there's a search query, prioritize by search score first
+      if (debouncedSearchQuery) {
+        if (a.score !== b.score) {
+          return b.score - a.score;
+        }
+      }
+
+      // Then sort alphabetically by common name
+      const comparison = a.item.common_name.localeCompare(b.item.common_name);
+      return sortOrder === "asc" ? comparison : -comparison;
+    })
+    .map(({ item }) => item);
+
+  // Filter Panel Component - add this before the main component return
+  const FilterDropdown = () => (
+    <View style={styles.filterDropdown}>
+      <View style={styles.dropdownArrow} />
+      <View style={styles.dropdownSection}>
+        {activeTab === "book" && (
+          <>
+            <Text style={styles.dropdownSectionTitle}>Sort by</Text>
+            <View style={styles.dropdownOptions}>
+              {[
+                { key: "page", label: "Page", icon: "book" },
+                { key: "title", label: "Title", icon: "text" },
+                { key: "species", label: "Species", icon: "leaf" },
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[
+                    styles.dropdownOption,
+                    sortBy === option.key && styles.dropdownOptionActive,
+                  ]}
+                  onPress={() => setSortBy(option.key as typeof sortBy)}
+                >
+                  <Ionicons
+                    name={option.icon as React.ComponentProps<typeof Ionicons>["name"]}
+                    size={16}
+                    color={
+                      sortBy === option.key ? theme.colors.primary : theme.colors.onSurfaceVariant
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.dropdownOptionText,
+                      sortBy === option.key && styles.dropdownOptionTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {sortBy === option.key && (
+                    <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.dropdownDivider} />
+          </>
+        )}
+
+        <View style={styles.dropdownSection}>
+          <Text style={styles.dropdownSectionTitle}>Order</Text>
+          <View style={styles.dropdownOptions}>
+            <TouchableOpacity
+              style={[styles.dropdownOption, sortOrder === "asc" && styles.dropdownOptionActive]}
+              onPress={() => setSortOrder("asc")}
+            >
+              <Ionicons
+                name="arrow-up"
+                size={16}
+                color={sortOrder === "asc" ? theme.colors.primary : theme.colors.onSurfaceVariant}
+              />
+              <Text
+                style={[
+                  styles.dropdownOptionText,
+                  sortOrder === "asc" && styles.dropdownOptionTextActive,
+                ]}
+              >
+                A → Z
+              </Text>
+              {sortOrder === "asc" && (
+                <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dropdownOption, sortOrder === "desc" && styles.dropdownOptionActive]}
+              onPress={() => setSortOrder("desc")}
+            >
+              <Ionicons
+                name="arrow-down"
+                size={16}
+                color={sortOrder === "desc" ? theme.colors.primary : theme.colors.onSurfaceVariant}
+              />
+              <Text
+                style={[
+                  styles.dropdownOptionText,
+                  sortOrder === "desc" && styles.dropdownOptionTextActive,
+                ]}
+              >
+                Z → A
+              </Text>
+              {sortOrder === "desc" && (
+                <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {activeTab === "book" && (
+          <>
+            <View style={styles.dropdownDivider} />
+            <View style={styles.dropdownSection}>
+              <Text style={styles.dropdownSectionTitle}>Filter</Text>
+              <View style={styles.dropdownOptions}>
+                {[
+                  { key: "all", label: "All", icon: "list" },
+                  { key: "downloaded", label: "Downloaded", icon: "cloud-done" },
+                  { key: "not_downloaded", label: "Not Downloaded", icon: "cloud-outline" },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.dropdownOption,
+                      downloadedFilter === option.key && styles.dropdownOptionActive,
+                    ]}
+                    onPress={() => setDownloadedFilter(option.key as typeof downloadedFilter)}
+                  >
+                    <Ionicons
+                      name={option.icon as React.ComponentProps<typeof Ionicons>["name"]}
+                      size={16}
+                      color={
+                        downloadedFilter === option.key
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.dropdownOptionText,
+                        downloadedFilter === option.key && styles.dropdownOptionTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {downloadedFilter === option.key && (
+                      <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
+        <View style={styles.dropdownDivider} />
+
+        <TouchableOpacity
+          style={styles.dropdownResetButton}
+          onPress={() => {
+            setSortBy("page");
+            setSortOrder("asc");
+            setDownloadedFilter("all");
+            setShowFilters(false);
+          }}
+        >
+          <Ionicons name="refresh" size={14} color={theme.colors.primary} />
+          <Text style={styles.dropdownResetText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
@@ -571,19 +986,43 @@ const RecordingsListScreen = () => {
               )}
             </View>
             {isConnected && (
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => {
-                  setShowSearch((prev) => !prev);
-                  setSearchInput("");
-                }}
-              >
-                <Ionicons
-                  name={showSearch ? "close" : "search"}
-                  size={24}
-                  color={theme.colors.primary}
-                />
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  style={[
+                    styles.headerButton,
+                    (sortBy !== "page" || sortOrder !== "asc" || downloadedFilter !== "all") &&
+                      styles.headerButtonActive,
+                  ]}
+                  onPress={() => setShowFilters(!showFilters)}
+                >
+                  <Ionicons
+                    name="options"
+                    size={20}
+                    color={
+                      sortBy !== "page" || sortOrder !== "asc" || downloadedFilter !== "all"
+                        ? theme.colors.primary
+                        : theme.colors.onSurfaceVariant
+                    }
+                  />
+                  {(sortBy !== "page" || sortOrder !== "asc" || downloadedFilter !== "all") && (
+                    <View style={styles.activeBadge} />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.headerButton}
+                  onPress={() => {
+                    setShowSearch((prev) => !prev);
+                    setSearchInput("");
+                    setShowFilters(false);
+                  }}
+                >
+                  <Ionicons
+                    name={showSearch ? "close" : "search"}
+                    size={20}
+                    color={theme.colors.onSurfaceVariant}
+                  />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
 
@@ -686,42 +1125,54 @@ const RecordingsListScreen = () => {
         </View>
       ) : (
         isConnected && (
-          <View style={styles.listContainer}>
-            {activeTab === "book" ? (
-              <FlatList
-                data={filteredRecordings}
-                renderItem={renderRecordingItem}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={recordingsLoading}
-                    onRefresh={refetchRecordings}
-                    colors={[theme.colors.primary]}
-                    tintColor={theme.colors.primary}
-                  />
-                }
-                ListEmptyComponent={<EmptyState type="recordings" />}
-              />
-            ) : (
-              <FlatList
-                data={filteredSpecies}
-                renderItem={renderSpeciesItem}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={speciesLoading}
-                    onRefresh={refetchSpecies}
-                    colors={[theme.colors.primary]}
-                    tintColor={theme.colors.primary}
-                  />
-                }
-                ListEmptyComponent={<EmptyState type="species" />}
-              />
-            )}
-          </View>
+          <>
+            <View style={styles.listContainer}>
+              {/* Only render the active tab's FlatList */}
+              {activeTab === "book" && (
+                <FlatList
+                  data={filteredAndSortedRecordings}
+                  renderItem={renderRecordingItem}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={recordingsLoading}
+                      onRefresh={refetchRecordings}
+                      colors={[theme.colors.primary]}
+                      tintColor={theme.colors.primary}
+                    />
+                  }
+                  ListEmptyComponent={<EmptyState type="recordings" />}
+                />
+              )}
+              {activeTab === "species" && (
+                <FlatList
+                  data={filteredAndSortedSpecies}
+                  renderItem={renderSpeciesItem}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={speciesLoading}
+                      onRefresh={refetchSpecies}
+                      colors={[theme.colors.primary]}
+                      tintColor={theme.colors.primary}
+                    />
+                  }
+                  ListEmptyComponent={<EmptyState type="species" />}
+                />
+              )}
+            </View>
+            {showFilters && <FilterDropdown />}
+          </>
         )
+      )}
+      {showFilters && (
+        <TouchableOpacity
+          style={styles.filterOverlay}
+          activeOpacity={1}
+          onPress={() => setShowFilters(false)}
+        />
       )}
     </View>
   );

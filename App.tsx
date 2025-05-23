@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useContext } from "react";
 import { StyleSheet, View } from "react-native";
@@ -12,9 +11,6 @@ import { NetworkProvider } from "./src/context/NetworkContext";
 import { ThemeProvider, ThemeContext } from "./src/context/ThemeContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { lightTheme, darkTheme } from "./src/theme";
-
-// Keep the splash screen visible while we initialize resources
-SplashScreen.preventAutoHideAsync();
 
 // Create a client for React Query
 const queryClient = new QueryClient();
