@@ -526,7 +526,6 @@ const DownloadsScreen = () => {
             </View>
 
             <View style={styles.downloadActions}>
-              {/* Use MiniAudioPlayer with the downloaded audio file path */}
               {audioUri && (
                 <View style={styles.playButton}>
                   <MiniAudioPlayer trackId={item.recording_id} audioUri={audioUri} size={40} />

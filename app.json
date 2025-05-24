@@ -7,7 +7,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -21,7 +23,12 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["audio", "audio", "audio", "audio"],
+        "UIBackgroundModes": [
+          "audio",
+          "audio",
+          "audio",
+          "audio"
+        ],
         "UIViewControllerBasedStatusBarAppearance": true,
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -45,9 +52,8 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "7f33bec7-30da-4d56-b98d-52c01f621e3b"
+        "projectId": "3d115900-9fb5-46eb-871d-3a693480d059"
       }
-    },
-    "owner": "robbfelix"
+    }
   }
 }

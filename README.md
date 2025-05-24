@@ -120,3 +120,13 @@ Required environment variables:
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+# Paid stuff
+
+- supabase 25€ per month ok
+- developer account apple 99€ per month
+- google developer 25€ onee time
+- cursor 20€ per month, or 16€ per month paid yearly
+- expo based on usage. no idea how much, depends on what is used ok
+- email smtp???
+-

@@ -30,7 +30,7 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
 
 # typescript
 *.tsbuildinfo
@@ -38,13 +38,11 @@ yarn-error.*
 /node_modules
 /sonograms
 /recordings
-/.env
 /ios
 /android
 /captions
 /e-sonagrams
 /high quality recordings
 /mp3s
-.env
 package-lock.json
 package-lock.json
