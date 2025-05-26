@@ -5,13 +5,11 @@ import { useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 
 import { NetworkContext } from "../context/NetworkContext";
-import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
 
 const OfflineIndicator = () => {
   const { isConnected } = useContext(NetworkContext);
-  const { isDarkMode } = useContext(ThemeContext);
   const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const screenWidth = Dimensions.get("window").width;
@@ -33,7 +31,7 @@ const OfflineIndicator = () => {
     container: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderTopColor: isDarkMode ? `${theme.colors.onError}30` : theme.colors.onError,
+      borderTopColor: theme.colors.error,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       elevation: 8,

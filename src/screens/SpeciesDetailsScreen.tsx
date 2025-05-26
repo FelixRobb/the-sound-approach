@@ -12,7 +12,6 @@ import DetailHeader from "../components/DetailHeader";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
@@ -25,7 +24,6 @@ const SpeciesDetailsScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
   const { isConnected } = useContext(NetworkContext);
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { isDarkMode } = useContext(ThemeContext);
   const { theme } = useThemedStyles();
 
   const { speciesId } = route.params;
@@ -43,9 +41,7 @@ const SpeciesDetailsScreen = () => {
   // Create styles with theme support
   const styles = StyleSheet.create({
     backgroundPattern: {
-      backgroundColor: isDarkMode
-        ? `${theme.colors.primary}08` // Very transparent primary color
-        : `${theme.colors.primary}05`,
+      backgroundColor: theme.colors.background,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -67,7 +63,7 @@ const SpeciesDetailsScreen = () => {
       padding: 16,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.22,
+      shadowOpacity: 0.3,
       shadowRadius: 2.22,
     },
     container: {
@@ -110,7 +106,7 @@ const SpeciesDetailsScreen = () => {
       padding: 24,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
       width: width * 0.8,
     },
@@ -151,7 +147,7 @@ const SpeciesDetailsScreen = () => {
       padding: 24,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
       width: width * 0.8,
     },
@@ -181,7 +177,7 @@ const SpeciesDetailsScreen = () => {
       paddingRight: 12,
     },
     recordingCountBadge: {
-      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
+      backgroundColor: theme.colors.onPrimary,
       borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 4,
@@ -320,11 +316,7 @@ const SpeciesDetailsScreen = () => {
 
           {recordings.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons
-                name="musical-notes"
-                size={48}
-                color={isDarkMode ? "rgba(255, 255, 255, 0.3)" : "#E0E0E0"}
-              />
+              <Ionicons name="musical-notes" size={48} color={theme.colors.primary} />
               <Text style={styles.emptyText}>No recordings available</Text>
             </View>
           ) : (

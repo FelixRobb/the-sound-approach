@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useContext, useEffect, useState } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import { useContext, useEffect } from "react";
 import { Platform, Text, View, StyleSheet } from "react-native";
 
 import OfflineIndicator from "../components/OfflineIndicator";
@@ -12,7 +13,6 @@ import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { OfflineContext, OfflineProvider } from "../context/OfflineContext";
-import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import OfflineNavigator from "../navigation/OfflineNavigator";
 import DownloadsScreen from "../screens/DownloadsScreen";
@@ -24,7 +24,6 @@ import RecordingsListScreen from "../screens/RecordingsListScreen";
 import SearchScreen from "../screens/SearchScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import SpeciesDetailsScreen from "../screens/SpeciesDetailsScreen";
-import SplashScreen from "../screens/SplashScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { navigationDarkTheme, navigationLightTheme } from "../theme";
 
@@ -58,7 +57,6 @@ const AuthNavigator = () => {
 };
 
 // Main tab navigator
-// Simple, modern MainTabNavigator
 const MainTabNavigator = () => {
   const { theme } = useThemedStyles();
 
@@ -88,9 +86,9 @@ const MainTabNavigator = () => {
       paddingBottom: Platform.OS === "ios" ? 24 : 8,
       paddingTop: 8,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
+      shadowOffset: { width: 0, height: -14 },
+      shadowOpacity: 0.8,
+      shadowRadius: 18,
     },
     tabItem: {
       alignItems: "center",
@@ -141,7 +139,9 @@ const MainTabNavigator = () => {
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
           tabBarStyle: styles.tabBar,
-          // Remove function, use just the style object
+          animation: "shift",
+          animationTypeForReplace: "push",
+          animationDuration: 300,
           tabBarItemStyle: styles.tabItem,
           headerShown: false,
           tabBarHideOnKeyboard: true,
@@ -160,7 +160,7 @@ const MainTabNavigator = () => {
 // Main stack navigator that includes the tab navigator
 const MainNavigator = () => {
   const { handleOfflineRedirect } = useContext(OfflineContext);
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme } = useThemedStyles();
   const { isConnected } = useContext(NetworkContext);
 
   // Redirect to Downloads when going offline
@@ -221,7 +221,7 @@ const MainNavigator = () => {
             gestureEnabled: true,
             animation: "slide_from_bottom",
             contentStyle: {
-              backgroundColor: isDarkMode ? "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0.3)",
+              backgroundColor: theme.colors.background,
             },
           }}
         />
@@ -247,13 +247,19 @@ const MainNavigator = () => {
 // Root navigator that switches between auth and main flows
 const AppNavigator = () => {
   const { state: authState } = useContext(AuthContext);
-  const { isDarkMode } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
-  const { theme } = useThemedStyles();
+  const { theme, isDarkMode } = useThemedStyles();
   const navTheme = isDarkMode ? navigationDarkTheme : navigationLightTheme;
 
-  // State to control splash screen visibility
-  const [showSplash, setShowSplash] = useState(true);
+  // Effect to hide the splash screen once auth state is determined
+  useEffect(() => {
+    const hideSplash = async () => {
+      if (authState.userToken !== undefined) {
+        await SplashScreen.hideAsync();
+      }
+    };
+    hideSplash();
+  }, [authState.userToken]); // Rerun when auth state changes
 
   // Add background color to ensure no white flashes
   const backgroundStyle = StyleSheet.create({
@@ -263,19 +269,12 @@ const AppNavigator = () => {
     },
   });
 
-  // Handle splash screen finish
-  const handleSplashFinish = () => {
-    setShowSplash(false);
-  };
-
   return (
     <View style={backgroundStyle.container}>
       <NavigationContainer theme={navTheme}>
         <AudioProvider>
           <OfflineProvider>
-            {showSplash ? (
-              <SplashScreen onFinish={handleSplashFinish} />
-            ) : authState.userToken ? (
+            {authState.userToken ? ( // Directly check authState
               isConnected ? (
                 <MainNavigator />
               ) : (

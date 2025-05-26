@@ -34,7 +34,7 @@ const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isConnected } = useContext(NetworkContext);
   const { isDownloaded } = useContext(DownloadContext);
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme } = useThemedStyles();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResults>({
@@ -48,9 +48,7 @@ const SearchScreen = () => {
 
   const styles = StyleSheet.create({
     backgroundPattern: {
-      backgroundColor: isDarkMode
-        ? `${theme.colors.primary}08` // Very transparent primary color
-        : `${theme.colors.primary}05`,
+      backgroundColor: theme.colors.background,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -77,7 +75,7 @@ const SearchScreen = () => {
     },
     downloadedBadge: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.primary}30` : `${theme.colors.primary}15`,
+      backgroundColor: theme.colors.onPrimary,
       borderRadius: 8,
       flexDirection: "row",
       paddingHorizontal: 8,
@@ -118,7 +116,7 @@ const SearchScreen = () => {
     },
     filterContainer: {
       backgroundColor: theme.colors.surface,
-      borderBottomColor: isDarkMode ? `${theme.colors.outline}20` : `${theme.colors.outline}15`,
+      borderBottomColor: theme.colors.outline,
       borderBottomWidth: 1,
       flexDirection: "row",
       justifyContent: "space-around",
@@ -188,7 +186,7 @@ const SearchScreen = () => {
     },
     offlineBadge: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      backgroundColor: theme.colors.error,
       borderRadius: 8,
       flexDirection: "row",
       marginTop: 4,
@@ -249,12 +247,12 @@ const SearchScreen = () => {
       padding: 16,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
     },
     recentItemIcon: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
+      backgroundColor: theme.colors.onPrimary,
       borderRadius: 20,
       height: 40,
       justifyContent: "center",
@@ -289,7 +287,7 @@ const SearchScreen = () => {
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.4 : 0.15,
+      shadowOpacity: 0.4,
       shadowRadius: 6,
     },
     resultCardContent: {
@@ -323,7 +321,7 @@ const SearchScreen = () => {
     },
     resultTypeIndicator: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.secondary}20` : `${theme.colors.secondary}10`,
+      backgroundColor: theme.colors.onSecondary,
       borderRadius: 8,
       flexDirection: "row",
       paddingHorizontal: 8,
@@ -375,9 +373,7 @@ const SearchScreen = () => {
       color: theme.colors.onSurfaceDisabled,
     },
     sectionDivider: {
-      backgroundColor: isDarkMode
-        ? `${theme.colors.surfaceVariant}50`
-        : `${theme.colors.surfaceVariant}80`,
+      backgroundColor: theme.colors.surfaceVariant,
       height: 1,
       marginVertical: 16,
       width: "100%",
@@ -392,7 +388,7 @@ const SearchScreen = () => {
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.4 : 0.15,
+      shadowOpacity: 0.4,
       shadowRadius: 6,
     },
     speciesCardContent: {
@@ -603,7 +599,7 @@ const SearchScreen = () => {
 
           <View style={styles.resultMeta}>
             <View style={styles.pageReference}>
-              <Ionicons name="book-outline" size={14} color={theme.colors.tertiary} />
+              <Ionicons name="book-outline" size={14} color={theme.colors.onPrimary} />
               <Text style={styles.pageText}>Page {item.book_page_number}</Text>
             </View>
 
@@ -713,7 +709,7 @@ const SearchScreen = () => {
           <Ionicons
             name="search-outline"
             size={60}
-            color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.3)"}
+            color={theme.colors.surface}
             style={styles.emptyIcon}
           />
           <Text style={styles.emptyTitle}>No Results Found</Text>
@@ -906,7 +902,7 @@ const SearchScreen = () => {
               <Ionicons
                 name="search-outline"
                 size={60}
-                color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.3)"}
+                color={theme.colors.primary}
                 style={styles.emptyIcon}
               />
               <Text style={styles.emptyTitle}>No Recent Searches</Text>

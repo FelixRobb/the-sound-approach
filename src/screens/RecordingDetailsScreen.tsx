@@ -20,6 +20,7 @@ import {
   BackHandler,
   StatusBar,
   Animated,
+  Dimensions,
 } from "react-native";
 
 import DetailHeader from "../components/DetailHeader";
@@ -29,6 +30,8 @@ import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
 import type { Recording, RootStackParamList } from "../types";
+
+const { width } = Dimensions.get("window");
 
 const RecordingDetailsScreen = () => {
   const { theme } = useThemedStyles();
@@ -52,6 +55,15 @@ const RecordingDetailsScreen = () => {
   const [isSeekingOperation, setIsSeekingOperation] = useState(false);
 
   const styles = StyleSheet.create({
+    backgroundPattern: {
+      backgroundColor: theme.colors.background,
+      bottom: 0,
+      left: 0,
+      opacity: 0.6,
+      position: "absolute",
+      right: 0,
+      top: 0,
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -73,15 +85,15 @@ const RecordingDetailsScreen = () => {
     },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 24,
-      elevation: 4,
-      marginBottom: 20,
+      borderRadius: 16,
+      elevation: 3,
+      marginBottom: 16,
       overflow: "hidden",
       padding: 20,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
     },
     descriptionText: {
       color: theme.colors.onSurfaceVariant,
@@ -96,47 +108,50 @@ const RecordingDetailsScreen = () => {
     },
     descriptionTitle: {
       color: theme.colors.onSurface,
-      fontSize: 20,
-      fontWeight: "600",
+      fontSize: 18,
+      fontWeight: "bold",
       marginBottom: 12,
     },
-    detailHeaderDownloaded: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      padding: 8,
+    disabledButton: {
+      opacity: 0.5,
     },
     downloadButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 16,
+      borderRadius: 12,
       flexDirection: "row",
       justifyContent: "center",
-      paddingHorizontal: 24,
-      paddingVertical: 16,
+      paddingHorizontal: 20,
+      paddingVertical: 14,
       width: "100%",
+    },
+    downloadButtonSmall: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 50,
+      padding: 8,
     },
     downloadButtonText: {
       color: theme.colors.onPrimary,
       fontSize: 16,
       fontWeight: "600",
-      marginLeft: 12,
+      marginLeft: 8,
     },
     downloadCard: {
-      alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 24,
-      elevation: 4,
-      marginBottom: 20,
+      borderRadius: 16,
+      elevation: 3,
+      marginBottom: 16,
       overflow: "hidden",
       padding: 20,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
     },
     downloadedContainer: {
       alignItems: "center",
       flexDirection: "row",
+      justifyContent: "center",
     },
     downloadedText: {
       color: theme.colors.primary,
@@ -147,14 +162,14 @@ const RecordingDetailsScreen = () => {
     errorCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 24,
+      borderRadius: 16,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      width: "90%",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      width: width * 0.9,
     },
     errorContainer: {
       alignItems: "center",
@@ -201,7 +216,8 @@ const RecordingDetailsScreen = () => {
       bottom: 40,
       flexDirection: "row",
       left: 20,
-      padding: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
       position: "absolute",
       right: 20,
       zIndex: 1000,
@@ -229,6 +245,30 @@ const RecordingDetailsScreen = () => {
     fullscreenVideo: {
       flex: 1,
     },
+    loadingCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 4,
+      padding: 24,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      width: width * 0.9,
+    },
+    loadingContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: 20,
+    },
+    loadingText: {
+      color: theme.colors.onSurface,
+      fontSize: 16,
+      marginTop: 16,
+      textAlign: "center",
+    },
     offlineText: {
       color: theme.colors.error,
       fontSize: 14,
@@ -241,13 +281,14 @@ const RecordingDetailsScreen = () => {
     },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.primaryContainer,
+      backgroundColor: theme.colors.primary,
       borderRadius: 12,
+      marginBottom: 12,
       paddingHorizontal: 12,
       paddingVertical: 6,
     },
     pageText: {
-      color: theme.colors.onPrimaryContainer,
+      color: theme.colors.onPrimary,
       fontSize: 14,
       fontWeight: "600",
     },
@@ -274,7 +315,7 @@ const RecordingDetailsScreen = () => {
     retryButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 16,
+      borderRadius: 12,
       paddingHorizontal: 24,
       paddingVertical: 12,
     },
@@ -287,7 +328,7 @@ const RecordingDetailsScreen = () => {
       color: theme.colors.onSurfaceVariant,
       fontSize: 16,
       fontStyle: "italic",
-      marginBottom: 12,
+      marginBottom: 4,
     },
     slider: {
       flex: 1,
@@ -296,7 +337,7 @@ const RecordingDetailsScreen = () => {
     },
     speciesButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
+      backgroundColor: theme.colors.primary,
       borderTopColor: theme.colors.outlineVariant,
       borderTopWidth: 1,
       flexDirection: "row",
@@ -304,29 +345,29 @@ const RecordingDetailsScreen = () => {
       padding: 16,
     },
     speciesButtonText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 16,
       fontWeight: "600",
       marginRight: 8,
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 24,
-      elevation: 4,
-      marginBottom: 20,
+      borderRadius: 16,
+      elevation: 3,
+      marginBottom: 16,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
     },
     speciesHeader: {
       padding: 20,
     },
     speciesName: {
       color: theme.colors.onSurface,
-      fontSize: 24,
-      fontWeight: "700",
+      fontSize: 22,
+      fontWeight: "bold",
       marginBottom: 4,
     },
     timeText: {
@@ -339,28 +380,28 @@ const RecordingDetailsScreen = () => {
     },
     videoContainer: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 24,
-      elevation: 4,
-      marginBottom: 20,
+      borderRadius: 16,
+      elevation: 3,
+      marginBottom: 16,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
     },
     videoHeader: {
       padding: 20,
+      paddingBottom: 12,
     },
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: "center",
       justifyContent: "center",
     },
-
     videoTitle: {
       color: theme.colors.onSurface,
-      fontSize: 20,
-      fontWeight: "600",
+      fontSize: 18,
+      fontWeight: "bold",
     },
   });
 
@@ -390,7 +431,7 @@ const RecordingDetailsScreen = () => {
   useEventListener(videoPlayer, "timeUpdate", (payload) => {
     if (!isSeeking) {
       setVideoPosition(payload.currentTime);
-      setSeekValue(payload.currentTime); // Keep seekValue in sync when not seeking
+      setSeekValue(payload.currentTime);
     }
     if (videoDuration === 0 && payload.bufferedPosition > 0) {
       setVideoDuration(videoPlayer.duration || 0);
@@ -526,20 +567,17 @@ const RecordingDetailsScreen = () => {
     setIsSeekingOperation(true);
   };
 
-  // Update the onSeekComplete function:
   const onSeekComplete = async (value: number) => {
     setIsSeeking(false);
     setVideoPosition(value);
     setSeekValue(value);
     videoPlayer.currentTime = value;
 
-    // Use a small delay to allow the video player to settle before listening to playingChange again
     setTimeout(() => {
       setIsSeekingOperation(false);
     }, 100);
   };
 
-  // Update the onValueChange for the slider:
   const onSeekValueChange = (value: number) => {
     if (isSeeking) {
       setSeekValue(value);
@@ -552,7 +590,7 @@ const RecordingDetailsScreen = () => {
     return (
       <View style={containerStyle}>
         <TouchableOpacity onPress={togglePlayPause}>
-          <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.onPrimary} />
+          <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.primary} />
         </TouchableOpacity>
 
         <Slider
@@ -577,7 +615,7 @@ const RecordingDetailsScreen = () => {
           <Ionicons
             name={isVideoFullscreen ? "contract" : "expand"}
             size={24}
-            color={theme.colors.onPrimary}
+            color={theme.colors.primary}
           />
         </TouchableOpacity>
       </View>
@@ -624,12 +662,19 @@ const RecordingDetailsScreen = () => {
     );
   };
 
+  // Background pattern component
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
+
   if (isLoading) {
     return (
       <View style={styles.container}>
+        <BackgroundPattern />
         <DetailHeader title="Loading..." />
-        <View style={styles.errorContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Loading recording...</Text>
+          </View>
         </View>
       </View>
     );
@@ -638,6 +683,7 @@ const RecordingDetailsScreen = () => {
   if (error || !recording) {
     return (
       <View style={styles.container}>
+        <BackgroundPattern />
         <DetailHeader title="Error" />
         <View style={styles.errorContainer}>
           <View style={styles.errorCard}>
@@ -695,31 +741,24 @@ const RecordingDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <BackgroundPattern />
       <DetailHeader
         title={recording.title}
         subtitle={recording.species?.scientific_name}
         rightElement={
-          isDownloaded(recording.id) && (
+          getDownloadStatus() === "completed" && (
             <TouchableOpacity
-              style={styles.detailHeaderDownloaded}
-              onPress={() => navigation.navigate("Downloads")}
+              style={styles.downloadButtonSmall}
+              onPress={() => navigation.navigate("MainTabs", { screen: "Downloads" })}
             >
-              <Ionicons name="cloud-done" size={20} color={theme.colors.onPrimary} />
+              <Ionicons name="cloud-done" size={24} color={theme.colors.onPrimary} />
             </TouchableOpacity>
           )
         }
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Animated.View
-          style={[
-            styles.speciesCard,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
+        <View style={styles.speciesCard}>
           <View style={styles.speciesHeader}>
             <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
             <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
@@ -735,10 +774,10 @@ const RecordingDetailsScreen = () => {
               }
             >
               <Text style={styles.speciesButtonText}>View Species Details</Text>
-              <Ionicons name="arrow-forward" size={20} color={theme.colors.primary} />
+              <Ionicons name="arrow-forward" size={20} color={theme.colors.onPrimary} />
             </TouchableOpacity>
           )}
-        </Animated.View>
+        </View>
 
         <View style={styles.videoContainer}>
           <View style={styles.videoHeader}>
@@ -756,8 +795,7 @@ const RecordingDetailsScreen = () => {
           {getDownloadStatus() === "completed" ? (
             <View style={styles.downloadedContainer}>
               <TouchableOpacity
-                // eslint-disable-next-line react-native/no-inline-styles
-                style={[styles.downloadButton, !isConnected && { opacity: 0.5 }]}
+                style={[styles.downloadButton, !isConnected && styles.disabledButton]}
                 onPress={() => handleDeleteDownload(recording)}
                 disabled={!isConnected}
               >
@@ -773,8 +811,7 @@ const RecordingDetailsScreen = () => {
           ) : (
             <>
               <TouchableOpacity
-                // eslint-disable-next-line react-native/no-inline-styles
-                style={[styles.downloadButton, !isConnected && { opacity: 0.5 }]}
+                style={[styles.downloadButton, !isConnected && styles.disabledButton]}
                 onPress={handleDownload}
                 disabled={!isConnected}
               >

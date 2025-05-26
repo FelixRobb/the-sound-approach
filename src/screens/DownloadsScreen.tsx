@@ -20,7 +20,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
 import { RootStackParamList } from "../types";
@@ -31,7 +30,6 @@ const DownloadsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
     useContext(DownloadContext);
-  const { isDarkMode } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
@@ -175,13 +173,13 @@ const DownloadsScreen = () => {
       top: 0,
     },
     clearAllButton: {
-      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}15`,
+      backgroundColor: theme.colors.primary,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 6,
     },
     clearAllText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 14,
       fontWeight: "bold",
     },
@@ -191,7 +189,7 @@ const DownloadsScreen = () => {
     },
     deleteButton: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
+      backgroundColor: theme.colors.error,
       borderRadius: 20,
       height: 40,
       justifyContent: "center",
@@ -217,7 +215,7 @@ const DownloadsScreen = () => {
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.22,
+      shadowOpacity: 0.3,
       shadowRadius: 2.22,
     },
     downloadContent: {
@@ -232,7 +230,7 @@ const DownloadsScreen = () => {
       marginTop: 4,
     },
     downloadHeader: {
-      borderBottomColor: isDarkMode ? theme.colors.surfaceVariant : theme.colors.surfaceVariant,
+      borderBottomColor: theme.colors.surfaceVariant,
       borderBottomWidth: 1,
       padding: 16,
       paddingBottom: 8,
@@ -253,7 +251,7 @@ const DownloadsScreen = () => {
       padding: 24,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
       width: width * 0.8,
     },
@@ -301,7 +299,7 @@ const DownloadsScreen = () => {
     },
     listContent: {
       padding: 16,
-      paddingBottom: 80, // Extra space for button at bottom
+      paddingBottom: 80,
     },
     loadingCard: {
       alignItems: "center",
@@ -311,7 +309,7 @@ const DownloadsScreen = () => {
       padding: 24,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
       width: width * 0.8,
     },
@@ -340,7 +338,7 @@ const DownloadsScreen = () => {
       right: 20,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.2,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
     },
     manageStorageText: {
@@ -350,12 +348,11 @@ const DownloadsScreen = () => {
     },
     offlineBanner: {
       alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.error}15` : `${theme.colors.error}10`,
-      borderColor: `${theme.colors.error}30`,
+      backgroundColor: theme.colors.error,
+      borderColor: theme.colors.onError,
       borderRadius: 12,
       borderWidth: 1,
       flexDirection: "row",
-      marginBottom: 20,
       marginHorizontal: 20,
       paddingHorizontal: 16,
       paddingVertical: 6,
@@ -366,7 +363,7 @@ const DownloadsScreen = () => {
       width: Dimensions.get("window").width - 40,
     },
     offlineBannerText: {
-      color: theme.colors.error,
+      color: theme.colors.onError,
       flex: 1,
       fontSize: 15,
       fontWeight: "600",
@@ -374,7 +371,7 @@ const DownloadsScreen = () => {
     },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: isDarkMode ? `${theme.colors.primary}20` : `${theme.colors.primary}10`,
+      backgroundColor: theme.colors.primary,
       borderRadius: 12,
       marginBottom: 4,
       marginTop: 4,
@@ -382,7 +379,7 @@ const DownloadsScreen = () => {
       paddingVertical: 2,
     },
     pageText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 12,
     },
     playButton: {
@@ -408,7 +405,7 @@ const DownloadsScreen = () => {
       justifyContent: "space-between",
     },
     storageInfoContainer: {
-      backgroundColor: isDarkMode ? `${theme.colors.primary}15` : `${theme.colors.primary}08`,
+      backgroundColor: theme.colors.surface,
       borderBottomLeftRadius: 20,
       borderBottomRightRadius: 20,
       paddingHorizontal: 16,
@@ -448,7 +445,7 @@ const DownloadsScreen = () => {
 
       {!isConnected && (
         <View style={styles.offlineBanner}>
-          <Ionicons name="cloud-offline-outline" size={22} color={theme.colors.error} />
+          <Ionicons name="cloud-offline-outline" size={22} color={theme.colors.onError} />
           <Text style={styles.offlineBannerText}>
             Offline Mode - Only downloaded content is available
           </Text>
@@ -540,7 +537,7 @@ const DownloadsScreen = () => {
                 <Ionicons
                   name="trash-outline"
                   size={22}
-                  color={isConnected ? theme.colors.error : theme.colors.onSurfaceDisabled}
+                  color={isConnected ? theme.colors.onError : theme.colors.onSurfaceDisabled}
                 />
               </TouchableOpacity>
             </View>
@@ -612,7 +609,7 @@ const DownloadsScreen = () => {
           }}
         >
           <Text style={styles.manageStorageText}>Manage Storage</Text>
-          <Ionicons name="settings-outline" size={18} color="#FFFFFF" />
+          <Ionicons name="settings-outline" size={18} color={theme.colors.onPrimary} />
         </TouchableOpacity>
       )}
     </View>

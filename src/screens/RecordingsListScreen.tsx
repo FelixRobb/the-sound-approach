@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   TextInput,
+  ScrollView,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -47,7 +48,7 @@ const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isConnected } = useContext(NetworkContext);
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme } = useThemedStyles();
 
   const [activeTab, setActiveTab] = useState("book");
   const [searchInput, setSearchInput] = useState("");
@@ -57,32 +58,22 @@ const RecordingsListScreen = () => {
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [sortBy, setSortBy] = useState<"title" | "species" | "page">("page");
-  const [showFilters, setShowFilters] = useState(false);
   const [downloadedFilter, setDownloadedFilter] = useState<"all" | "downloaded" | "not_downloaded">(
     "all"
   );
 
   const styles = StyleSheet.create({
-    activeBadge: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 4,
-      height: 8,
-      position: "absolute",
-      right: 6,
-      top: 6,
-      width: 8,
-    },
     activeTab: {
       backgroundColor: theme.colors.primary,
     },
+
     activeTabText: {
       color: theme.colors.onPrimary,
       fontWeight: "600",
     },
+
     backgroundPattern: {
-      backgroundColor: isDarkMode
-        ? `${theme.colors.primary}08` // Very transparent primary color
-        : `${theme.colors.primary}05`,
+      backgroundColor: theme.colors.background,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -90,107 +81,49 @@ const RecordingsListScreen = () => {
       right: 0,
       top: 0,
     },
+
     caption: {
-      color: theme.colors.onSurface,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 14,
-      lineHeight: 20,
-      marginBottom: 8,
+      lineHeight: 18,
     },
+
     captionContainer: {
       flex: 1,
-      marginRight: 12,
     },
+
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
+
     downloadedIndicator: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 4,
-      flexDirection: "row",
-      marginLeft: 8,
-      paddingHorizontal: 6,
-      paddingVertical: 3,
-    },
-    downloadedText: {
-      color: theme.colors.onSurface,
-      fontSize: 12,
-      marginLeft: 4,
-    },
-    dropdownArrow: {
-      backgroundColor: theme.colors.surface,
-      height: 8,
-      position: "absolute",
-      right: 20,
-      top: -4,
-      transform: [{ rotate: "45deg" }],
-      width: 8,
-    },
-    dropdownDivider: {
-      backgroundColor: theme.colors.outlineVariant,
-      height: 1,
-      marginVertical: 8,
-      opacity: 0.5,
-    },
-    dropdownOption: {
-      alignItems: "center",
       borderRadius: 8,
       flexDirection: "row",
-      minHeight: 36,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
     },
-    dropdownOptionActive: {
-      backgroundColor: `${theme.colors.primary}15`,
-    },
-    dropdownOptionText: {
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 14,
-      marginLeft: 10,
-    },
-    dropdownOptionTextActive: {
-      color: theme.colors.primary,
-      fontWeight: "500",
-    },
-    dropdownOptions: {
-      gap: 2,
-    },
-    dropdownResetButton: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-      marginHorizontal: 8,
-      marginTop: 4,
-      paddingVertical: 8,
-    },
-    dropdownResetText: {
-      color: theme.colors.primary,
-      fontSize: 13,
-      fontWeight: "500",
-      marginLeft: 6,
-    },
-    dropdownSection: {
-      paddingHorizontal: 4,
-    },
-    dropdownSectionTitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
+
+    downloadedText: {
+      color: theme.colors.onPrimary,
+      fontSize: 11,
       fontWeight: "600",
-      marginBottom: 8,
-      marginLeft: 12,
-      textTransform: "uppercase",
+      marginLeft: 4,
     },
+
     emptyContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
       paddingTop: 40,
     },
+
     emptyIcon: {
       marginBottom: 16,
     },
+
     emptyText: {
       color: theme.colors.onSurface,
       fontSize: 16,
@@ -198,6 +131,7 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
+
     emptyTitle: {
       color: theme.colors.onSurface,
       fontSize: 18,
@@ -205,6 +139,7 @@ const RecordingsListScreen = () => {
       marginBottom: 8,
       textAlign: "center",
     },
+
     errorContainer: {
       alignItems: "center",
       flex: 1,
@@ -218,37 +153,90 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
-    filterDropdown: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 8,
-      minWidth: 200,
-      paddingVertical: 12,
-      position: "absolute" as const,
-      right: 20,
+
+    filterButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 20,
+      elevation: 1,
+      flexDirection: "row",
+      marginRight: 10,
+      marginVertical: 2,
+      minHeight: 32,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      top: 80 + insets.top,
-      zIndex: 1000,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
     },
-    // eslint-disable-next-line react-native/no-color-literals
-    filterOverlay: {
-      backgroundColor: "transparent",
-      bottom: 0,
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
-      zIndex: 999,
+
+    filterButtonActive: {
+      backgroundColor: theme.colors.primary,
+      elevation: 2,
+      shadowOpacity: 0.15,
+    },
+
+    filterButtonIcon: {
+      marginRight: 6,
+    },
+
+    filterButtonText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "500",
+    },
+
+    filterButtonTextActive: {
+      color: theme.colors.onPrimary,
+      fontWeight: "600",
+    },
+
+    filterButtonsContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 24,
+      elevation: 3,
+      marginHorizontal: 8,
+      marginTop: 8,
+      paddingHorizontal: 0,
+      paddingVertical: 6,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+    },
+
+    filterDivider: {
+      alignSelf: "center",
+      backgroundColor: theme.colors.outlineVariant,
+      borderRadius: 1,
+      height: 24,
+      marginHorizontal: 10,
+      opacity: 0.4,
+      width: 1.5,
+    },
+    filterRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      paddingHorizontal: 8,
+    },
+    filterSectionTitle: {
+      alignSelf: "center",
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 10,
+      fontWeight: "600",
+      letterSpacing: 0.5,
+      marginLeft: 0,
+      marginRight: 8,
+      opacity: 0.7,
+      textTransform: "uppercase",
     },
     header: {
       backgroundColor: theme.colors.surface,
       borderBottomLeftRadius: 24,
       borderBottomRightRadius: 24,
       elevation: 4,
-      paddingBottom: 20,
+      paddingBottom: 8,
       paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -259,19 +247,18 @@ const RecordingsListScreen = () => {
     headerActions: {
       alignItems: "center",
       flexDirection: "row",
+      flexShrink: 1,
       gap: 8,
     },
     headerButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 12,
-      height: 40,
+      borderRadius: 22,
+      height: 44,
       justifyContent: "center",
+      paddingHorizontal: 0,
       position: "relative",
-      width: 40,
-    },
-    headerButtonActive: {
-      backgroundColor: `${theme.colors.primary}15`,
+      width: 44,
     },
     headerInner: {
       paddingHorizontal: 20,
@@ -295,118 +282,65 @@ const RecordingsListScreen = () => {
     loadingText: {
       color: theme.colors.onSurface,
     },
-    offlineBadge: {
-      alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
-      borderRadius: 8,
-      flexDirection: "row",
-      marginTop: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    offlineBadgeText: {
-      color: theme.colors.error,
-      fontSize: 12,
-      marginLeft: 4,
-    },
-    offlineBanner: {
-      alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
-      borderColor: theme.colors.error,
-      borderRadius: 12,
-      borderWidth: 1,
-      flex: 1,
-      justifyContent: "center",
-      margin: 16,
-      padding: 16,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-    },
-    offlineBannerButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      flexDirection: "row",
-      marginTop: 20,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-    },
-    offlineBannerButtonText: {
-      color: theme.colors.onPrimary,
-      fontWeight: "bold",
-      marginLeft: 8,
-    },
-    offlineBannerIcon: {
-      marginBottom: 16,
-    },
-    offlineBannerText: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      marginHorizontal: 20,
-      textAlign: "center",
-    },
-    offlineTab: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceDisabled,
-      borderRadius: 20,
-      flexDirection: "row",
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
-    offlineTabText: {
-      color: theme.colors.onSurfaceDisabled,
-      fontSize: 14,
-      marginLeft: 6,
-    },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 4,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 6,
       paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingVertical: 3,
     },
     pageText: {
-      color: theme.colors.onSurface,
-      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 11,
+      fontWeight: "600",
+    },
+    recordingActions: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
     },
     recordingCard: {
       backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outline,
       borderRadius: 12,
+      borderWidth: 0.5,
       elevation: 2,
-      marginVertical: 8,
-      padding: 16,
+      marginHorizontal: 2,
+      marginVertical: 4,
+      padding: 14,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
     },
     recordingContent: {
-      alignItems: "center",
+      alignItems: "flex-end",
       flexDirection: "row",
+      gap: 12,
       justifyContent: "space-between",
     },
     recordingHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
       marginBottom: 8,
     },
     recordingTitle: {
       color: theme.colors.onSurface,
-      flex: 1,
       fontSize: 16,
       fontWeight: "700",
+      lineHeight: 20,
+      marginBottom: 2,
     },
     scientificName: {
-      color: theme.colors.onSurface,
-      fontSize: 14,
+      color: theme.colors.primary,
+      fontSize: 13,
       fontStyle: "italic",
-      marginTop: 2,
+      fontWeight: "500",
+    },
+    scrollViewFilters: {
+      alignItems: "center",
+      paddingRight: 8,
     },
     searchContainer: {
       alignItems: "center",
@@ -446,7 +380,7 @@ const RecordingsListScreen = () => {
       padding: 16,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 3,
     },
     speciesContent: {
@@ -496,9 +430,8 @@ const RecordingsListScreen = () => {
       fontWeight: "bold",
     },
     titleContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
+      flex: 1,
+      marginRight: 12,
     },
   });
 
@@ -698,164 +631,6 @@ const RecordingsListScreen = () => {
     })
     .map(({ item }) => item);
 
-  // Filter Panel Component - add this before the main component return
-  const FilterDropdown = () => (
-    <View style={styles.filterDropdown}>
-      <View style={styles.dropdownArrow} />
-      <View style={styles.dropdownSection}>
-        {activeTab === "book" && (
-          <>
-            <Text style={styles.dropdownSectionTitle}>Sort by</Text>
-            <View style={styles.dropdownOptions}>
-              {[
-                { key: "page", label: "Page", icon: "book" },
-                { key: "title", label: "Title", icon: "text" },
-                { key: "species", label: "Species", icon: "leaf" },
-              ].map((option) => (
-                <TouchableOpacity
-                  key={option.key}
-                  style={[
-                    styles.dropdownOption,
-                    sortBy === option.key && styles.dropdownOptionActive,
-                  ]}
-                  onPress={() => setSortBy(option.key as typeof sortBy)}
-                >
-                  <Ionicons
-                    name={option.icon as React.ComponentProps<typeof Ionicons>["name"]}
-                    size={16}
-                    color={
-                      sortBy === option.key ? theme.colors.primary : theme.colors.onSurfaceVariant
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.dropdownOptionText,
-                      sortBy === option.key && styles.dropdownOptionTextActive,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                  {sortBy === option.key && (
-                    <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-            <View style={styles.dropdownDivider} />
-          </>
-        )}
-
-        <View style={styles.dropdownSection}>
-          <Text style={styles.dropdownSectionTitle}>Order</Text>
-          <View style={styles.dropdownOptions}>
-            <TouchableOpacity
-              style={[styles.dropdownOption, sortOrder === "asc" && styles.dropdownOptionActive]}
-              onPress={() => setSortOrder("asc")}
-            >
-              <Ionicons
-                name="arrow-up"
-                size={16}
-                color={sortOrder === "asc" ? theme.colors.primary : theme.colors.onSurfaceVariant}
-              />
-              <Text
-                style={[
-                  styles.dropdownOptionText,
-                  sortOrder === "asc" && styles.dropdownOptionTextActive,
-                ]}
-              >
-                A → Z
-              </Text>
-              {sortOrder === "asc" && (
-                <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.dropdownOption, sortOrder === "desc" && styles.dropdownOptionActive]}
-              onPress={() => setSortOrder("desc")}
-            >
-              <Ionicons
-                name="arrow-down"
-                size={16}
-                color={sortOrder === "desc" ? theme.colors.primary : theme.colors.onSurfaceVariant}
-              />
-              <Text
-                style={[
-                  styles.dropdownOptionText,
-                  sortOrder === "desc" && styles.dropdownOptionTextActive,
-                ]}
-              >
-                Z → A
-              </Text>
-              {sortOrder === "desc" && (
-                <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {activeTab === "book" && (
-          <>
-            <View style={styles.dropdownDivider} />
-            <View style={styles.dropdownSection}>
-              <Text style={styles.dropdownSectionTitle}>Filter</Text>
-              <View style={styles.dropdownOptions}>
-                {[
-                  { key: "all", label: "All", icon: "list" },
-                  { key: "downloaded", label: "Downloaded", icon: "cloud-done" },
-                  { key: "not_downloaded", label: "Not Downloaded", icon: "cloud-outline" },
-                ].map((option) => (
-                  <TouchableOpacity
-                    key={option.key}
-                    style={[
-                      styles.dropdownOption,
-                      downloadedFilter === option.key && styles.dropdownOptionActive,
-                    ]}
-                    onPress={() => setDownloadedFilter(option.key as typeof downloadedFilter)}
-                  >
-                    <Ionicons
-                      name={option.icon as React.ComponentProps<typeof Ionicons>["name"]}
-                      size={16}
-                      color={
-                        downloadedFilter === option.key
-                          ? theme.colors.primary
-                          : theme.colors.onSurfaceVariant
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.dropdownOptionText,
-                        downloadedFilter === option.key && styles.dropdownOptionTextActive,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    {downloadedFilter === option.key && (
-                      <Ionicons name="checkmark" size={16} color={theme.colors.primary} />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </>
-        )}
-        <View style={styles.dropdownDivider} />
-
-        <TouchableOpacity
-          style={styles.dropdownResetButton}
-          onPress={() => {
-            setSortBy("page");
-            setSortOrder("asc");
-            setDownloadedFilter("all");
-            setShowFilters(false);
-          }}
-        >
-          <Ionicons name="refresh" size={14} color={theme.colors.primary} />
-          <Text style={styles.dropdownResetText}>Reset</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     const isItemDownloaded = isDownloaded(item.id);
@@ -866,18 +641,21 @@ const RecordingsListScreen = () => {
         onPress={() => {
           navigation.navigate("RecordingDetails", { recordingId: item.id });
         }}
+        activeOpacity={0.7}
       >
         <View style={styles.recordingHeader}>
           <View style={styles.titleContainer}>
-            <Text style={styles.recordingTitle}>{item.title}</Text>
-            {isItemDownloaded && (
-              <View style={styles.downloadedIndicator}>
-                <Ionicons name="cloud-done" size={14} color={isDarkMode ? "#81C784" : "#2E7D32"} />
-                <Text style={styles.downloadedText}>Downloaded</Text>
-              </View>
-            )}
+            <Text style={styles.recordingTitle} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <Text style={styles.scientificName}>{item.species?.scientific_name}</Text>
           </View>
-          <Text style={styles.scientificName}>{item.species?.scientific_name}</Text>
+          {isItemDownloaded && (
+            <View style={styles.downloadedIndicator}>
+              <Ionicons name="cloud-done" size={14} color={theme.colors.onPrimary} />
+              <Text style={styles.downloadedText}>Downloaded</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.recordingContent}>
@@ -885,15 +663,17 @@ const RecordingsListScreen = () => {
             <Text style={styles.caption} numberOfLines={2}>
               {item.caption}
             </Text>
+          </View>
+
+          <View style={styles.recordingActions}>
             <View style={styles.pageReference}>
               <Text style={styles.pageText}>Page {item.book_page_number}</Text>
             </View>
+            {(() => {
+              const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
+              return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={36} /> : null;
+            })()}
           </View>
-
-          {(() => {
-            const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
-            return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={36} /> : null;
-          })()}
         </View>
       </TouchableOpacity>
     );
@@ -930,7 +710,7 @@ const RecordingsListScreen = () => {
       <Ionicons
         name={type === "recordings" ? "disc-outline" : "leaf-outline"}
         size={60}
-        color={isDarkMode ? "rgba(255, 255, 255, 0.5)" : "rgba(0, 0, 0, 0.3)"}
+        color={theme.colors.surface}
         style={styles.emptyIcon}
       />
       <Text style={styles.emptyTitle}>
@@ -941,28 +721,6 @@ const RecordingsListScreen = () => {
           ? "We couldn't find any recordings matching your search."
           : "We couldn't find any species matching your search."}
       </Text>
-    </View>
-  );
-
-  // Offline banner component
-  const OfflineBanner = () => (
-    <View style={styles.offlineBanner}>
-      <Ionicons
-        name="cloud-offline"
-        size={48}
-        color={theme.colors.error}
-        style={styles.offlineBannerIcon}
-      />
-      <Text style={styles.offlineBannerText}>
-        You&apos;re currently offline. Only downloaded content is available.
-      </Text>
-      <TouchableOpacity
-        style={styles.offlineBannerButton}
-        onPress={() => navigation.navigate("Downloads")}
-      >
-        <Ionicons name="download" size={20} color={theme.colors.onPrimary} />
-        <Text style={styles.offlineBannerButtonText}>View Downloads</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -978,42 +736,14 @@ const RecordingsListScreen = () => {
             <View>
               <Text style={styles.title}>Library</Text>
               <Text style={styles.subtitle}>Explore bird recordings and species</Text>
-              {!isConnected && (
-                <View style={styles.offlineBadge}>
-                  <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
-                  <Text style={styles.offlineBadgeText}>Offline Mode</Text>
-                </View>
-              )}
             </View>
             {isConnected && (
               <View style={styles.headerActions}>
-                <TouchableOpacity
-                  style={[
-                    styles.headerButton,
-                    (sortBy !== "page" || sortOrder !== "asc" || downloadedFilter !== "all") &&
-                      styles.headerButtonActive,
-                  ]}
-                  onPress={() => setShowFilters(!showFilters)}
-                >
-                  <Ionicons
-                    name="options"
-                    size={20}
-                    color={
-                      sortBy !== "page" || sortOrder !== "asc" || downloadedFilter !== "all"
-                        ? theme.colors.primary
-                        : theme.colors.onSurfaceVariant
-                    }
-                  />
-                  {(sortBy !== "page" || sortOrder !== "asc" || downloadedFilter !== "all") && (
-                    <View style={styles.activeBadge} />
-                  )}
-                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.headerButton}
                   onPress={() => {
                     setShowSearch((prev) => !prev);
                     setSearchInput("");
-                    setShowFilters(false);
                   }}
                 >
                   <Ionicons
@@ -1047,7 +777,7 @@ const RecordingsListScreen = () => {
             </View>
           ) : (
             <View style={styles.tabBar}>
-              {isConnected ? (
+              {isConnected && (
                 <>
                   <TouchableOpacity
                     style={[styles.tab, activeTab === "book" && styles.activeTab]}
@@ -1084,22 +814,204 @@ const RecordingsListScreen = () => {
                     </Text>
                   </TouchableOpacity>
                 </>
-              ) : (
-                <View style={styles.offlineTab}>
-                  <Ionicons
-                    name="cloud-offline-outline"
-                    size={18}
-                    color={theme.colors.onSurfaceDisabled}
-                  />
-                  <Text style={styles.offlineTabText}>Offline Mode</Text>
-                </View>
               )}
+            </View>
+          )}
+          {isConnected && activeTab === "book" && (
+            <View style={styles.filterButtonsContainer}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollViewFilters}
+              >
+                <View style={styles.filterRow}>
+                  {/* Sort By Buttons */}
+                  <Text style={styles.filterSectionTitle}>Sort By</Text>
+                  <TouchableOpacity
+                    style={[styles.filterButton, sortBy === "page" && styles.filterButtonActive]}
+                    onPress={() => setSortBy("page")}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="book-outline"
+                      size={14}
+                      color={
+                        sortBy === "page" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+                      }
+                      style={styles.filterButtonIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        sortBy === "page" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Page
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, sortBy === "title" && styles.filterButtonActive]}
+                    onPress={() => setSortBy("title")}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="text-outline"
+                      size={14}
+                      color={
+                        sortBy === "title" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+                      }
+                      style={styles.filterButtonIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        sortBy === "title" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Title
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, sortBy === "species" && styles.filterButtonActive]}
+                    onPress={() => setSortBy("species")}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="leaf-outline"
+                      size={14}
+                      color={
+                        sortBy === "species"
+                          ? theme.colors.onPrimary
+                          : theme.colors.onSurfaceVariant
+                      }
+                      style={styles.filterButtonIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        sortBy === "species" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Species
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, sortOrder === "desc" && styles.filterButtonActive]}
+                    onPress={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={sortOrder === "asc" ? "arrow-down-outline" : "arrow-up-outline"}
+                      size={14}
+                      color={
+                        sortOrder === "desc"
+                          ? theme.colors.onPrimary
+                          : theme.colors.onSurfaceVariant
+                      }
+                      style={styles.filterButtonIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        sortOrder === "desc" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      {sortOrder === "asc" ? "A→Z" : "Z→A"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Divider between groups */}
+                  <View style={styles.filterDivider} />
+                  <Text style={styles.filterSectionTitle}>Filter By</Text>
+
+                  {/* Filter By Buttons */}
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      downloadedFilter === "all" && styles.filterButtonActive,
+                    ]}
+                    onPress={() => setDownloadedFilter("all")}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="albums-outline"
+                      size={14}
+                      color={
+                        downloadedFilter === "all"
+                          ? theme.colors.onPrimary
+                          : theme.colors.onSurfaceVariant
+                      }
+                      style={styles.filterButtonIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        downloadedFilter === "all" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      All
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      downloadedFilter === "downloaded" && styles.filterButtonActive,
+                    ]}
+                    onPress={() => setDownloadedFilter("downloaded")}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="cloud-done-outline"
+                      size={14}
+                      color={
+                        downloadedFilter === "downloaded"
+                          ? theme.colors.onPrimary
+                          : theme.colors.onSurfaceVariant
+                      }
+                      style={styles.filterButtonIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        downloadedFilter === "downloaded" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Downloaded
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterButton,
+                      downloadedFilter === "not_downloaded" && styles.filterButtonActive,
+                    ]}
+                    onPress={() => setDownloadedFilter("not_downloaded")}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="cloud-outline"
+                      size={14}
+                      color={
+                        downloadedFilter === "not_downloaded"
+                          ? theme.colors.onPrimary
+                          : theme.colors.onSurfaceVariant
+                      }
+                      style={styles.filterButtonIcon}
+                    />
+                    <Text
+                      style={[
+                        styles.filterButtonText,
+                        downloadedFilter === "not_downloaded" && styles.filterButtonTextActive,
+                      ]}
+                    >
+                      Online Only
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
             </View>
           )}
         </View>
       </View>
-
-      {!isConnected && <OfflineBanner />}
 
       {!isConnected ? (
         <View style={styles.listContainer}>
@@ -1163,16 +1075,8 @@ const RecordingsListScreen = () => {
                 />
               )}
             </View>
-            {showFilters && <FilterDropdown />}
           </>
         )
-      )}
-      {showFilters && (
-        <TouchableOpacity
-          style={styles.filterOverlay}
-          activeOpacity={1}
-          onPress={() => setShowFilters(false)}
-        />
       )}
     </View>
   );

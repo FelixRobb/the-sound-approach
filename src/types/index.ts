@@ -1,5 +1,7 @@
 // src/types/index.ts
 
+import { NavigatorScreenParams } from "@react-navigation/native";
+
 // ==========================================
 // Database Types
 // ==========================================
@@ -187,7 +189,7 @@ export type RootStackParamList = {
   Welcome: undefined;
   SignUp: undefined;
   Login: undefined;
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
   RecordingDetails: { recordingId: string };
   SpeciesDetails: { speciesId: string };
   Search: undefined;

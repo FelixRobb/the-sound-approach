@@ -41,7 +41,7 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
       paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.8,
       shadowRadius: 4,
       zIndex: 1,
     },

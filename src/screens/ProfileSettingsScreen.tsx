@@ -19,24 +19,15 @@ const ProfileSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { state: authState, signOut } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
-  const { theme: themeMode, isDarkMode, setTheme } = useContext(ThemeContext);
+  const { theme: themeMode, setTheme } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
 
   // Create styles based on theme
   const styles = StyleSheet.create({
-    accountOfflineText: {
-      color: theme.colors.error,
-      fontSize: 12,
-    },
-    accountOfflineView: {
-      marginLeft: "auto",
-    },
     backgroundPattern: {
-      backgroundColor: isDarkMode
-        ? `${theme.colors.primary}08` // Very transparent primary color
-        : `${theme.colors.primary}05`,
+      backgroundColor: theme.colors.background,
       bottom: 0,
       left: 0,
       opacity: 0.6,
@@ -93,20 +84,6 @@ const ProfileSettingsScreen = () => {
       marginHorizontal: 16,
       marginTop: 24,
     },
-    offlineBadge: {
-      alignItems: "center",
-      backgroundColor: isDarkMode ? `${theme.colors.error}20` : `${theme.colors.error}10`,
-      borderRadius: 8,
-      flexDirection: "row",
-      marginTop: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    offlineBadgeText: {
-      color: theme.colors.error,
-      fontSize: 12,
-      marginLeft: 4,
-    },
     sectionCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 12,
@@ -115,7 +92,7 @@ const ProfileSettingsScreen = () => {
       padding: 4,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.3,
       shadowRadius: 4,
     },
     sectionHeader: {
@@ -268,14 +245,6 @@ const ProfileSettingsScreen = () => {
           <View>
             <Text style={styles.title}>Profile & Settings</Text>
             <Text style={styles.subtitle}>Customize your experience</Text>
-            {!isConnected && (
-              <View style={styles.offlineBadge}>
-                <Ionicons name="cloud-offline" size={12} color={theme.colors.error} />
-                <Text style={styles.offlineBadgeText}>
-                  Offline Mode - Some features unavailable
-                </Text>
-              </View>
-            )}
           </View>
         </View>
       </View>
@@ -331,11 +300,6 @@ const ProfileSettingsScreen = () => {
           <View style={styles.sectionHeader}>
             <Ionicons name="person-circle-outline" size={20} color={theme.colors.primary} />
             <Text style={styles.sectionTitle}>Account</Text>
-            {!isConnected && (
-              <View style={styles.accountOfflineView}>
-                <Text style={styles.accountOfflineText}>Limited in offline mode</Text>
-              </View>
-            )}
           </View>
 
           <List.Item

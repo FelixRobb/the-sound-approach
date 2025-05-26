@@ -32,9 +32,7 @@ const SignUpScreen = () => {
 
   const styles = StyleSheet.create({
     backgroundPattern: {
-      backgroundColor: isDarkMode
-        ? `${theme.colors.primary}08` // Very transparent primary color
-        : `${theme.colors.primary}05`,
+      backgroundColor: theme.colors.background,
       bottom: 0,
       left: 0,
       opacity: 0.6,
