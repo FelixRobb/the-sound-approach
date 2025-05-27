@@ -9,7 +9,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from
 import { ActivityIndicator } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
+import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
+import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
@@ -50,6 +52,11 @@ const SpeciesDetailsScreen = () => {
       right: 0,
       top: 0,
     },
+    badgeRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 6,
+    },
     caption: {
       color: theme.colors.onSurface,
       fontSize: 14,
@@ -78,15 +85,6 @@ const SpeciesDetailsScreen = () => {
     divider: {
       backgroundColor: theme.colors.surface,
       height: 1,
-    },
-    downloadedBadge: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    downloadedText: {
-      color: theme.colors.primary,
-      fontSize: 12,
-      marginLeft: 4,
     },
     emptyContainer: {
       alignItems: "center",
@@ -162,16 +160,6 @@ const SpeciesDetailsScreen = () => {
       color: theme.colors.onSurface,
       fontSize: 16,
       marginTop: 16,
-    },
-    pageReference: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginRight: 16,
-    },
-    pageText: {
-      color: theme.colors.primary,
-      fontSize: 12,
-      marginLeft: 4,
     },
     recordingContent: {
       flex: 1,
@@ -333,16 +321,10 @@ const SpeciesDetailsScreen = () => {
                       <View style={styles.recordingContent}>
                         <Text style={styles.recordingTitle}>{item.title}</Text>
                         <View style={styles.recordingMeta}>
-                          <View style={styles.pageReference}>
-                            <Ionicons name="book-outline" size={14} color={theme.colors.primary} />
-                            <Text style={styles.pageText}>Page {item.book_page_number}</Text>
+                          <View style={styles.badgeRow}>
+                            <PageBadge page={item.book_page_number} iconSize={14} />
+                            {isDownloaded(item.id) && <DownloadedBadge iconSize={14} />}
                           </View>
-                          {isDownloaded(item.id) && (
-                            <View style={styles.downloadedBadge}>
-                              <Ionicons name="cloud-done" size={14} color={theme.colors.primary} />
-                              <Text style={styles.downloadedText}>Downloaded</Text>
-                            </View>
-                          )}
                         </View>
                         <Text style={styles.caption} numberOfLines={2}>
                           {item.caption}

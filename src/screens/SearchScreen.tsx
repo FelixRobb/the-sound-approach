@@ -17,6 +17,8 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import DownloadedBadge from "../components/DownloadedBadge";
+import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
@@ -72,20 +74,6 @@ const SearchScreen = () => {
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
-    },
-    downloadedBadge: {
-      alignItems: "center",
-      backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
-      flexDirection: "row",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    downloadedText: {
-      color: theme.colors.onTertiary,
-      fontSize: 12,
-      fontWeight: "500",
-      marginLeft: 4,
     },
     emptyContainer: {
       alignItems: "center",
@@ -183,20 +171,6 @@ const SearchScreen = () => {
       color: theme.colors.onBackground,
       fontSize: 16,
       marginTop: 16,
-    },
-    pageReference: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 8,
-      flexDirection: "row",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    pageText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      fontWeight: "500",
-      marginLeft: 4,
     },
     recentContainer: {
       padding: 16,
@@ -547,19 +521,11 @@ const SearchScreen = () => {
                 <Text style={styles.scientificName}>{item.species.scientific_name}</Text>
               )}
             </View>
-            {isDownloaded(item.id) && (
-              <View style={styles.downloadedBadge}>
-                <Ionicons name="cloud-done-outline" size={14} color={theme.colors.onTertiary} />
-                <Text style={styles.downloadedText}>Downloaded</Text>
-              </View>
-            )}
+            {isDownloaded(item.id) && <DownloadedBadge />}
           </View>
 
           <View style={styles.resultMeta}>
-            <View style={styles.pageReference}>
-              <Ionicons name="book-outline" size={14} color={theme.colors.onSurfaceVariant} />
-              <Text style={styles.pageText}>Page {item.book_page_number}</Text>
-            </View>
+            <PageBadge page={item.book_page_number} />
 
             <View style={styles.resultTypeIndicator}>
               <Ionicons name="musical-notes-outline" size={12} color={theme.colors.secondary} />

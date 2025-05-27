@@ -18,6 +18,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
+import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
@@ -349,18 +350,9 @@ const DownloadsScreen = () => {
       fontWeight: "600",
       marginLeft: 12,
     },
-    pageReference: {
+    pageBadgeWrapper: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.secondary,
-      borderRadius: 12,
-      marginBottom: 4,
-      marginTop: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-    },
-    pageText: {
-      color: theme.colors.onSecondary,
-      fontSize: 12,
+      marginVertical: 2,
     },
     playButton: {
       marginRight: 16,
@@ -492,8 +484,8 @@ const DownloadsScreen = () => {
               <Text style={styles.speciesName}>{item.species_name || "Unknown Species"}</Text>
 
               {item.book_page_number && (
-                <View style={styles.pageReference}>
-                  <Text style={styles.pageText}>Page {item.book_page_number}</Text>
+                <View style={styles.pageBadgeWrapper}>
+                  <PageBadge page={item.book_page_number} />
                 </View>
               )}
 

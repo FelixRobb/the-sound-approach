@@ -18,7 +18,9 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
+import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
@@ -93,20 +95,6 @@ const RecordingsListScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
-    downloadedIndicator: {
-      alignItems: "center",
-      backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
-      flexDirection: "row",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-    },
-    downloadedText: {
-      color: theme.colors.onPrimary,
-      fontSize: 11,
-      fontWeight: "600",
-      marginLeft: 4,
-    },
     emptyContainer: {
       alignItems: "center",
       flex: 1,
@@ -160,7 +148,7 @@ const RecordingsListScreen = () => {
       shadowRadius: 2,
     },
     filterButtonActive: {
-      backgroundColor: theme.colors.primaryContainer,
+      backgroundColor: theme.colors.primary,
       elevation: 2,
       shadowOpacity: 0.15,
     },
@@ -173,7 +161,7 @@ const RecordingsListScreen = () => {
       fontWeight: "500",
     },
     filterButtonTextActive: {
-      color: theme.colors.onPrimaryContainer,
+      color: theme.colors.onPrimary,
       fontWeight: "600",
     },
     filterButtonsContainer: {
@@ -219,6 +207,7 @@ const RecordingsListScreen = () => {
       borderBottomLeftRadius: borderRadius.xxl,
       borderBottomRightRadius: borderRadius.xxl,
       elevation: 4,
+      marginBottom: 8,
       paddingBottom: 8,
       paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
@@ -263,18 +252,6 @@ const RecordingsListScreen = () => {
     },
     loadingText: {
       color: theme.colors.onSurface,
-    },
-    pageReference: {
-      alignSelf: "flex-start",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 6,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    pageText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 11,
-      fontWeight: "600",
     },
     recordingActions: {
       alignItems: "center",
@@ -326,15 +303,17 @@ const RecordingsListScreen = () => {
     },
     searchContainer: {
       alignItems: "center",
+      alignSelf: "center",
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.outlineVariant,
-      borderRadius: 20,
+      borderRadius: 24,
       borderWidth: 1,
       flexDirection: "row",
       height: 46,
       marginHorizontal: 4,
       marginTop: 12,
       paddingHorizontal: 16,
+      width: "94%",
     },
     searchInput: {
       color: theme.colors.onSurface,
@@ -391,14 +370,16 @@ const RecordingsListScreen = () => {
       paddingVertical: 8,
     },
     tabBar: {
+      alignItems: "center",
       alignSelf: "center",
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.outlineVariant,
       borderRadius: 24,
       borderWidth: 1,
       flexDirection: "row",
+      height: 46,
+      marginHorizontal: 4,
       marginTop: 12,
-      padding: 4,
       width: "94%",
     },
     tabText: {
@@ -632,12 +613,7 @@ const RecordingsListScreen = () => {
             </Text>
             <Text style={styles.scientificName}>{item.species?.scientific_name}</Text>
           </View>
-          {isItemDownloaded && (
-            <View style={styles.downloadedIndicator}>
-              <Ionicons name="cloud-done" size={14} color={theme.colors.onPrimary} />
-              <Text style={styles.downloadedText}>Downloaded</Text>
-            </View>
-          )}
+          {isItemDownloaded && <DownloadedBadge />}
         </View>
 
         <View style={styles.recordingContent}>
@@ -648,9 +624,7 @@ const RecordingsListScreen = () => {
           </View>
 
           <View style={styles.recordingActions}>
-            <View style={styles.pageReference}>
-              <Text style={styles.pageText}>Page {item.book_page_number}</Text>
-            </View>
+            <PageBadge page={item.book_page_number} />
             {(() => {
               const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
               return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={36} /> : null;
@@ -742,7 +716,7 @@ const RecordingsListScreen = () => {
 
           {showSearch && isConnected ? (
             <View style={styles.searchContainer}>
-              <Ionicons name="search" size={20} color={theme.colors.primary} />
+              <Ionicons name="search" size={20} color={theme.colors.tertiary} />
               <TextInput
                 placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
                 placeholderTextColor={theme.colors.onSurfaceVariant}
@@ -819,9 +793,7 @@ const RecordingsListScreen = () => {
                       name="book-outline"
                       size={14}
                       color={
-                        sortBy === "page"
-                          ? theme.colors.onPrimaryContainer
-                          : theme.colors.onSurfaceVariant
+                        sortBy === "page" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
                     />
@@ -843,9 +815,7 @@ const RecordingsListScreen = () => {
                       name="text-outline"
                       size={14}
                       color={
-                        sortBy === "title"
-                          ? theme.colors.onPrimaryContainer
-                          : theme.colors.onSurfaceVariant
+                        sortBy === "title" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
                     />
@@ -868,7 +838,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         sortBy === "species"
-                          ? theme.colors.onPrimaryContainer
+                          ? theme.colors.onPrimary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -892,7 +862,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         sortOrder === "desc"
-                          ? theme.colors.onPrimaryContainer
+                          ? theme.colors.onPrimary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -925,7 +895,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "all"
-                          ? theme.colors.onPrimaryContainer
+                          ? theme.colors.onPrimary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -952,7 +922,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "downloaded"
-                          ? theme.colors.onPrimaryContainer
+                          ? theme.colors.onPrimary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -979,7 +949,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "not_downloaded"
-                          ? theme.colors.onPrimaryContainer
+                          ? theme.colors.onPrimary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}

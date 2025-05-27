@@ -8,8 +8,8 @@ import { MD3LightTheme, MD3DarkTheme, MD3Theme } from "react-native-paper";
 const Colors = {
   // Primary color (sophisticated golden amber - warmer and more elegant)
   primary: "rgb(236, 121, 54)", // Rich golden amber
-  primaryLight: "rgb(238, 139, 41)", // Lighter golden amber
-  primaryDark: "rgb(180, 83, 9)", // Deeper amber
+  primaryLight: "rgb(238, 135, 33)", // Lighter golden amber
+  primaryDark: "rgb(200, 95, 15)", // Deeper amber
   primaryContainer: "rgb(235, 208, 101)", // Soft golden cream
   onPrimary: "rgb(255, 255, 255)", // White on primary
   onPrimaryLight: "rgb(92, 38, 0)", // Dark on light primary

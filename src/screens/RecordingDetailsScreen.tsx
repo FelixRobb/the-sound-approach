@@ -24,6 +24,7 @@ import {
 } from "react-native";
 
 import DetailHeader from "../components/DetailHeader";
+import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
@@ -261,18 +262,9 @@ const RecordingDetailsScreen = () => {
       marginTop: 16,
       textAlign: "center",
     },
-    pageReference: {
+    pageBadgeWrapper: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 12,
-      marginBottom: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-    },
-    pageText: {
-      color: theme.colors.onPrimaryContainer,
-      fontSize: 14,
-      fontWeight: "600",
+      marginVertical: 2,
     },
     playButton: {
       alignItems: "center",
@@ -733,9 +725,11 @@ const RecordingDetailsScreen = () => {
           <View style={styles.speciesHeader}>
             <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
             <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
-            <View style={styles.pageReference}>
-              <Text style={styles.pageText}>Page {recording.book_page_number}</Text>
-            </View>
+            {recording.book_page_number && (
+              <View style={styles.pageBadgeWrapper}>
+                <PageBadge page={recording.book_page_number} />
+              </View>
+            )}
           </View>
           {isConnected && (
             <TouchableOpacity
