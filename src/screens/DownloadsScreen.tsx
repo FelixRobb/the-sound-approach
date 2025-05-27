@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
+import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
 import { RootStackParamList } from "../types";
@@ -173,13 +174,13 @@ const DownloadsScreen = () => {
       top: 0,
     },
     clearAllButton: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.tertiary,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 6,
     },
     clearAllText: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onTertiary,
       fontSize: 14,
       fontWeight: "bold",
     },
@@ -325,27 +326,6 @@ const DownloadsScreen = () => {
       marginTop: 16,
       textAlign: "center",
     },
-    manageStorageButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 24,
-      bottom: 20,
-      elevation: 4,
-      flexDirection: "row",
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      position: "absolute",
-      right: 20,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-    },
-    manageStorageText: {
-      color: theme.colors.onPrimary,
-      fontWeight: "bold",
-      marginRight: 8,
-    },
     offlineBanner: {
       alignItems: "center",
       backgroundColor: theme.colors.error,
@@ -371,7 +351,7 @@ const DownloadsScreen = () => {
     },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.secondary,
       borderRadius: 12,
       marginBottom: 4,
       marginTop: 4,
@@ -379,7 +359,7 @@ const DownloadsScreen = () => {
       paddingVertical: 2,
     },
     pageText: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onSecondary,
       fontSize: 12,
     },
     playButton: {
@@ -412,7 +392,7 @@ const DownloadsScreen = () => {
       paddingVertical: 10,
     },
     storageText: {
-      color: theme.colors.primary,
+      color: theme.colors.tertiary,
       fontSize: 14,
       fontWeight: "500",
     },
@@ -579,6 +559,8 @@ const DownloadsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <NavigationAudioStopper />
+
       <BackgroundPattern />
       <Header />
 
@@ -601,17 +583,6 @@ const DownloadsScreen = () => {
           />
         }
       />
-      {isConnected && (
-        <TouchableOpacity
-          style={styles.manageStorageButton}
-          onPress={() => {
-            navigation.navigate("Profile");
-          }}
-        >
-          <Text style={styles.manageStorageText}>Manage Storage</Text>
-          <Ionicons name="settings-outline" size={18} color={theme.colors.onPrimary} />
-        </TouchableOpacity>
-      )}
     </View>
   );
 };

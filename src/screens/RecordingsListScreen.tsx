@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
+import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
@@ -710,6 +711,8 @@ const RecordingsListScreen = () => {
 
   return (
     <View style={styles.container}>
+      <NavigationAudioStopper />
+
       <BackgroundPattern />
       <View style={styles.header}>
         <View style={styles.headerInner}>

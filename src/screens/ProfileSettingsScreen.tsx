@@ -118,7 +118,7 @@ const ProfileSettingsScreen = () => {
       overflow: "hidden",
     },
     storageBarFill: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.tertiary,
       borderRadius: 4,
       height: "100%",
     },
@@ -152,7 +152,7 @@ const ProfileSettingsScreen = () => {
       overflow: "hidden",
     },
     themeOptionSelected: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.tertiary,
     },
     themeOptionText: {
       color: theme.colors.onSurfaceVariant,
@@ -305,7 +305,7 @@ const ProfileSettingsScreen = () => {
           <List.Item
             title="Email"
             description={authState.user?.email || "Not available"}
-            left={(props) => <List.Icon {...props} icon="email" color={theme.colors.primary} />}
+            left={(props) => <List.Icon {...props} icon="email" color={theme.colors.tertiary} />}
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}
@@ -314,7 +314,7 @@ const ProfileSettingsScreen = () => {
           <List.Item
             title="Book Code"
             description="••••••••"
-            left={(props) => <List.Icon {...props} icon="book" color={theme.colors.primary} />}
+            left={(props) => <List.Icon {...props} icon="book" color={theme.colors.tertiary} />}
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}
@@ -332,7 +332,7 @@ const ProfileSettingsScreen = () => {
             title="Theme"
             description="Choose your preferred theme"
             left={(props) => (
-              <List.Icon {...props} icon="theme-light-dark" color={theme.colors.primary} />
+              <List.Icon {...props} icon="theme-light-dark" color={theme.colors.tertiary} />
             )}
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
@@ -345,15 +345,15 @@ const ProfileSettingsScreen = () => {
         {/* Storage Section */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="folder-outline" size={20} color={theme.colors.primary} />
+            <Ionicons name="folder-outline" size={20} color={theme.colors.tertiary} />
             <Text style={styles.sectionTitle}>Storage</Text>
           </View>
 
           <List.Item
             title="Offline Recordings"
             description="Manage downloaded recordings"
-            left={(props) => <List.Icon {...props} icon="download" color={theme.colors.primary} />}
-            onPress={() => navigation.navigate("Downloads")}
+            left={(props) => <List.Icon {...props} icon="download" color={theme.colors.tertiary} />}
+            onPress={() => navigation.navigate("MainTabs", { screen: "Downloads" })}
             style={styles.listItem}
             titleStyle={styles.listItemTitle}
             descriptionStyle={styles.listItemDescription}

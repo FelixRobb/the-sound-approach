@@ -62,11 +62,11 @@ const SearchScreen = () => {
       borderTopColor: theme.colors.outlineVariant,
       borderTopWidth: 1,
       flexDirection: "row",
-      justifyContent: "space-between",
+      justifyContent: "flex-end",
       padding: 12,
     },
     clearText: {
-      color: theme.colors.primary,
+      color: theme.colors.tertiary,
       fontWeight: "600",
     },
     container: {
@@ -75,14 +75,14 @@ const SearchScreen = () => {
     },
     downloadedBadge: {
       alignItems: "center",
-      backgroundColor: theme.colors.onPrimary,
+      backgroundColor: theme.colors.tertiary,
       borderRadius: 8,
       flexDirection: "row",
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
     downloadedText: {
-      color: theme.colors.primary,
+      color: theme.colors.onTertiary,
       fontSize: 12,
       fontWeight: "500",
       marginLeft: 4,
@@ -186,14 +186,14 @@ const SearchScreen = () => {
     },
     pageReference: {
       alignItems: "center",
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 8,
       flexDirection: "row",
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
     pageText: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 12,
       fontWeight: "500",
       marginLeft: 4,
@@ -222,7 +222,7 @@ const SearchScreen = () => {
     },
     recentItemIcon: {
       alignItems: "center",
-      backgroundColor: theme.colors.onPrimary,
+      backgroundColor: theme.colors.onTertiary,
       borderRadius: 20,
       height: 40,
       justifyContent: "center",
@@ -549,7 +549,7 @@ const SearchScreen = () => {
             </View>
             {isDownloaded(item.id) && (
               <View style={styles.downloadedBadge}>
-                <Ionicons name="cloud-done-outline" size={14} color={theme.colors.primary} />
+                <Ionicons name="cloud-done-outline" size={14} color={theme.colors.onTertiary} />
                 <Text style={styles.downloadedText}>Downloaded</Text>
               </View>
             )}
@@ -557,7 +557,7 @@ const SearchScreen = () => {
 
           <View style={styles.resultMeta}>
             <View style={styles.pageReference}>
-              <Ionicons name="book-outline" size={14} color={theme.colors.onPrimary} />
+              <Ionicons name="book-outline" size={14} color={theme.colors.onSurfaceVariant} />
               <Text style={styles.pageText}>Page {item.book_page_number}</Text>
             </View>
 
@@ -610,7 +610,6 @@ const SearchScreen = () => {
 
         {isConnected && (
           <View style={styles.cardFooter}>
-            <View>{/* You could add additional info here if needed */}</View>
             <TouchableOpacity
               style={styles.viewDetailButton}
               onPress={() => {
@@ -803,7 +802,7 @@ const SearchScreen = () => {
                   }}
                 >
                   <View style={styles.recentItemIcon}>
-                    <Ionicons name="time-outline" size={22} color={theme.colors.primary} />
+                    <Ionicons name="time-outline" size={22} color={theme.colors.tertiary} />
                   </View>
                   <View style={styles.recentItemTextContainer}>
                     <Text style={styles.recentQueryText}>{item.name}</Text>
@@ -814,7 +813,7 @@ const SearchScreen = () => {
                   <Ionicons
                     name="search"
                     size={20}
-                    color={isConnected ? theme.colors.primary : theme.colors.onSurfaceDisabled}
+                    color={isConnected ? theme.colors.secondary : theme.colors.onSurfaceDisabled}
                   />
                 </TouchableOpacity>
               )}

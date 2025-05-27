@@ -12,6 +12,7 @@ import DetailHeader from "../components/DetailHeader";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
+import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
@@ -299,6 +300,7 @@ const SpeciesDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <NavigationAudioStopper />
       <BackgroundPattern />
       <DetailHeader title={speciesName} subtitle={scientificName} />
 
@@ -355,12 +357,7 @@ const SpeciesDetailsScreen = () => {
                           isConnected
                         );
                         return uri ? (
-                          <MiniAudioPlayer
-                            trackId={item.id}
-                            audioUri={uri}
-                            size={36}
-                            showLoading={false}
-                          />
+                          <MiniAudioPlayer trackId={item.id} audioUri={uri} size={36} />
                         ) : null;
                       })()}
                     </TouchableOpacity>

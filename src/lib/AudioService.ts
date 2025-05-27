@@ -5,20 +5,13 @@ import {
   InterruptionModeIOS,
 } from "expo-av";
 
-// Types
-export type PlaybackSpeed = 0.5 | 1 | 1.5 | 2;
-
-export type PlaybackState = "idle" | "loading" | "playing" | "paused" | "error";
+export type PlaybackState = "idle" | "loading" | "playing" | "paused";
 
 export type AudioListenerCallback = (state: AudioPlayerState) => void;
 
 export interface AudioPlayerState {
   trackId: string | null;
   playbackState: PlaybackState;
-  position: number;
-  duration: number;
-  speed: PlaybackSpeed;
-  isLooping: boolean;
   error: string | null;
 }
 
@@ -26,10 +19,6 @@ export interface AudioPlayerState {
 const initialState: AudioPlayerState = {
   trackId: null,
   playbackState: "idle",
-  position: 0,
-  duration: 0,
-  speed: 1,
-  isLooping: false,
   error: null,
 };
 
@@ -38,8 +27,6 @@ class AudioService {
   private sound: Audio.Sound | null = null;
   private state: AudioPlayerState = { ...initialState };
   private listeners: Map<string, AudioListenerCallback> = new Map();
-  private lastPositionUpdate = 0;
-  private updateIntervalId: NodeJS.Timeout | null = null;
 
   // Private constructor for singleton pattern
   private constructor() {
@@ -59,7 +46,7 @@ class AudioService {
     try {
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
-        staysActiveInBackground: false, // No background playback
+        staysActiveInBackground: false,
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
         interruptionModeIOS: InterruptionModeIOS.DoNotMix,
@@ -70,81 +57,76 @@ class AudioService {
     }
   }
 
-  // Load an audio track
-  public async loadTrack(uri: string, trackId: string): Promise<boolean> {
+  // Load and play an audio track
+  public async playTrack(uri: string, trackId: string): Promise<boolean> {
     try {
-      // Save current looping state before unloading
-      const currentLoopingState = this.state.isLooping;
+      // If same track is already playing, just pause it
+      if (this.state.trackId === trackId && this.state.playbackState === "playing") {
+        return this.pause();
+      }
 
-      // Unload any existing audio first
-      await this.unloadTrack();
+      // If same track is paused, resume from beginning
+      if (this.state.trackId === trackId && this.state.playbackState === "paused") {
+        return this.play();
+      }
+
+      // Stop any current track
+      await this.stop();
 
       // Update state to loading
       this.updateState({
         trackId,
         playbackState: "loading",
-        position: 0,
-        duration: 0,
         error: null,
-        // Restore looping state
-        isLooping: currentLoopingState,
       });
 
       // Create new sound object
       const { sound, status } = await Audio.Sound.createAsync(
         { uri },
-        {
-          shouldPlay: false,
-          progressUpdateIntervalMillis: 200,
-          isLooping: currentLoopingState,
-        },
+        { shouldPlay: false },
         this.onPlaybackStatusUpdate
       );
 
       this.sound = sound;
 
-      // Update state based on loaded status
+      // Check if loaded successfully
       if (status.isLoaded) {
-        this.updateState({
-          duration: status.durationMillis || 0,
-          playbackState: "paused",
-        });
+        // Start playing immediately
+        await this.sound.playAsync();
+        this.updateState({ playbackState: "playing" });
         return true;
       } else {
         this.updateState({
-          playbackState: "error",
+          playbackState: "idle",
           error: "Failed to load audio",
         });
         return false;
       }
     } catch (error) {
       this.updateState({
-        playbackState: "error",
-        error: error instanceof Error ? error.message : "Unknown error loading audio",
+        playbackState: "idle",
+        trackId: null,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return false;
     }
   }
 
   // Play the loaded track
-  public async play(): Promise<boolean> {
-    if (!this.sound || this.state.playbackState === "loading") {
+  private async play(): Promise<boolean> {
+    if (!this.sound) {
       return false;
     }
 
     try {
-      // Start position updates
-      this.startPositionUpdates();
-
-      // Ensure looping state is correctly set before playing
-      await this.sound.setIsLoopingAsync(this.state.isLooping);
-
+      // Reset to beginning
+      await this.sound.setPositionAsync(0);
       await this.sound.playAsync();
       this.updateState({ playbackState: "playing" });
       return true;
     } catch (error) {
       this.updateState({
-        playbackState: "error",
+        playbackState: "idle",
         error: error instanceof Error ? error.message : "Unknown error playing audio",
       });
       return false;
@@ -152,13 +134,15 @@ class AudioService {
   }
 
   // Pause the current track
-  public async pause(): Promise<boolean> {
+  private async pause(): Promise<boolean> {
     if (!this.sound || this.state.playbackState !== "playing") {
       return false;
     }
 
     try {
       await this.sound.pauseAsync();
+      // Reset to beginning when paused
+      await this.sound.setPositionAsync(0);
       this.updateState({ playbackState: "paused" });
       return true;
     } catch (error) {
@@ -167,85 +151,27 @@ class AudioService {
   }
 
   // Stop and unload the current track
-  public async unloadTrack(): Promise<boolean> {
-    this.stopPositionUpdates();
-
+  public async stop(): Promise<boolean> {
     if (!this.sound) {
       return true;
     }
 
     try {
-      // Save the current looping state
-      const wasLooping = this.state.isLooping;
-
       await this.sound.stopAsync();
       await this.sound.unloadAsync();
       this.sound = null;
 
-      // Reset state but preserve looping setting
+      // Reset state
       this.updateState({
         ...initialState,
-        isLooping: wasLooping,
       });
 
       return true;
     } catch (error) {
-      // Still reset the state even if unloading fails
-      const wasLooping = this.state.isLooping;
       this.sound = null;
       this.updateState({
         ...initialState,
-        isLooping: wasLooping,
       });
-      return false;
-    }
-  }
-
-  // Seek to a specific position
-  public async seekTo(position: number): Promise<boolean> {
-    if (!this.sound || this.state.playbackState === "loading") {
-      return false;
-    }
-
-    try {
-      await this.sound.setPositionAsync(position);
-      this.updateState({ position });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  // Set playback speed
-  public async setSpeed(speed: PlaybackSpeed): Promise<boolean> {
-    if (!this.sound) {
-      return false;
-    }
-
-    try {
-      await this.sound.setRateAsync(speed, true);
-      this.updateState({ speed });
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  // Toggle looping
-  public async setLooping(isLooping: boolean): Promise<boolean> {
-    if (!this.sound) {
-      // Even if no sound is loaded, we still update the state
-      // so it will be applied to the next loaded sound
-      this.updateState({ isLooping });
-      return true;
-    }
-
-    try {
-      await this.sound.setIsLoopingAsync(isLooping);
-      this.updateState({ isLooping });
-      return true;
-    } catch (error) {
-      console.error("Error setting looping state:", error);
       return false;
     }
   }
@@ -277,80 +203,24 @@ class AudioService {
     });
   }
 
-  // Start regular position updates for smooth UI
-  private startPositionUpdates(): void {
-    if (this.updateIntervalId) {
-      clearInterval(this.updateIntervalId);
-    }
-
-    // Update position every 200ms for smooth UI updates
-    this.updateIntervalId = setInterval(async () => {
-      if (this.sound && this.state.playbackState === "playing") {
-        try {
-          const status = await this.sound.getStatusAsync();
-          if (status.isLoaded) {
-            this.updateState({ position: status.positionMillis });
-          }
-        } catch (error) {
-          // Ignore errors during position updates
-        }
-      }
-    }, 200);
-  }
-
-  // Stop position updates
-  private stopPositionUpdates(): void {
-    if (this.updateIntervalId) {
-      clearInterval(this.updateIntervalId);
-      this.updateIntervalId = null;
-    }
-  }
-
   // Handle playback status updates
   private onPlaybackStatusUpdate = (status: AVPlaybackStatus): void => {
     if (!status.isLoaded) {
-      // Handle error or unloaded state
       if (status.error) {
         this.updateState({
-          playbackState: "error",
+          playbackState: "idle",
           error: `Playback error: ${status.error}`,
         });
       }
       return;
     }
 
-    // Only update position occasionally to avoid too many state updates
-    const now = Date.now();
-    if (now - this.lastPositionUpdate > 500) {
-      this.lastPositionUpdate = now;
-      this.updateState({
-        position: status.positionMillis,
-        duration: status.durationMillis || this.state.duration,
-      });
-    }
-
-    // Update looping state from status if it's different from our state
-    if (status.isLooping !== this.state.isLooping) {
-      this.updateState({
-        isLooping: status.isLooping,
-      });
-    }
-
-    // Handle playback completion
+    // Check if playback finished
     if (status.didJustFinish) {
-      // Only reset position if not looping
-      if (!status.isLooping && !this.state.isLooping) {
-        // Force stop playback with multiple methods to ensure it stops
-        this.sound?.pauseAsync().catch(() => {});
-        this.sound?.stopAsync().catch(() => {});
-
-        this.updateState({
-          playbackState: "paused",
-          position: 0,
-        });
-
-        this.sound?.setPositionAsync(0).catch(() => {});
-      }
+      this.updateState({
+        playbackState: "idle",
+        trackId: null,
+      });
     }
   };
 }

@@ -129,8 +129,6 @@ export type AudioState = {
   isLoaded: boolean;
   duration: number;
   position: number;
-  playbackSpeed: PlaybackSpeed;
-  isLooping: boolean;
   currentAudioId: string | null;
 };
 
@@ -140,9 +138,6 @@ export type AudioContextType = {
   playAudio: () => Promise<boolean>;
   pauseAudio: () => Promise<void>;
   stopAudio: () => Promise<void>;
-  seekAudio: (position: number) => Promise<void>;
-  setPlaybackSpeed: (speed: PlaybackSpeed) => Promise<void>;
-  toggleLooping: () => Promise<void>;
 };
 
 // ==========================================
