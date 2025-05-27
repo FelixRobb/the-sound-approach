@@ -2,7 +2,7 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
+import { getFocusedRouteNameFromRoute, NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as SplashScreen from "expo-splash-screen";
 import { useContext, useEffect } from "react";
@@ -32,6 +32,12 @@ const AuthStack = createNativeStackNavigator();
 const MainStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Individual tab stack navigators
+const RecordingsStack = createNativeStackNavigator();
+const SearchStack = createNativeStackNavigator();
+const DownloadsStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
+
 // Auth navigator
 const AuthNavigator = () => {
   const { theme } = useThemedStyles();
@@ -53,6 +59,129 @@ const AuthNavigator = () => {
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
     </AuthStack.Navigator>
+  );
+};
+
+// Recordings stack navigator
+const RecordingsNavigator = () => {
+  const { theme } = useThemedStyles();
+
+  return (
+    <RecordingsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+        animation: "fade",
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+        presentation: "card",
+        animationTypeForReplace: "push",
+        navigationBarColor: theme.colors.background,
+      }}
+    >
+      <RecordingsStack.Screen name="RecordingsList" component={RecordingsListScreen} />
+      <RecordingsStack.Screen
+        name="RecordingDetails"
+        component={RecordingDetailsScreen}
+        options={{
+          contentStyle: { backgroundColor: theme.colors.background },
+        }}
+      />
+      <RecordingsStack.Screen
+        name="SpeciesDetails"
+        component={SpeciesDetailsScreen}
+        options={{
+          contentStyle: { backgroundColor: theme.colors.background },
+        }}
+      />
+    </RecordingsStack.Navigator>
+  );
+};
+
+// Search stack navigator
+const SearchNavigator = () => {
+  const { theme } = useThemedStyles();
+
+  return (
+    <SearchStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+        animation: "fade",
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+        presentation: "card",
+        animationTypeForReplace: "push",
+        navigationBarColor: theme.colors.background,
+      }}
+    >
+      <SearchStack.Screen name="SearchMain" component={SearchScreen} />
+      <SearchStack.Screen
+        name="RecordingDetails"
+        component={RecordingDetailsScreen}
+        options={{
+          contentStyle: { backgroundColor: theme.colors.background },
+        }}
+      />
+      <SearchStack.Screen
+        name="SpeciesDetails"
+        component={SpeciesDetailsScreen}
+        options={{
+          contentStyle: { backgroundColor: theme.colors.background },
+        }}
+      />
+    </SearchStack.Navigator>
+  );
+};
+
+// Downloads stack navigator
+const DownloadsNavigator = () => {
+  const { theme } = useThemedStyles();
+
+  return (
+    <DownloadsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+        animation: "fade",
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+        presentation: "card",
+        animationTypeForReplace: "push",
+        navigationBarColor: theme.colors.background,
+      }}
+    >
+      <DownloadsStack.Screen name="Downloads" component={DownloadsScreen} />
+      <DownloadsStack.Screen
+        name="RecordingDetails"
+        component={RecordingDetailsScreen}
+        options={{
+          contentStyle: { backgroundColor: theme.colors.background },
+        }}
+      />
+    </DownloadsStack.Navigator>
+  );
+};
+
+// Profile stack navigator
+const ProfileNavigator = () => {
+  const { theme } = useThemedStyles();
+
+  return (
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+        animation: "fade",
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+        presentation: "card",
+        animationTypeForReplace: "push",
+        navigationBarColor: theme.colors.background,
+      }}
+    >
+      <ProfileStack.Screen name="ProfileMain" component={ProfileSettingsScreen} />
+    </ProfileStack.Navigator>
   );
 };
 
@@ -106,51 +235,63 @@ const MainTabNavigator = () => {
   return (
     <View style={styles.container}>
       <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color }) => {
-            let iconName: keyof typeof Ionicons.glyphMap = "ellipse";
+        screenOptions={({ route }) => {
+          // Get the currently focused route name
+          const routeName = getFocusedRouteNameFromRoute(route);
 
-            switch (route.name) {
-              case "Recordings":
-                iconName = focused ? "musical-notes" : "musical-notes-outline";
-                break;
-              case "Search":
-                iconName = focused ? "search" : "search-outline";
-                break;
-              case "Downloads":
-                iconName = focused ? "download" : "download-outline";
-                break;
-              case "Profile":
-                iconName = focused ? "person" : "person-outline";
-                break;
-            }
+          return {
+            tabBarIcon: ({ focused, color }) => {
+              let iconName: keyof typeof Ionicons.glyphMap = "ellipse";
 
-            return (
-              <View style={styles.iconContainer}>
-                <Ionicons name={iconName} size={focused ? 24 : 22} color={color} />
-              </View>
-            );
-          },
-          tabBarLabel: ({ focused, children }) => (
-            <Text style={[styles.tabLabel, focused ? styles.activeLabel : styles.inactiveLabel]}>
-              {children}
-            </Text>
-          ),
-          tabBarActiveTintColor: theme.colors.primary,
-          tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-          tabBarStyle: styles.tabBar,
-          animation: "shift",
-          animationTypeForReplace: "push",
-          animationDuration: 300,
-          tabBarItemStyle: styles.tabItem,
-          headerShown: false,
-          tabBarHideOnKeyboard: true,
-        })}
+              switch (route.name) {
+                case "Recordings":
+                  iconName = focused ? "musical-notes" : "musical-notes-outline";
+                  break;
+                case "Search":
+                  iconName = focused ? "search" : "search-outline";
+                  break;
+                case "Downloads":
+                  iconName = focused ? "download" : "download-outline";
+                  break;
+                case "Profile":
+                  iconName = focused ? "person" : "person-outline";
+                  break;
+              }
+
+              return (
+                <View style={styles.iconContainer}>
+                  <Ionicons name={iconName} size={focused ? 24 : 22} color={color} />
+                </View>
+              );
+            },
+            tabBarLabel: ({ focused, children }) => (
+              <Text style={[styles.tabLabel, focused ? styles.activeLabel : styles.inactiveLabel]}>
+                {children}
+              </Text>
+            ),
+            tabBarActiveTintColor: theme.colors.primary,
+            tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+            animation: "shift",
+            animationTypeForReplace: "push",
+            animationDuration: 300,
+            tabBarItemStyle: styles.tabItem,
+            headerShown: false,
+            tabBarHideOnKeyboard: true,
+            tabBarStyle: {
+              ...styles.tabBar,
+              // Hide tab bar on specific screens
+              display:
+                routeName === "RecordingDetails" || routeName === "SpeciesDetails"
+                  ? "none"
+                  : "flex",
+            },
+          };
+        }}
       >
-        <Tab.Screen name="Recordings" component={RecordingsListScreen} />
-        <Tab.Screen name="Search" component={SearchScreen} />
-        <Tab.Screen name="Downloads" component={DownloadsScreen} />
-        <Tab.Screen name="Profile" component={ProfileSettingsScreen} />
+        <Tab.Screen name="Recordings" component={RecordingsNavigator} />
+        <Tab.Screen name="Search" component={SearchNavigator} />
+        <Tab.Screen name="Downloads" component={DownloadsNavigator} />
+        <Tab.Screen name="Profile" component={ProfileNavigator} />
       </Tab.Navigator>
       <OfflineIndicator />
     </View>
@@ -193,27 +334,6 @@ const MainNavigator = () => {
       >
         <MainStack.Screen name="MainTabs" component={MainTabNavigator} />
         <MainStack.Screen
-          name="RecordingDetails"
-          component={RecordingDetailsScreen}
-          options={{
-            contentStyle: { backgroundColor: theme.colors.background },
-          }}
-        />
-        <MainStack.Screen
-          name="SpeciesDetails"
-          component={SpeciesDetailsScreen}
-          options={{
-            contentStyle: { backgroundColor: theme.colors.background },
-          }}
-        />
-        <MainStack.Screen
-          name="Search"
-          component={SearchScreen}
-          options={{
-            contentStyle: { backgroundColor: theme.colors.background },
-          }}
-        />
-        <MainStack.Screen
           name="OfflineNotice"
           component={OfflineNoticeScreen}
           options={{
@@ -223,20 +343,6 @@ const MainNavigator = () => {
             contentStyle: {
               backgroundColor: theme.colors.background,
             },
-          }}
-        />
-        <MainStack.Screen
-          name="Profile"
-          component={ProfileSettingsScreen}
-          options={{
-            contentStyle: { backgroundColor: theme.colors.background },
-          }}
-        />
-        <MainStack.Screen
-          name="Downloads"
-          component={DownloadsScreen}
-          options={{
-            contentStyle: { backgroundColor: theme.colors.background },
           }}
         />
       </MainStack.Navigator>

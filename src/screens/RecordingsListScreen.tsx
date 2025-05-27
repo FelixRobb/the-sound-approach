@@ -65,10 +65,10 @@ const RecordingsListScreen = () => {
 
   const styles = StyleSheet.create({
     activeTab: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.tertiary,
     },
     activeTabText: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onTertiary,
       fontWeight: "600",
     },
     backgroundPattern: {
@@ -94,7 +94,7 @@ const RecordingsListScreen = () => {
     },
     downloadedIndicator: {
       alignItems: "center",
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.tertiary,
       borderRadius: 8,
       flexDirection: "row",
       paddingHorizontal: 8,
@@ -159,7 +159,7 @@ const RecordingsListScreen = () => {
       shadowRadius: 2,
     },
     filterButtonActive: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.primaryContainer,
       elevation: 2,
       shadowOpacity: 0.15,
     },
@@ -172,7 +172,7 @@ const RecordingsListScreen = () => {
       fontWeight: "500",
     },
     filterButtonTextActive: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onPrimaryContainer,
       fontWeight: "600",
     },
     filterButtonsContainer: {
@@ -816,7 +816,9 @@ const RecordingsListScreen = () => {
                       name="book-outline"
                       size={14}
                       color={
-                        sortBy === "page" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+                        sortBy === "page"
+                          ? theme.colors.onPrimaryContainer
+                          : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
                     />
@@ -838,7 +840,9 @@ const RecordingsListScreen = () => {
                       name="text-outline"
                       size={14}
                       color={
-                        sortBy === "title" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant
+                        sortBy === "title"
+                          ? theme.colors.onPrimaryContainer
+                          : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
                     />
@@ -861,7 +865,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         sortBy === "species"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onPrimaryContainer
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -885,7 +889,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         sortOrder === "desc"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onPrimaryContainer
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -918,7 +922,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "all"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onPrimaryContainer
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -945,7 +949,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "downloaded"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onPrimaryContainer
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -972,7 +976,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "not_downloaded"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onPrimaryContainer
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}

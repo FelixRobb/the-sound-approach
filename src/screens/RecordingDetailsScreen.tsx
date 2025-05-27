@@ -123,7 +123,7 @@ const RecordingDetailsScreen = () => {
       width: "100%",
     },
     downloadButtonSmall: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.tertiary,
       borderRadius: 50,
       padding: 8,
     },
@@ -263,14 +263,14 @@ const RecordingDetailsScreen = () => {
     },
     pageReference: {
       alignSelf: "flex-start",
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.primaryContainer,
       borderRadius: 12,
       marginBottom: 12,
       paddingHorizontal: 12,
       paddingVertical: 6,
     },
     pageText: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onPrimaryContainer,
       fontSize: 14,
       fontWeight: "600",
     },
@@ -722,7 +722,7 @@ const RecordingDetailsScreen = () => {
               style={styles.downloadButtonSmall}
               onPress={() => navigation.navigate("MainTabs", { screen: "Downloads" })}
             >
-              <Ionicons name="cloud-done" size={24} color={theme.colors.onPrimary} />
+              <Ionicons name="cloud-done" size={24} color={theme.colors.onTertiary} />
             </TouchableOpacity>
           )
         }

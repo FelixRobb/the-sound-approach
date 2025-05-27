@@ -7,10 +7,10 @@ import { MD3LightTheme, MD3DarkTheme, MD3Theme } from "react-native-paper";
 // Enhanced color palette with better harmony and contrast
 const Colors = {
   // Primary color (sophisticated golden amber - warmer and more elegant)
-  primary: "rgb(217, 119, 6)", // Rich golden amber
+  primary: "rgb(238, 88, 8)", // Rich golden amber
   primaryLight: "rgb(245, 158, 11)", // Lighter golden amber
   primaryDark: "rgb(180, 83, 9)", // Deeper amber
-  primaryContainer: "rgb(254, 243, 199)", // Soft golden cream
+  primaryContainer: "rgb(235, 208, 101)", // Soft golden cream
   onPrimary: "rgb(255, 255, 255)", // White on primary
   onPrimaryLight: "rgb(92, 38, 0)", // Dark on light primary
   onPrimaryDark: "rgb(255, 255, 255)", // White on dark primary
@@ -77,8 +77,8 @@ const Colors = {
   onLightSurfaceVariant: "rgb(75, 85, 99)",
 
   // Dark mode colors (deep, rich with proper contrast)
-  darkBackground: "rgb(9, 9, 11)", // True deep black
-  darkSurface: "rgb(24, 24, 27)", // Dark surface
+  darkBackground: "rgb(6, 6, 7)", // True deep black
+  darkSurface: "rgb(15, 15, 16)", // Dark surface
   darkSurfaceVariant: "rgb(39, 39, 42)", // Elevated dark
   darkSurfaceLow: "rgb(18, 18, 20)", // Between background and surface
   darkSurfaceHigh: "rgb(39, 39, 42)", // Higher elevation
