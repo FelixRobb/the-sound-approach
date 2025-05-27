@@ -24,6 +24,7 @@ import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
+import { borderRadius } from "../theme";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
 
@@ -66,12 +67,10 @@ const RecordingsListScreen = () => {
     activeTab: {
       backgroundColor: theme.colors.primary,
     },
-
     activeTabText: {
       color: theme.colors.onPrimary,
       fontWeight: "600",
     },
-
     backgroundPattern: {
       backgroundColor: theme.colors.background,
       bottom: 0,
@@ -81,22 +80,18 @@ const RecordingsListScreen = () => {
       right: 0,
       top: 0,
     },
-
     caption: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 14,
       lineHeight: 18,
     },
-
     captionContainer: {
       flex: 1,
     },
-
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
-
     downloadedIndicator: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
@@ -105,25 +100,21 @@ const RecordingsListScreen = () => {
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
-
     downloadedText: {
       color: theme.colors.onPrimary,
       fontSize: 11,
       fontWeight: "600",
       marginLeft: 4,
     },
-
     emptyContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
       paddingTop: 40,
     },
-
     emptyIcon: {
       marginBottom: 16,
     },
-
     emptyText: {
       color: theme.colors.onSurface,
       fontSize: 16,
@@ -131,7 +122,6 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
-
     emptyTitle: {
       color: theme.colors.onSurface,
       fontSize: 18,
@@ -139,7 +129,6 @@ const RecordingsListScreen = () => {
       marginBottom: 8,
       textAlign: "center",
     },
-
     errorContainer: {
       alignItems: "center",
       flex: 1,
@@ -153,7 +142,6 @@ const RecordingsListScreen = () => {
       marginHorizontal: 24,
       textAlign: "center",
     },
-
     filterButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
@@ -170,28 +158,23 @@ const RecordingsListScreen = () => {
       shadowOpacity: 0.1,
       shadowRadius: 2,
     },
-
     filterButtonActive: {
       backgroundColor: theme.colors.primary,
       elevation: 2,
       shadowOpacity: 0.15,
     },
-
     filterButtonIcon: {
       marginRight: 6,
     },
-
     filterButtonText: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 13,
       fontWeight: "500",
     },
-
     filterButtonTextActive: {
       color: theme.colors.onPrimary,
       fontWeight: "600",
     },
-
     filterButtonsContainer: {
       backgroundColor: theme.colors.surface,
       borderRadius: 24,
@@ -199,13 +182,12 @@ const RecordingsListScreen = () => {
       marginHorizontal: 8,
       marginTop: 8,
       paddingHorizontal: 0,
-      paddingVertical: 6,
+      paddingTop: 6,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.08,
       shadowRadius: 8,
     },
-
     filterDivider: {
       alignSelf: "center",
       backgroundColor: theme.colors.outlineVariant,
@@ -233,8 +215,8 @@ const RecordingsListScreen = () => {
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
+      borderBottomLeftRadius: borderRadius.xxl,
+      borderBottomRightRadius: borderRadius.xxl,
       elevation: 4,
       paddingBottom: 8,
       paddingTop: 16 + insets.top,
@@ -267,7 +249,6 @@ const RecordingsListScreen = () => {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 16,
     },
     listContainer: {
       flex: 1,
@@ -825,7 +806,6 @@ const RecordingsListScreen = () => {
                 contentContainerStyle={styles.scrollViewFilters}
               >
                 <View style={styles.filterRow}>
-                  {/* Sort By Buttons */}
                   <Text style={styles.filterSectionTitle}>Sort By</Text>
                   <TouchableOpacity
                     style={[styles.filterButton, sortBy === "page" && styles.filterButtonActive]}

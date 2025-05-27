@@ -112,9 +112,6 @@ const RecordingDetailsScreen = () => {
       fontWeight: "bold",
       marginBottom: 12,
     },
-    disabledButton: {
-      opacity: 0.5,
-    },
     downloadButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
@@ -247,14 +244,9 @@ const RecordingDetailsScreen = () => {
     },
     loadingCard: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
       borderRadius: 16,
       elevation: 4,
       padding: 24,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
       width: width * 0.9,
     },
     loadingContainer: {
@@ -268,16 +260,6 @@ const RecordingDetailsScreen = () => {
       fontSize: 16,
       marginTop: 16,
       textAlign: "center",
-    },
-    offlineText: {
-      color: theme.colors.error,
-      fontSize: 14,
-      marginLeft: 8,
-    },
-    offlineWarning: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginTop: 12,
     },
     pageReference: {
       alignSelf: "flex-start",
@@ -337,15 +319,15 @@ const RecordingDetailsScreen = () => {
     },
     speciesButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderTopColor: theme.colors.outlineVariant,
+      backgroundColor: theme.colors.surface,
+      borderTopColor: theme.colors.primary,
       borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "center",
       padding: 16,
     },
     speciesButtonText: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onSurface,
       fontSize: 16,
       fontWeight: "600",
       marginRight: 8,
@@ -508,7 +490,7 @@ const RecordingDetailsScreen = () => {
   };
 
   const handleDownload = async () => {
-    if (!recording || !isConnected) return;
+    if (!recording) return;
     try {
       await downloadRecording(recording);
     } catch (error) {
@@ -518,15 +500,6 @@ const RecordingDetailsScreen = () => {
   };
 
   const handleDeleteDownload = async (item: Recording) => {
-    if (!isConnected) {
-      Alert.alert(
-        "Cannot Delete While Offline",
-        "You need to be online to delete downloaded recordings.",
-        [{ text: "OK" }]
-      );
-      return;
-    }
-
     Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
       {
         text: "Cancel",
@@ -690,9 +663,7 @@ const RecordingDetailsScreen = () => {
             <Ionicons name="alert-circle" size={48} style={styles.errorIcon} />
             <Text style={styles.errorTitle}>Unable to Load Recording</Text>
             <Text style={styles.errorText}>
-              {!isConnected
-                ? "You're offline. This recording is not available offline."
-                : "Something went wrong. Please try again."}
+              &quot;Something went wrong. Please try again.&quot;
             </Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
               <Text style={styles.retryText}>Try Again</Text>
@@ -774,7 +745,7 @@ const RecordingDetailsScreen = () => {
               }
             >
               <Text style={styles.speciesButtonText}>View Species Details</Text>
-              <Ionicons name="arrow-forward" size={20} color={theme.colors.onPrimary} />
+              <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
             </TouchableOpacity>
           )}
         </View>
@@ -795,9 +766,8 @@ const RecordingDetailsScreen = () => {
           {getDownloadStatus() === "completed" ? (
             <View style={styles.downloadedContainer}>
               <TouchableOpacity
-                style={[styles.downloadButton, !isConnected && styles.disabledButton]}
+                style={styles.downloadButton}
                 onPress={() => handleDeleteDownload(recording)}
-                disabled={!isConnected}
               >
                 <Ionicons name="trash-outline" size={24} color={theme.colors.onPrimary} />
                 <Text style={styles.downloadButtonText}>Remove Download</Text>
@@ -810,21 +780,10 @@ const RecordingDetailsScreen = () => {
             </View>
           ) : (
             <>
-              <TouchableOpacity
-                style={[styles.downloadButton, !isConnected && styles.disabledButton]}
-                onPress={handleDownload}
-                disabled={!isConnected}
-              >
+              <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
                 <Ionicons name="cloud-download" size={24} color={theme.colors.onPrimary} />
                 <Text style={styles.downloadButtonText}>Download for Offline Use</Text>
               </TouchableOpacity>
-
-              {!isConnected && (
-                <View style={styles.offlineWarning}>
-                  <Ionicons name="wifi" size={16} color={theme.colors.error} />
-                  <Text style={styles.offlineText}>Connect to download this recording</Text>
-                </View>
-              )}
             </>
           )}
         </View>

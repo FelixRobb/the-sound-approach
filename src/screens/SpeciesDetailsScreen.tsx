@@ -272,9 +272,7 @@ const SpeciesDetailsScreen = () => {
             <Ionicons name="alert-circle" size={60} color={theme.colors.error} />
             <Text style={styles.errorTitle}>Unable to Load Species</Text>
             <Text style={styles.errorText}>
-              {!isConnected
-                ? "You're offline. This species is not available offline."
-                : "Something went wrong. Please try again."}
+              &quot;Something went wrong. Please try again.&quot;
             </Text>
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
               <Ionicons name="refresh" size={18} color="#FFFFFF" />
