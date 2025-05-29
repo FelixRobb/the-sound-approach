@@ -1,5 +1,3 @@
-"use client";
-
 import { useNavigationState } from "@react-navigation/native";
 import type React from "react";
 import { createContext, useContext, useEffect, useState, useRef } from "react";
@@ -49,6 +47,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     error: null,
   });
 
+  // Track the current playing URI to check if it's a local file
+  const [currentPlayingUri, setCurrentPlayingUri] = useState<string | null>(null);
+
   // Track navigation state to detect screen changes
   const currentRouteName = useNavigationState((state) => state?.routes[state.index]?.name);
   const previousRouteRef = useRef<string | null>(null);
@@ -72,17 +73,25 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       audioService.stop().catch((error) => {
         console.error("Error stopping playback during navigation:", error);
       });
+      setCurrentPlayingUri(null);
     }
 
     previousRouteRef.current = currentRouteName;
   }, [currentRouteName, audioService]);
 
-  // Stop playback when going offline if the current track is not downloaded
+  // Stop playback when going offline ONLY if the current track is NOT a downloaded file
   useEffect(() => {
-    if (!isConnected && audioState.playbackState === "playing") {
+    if (
+      !isConnected &&
+      audioState.playbackState === "playing" &&
+      currentPlayingUri &&
+      !currentPlayingUri.startsWith("file://")
+    ) {
+      // Only stop if it's not a local file
       audioService.stop().catch(console.error);
+      setCurrentPlayingUri(null);
     }
-  }, [isConnected, audioState.playbackState, audioService]);
+  }, [isConnected, audioState.playbackState, currentPlayingUri, audioService]);
 
   // Toggle play/pause for a track
   const togglePlayPause = async (uri: string, trackId: string): Promise<boolean> => {
@@ -92,10 +101,21 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return false;
       }
 
+      // Store the current playing URI for offline checks
+      setCurrentPlayingUri(uri);
+
       // Use the simplified playTrack method which handles all the logic
-      return await audioService.playTrack(uri, trackId);
+      const result = await audioService.playTrack(uri, trackId);
+
+      // Clear the URI if playback failed
+      if (!result) {
+        setCurrentPlayingUri(null);
+      }
+
+      return result;
     } catch (error) {
       console.error("Error toggling playback:", error);
+      setCurrentPlayingUri(null);
       return false;
     }
   };

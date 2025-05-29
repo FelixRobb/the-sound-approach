@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { createContext, useReducer, useEffect } from "react";
 
@@ -98,32 +96,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const bootstrapAsync = async () => {
       try {
         // Get the current session from Supabase
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+        // Check for refresh token errors
+        if (sessionError) {
+          // If it's a refresh token error, clear the session and sign out
+          if (
+            sessionError.message.includes("refresh_token_not_found") ||
+            sessionError.message.includes("Invalid Refresh Token") ||
+            sessionError.message.includes("Refresh Token Not Found")
+          ) {
+            await supabase.auth.signOut({ scope: "local" }); // Only clear local storage
+            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+            return;
+          }
+
+          // Handle other session errors
+          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+          return;
+        }
 
         if (sessionData?.session) {
-          // Session exists, restore the user state
-          dispatch({
-            type: "RESTORE_TOKEN",
-            token: sessionData.session.access_token,
-            user: sessionData.session.user
-              ? {
-                  id: sessionData.session.user.id,
-                  email: sessionData.session.user.email || "",
-                }
-              : null,
-          });
+          // Verify the session is still valid by making a simple request
+          try {
+            // Test the session by getting user info
+            const { error: userError } = await supabase.auth.getUser();
+
+            if (userError) {
+              // Session is invalid, clear it
+              await supabase.auth.signOut({ scope: "local" });
+              dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+              return;
+            }
+
+            // Session is valid, restore the user state
+            dispatch({
+              type: "RESTORE_TOKEN",
+              token: sessionData.session.access_token,
+              user: sessionData.session.user
+                ? {
+                    id: sessionData.session.user.id,
+                    email: sessionData.session.user.email || "",
+                  }
+                : null,
+            });
+          } catch (verificationError) {
+            await supabase.auth.signOut({ scope: "local" });
+            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+            return;
+          }
         } else {
           // No active session
           dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
         }
 
         // Subscribe to auth state changes
-        authStateSubscription = supabase.auth.onAuthStateChange((event, session) => {
+        authStateSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === "SIGNED_OUT") {
             // User signed out or was deleted
             dispatch({ type: "SIGN_OUT" });
-          } else if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
-            // User signed in or token was refreshed
+          } else if (event === "TOKEN_REFRESHED" && session) {
+            // Token was successfully refreshed
+            dispatch({
+              type: "RESTORE_TOKEN",
+              token: session.access_token,
+              user: session.user
+                ? {
+                    id: session.user.id,
+                    email: session.user.email || "",
+                  }
+                : null,
+            });
+          } else if (event === "SIGNED_IN" && session) {
+            // User signed in
             dispatch({
               type: "RESTORE_TOKEN",
               token: session.access_token,
@@ -138,6 +183,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       } catch (e) {
         console.error("Failed to restore authentication state:", e);
+        // Clear any potentially corrupted session data
+        try {
+          await supabase.auth.signOut({ scope: "local" });
+        } catch (signOutError) {
+          console.error("Error clearing session:", signOutError);
+        }
         dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
       }
     };
@@ -258,6 +309,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SIGN_OUT" });
       } catch (e) {
         console.error("Error signing out:", e);
+        // Even if signOut fails, update local state
+        dispatch({ type: "SIGN_OUT" });
       }
     },
     clearError: () => {

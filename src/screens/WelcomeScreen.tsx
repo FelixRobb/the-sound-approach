@@ -1,5 +1,4 @@
 // src/screens/WelcomeScreen.tsx
-"use client";
 
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -7,7 +6,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { Button } from "react-native-paper";
-import { opacity } from "react-native-reanimated/lib/typescript/Colors";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { useThemedStyles } from "../hooks/useThemedStyles";

@@ -1,5 +1,4 @@
 // src/screens/LoginScreen.tsx
-"use client";
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";

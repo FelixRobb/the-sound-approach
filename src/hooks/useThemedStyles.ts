@@ -1,5 +1,3 @@
-"use client";
-
 import { useContext } from "react";
 import { useTheme, type MD3Theme } from "react-native-paper";
 

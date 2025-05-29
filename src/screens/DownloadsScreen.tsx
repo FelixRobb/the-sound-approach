@@ -1,5 +1,3 @@
-"use client";
-
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -449,14 +447,17 @@ const DownloadsScreen = () => {
     </View>
   );
 
+  // Ensure the audioUri has the file:// prefix and is well-formed
+  const ensureFileUri = (path: string) => {
+    if (!path) return null;
+    if (path.startsWith("file://")) return path;
+    // Remove any accidental double slashes after file://
+    return "file://" + path.replace(/^\/+/, "");
+  };
+
   // Render download item
   const renderDownloadItem = ({ item }: { item: DownloadRecord }) => {
-    // Ensure the audioUri has the file:// prefix
-    const audioUri = item.audio_path
-      ? item.audio_path.startsWith("file://")
-        ? item.audio_path
-        : `file://${item.audio_path}`
-      : null;
+    const audioUri = ensureFileUri(item.audio_path);
 
     const handleItemPress = () => {
       if (!isConnected) {

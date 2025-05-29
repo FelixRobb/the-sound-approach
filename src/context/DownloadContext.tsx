@@ -1,5 +1,3 @@
-"use client";
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import type React from "react";

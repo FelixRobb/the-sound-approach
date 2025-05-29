@@ -1,5 +1,3 @@
-"use client";
-
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";

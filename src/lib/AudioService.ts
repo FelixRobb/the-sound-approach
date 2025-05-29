@@ -27,7 +27,6 @@ class AudioService {
   private sound: Audio.Sound | null = null;
   private state: AudioPlayerState = { ...initialState };
   private listeners: Map<string, AudioListenerCallback> = new Map();
-  private isProcessing: boolean = false; // Add processing lock
 
   // Private constructor for singleton pattern
   private constructor() {
@@ -60,24 +59,15 @@ class AudioService {
 
   // Load and play an audio track
   public async playTrack(uri: string, trackId: string): Promise<boolean> {
-    // Prevent multiple simultaneous operations
-    if (this.isProcessing) {
-      return false;
-    }
-
     try {
-      this.isProcessing = true;
-
-      // If same track is already playing, pause it
+      // If same track is already playing, just pause it
       if (this.state.trackId === trackId && this.state.playbackState === "playing") {
-        const success = await this.pauseCurrentTrack();
-        return success;
+        return this.pause();
       }
 
-      // If same track is paused, resume it (restart from beginning)
+      // If same track is paused, resume from beginning
       if (this.state.trackId === trackId && this.state.playbackState === "paused") {
-        const success = await this.resumeCurrentTrack();
-        return success;
+        return this.play();
       }
 
       // Stop any current track
@@ -108,26 +98,43 @@ class AudioService {
       } else {
         this.updateState({
           playbackState: "idle",
-          trackId: null,
           error: "Failed to load audio",
         });
         return false;
       }
     } catch (error) {
-      console.error("Error in playTrack:", error);
       this.updateState({
         playbackState: "idle",
         trackId: null,
         error: error instanceof Error ? error.message : "Unknown error",
       });
       return false;
-    } finally {
-      this.isProcessing = false;
+    }
+  }
+
+  // Play the loaded track
+  private async play(): Promise<boolean> {
+    if (!this.sound) {
+      return false;
+    }
+
+    try {
+      // Reset to beginning
+      await this.sound.setPositionAsync(0);
+      await this.sound.playAsync();
+      this.updateState({ playbackState: "playing" });
+      return true;
+    } catch (error) {
+      this.updateState({
+        playbackState: "idle",
+        error: error instanceof Error ? error.message : "Unknown error playing audio",
+      });
+      return false;
     }
   }
 
   // Pause the current track
-  private async pauseCurrentTrack(): Promise<boolean> {
+  private async pause(): Promise<boolean> {
     if (!this.sound || this.state.playbackState !== "playing") {
       return false;
     }
@@ -139,33 +146,6 @@ class AudioService {
       this.updateState({ playbackState: "paused" });
       return true;
     } catch (error) {
-      console.error("Error pausing track:", error);
-      this.updateState({
-        playbackState: "idle",
-        error: "Error pausing playback",
-      });
-      return false;
-    }
-  }
-
-  // Resume the current track (restart from beginning)
-  private async resumeCurrentTrack(): Promise<boolean> {
-    if (!this.sound) {
-      return false;
-    }
-
-    try {
-      // Reset to beginning and play
-      await this.sound.setPositionAsync(0);
-      await this.sound.playAsync();
-      this.updateState({ playbackState: "playing" });
-      return true;
-    } catch (error) {
-      console.error("Error resuming track:", error);
-      this.updateState({
-        playbackState: "idle",
-        error: error instanceof Error ? error.message : "Unknown error playing audio",
-      });
       return false;
     }
   }
@@ -188,7 +168,6 @@ class AudioService {
 
       return true;
     } catch (error) {
-      console.error("Error stopping audio:", error);
       this.sound = null;
       this.updateState({
         ...initialState,
@@ -220,11 +199,7 @@ class AudioService {
 
     // Notify all listeners
     this.listeners.forEach((callback) => {
-      try {
-        callback(this.state);
-      } catch (error) {
-        console.error("Error notifying listener:", error);
-      }
+      callback(this.state);
     });
   }
 
@@ -234,7 +209,6 @@ class AudioService {
       if (status.error) {
         this.updateState({
           playbackState: "idle",
-          trackId: null,
           error: `Playback error: ${status.error}`,
         });
       }

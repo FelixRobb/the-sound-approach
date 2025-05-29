@@ -1,5 +1,3 @@
-"use client";
-
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { getFocusedRouteNameFromRoute, NavigationContainer } from "@react-navigation/native";
@@ -360,12 +358,12 @@ const AppNavigator = () => {
   // Effect to hide the splash screen once auth state is determined
   useEffect(() => {
     const hideSplash = async () => {
-      if (authState.userToken !== undefined) {
+      if (!authState.isLoading && authState.userToken !== undefined) {
         await SplashScreen.hideAsync();
       }
     };
     hideSplash();
-  }, [authState.userToken]); // Rerun when auth state changes
+  }, [authState.isLoading, authState.userToken]);
 
   // Add background color to ensure no white flashes
   const backgroundStyle = StyleSheet.create({
@@ -380,7 +378,7 @@ const AppNavigator = () => {
       <NavigationContainer theme={navTheme}>
         <AudioProvider>
           <OfflineProvider>
-            {authState.userToken ? ( // Directly check authState
+            {authState.userToken ? (
               isConnected ? (
                 <MainNavigator />
               ) : (

@@ -1,5 +1,3 @@
-"use client";
-
 import NetInfo from "@react-native-community/netinfo";
 import type React from "react";
 import { createContext, useState, useEffect, useCallback, useRef } from "react";
