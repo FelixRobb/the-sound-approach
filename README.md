@@ -128,5 +128,4 @@ Required environment variables:
 - google developer 25€ onee time
 - cursor 20€ per month, or 16€ per month paid yearly
 - expo based on usage. no idea how much, depends on what is used ok
-- email smtp???
--
+- email smtp??? needed for auth. resend is 20 month forever. but sound approach probably already has email services that could be used
