@@ -72,13 +72,14 @@ export type AuthAction =
   | { type: "RESTORE_TOKEN"; token: string | null; user: User | null }
   | { type: "SIGN_IN"; token: string; user: User }
   | { type: "SIGN_OUT" }
-  | { type: "AUTH_ERROR"; error: string };
+  | { type: "AUTH_ERROR"; error: string | null };
 
 export type AuthContextType = {
   state: AuthState;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, bookCode: string) => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   clearError: () => void;
 };
 
@@ -193,13 +194,35 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  Recordings: undefined;
-  Downloads: undefined;
-  Profile: undefined;
+  Recordings: NavigatorScreenParams<RecordingsStackParamList>;
+  Search: NavigatorScreenParams<SearchStackParamList>;
+  Downloads: NavigatorScreenParams<DownloadsStackParamList>;
+  Profile: NavigatorScreenParams<ProfileStackParamList>;
+};
+
+export type RecordingsStackParamList = {
+  RecordingsList: undefined;
+  RecordingDetails: { recordingId: string };
+  SpeciesDetails: { speciesId: string };
+};
+
+export type SearchStackParamList = {
+  SearchMain: undefined;
+  RecordingDetails: { recordingId: string };
+  SpeciesDetails: { speciesId: string };
+};
+
+export type DownloadsStackParamList = {
+  DownloadsList: undefined;
+  RecordingDetails: { recordingId: string };
+};
+
+export type ProfileStackParamList = {
+  ProfileMain: undefined;
 };
 
 export type OfflineStackParamList = {
-  Downloads: undefined;
+  DownloadsList: undefined;
   OfflineNotice: undefined;
 };
 

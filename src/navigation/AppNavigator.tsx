@@ -149,7 +149,7 @@ const DownloadsNavigator = () => {
         navigationBarColor: theme.colors.background,
       }}
     >
-      <DownloadsStack.Screen name="Downloads" component={DownloadsScreen} />
+      <DownloadsStack.Screen name="DownloadsList" component={DownloadsScreen} />
       <DownloadsStack.Screen
         name="RecordingDetails"
         component={RecordingDetailsScreen}
@@ -179,6 +179,7 @@ const ProfileNavigator = () => {
       }}
     >
       <ProfileStack.Screen name="ProfileMain" component={ProfileSettingsScreen} />
+      <DownloadsStack.Screen name="DownloadsList" component={DownloadsScreen} />
     </ProfileStack.Navigator>
   );
 };

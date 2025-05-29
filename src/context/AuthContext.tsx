@@ -1,35 +1,10 @@
 import type React from "react";
-import { createContext, useReducer, useEffect } from "react";
+import { createContext, useReducer, useEffect, useContext } from "react";
 
 import { supabase } from "../lib/supabase";
+import type { AuthAction, AuthContextType, AuthState } from "../types";
 
-// Define types
-type User = {
-  id: string;
-  email: string;
-};
-
-type AuthState = {
-  isLoading: boolean;
-  isSignout: boolean;
-  userToken: string | null;
-  user: User | null;
-  error: string | null;
-};
-
-type AuthAction =
-  | { type: "RESTORE_TOKEN"; token: string | null; user: User | null }
-  | { type: "SIGN_IN"; token: string; user: User }
-  | { type: "SIGN_OUT" }
-  | { type: "AUTH_ERROR"; error: string | null };
-
-type AuthContextType = {
-  state: AuthState;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, bookCode: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  clearError: () => void;
-};
+import { DownloadContext } from "./DownloadContext";
 
 // Initial state
 const initialState: AuthState = {
@@ -46,6 +21,7 @@ export const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
+  deleteAccount: async () => {},
   clearError: () => {},
 });
 
@@ -87,6 +63,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const { clearAllDownloads } = useContext(DownloadContext);
 
   // Effect to check for stored token on app start
   useEffect(() => {
@@ -306,11 +283,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: async () => {
       try {
         await supabase.auth.signOut();
+        // Clear all local downloads upon signing out
+        await clearAllDownloads();
         dispatch({ type: "SIGN_OUT" });
       } catch (e) {
         console.error("Error signing out:", e);
         // Even if signOut fails, update local state
         dispatch({ type: "SIGN_OUT" });
+      }
+    },
+    deleteAccount: async () => {
+      try {
+        // Get the current session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          dispatch({ type: "AUTH_ERROR", error: "No active session found" });
+          return;
+        }
+
+        // Get the Supabase URL from your config
+        const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+
+        // Call the edge function to delete the user
+        const response = await fetch(`${supabaseUrl}/functions/v1/delete-user`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          dispatch({ type: "AUTH_ERROR", error: result.error || "Failed to delete account" });
+          return;
+        }
+
+        // If successful, sign out the user locally AND clear downloads
+        await clearAllDownloads();
+        dispatch({ type: "SIGN_OUT" });
+      } catch (e) {
+        console.error("Error deleting account:", e);
+        dispatch({
+          type: "AUTH_ERROR",
+          error: "An unexpected error occurred while deleting account",
+        });
       }
     },
     clearError: () => {

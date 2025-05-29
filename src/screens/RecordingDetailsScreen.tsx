@@ -567,7 +567,7 @@ const RecordingDetailsScreen = () => {
           minimumTrackTintColor={theme.colors.primary}
           maximumTrackTintColor={theme.colors.surfaceVariant}
           tapToSeek
-          thumbTintColor={theme.colors.primary}
+          thumbTintColor={theme.colors.tertiary}
         />
 
         <Text style={styles.timeText}>
@@ -710,7 +710,12 @@ const RecordingDetailsScreen = () => {
           getDownloadStatus() === "completed" && (
             <TouchableOpacity
               style={styles.downloadButtonSmall}
-              onPress={() => navigation.navigate("MainTabs", { screen: "Downloads" })}
+              onPress={() =>
+                navigation.navigate("MainTabs", {
+                  screen: "Downloads",
+                  params: { screen: "DownloadsList" },
+                })
+              }
             >
               <Ionicons name="cloud-done" size={24} color={theme.colors.onTertiary} />
             </TouchableOpacity>
