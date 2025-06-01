@@ -191,6 +191,7 @@ export type RootStackParamList = {
   Search: undefined;
   OfflineNotice: undefined;
   Profile: undefined;
+  DownloadsList: undefined;
 };
 
 export type MainTabParamList = {

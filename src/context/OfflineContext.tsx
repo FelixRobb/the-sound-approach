@@ -30,7 +30,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Just redirect to Downloads directly when offline
       navigation.reset({
         index: 0,
-        routes: [{ name: "Downloads" }],
+        routes: [{ name: "DownloadsList" }],
       });
     }
   }, [isConnected, navigation]);
@@ -39,7 +39,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const isScreenAllowedOffline = (screenName: keyof RootStackParamList): boolean => {
     // When offline, only allow certain screens
     if (!isConnected) {
-      const allowedScreens: (keyof RootStackParamList)[] = ["Downloads", "OfflineNotice"];
+      const allowedScreens: (keyof RootStackParamList)[] = ["DownloadsList", "OfflineNotice"];
       return allowedScreens.includes(screenName);
     }
     return true;

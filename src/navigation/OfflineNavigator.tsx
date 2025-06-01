@@ -111,7 +111,7 @@ const OfflineNavigator = () => {
           navigationBarColor: theme.colors.background,
         }}
       >
-        <OfflineStack.Screen name="Downloads" component={DownloadsScreen} />
+        <OfflineStack.Screen name="DownloadsList" component={DownloadsScreen} />
         <OfflineStack.Screen
           name="OfflineNotice"
           component={OfflineNoticeScreen}

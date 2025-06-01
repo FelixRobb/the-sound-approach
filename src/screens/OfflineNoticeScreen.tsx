@@ -100,7 +100,7 @@ const OfflineNoticeScreen = () => {
             mode="contained"
             icon="download"
             onPress={() => {
-              navigation.navigate("Downloads");
+              navigation.navigate("DownloadsList");
             }}
             style={styles.button}
           >
