@@ -1,9 +1,12 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
+import * as NavigationBar from "expo-navigation-bar";
 import { StatusBar } from "expo-status-bar";
-import { View, Text, StyleSheet, ImageBackground } from "react-native";
+import { useEffect } from "react";
+import { View, Text, StyleSheet, ImageBackground, Platform } from "react-native";
 import { Button } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 import { useThemedStyles } from "../hooks/useThemedStyles";
@@ -11,17 +14,48 @@ import type { RootStackParamList } from "../types";
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { theme } = useThemedStyles();
+  const { theme, isDarkMode } = useThemedStyles();
+  const insets = useSafeAreaInsets();
+
+  // Set Android navigation bar to transparent/translucent for welcome screen
+  useEffect(() => {
+    const setTransparentNavigationBar = async () => {
+      if (Platform.OS === "android") {
+        try {
+          // Make navigation bar transparent
+          await NavigationBar.setBackgroundColorAsync("transparent");
+          await NavigationBar.setButtonStyleAsync("light");
+        } catch (error) {
+          console.warn("Failed to set transparent navigation bar:", error);
+        }
+      }
+    };
+
+    setTransparentNavigationBar();
+
+    // Cleanup: restore navigation bar when leaving welcome screen
+    return () => {
+      if (Platform.OS === "android") {
+        const restoreNavigationBar = async () => {
+          try {
+            await NavigationBar.setBackgroundColorAsync(theme.colors.background);
+            await NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+          } catch (error) {
+            console.warn("Failed to restore navigation bar:", error);
+          }
+        };
+        restoreNavigationBar();
+      }
+    };
+  }, [theme.colors.background, isDarkMode]);
 
   const styles = StyleSheet.create({
     backgroundImage: {
       flex: 1,
-      height: "100%",
-      width: "100%",
     },
     buttonContainer: {
       gap: 16,
-      marginBottom: 20,
+      marginBottom: Platform.OS === "android" ? Math.max(20, insets.bottom) : 20,
     },
     buttonContent: {
       flexDirection: "row-reverse",
@@ -34,7 +68,6 @@ const WelcomeScreen = () => {
     container: {
       flex: 1,
       justifyContent: "space-between",
-      paddingBottom: 50,
       paddingHorizontal: 28,
       paddingTop: 80,
     },
@@ -129,7 +162,7 @@ const WelcomeScreen = () => {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <StatusBar style="light" />
+      <StatusBar style="light" translucent />
       <LinearGradient
         colors={["rgba(0, 0, 0, 0.4)", "rgba(0, 0, 0, 0.2)", "rgba(0, 0, 0, 0.6)"]}
         locations={[0, 0.5, 1]}
