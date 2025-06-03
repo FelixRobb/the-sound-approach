@@ -16,6 +16,7 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import AnimatedTabBar from "../components/AnimatedTabBar";
 import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
@@ -65,13 +66,6 @@ const RecordingsListScreen = () => {
   );
 
   const styles = StyleSheet.create({
-    activeTab: {
-      backgroundColor: theme.colors.tertiary,
-    },
-    activeTabText: {
-      color: theme.colors.onTertiary,
-      fontWeight: "600",
-    },
     backgroundPattern: {
       backgroundColor: theme.colors.background,
       bottom: 0,
@@ -372,34 +366,6 @@ const RecordingsListScreen = () => {
       color: theme.colors.onSurfaceVariant,
       fontSize: 15,
       marginTop: 2,
-    },
-    tab: {
-      alignItems: "center",
-      borderRadius: 20,
-      flexDirection: "row",
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
-    tabBar: {
-      alignItems: "center",
-      alignSelf: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outlineVariant,
-      borderRadius: 24,
-      borderWidth: 1,
-      flexDirection: "row",
-      height: 46,
-      marginHorizontal: 4,
-      marginTop: 12,
-      paddingHorizontal: 6,
-      width: "94%",
-    },
-    tabText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginLeft: 6,
     },
     title: {
       color: theme.colors.primary,
@@ -765,46 +731,7 @@ const RecordingsListScreen = () => {
               )}
             </View>
           ) : (
-            <View style={styles.tabBar}>
-              {isConnected && (
-                <>
-                  <TouchableOpacity
-                    style={[styles.tab, activeTab === "book" && styles.activeTab]}
-                    onPress={() => setActiveTab("book")}
-                  >
-                    <Ionicons
-                      name="book-outline"
-                      size={18}
-                      color={
-                        activeTab === "book"
-                          ? theme.colors.onPrimary
-                          : theme.colors.onSurfaceVariant
-                      }
-                    />
-                    <Text style={[styles.tabText, activeTab === "book" && styles.activeTabText]}>
-                      By Book Order
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.tab, activeTab === "species" && styles.activeTab]}
-                    onPress={() => setActiveTab("species")}
-                  >
-                    <Ionicons
-                      name="leaf-outline"
-                      size={18}
-                      color={
-                        activeTab === "species"
-                          ? theme.colors.onPrimary
-                          : theme.colors.onSurfaceVariant
-                      }
-                    />
-                    <Text style={[styles.tabText, activeTab === "species" && styles.activeTabText]}>
-                      By Species
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
+            <AnimatedTabBar activeTab={activeTab} onTabChange={setActiveTab} theme={theme} />
           )}
           {isConnected && activeTab === "book" && (
             <View style={styles.filterButtonsContainer}>
