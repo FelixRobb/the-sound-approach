@@ -45,10 +45,7 @@ const OfflineNoticeScreen = () => {
       marginBottom: 24,
       textAlign: "center",
     },
-    dismissButton: {
-      borderColor: theme.colors.primary,
-      width: "100%",
-    },
+
     noDownloadsText: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 14,
@@ -111,15 +108,6 @@ const OfflineNoticeScreen = () => {
             Connect to the internet to browse and download recordings for offline use.
           </Text>
         )}
-
-        <Button
-          mode="outlined"
-          onPress={() => navigation.goBack()}
-          style={styles.dismissButton}
-          textColor={theme.colors.primary}
-        >
-          Dismiss
-        </Button>
 
         {isConnected && (
           <View style={styles.reconnectedContainer}>
