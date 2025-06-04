@@ -152,7 +152,7 @@ const ProfileSettingsScreen = () => {
       fontWeight: "500",
     },
     actionButtonTextDanger: {
-      color: theme.colors.error,
+      color: theme.colors.onErrorContainer,
       fontWeight: "600",
     },
     actionButtonTextDisabled: {
@@ -590,7 +590,7 @@ const ProfileSettingsScreen = () => {
             <Ionicons
               name="trash-outline"
               size={24}
-              color={isConnected ? theme.colors.error : theme.colors.onSurfaceDisabled}
+              color={isConnected ? theme.colors.onErrorContainer : theme.colors.onSurfaceDisabled}
             />
           </View>
           <Text

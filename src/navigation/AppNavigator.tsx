@@ -24,6 +24,7 @@ import OfflineNavigator from "../navigation/OfflineNavigator";
 import DownloadsScreen from "../screens/DownloadsScreen";
 import LoginScreen from "../screens/LoginScreen";
 import OfflineNoticeScreen from "../screens/OfflineNoticeScreen";
+import OfflineWelcomeScreen from "../screens/OfflineWelcomeScreen";
 import ProfileSettingsScreen from "../screens/ProfileSettingsScreen";
 import RecordingDetailsScreen from "../screens/RecordingDetailsScreen";
 import RecordingsListScreen from "../screens/RecordingsListScreen";
@@ -447,12 +448,32 @@ const MainNavigator: React.FC = () => {
   );
 };
 
+const OfflineAuthNavigator: React.FC = () => {
+  return (
+    <AuthStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: "fade",
+        gestureEnabled: false, // Disable gestures when offline
+        presentation: "card",
+      }}
+    >
+      <AuthStack.Screen name="Welcome" component={OfflineWelcomeScreen} />
+    </AuthStack.Navigator>
+  );
+};
+
 // Root navigator that switches between auth and main flows
 const AppNavigator: React.FC = () => {
   const { state: authState } = useContext(AuthContext);
   const { isConnected } = useContext(NetworkContext);
   const { theme, isDarkMode } = useThemedStyles();
   const navTheme = isDarkMode ? navigationDarkTheme : navigationLightTheme;
+  const backgroundStyle = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+  });
 
   useEffect(() => {
     const setNavigationBarColor = async () => {
@@ -482,25 +503,27 @@ const AppNavigator: React.FC = () => {
     hideSplash();
   }, [authState.isLoading, authState.userToken]);
 
-  const backgroundStyle = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-  });
-
+  if (authState.isLoading) {
+    return <View style={backgroundStyle.container} />;
+  }
   return (
     <View style={backgroundStyle.container}>
       <NavigationContainer theme={navTheme}>
         <AudioProvider>
           <OfflineProvider>
             {authState.userToken ? (
+              // User is authenticated (either online or offline)
               isConnected ? (
                 <MainNavigator />
               ) : (
                 <OfflineNavigator />
               )
-            ) : (
+            ) : // User is not authenticated
+            isConnected ? (
               <AuthNavigator />
+            ) : (
+              // Offline and not authenticated - show limited auth flow
+              <OfflineAuthNavigator />
             )}
           </OfflineProvider>
         </AudioProvider>

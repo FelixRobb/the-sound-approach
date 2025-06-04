@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 import type React from "react";
 import { createContext, useReducer, useEffect, useContext } from "react";
 
@@ -72,7 +74,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const bootstrapAsync = async () => {
       try {
-        // Get the current session from Supabase
+        // Check if we're offline first
+        const { isConnected } = await NetInfo.fetch();
+
+        if (!isConnected) {
+          // When offline, check for stored offline token
+          const offlineToken = await AsyncStorage.getItem("offline_auth_token");
+          const tokenExpiry = await AsyncStorage.getItem("offline_token_expiry");
+
+          if (offlineToken && tokenExpiry) {
+            const expiryDate = new Date(tokenExpiry);
+            const now = new Date();
+
+            if (now < expiryDate) {
+              // Token is still valid, restore offline session
+              const userData = await AsyncStorage.getItem("offline_user_data");
+              const user = userData ? JSON.parse(userData) : null;
+
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token: offlineToken,
+                user,
+              });
+              return;
+            } else {
+              // Token expired, clear offline data
+              await AsyncStorage.multiRemove([
+                "offline_auth_token",
+                "offline_token_expiry",
+                "offline_user_data",
+              ]);
+            }
+          }
+
+          // No valid offline token
+          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+          return;
+        }
+
+        // Check if there's any stored auth data before calling Supabase
+        const hasStoredAuth = await AsyncStorage.getItem("offline_auth_token");
+
+        // If no stored auth data, this is likely a fresh install
+        if (!hasStoredAuth) {
+          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+
+          // Still set up the auth state listener for future auth events
+          authStateSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === "SIGNED_OUT") {
+              dispatch({ type: "SIGN_OUT" });
+            } else if (event === "TOKEN_REFRESHED" && session) {
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token: session.access_token,
+                user: session.user
+                  ? {
+                      id: session.user.id,
+                      email: session.user.email || "",
+                    }
+                  : null,
+              });
+            } else if (event === "SIGNED_IN" && session) {
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token: session.access_token,
+                user: session.user
+                  ? {
+                      id: session.user.id,
+                      email: session.user.email || "",
+                    }
+                  : null,
+              });
+            }
+          });
+          return;
+        }
+
+        // Original online logic continues here for existing users...
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
         // Check for refresh token errors
@@ -83,7 +161,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             sessionError.message.includes("Invalid Refresh Token") ||
             sessionError.message.includes("Refresh Token Not Found")
           ) {
-            await supabase.auth.signOut({ scope: "local" }); // Only clear local storage
+            // Clear all stored auth data
+            await AsyncStorage.multiRemove([
+              "offline_auth_token",
+              "offline_token_expiry",
+              "offline_user_data",
+            ]);
+            await supabase.auth.signOut({ scope: "local" });
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
             return;
           }
@@ -101,6 +185,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (userError) {
               // Session is invalid, clear it
+              await AsyncStorage.multiRemove([
+                "offline_auth_token",
+                "offline_token_expiry",
+                "offline_user_data",
+              ]);
               await supabase.auth.signOut({ scope: "local" });
               dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
               return;
@@ -118,6 +207,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 : null,
             });
           } catch (verificationError) {
+            await AsyncStorage.multiRemove([
+              "offline_auth_token",
+              "offline_token_expiry",
+              "offline_user_data",
+            ]);
             await supabase.auth.signOut({ scope: "local" });
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
             return;
@@ -160,12 +254,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       } catch (e) {
         console.error("Failed to restore authentication state:", e);
-        // Clear any potentially corrupted session data
-        try {
-          await supabase.auth.signOut({ scope: "local" });
-        } catch (signOutError) {
-          console.error("Error clearing session:", signOutError);
-        }
         dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
       }
     };
@@ -195,6 +283,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (data?.user && data?.session) {
+          // Store offline authentication data
+          const expiryDate = new Date();
+          expiryDate.setMonth(expiryDate.getMonth() + 3); // 3 months from now
+
+          await AsyncStorage.setItem("offline_auth_token", data.session.access_token);
+          await AsyncStorage.setItem("offline_token_expiry", expiryDate.toISOString());
+          await AsyncStorage.setItem(
+            "offline_user_data",
+            JSON.stringify({
+              id: data.user.id,
+              email: data.user.email || "",
+            })
+          );
+
           dispatch({
             type: "SIGN_IN",
             token: data.session.access_token,
@@ -267,6 +369,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           }
 
+          // Store offline authentication data
+          const expiryDate = new Date();
+          expiryDate.setMonth(expiryDate.getMonth() + 3);
+
+          await AsyncStorage.setItem("offline_auth_token", data.session.access_token);
+          await AsyncStorage.setItem("offline_token_expiry", expiryDate.toISOString());
+          await AsyncStorage.setItem(
+            "offline_user_data",
+            JSON.stringify({
+              id: data.user.id,
+              email: data.user.email || "",
+            })
+          );
+
           dispatch({
             type: "SIGN_IN",
             token: data.session.access_token,
@@ -282,13 +398,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     signOut: async () => {
       try {
-        await supabase.auth.signOut();
-        // Clear all local downloads upon signing out
+        // Clear offline authentication data
+        await AsyncStorage.multiRemove([
+          "offline_auth_token",
+          "offline_token_expiry",
+          "offline_user_data",
+        ]);
+
+        // Only try to sign out from Supabase if online
+        const { isConnected } = await NetInfo.fetch();
+        if (isConnected) {
+          await supabase.auth.signOut();
+        }
+
         await clearAllDownloads();
         dispatch({ type: "SIGN_OUT" });
       } catch (e) {
         console.error("Error signing out:", e);
-        // Even if signOut fails, update local state
         dispatch({ type: "SIGN_OUT" });
       }
     },
