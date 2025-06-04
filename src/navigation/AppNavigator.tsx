@@ -371,6 +371,7 @@ const MainTabNavigator: React.FC = () => {
                 />
               );
             },
+            animation: "shift",
             tabBarLabel: ({ focused, children }) => (
               <AnimatedTabLabel focused={focused} theme={theme}>
                 {children}

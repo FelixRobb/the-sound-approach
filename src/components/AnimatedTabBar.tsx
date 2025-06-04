@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
+import { MD3Theme } from "react-native-paper";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,26 +9,11 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 
-interface Theme {
-  colors: {
-    onTertiary: string;
-    onSurfaceVariant: string;
-    tertiary: string;
-    shadow: string;
-    surface: string;
-    outlineVariant: string;
-    surfaceVariant?: string;
-    primary?: string;
-    onPrimary?: string;
-    error?: string;
-  };
-}
-
 interface AnimatedTabBarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  theme: Theme;
-  style?: object;
+  theme: MD3Theme;
+  style?: ViewStyle;
 }
 
 const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
@@ -56,7 +42,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
           translateX: interpolate(
             tabPosition.value,
             [0, 1],
-            [0, tabBarWidth / 2] // Move from 0 to half the tab bar width
+            [0, (tabBarWidth - 8) / 2] // Move by half the container width minus the left/right margins
           ),
         },
       ],
@@ -65,16 +51,16 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
 
   // Animated styles for tab content
   const bookTabStyle = useAnimatedStyle(() => {
-    const isActive = interpolate(tabPosition.value, [0, 1], [1, 0]);
+    const progress = tabPosition.value; // 0 = book active, 1 = species active
     return {
-      opacity: interpolate(isActive, [0, 1], [0.7, 1]),
+      opacity: interpolate(progress, [0, 0.3, 0.7, 1], [1, 0.9, 0.8, 0.7]),
     };
   });
 
   const speciesTabStyle = useAnimatedStyle(() => {
-    const isActive = interpolate(tabPosition.value, [0, 1], [0, 1]);
+    const progress = tabPosition.value; // 0 = book active, 1 = species active
     return {
-      opacity: interpolate(isActive, [0, 1], [0.7, 1]),
+      opacity: interpolate(progress, [0, 0.3, 0.7, 1], [0.7, 0.8, 0.9, 1]),
     };
   });
 
@@ -111,7 +97,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       flex: 1,
       justifyContent: "center",
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 8,
       zIndex: 1,
     },
     tabBar: {
