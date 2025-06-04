@@ -4,112 +4,147 @@ import {
 } from "@react-navigation/native";
 import { MD3LightTheme, MD3DarkTheme, MD3Theme } from "react-native-paper";
 
-// Enhanced color palette with better harmony and contrast
+// Enhanced color palette with proper separation for light and dark themes
 const Colors = {
-  // Primary color (sophisticated golden amber - warmer and more elegant)
+  // Primary colors (shared between themes with variations)
   primary: "rgb(236, 121, 54)", // Rich golden amber
-  primaryLight: "rgb(238, 135, 33)", // Lighter golden amber
-  primaryDark: "rgb(200, 95, 15)", // Deeper amber
-  primaryContainer: "rgb(235, 208, 101)", // Soft golden cream
-  onPrimary: "rgb(255, 255, 255)", // White on primary
-  onPrimaryLight: "rgb(92, 38, 0)", // Dark on light primary
-  onPrimaryDark: "rgb(255, 255, 255)", // White on dark primary
-  onPrimaryContainer: "rgb(92, 38, 0)", // Dark on primary container
+  primaryLight: "rgb(255, 152, 92)", // Lighter golden amber for dark theme
+  primaryDark: "rgb(200, 95, 15)", // Deeper amber for containers
 
-  // Secondary color (refined slate with better contrast)
-  secondary: "rgb(100, 116, 139)", // Balanced slate
-  secondaryLight: "rgb(148, 163, 184)", // Lighter slate
-  secondaryDark: "rgb(71, 85, 105)", // Darker slate
-  secondaryContainer: "rgb(241, 245, 249)", // Very light slate
-  onSecondary: "rgb(255, 255, 255)", // White on secondary
-  onSecondaryLight: "rgb(30, 41, 59)", // Dark on light secondary
-  onSecondaryDark: "rgb(255, 255, 255)", // White on dark secondary
-  onSecondaryContainer: "rgb(30, 41, 59)", // Dark on secondary container
+  // Light theme colors
+  light: {
+    // Primary system
+    primary: "rgb(236, 121, 54)",
+    onPrimary: "rgb(255, 255, 255)",
+    primaryContainer: "rgb(255, 224, 178)",
+    onPrimaryContainer: "rgb(92, 38, 0)",
 
-  // Tertiary (refined forest green)
-  tertiary: "rgb(5, 150, 105)", // Emerald green
-  tertiaryLight: "rgb(52, 211, 153)", // Lighter emerald
-  tertiaryDark: "rgb(4, 120, 87)", // Deeper emerald
-  tertiaryContainer: "rgb(209, 250, 229)", // Very light emerald
-  onTertiary: "rgb(255, 255, 255)", // White on tertiary
-  onTertiaryLight: "rgb(6, 78, 59)", // Dark on light tertiary
-  onTertiaryDark: "rgb(255, 255, 255)", // White on dark tertiary
-  onTertiaryContainer: "rgb(6, 78, 59)", // Dark on tertiary container
+    // Secondary system
+    secondary: "rgb(100, 116, 139)",
+    onSecondary: "rgb(255, 255, 255)",
+    secondaryContainer: "rgb(241, 245, 249)",
+    onSecondaryContainer: "rgb(30, 41, 59)",
 
-  // Status colors with proper contrast
-  success: "rgb(34, 197, 94)", // Emerald success
-  onSuccess: "rgb(255, 255, 255)",
-  successContainer: "rgb(220, 252, 231)",
-  onSuccessContainer: "rgb(5, 46, 22)",
+    // Tertiary system
+    tertiary: "rgb(5, 150, 105)",
+    onTertiary: "rgb(255, 255, 255)",
+    tertiaryContainer: "rgb(209, 250, 229)",
+    onTertiaryContainer: "rgb(6, 78, 59)",
 
-  warning: "rgb(245, 158, 11)", // Amber warning
-  onWarning: "rgb(255, 255, 255)",
-  warningContainer: "rgb(254, 243, 199)",
-  onWarningContainer: "rgb(92, 38, 0)",
+    // Surface system
+    background: "rgb(249, 250, 251)",
+    onBackground: "rgb(17, 24, 39)",
+    surface: "rgb(255, 255, 255)",
+    onSurface: "rgb(17, 24, 39)",
+    surfaceVariant: "rgb(243, 244, 246)",
+    onSurfaceVariant: "rgb(75, 85, 99)",
+    surfaceLow: "rgb(248, 249, 250)",
+    surfaceHigh: "rgb(255, 255, 255)",
+    surfaceHighest: "rgb(255, 255, 255)",
 
-  error: "rgb(239, 68, 68)", // Red error
-  onError: "rgb(255, 255, 255)",
-  errorContainer: "rgb(254, 226, 226)",
-  onErrorContainer: "rgb(153, 27, 27)",
+    // Status colors for light theme
+    success: "rgb(34, 197, 94)",
+    onSuccess: "rgb(255, 255, 255)",
+    successContainer: "rgb(220, 252, 231)",
+    onSuccessContainer: "rgb(5, 46, 22)",
 
-  info: "rgb(59, 130, 246)", // Blue info
-  onInfo: "rgb(255, 255, 255)",
-  infoContainer: "rgb(219, 234, 254)",
-  onInfoContainer: "rgb(30, 58, 138)",
+    warning: "rgb(245, 158, 11)",
+    onWarning: "rgb(255, 255, 255)",
+    warningContainer: "rgb(254, 243, 199)",
+    onWarningContainer: "rgb(92, 38, 0)",
 
-  // Light mode colors (refined and eye-friendly)
-  lightBackground: "rgb(249, 250, 251)", // Soft cool white
-  lightSurface: "rgb(255, 255, 255)", // Pure white
-  lightSurfaceVariant: "rgb(243, 244, 246)", // Light grey
-  lightSurfaceLow: "rgb(248, 249, 250)", // Between background and surface
-  lightSurfaceHigh: "rgb(255, 255, 255)", // Elevated surface
-  lightSurfaceHighest: "rgb(255, 255, 255)", // Highest elevation
+    error: "rgb(239, 68, 68)",
+    onError: "rgb(255, 255, 255)",
+    errorContainer: "rgb(195, 57, 57)",
+    onErrorContainer: "rgb(255, 238, 238)",
 
-  lightText: "rgb(17, 24, 39)", // Rich dark grey (not harsh black)
-  lightTextSecondary: "rgb(75, 85, 99)", // Medium grey
-  lightTextTertiary: "rgb(156, 163, 175)", // Light grey
-  lightDisabled: "rgb(209, 213, 219)", // Muted grey
-  lightOutline: "rgb(229, 231, 235)", // Subtle border
-  lightDivider: "rgb(243, 244, 246)", // Very light division
+    info: "rgb(59, 130, 246)",
+    onInfo: "rgb(255, 255, 255)",
+    infoContainer: "rgb(219, 234, 254)",
+    onInfoContainer: "rgb(30, 58, 138)",
 
-  onLightBackground: "rgb(17, 24, 39)",
-  onLightSurface: "rgb(17, 24, 39)",
-  onLightSurfaceVariant: "rgb(75, 85, 99)",
+    // Utility colors
+    text: "rgb(17, 24, 39)",
+    textSecondary: "rgb(75, 85, 99)",
+    textTertiary: "rgb(156, 163, 175)",
+    disabled: "rgb(209, 213, 219)",
+    outline: "rgb(229, 231, 235)",
+    divider: "rgb(243, 244, 246)",
+    shadow: "rgba(0, 0, 0, 0.1)",
+    overlay: "rgba(0, 0, 0, 0.5)",
+    backdrop: "rgba(17, 24, 39, 0.7)",
+  },
 
-  // Dark mode colors (deep, rich with proper contrast)
-  darkBackground: "rgb(6, 6, 7)", // True deep black
-  darkSurface: "rgb(15, 15, 16)", // Dark surface
-  darkSurfaceVariant: "rgb(39, 39, 42)", // Elevated dark
-  darkSurfaceLow: "rgb(18, 18, 20)", // Between background and surface
-  darkSurfaceHigh: "rgb(39, 39, 42)", // Higher elevation
-  darkSurfaceHighest: "rgb(63, 63, 70)", // Highest elevation
+  // Dark theme colors (completely separate)
+  dark: {
+    // Primary system
+    primary: "rgb(255, 152, 92)", // Lighter for dark theme
+    onPrimary: "rgb(92, 38, 0)",
+    primaryContainer: "rgb(200, 95, 15)",
+    onPrimaryContainer: "rgb(255, 224, 178)",
 
-  darkText: "rgb(250, 250, 250)", // Bright white
-  darkTextSecondary: "rgb(212, 212, 216)", // Light grey
-  darkTextTertiary: "rgb(161, 161, 170)", // Medium grey
-  darkDisabled: "rgb(113, 113, 122)", // Dark grey
-  darkOutline: "rgb(63, 63, 70)", // Subtle dark border
-  darkDivider: "rgb(39, 39, 42)", // Dark division
+    // Secondary system
+    secondary: "rgb(148, 163, 184)", // Lighter slate for dark
+    onSecondary: "rgb(30, 41, 59)",
+    secondaryContainer: "rgb(71, 85, 105)",
+    onSecondaryContainer: "rgb(241, 245, 249)",
 
-  onDarkBackground: "rgb(250, 250, 250)",
-  onDarkSurface: "rgb(250, 250, 250)",
-  onDarkSurfaceVariant: "rgb(212, 212, 216)",
+    // Tertiary system
+    tertiary: "rgb(52, 211, 153)", // Lighter emerald for dark
+    onTertiary: "rgb(6, 78, 59)",
+    tertiaryContainer: "rgb(4, 120, 87)",
+    onTertiaryContainer: "rgb(209, 250, 229)",
 
-  // Accent colors for special elements
+    // Surface system
+    background: "rgb(6, 6, 7)",
+    onBackground: "rgb(250, 250, 250)",
+    surface: "rgb(15, 15, 16)",
+    onSurface: "rgb(250, 250, 250)",
+    surfaceVariant: "rgb(39, 39, 42)",
+    onSurfaceVariant: "rgb(212, 212, 216)",
+    surfaceLow: "rgb(18, 18, 20)",
+    surfaceHigh: "rgb(39, 39, 42)",
+    surfaceHighest: "rgb(63, 63, 70)",
+
+    // Status colors for dark theme (adjusted for dark backgrounds)
+    success: "rgb(74, 222, 128)", // Brighter green for dark
+    onSuccess: "rgb(2, 44, 34)",
+    successContainer: "rgb(5, 46, 22)",
+    onSuccessContainer: "rgb(187, 247, 208)",
+
+    warning: "rgb(251, 191, 36)", // Brighter amber for dark
+    onWarning: "rgb(92, 38, 0)",
+    warningContainer: "rgb(146, 64, 14)",
+    onWarningContainer: "rgb(254, 243, 199)",
+
+    error: "rgb(248, 113, 113)", // Brighter red for dark
+    onError: "rgb(153, 27, 27)",
+    errorContainer: "rgb(153, 27, 27)",
+    onErrorContainer: "rgb(254, 226, 226)",
+
+    info: "rgb(96, 165, 250)", // Brighter blue for dark
+    onInfo: "rgb(30, 58, 138)",
+    infoContainer: "rgb(30, 58, 138)",
+    onInfoContainer: "rgb(219, 234, 254)",
+
+    // Utility colors
+    text: "rgb(250, 250, 250)",
+    textSecondary: "rgb(212, 212, 216)",
+    textTertiary: "rgb(161, 161, 170)",
+    disabled: "rgb(113, 113, 122)",
+    outline: "rgb(63, 63, 70)",
+    divider: "rgb(39, 39, 42)",
+    shadow: "rgba(0, 0, 0, 0.3)",
+    overlay: "rgba(0, 0, 0, 0.7)",
+    backdrop: "rgba(0, 0, 0, 0.8)",
+  },
+
+  // Accent colors (shared but with variations)
   accent: "rgb(139, 92, 246)", // Violet accent
   accentLight: "rgb(196, 181, 253)", // Light violet
   accentDark: "rgb(109, 40, 217)", // Dark violet
   accentContainer: "rgb(237, 233, 254)", // Violet container
-  onAccent: "rgb(255, 255, 255)",
-  onAccentLight: "rgb(76, 29, 149)",
-  onAccentDark: "rgb(255, 255, 255)",
-  onAccentContainer: "rgb(76, 29, 149)",
-
-  // Semantic colors
-  shadow: "rgba(0, 0, 0, 0.1)", // Soft shadow
-  darkShadow: "rgba(0, 0, 0, 0.3)", // Darker shadow
-  overlay: "rgba(0, 0, 0, 0.5)", // Modal overlay
-  backdrop: "rgba(17, 24, 39, 0.7)", // Backdrop
+  accentContainerDark: "rgb(109, 40, 217)", // Dark theme violet container
 };
 
 // Enhanced light theme with proper contrast ratios
@@ -118,95 +153,95 @@ export const lightTheme: MD3Theme = {
   colors: {
     ...MD3LightTheme.colors,
     // Primary colors
-    primary: Colors.primary,
-    onPrimary: Colors.onPrimary,
-    primaryContainer: Colors.primaryContainer,
-    onPrimaryContainer: Colors.onPrimaryContainer,
+    primary: Colors.light.primary,
+    onPrimary: Colors.light.onPrimary,
+    primaryContainer: Colors.light.primaryContainer,
+    onPrimaryContainer: Colors.light.onPrimaryContainer,
 
     // Secondary colors
-    secondary: Colors.secondary,
-    onSecondary: Colors.onSecondary,
-    secondaryContainer: Colors.secondaryContainer,
-    onSecondaryContainer: Colors.onSecondaryContainer,
+    secondary: Colors.light.secondary,
+    onSecondary: Colors.light.onSecondary,
+    secondaryContainer: Colors.light.secondaryContainer,
+    onSecondaryContainer: Colors.light.onSecondaryContainer,
 
     // Tertiary colors
-    tertiary: Colors.tertiary,
-    onTertiary: Colors.onTertiary,
-    tertiaryContainer: Colors.tertiaryContainer,
-    onTertiaryContainer: Colors.onTertiaryContainer,
+    tertiary: Colors.light.tertiary,
+    onTertiary: Colors.light.onTertiary,
+    tertiaryContainer: Colors.light.tertiaryContainer,
+    onTertiaryContainer: Colors.light.onTertiaryContainer,
 
     // Surface colors
-    background: Colors.lightBackground,
-    onBackground: Colors.onLightBackground,
-    surface: Colors.lightSurface,
-    onSurface: Colors.onLightSurface,
-    surfaceVariant: Colors.lightSurfaceVariant,
-    onSurfaceVariant: Colors.onLightSurfaceVariant,
+    background: Colors.light.background,
+    onBackground: Colors.light.onBackground,
+    surface: Colors.light.surface,
+    onSurface: Colors.light.onSurface,
+    surfaceVariant: Colors.light.surfaceVariant,
+    onSurfaceVariant: Colors.light.onSurfaceVariant,
 
     // Status colors
-    error: Colors.error,
-    onError: Colors.onError,
-    errorContainer: Colors.errorContainer,
-    onErrorContainer: Colors.onErrorContainer,
+    error: Colors.light.error,
+    onError: Colors.light.onError,
+    errorContainer: Colors.light.errorContainer,
+    onErrorContainer: Colors.light.onErrorContainer,
 
     // Utility colors
-    outline: Colors.lightOutline,
-    outlineVariant: Colors.lightDivider,
-    shadow: Colors.shadow,
-    scrim: Colors.overlay,
-    inverseSurface: Colors.darkSurface,
-    inverseOnSurface: Colors.onDarkSurface,
-    inversePrimary: Colors.primaryLight,
+    outline: Colors.light.outline,
+    outlineVariant: Colors.light.divider,
+    shadow: Colors.light.shadow,
+    scrim: Colors.light.overlay,
+    inverseSurface: Colors.dark.surface,
+    inverseOnSurface: Colors.dark.onSurface,
+    inversePrimary: Colors.dark.primary,
     surfaceDisabled: "rgba(17, 24, 39, 0.12)",
     onSurfaceDisabled: "rgba(17, 24, 39, 0.38)",
   },
 };
 
-// Enhanced dark theme with proper contrast
+// Enhanced dark theme with completely separate colors
 export const darkTheme: MD3Theme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
     // Primary colors
-    primary: Colors.primaryLight,
-    onPrimary: Colors.onPrimaryLight,
-    primaryContainer: Colors.primaryDark,
-    onPrimaryContainer: Colors.primaryContainer,
+    primary: Colors.dark.primary,
+    onPrimary: Colors.dark.onPrimary,
+    primaryContainer: Colors.dark.primaryContainer,
+    onPrimaryContainer: Colors.dark.onPrimaryContainer,
 
     // Secondary colors
-    secondary: Colors.secondaryLight,
-    onSecondary: Colors.onSecondaryLight,
-    secondaryContainer: Colors.secondaryDark,
-    onSecondaryContainer: Colors.secondaryContainer,
+    secondary: Colors.dark.secondary,
+    onSecondary: Colors.dark.onSecondary,
+    secondaryContainer: Colors.dark.secondaryContainer,
+    onSecondaryContainer: Colors.dark.onSecondaryContainer,
 
     // Tertiary colors
-    tertiary: Colors.tertiaryLight,
-    onTertiary: Colors.onTertiaryLight,
-    tertiaryContainer: Colors.tertiaryDark,
-    onTertiaryContainer: Colors.tertiaryContainer,
+    tertiary: Colors.dark.tertiary,
+    onTertiary: Colors.dark.onTertiary,
+    tertiaryContainer: Colors.dark.tertiaryContainer,
+    onTertiaryContainer: Colors.dark.onTertiaryContainer,
 
     // Surface colors
-    background: Colors.darkBackground,
-    onBackground: Colors.onDarkBackground,
-    surface: Colors.darkSurface,
-    onSurface: Colors.onDarkSurface,
-    surfaceVariant: Colors.darkSurfaceVariant,
-    onSurfaceVariant: Colors.onDarkSurfaceVariant,
+    background: Colors.dark.background,
+    onBackground: Colors.dark.onBackground,
+    surface: Colors.dark.surface,
+    onSurface: Colors.dark.onSurface,
+    surfaceVariant: Colors.dark.surfaceVariant,
+    onSurfaceVariant: Colors.dark.onSurfaceVariant,
 
-    // Status colors
-    error: "rgb(216, 99, 99)",
-    onError: Colors.onErrorContainer,
-    errorContainer: "rgb(153, 27, 27)",
-    onErrorContainer: Colors.errorContainer,
+    // Status colors (properly separated for dark theme)
+    error: Colors.dark.error,
+    onError: Colors.dark.onError,
+    errorContainer: Colors.dark.errorContainer,
+    onErrorContainer: Colors.dark.onErrorContainer,
 
     // Utility colors
-    outline: Colors.darkOutline,
-    outlineVariant: Colors.darkDivider,
-    shadow: Colors.darkShadow,
-    scrim: Colors.overlay,
-    inverseSurface: Colors.lightSurface,
-    inverseOnSurface: Colors.onLightSurface,
-    inversePrimary: Colors.primary,
+    outline: Colors.dark.outline,
+    outlineVariant: Colors.dark.divider,
+    shadow: Colors.dark.shadow,
+    scrim: Colors.dark.overlay,
+    inverseSurface: Colors.light.surface,
+    inverseOnSurface: Colors.light.onSurface,
+    inversePrimary: Colors.light.primary,
     surfaceDisabled: "rgba(250, 250, 250, 0.12)",
     onSurfaceDisabled: "rgba(250, 250, 250, 0.38)",
   },
@@ -217,12 +252,12 @@ export const navigationLightTheme = {
   ...NavigationLightTheme,
   colors: {
     ...NavigationLightTheme.colors,
-    primary: Colors.primary,
-    background: Colors.lightBackground,
-    card: Colors.lightSurface,
-    text: Colors.lightText,
-    border: Colors.lightOutline,
-    notification: Colors.primary,
+    primary: Colors.light.primary,
+    background: Colors.light.background,
+    card: Colors.light.surface,
+    text: Colors.light.text,
+    border: Colors.light.outline,
+    notification: Colors.light.primary,
   },
 };
 
@@ -230,12 +265,12 @@ export const navigationDarkTheme = {
   ...NavigationDarkTheme,
   colors: {
     ...NavigationDarkTheme.colors,
-    primary: Colors.primaryLight,
-    background: Colors.darkBackground,
-    card: Colors.darkSurface,
-    text: Colors.darkText,
-    border: Colors.darkOutline,
-    notification: Colors.primaryLight,
+    primary: Colors.dark.primary,
+    background: Colors.dark.background,
+    card: Colors.dark.surface,
+    text: Colors.dark.text,
+    border: Colors.dark.outline,
+    notification: Colors.dark.primary,
   },
 };
 
@@ -250,24 +285,14 @@ export const getTextColor = (
   isDark: boolean,
   variant: "primary" | "secondary" | "tertiary" = "primary"
 ) => {
-  if (isDark) {
-    switch (variant) {
-      case "tertiary":
-        return Colors.darkTextTertiary;
-      case "secondary":
-        return Colors.darkTextSecondary;
-      default:
-        return Colors.darkText;
-    }
-  } else {
-    switch (variant) {
-      case "tertiary":
-        return Colors.lightTextTertiary;
-      case "secondary":
-        return Colors.lightTextSecondary;
-      default:
-        return Colors.lightText;
-    }
+  const colors = isDark ? Colors.dark : Colors.light;
+  switch (variant) {
+    case "tertiary":
+      return colors.textTertiary;
+    case "secondary":
+      return colors.textSecondary;
+    default:
+      return colors.text;
   }
 };
 
@@ -276,89 +301,68 @@ export const getSurfaceColor = (
   isDark: boolean,
   elevation: "base" | "low" | "medium" | "high" | "highest" = "base"
 ) => {
-  if (isDark) {
-    switch (elevation) {
-      case "highest":
-        return Colors.darkSurfaceHighest;
-      case "high":
-        return Colors.darkSurfaceHigh;
-      case "medium":
-        return Colors.darkSurfaceVariant;
-      case "low":
-        return Colors.darkSurfaceLow;
-      default:
-        return Colors.darkBackground;
-    }
-  } else {
-    switch (elevation) {
-      case "highest":
-        return Colors.lightSurfaceHighest;
-      case "high":
-        return Colors.lightSurfaceHigh;
-      case "medium":
-        return Colors.lightSurfaceVariant;
-      case "low":
-        return Colors.lightSurfaceLow;
-      default:
-        return Colors.lightBackground;
-    }
+  const colors = isDark ? Colors.dark : Colors.light;
+  switch (elevation) {
+    case "highest":
+      return colors.surfaceHighest;
+    case "high":
+      return colors.surfaceHigh;
+    case "medium":
+      return colors.surfaceVariant;
+    case "low":
+      return colors.surfaceLow;
+    default:
+      return colors.background;
   }
 };
 
 // Helper for accent colors with proper contrast
 export const getAccentColor = (isDark: boolean, variant: "main" | "light" | "dark" = "main") => {
-  if (isDark) {
-    switch (variant) {
-      case "light":
-        return Colors.accentLight;
-      case "dark":
-        return Colors.accentDark;
-      default:
-        return Colors.accentLight;
-    }
-  } else {
-    switch (variant) {
-      case "light":
-        return Colors.accentLight;
-      case "dark":
-        return Colors.accentDark;
-      default:
-        return Colors.accent;
-    }
+  switch (variant) {
+    case "light":
+      return Colors.accentLight;
+    case "dark":
+      return Colors.accentDark;
+    default:
+      return isDark ? Colors.accentLight : Colors.accent;
   }
 };
 
-// Helper for semantic colors with containers
+// Helper for semantic colors with proper theme separation
 export const getSemanticColor = (
   type: "success" | "warning" | "error" | "info",
-  variant: "main" | "container" = "main"
+  variant: "main" | "container" = "main",
+  isDark: boolean = false
 ) => {
+  const colors = isDark ? Colors.dark : Colors.light;
   switch (type) {
     case "success":
-      return variant === "container" ? Colors.successContainer : Colors.success;
+      return variant === "container" ? colors.successContainer : colors.success;
     case "warning":
-      return variant === "container" ? Colors.warningContainer : Colors.warning;
+      return variant === "container" ? colors.warningContainer : colors.warning;
     case "error":
-      return variant === "container" ? Colors.errorContainer : Colors.error;
+      return variant === "container" ? colors.errorContainer : colors.error;
     case "info":
-      return variant === "container" ? Colors.infoContainer : Colors.info;
+      return variant === "container" ? colors.infoContainer : colors.info;
   }
 };
 
 // Get proper text color for semantic colors
 export const getSemanticTextColor = (
   type: "success" | "warning" | "error" | "info",
-  variant: "main" | "container" = "main"
+  variant: "main" | "container" = "main",
+  isDark: boolean = false
 ) => {
+  const colors = isDark ? Colors.dark : Colors.light;
   switch (type) {
     case "success":
-      return variant === "container" ? Colors.onSuccessContainer : Colors.onSuccess;
+      return variant === "container" ? colors.onSuccessContainer : colors.onSuccess;
     case "warning":
-      return variant === "container" ? Colors.onWarningContainer : Colors.onWarning;
+      return variant === "container" ? colors.onWarningContainer : colors.onWarning;
     case "error":
-      return variant === "container" ? Colors.onErrorContainer : Colors.onError;
+      return variant === "container" ? colors.onErrorContainer : colors.onError;
     case "info":
-      return variant === "container" ? Colors.onInfoContainer : Colors.onInfo;
+      return variant === "container" ? colors.onInfoContainer : colors.onInfo;
   }
 };
 

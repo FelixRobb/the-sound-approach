@@ -46,12 +46,13 @@ const RecordingDetailsScreen = () => {
   const [videoPosition, setVideoPosition] = useState(0);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
-  const [seekValue, setSeekValue] = useState(0);
+  const [videoError, setVideoError] = useState(false);
+  const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
+  const [showInitialLoading, setShowInitialLoading] = useState(true);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const videoViewRef = useRef(null);
-  const [isSeekingOperation, setIsSeekingOperation] = useState(false);
 
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -343,7 +344,7 @@ const RecordingDetailsScreen = () => {
       marginBottom: 4,
     },
     timeText: {
-      color: theme.colors.onSurfaceVariant,
+      color: theme.colors.onSurface,
       fontSize: 14,
       marginLeft: 8,
     },
@@ -395,28 +396,62 @@ const RecordingDetailsScreen = () => {
 
   // Initialize the video player
   const videoPlayer = useVideoPlayer(sonogramVideoUri || null, (player) => {
-    player.timeUpdateEventInterval = 0.5;
+    player.timeUpdateEventInterval = 0.1; // More frequent updates for smoother slider
     player.loop = false;
+
+    // Force load the video on iOS by setting a small volume initially
+    if (player && sonogramVideoUri) {
+      player.volume = 0.01;
+      // Preload the video
+      setTimeout(() => {
+        player.volume = 1;
+      }, 100);
+    }
+  });
+
+  // Listen for video ready/loaded events
+  useEventListener(videoPlayer, "statusChange", (payload) => {
+    if (payload.status === "readyToPlay" && !isVideoLoaded) {
+      setIsVideoLoaded(true);
+      setVideoDuration(videoPlayer.duration || 0);
+      setVideoError(false);
+      setShowInitialLoading(false);
+    } else if (payload.status === "error") {
+      setVideoError(true);
+      setIsVideoLoaded(false);
+      setShowInitialLoading(false);
+    }
   });
 
   // Listen for timeUpdate event to update the position
   useEventListener(videoPlayer, "timeUpdate", (payload) => {
+    // Only update position when not actively seeking
     if (!isSeeking) {
       setVideoPosition(payload.currentTime);
-      setSeekValue(payload.currentTime);
     }
-    if (videoDuration === 0 && payload.bufferedPosition > 0) {
-      setVideoDuration(videoPlayer.duration || 0);
+
+    // Set duration if not already set
+    if (videoDuration === 0 && videoPlayer.duration > 0) {
+      setVideoDuration(videoPlayer.duration);
       setIsVideoLoaded(true);
     }
   });
 
   // Listen for status changes
   useEventListener(videoPlayer, "playingChange", (payload) => {
-    if (!isSeekingOperation) {
-      setIsPlaying(payload.isPlaying);
-    }
+    setIsPlaying(payload.isPlaying);
   });
+
+  // Preload video when URI changes
+  useEffect(() => {
+    if (sonogramVideoUri && videoPlayer) {
+      setVideoError(false);
+      setIsVideoLoaded(false);
+      setVideoDuration(0);
+      setVideoPosition(0);
+      setShowInitialLoading(true);
+    }
+  }, [sonogramVideoUri, videoPlayer]);
 
   // Handle orientation and fullscreen changes
   useEffect(() => {
@@ -473,6 +508,13 @@ const RecordingDetailsScreen = () => {
     return () => backHandler.remove();
   }, [isVideoFullscreen]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
+
   const getDownloadStatus = () => {
     if (!recording) return "idle";
     if (isDownloaded(recording.id)) return "completed";
@@ -514,6 +556,8 @@ const RecordingDetailsScreen = () => {
   };
 
   const togglePlayPause = async () => {
+    if (!isVideoLoaded) return;
+
     if (isPlaying) {
       videoPlayer.pause();
     } else {
@@ -527,24 +571,28 @@ const RecordingDetailsScreen = () => {
 
   const onSeekStart = () => {
     setIsSeeking(true);
-    setIsSeekingOperation(true);
-  };
-
-  const onSeekComplete = async (value: number) => {
-    setIsSeeking(false);
-    setVideoPosition(value);
-    setSeekValue(value);
-    videoPlayer.currentTime = value;
-
-    setTimeout(() => {
-      setIsSeekingOperation(false);
-    }, 100);
-  };
-
-  const onSeekValueChange = (value: number) => {
-    if (isSeeking) {
-      setSeekValue(value);
+    // Remember if we were playing before seeking
+    setWasPlayingBeforeSeek(isPlaying);
+    // Pause the video during seeking to prevent position conflicts
+    if (isPlaying) {
+      videoPlayer.pause();
     }
+  };
+
+  const onSeekComplete = (value: number) => {
+    if (!isVideoLoaded) return;
+
+    // Set the video position
+    videoPlayer.currentTime = value;
+    setVideoPosition(value);
+
+    // Resume playing if it was playing before seeking
+    if (wasPlayingBeforeSeek) {
+      videoPlayer.play();
+    }
+
+    // Stop seeking
+    setIsSeeking(false);
   };
 
   const renderVideoControls = (isFullscreen = false) => {
@@ -552,33 +600,36 @@ const RecordingDetailsScreen = () => {
 
     return (
       <View style={containerStyle}>
-        <TouchableOpacity onPress={togglePlayPause}>
-          <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.primary} />
+        <TouchableOpacity onPress={togglePlayPause} disabled={!isVideoLoaded}>
+          <Ionicons
+            name={isPlaying ? "pause" : "play"}
+            size={24}
+            color={isVideoLoaded ? theme.colors.tertiary : theme.colors.surfaceVariant}
+          />
         </TouchableOpacity>
 
         <Slider
           style={styles.slider}
           minimumValue={0}
-          maximumValue={videoDuration}
-          value={isSeeking ? seekValue : videoPosition}
+          maximumValue={Math.max(videoDuration, 0.1)}
+          value={videoPosition}
           onSlidingStart={onSeekStart}
-          onValueChange={onSeekValueChange}
           onSlidingComplete={onSeekComplete}
           minimumTrackTintColor={theme.colors.primary}
           maximumTrackTintColor={theme.colors.surfaceVariant}
-          tapToSeek
           thumbTintColor={theme.colors.tertiary}
+          disabled={!isVideoLoaded}
         />
 
         <Text style={styles.timeText}>
-          {formatTime(isSeeking ? seekValue : videoPosition)}/{formatTime(videoDuration)}
+          {formatTime(videoPosition)}/{formatTime(videoDuration)}
         </Text>
 
         <TouchableOpacity style={styles.fullscreenButton} onPress={toggleFullscreen}>
           <Ionicons
             name={isVideoFullscreen ? "contract" : "expand"}
             size={24}
-            color={theme.colors.primary}
+            color={theme.colors.tertiary}
           />
         </TouchableOpacity>
       </View>
@@ -586,11 +637,13 @@ const RecordingDetailsScreen = () => {
   };
 
   const renderVideoPlayer = () => {
-    if (!sonogramVideoUri) {
+    if (!sonogramVideoUri || videoError) {
       return (
         <View style={styles.playerContainerError}>
           <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
-          <Text style={styles.descriptionTextError}>Video source not available</Text>
+          <Text style={styles.descriptionTextError}>
+            {videoError ? "Error loading video" : "Video source not available"}
+          </Text>
         </View>
       );
     }
@@ -603,22 +656,34 @@ const RecordingDetailsScreen = () => {
           style={styles.video}
           contentFit={isVideoFullscreen ? "contain" : "cover"}
           nativeControls={false}
+          allowsFullscreen={false}
+          allowsPictureInPicture={false}
         />
 
-        <TouchableOpacity
-          style={[
-            styles.videoOverlay,
-            (!isPlaying || !isVideoLoaded) && { backgroundColor: theme.colors.backdrop },
-          ]}
-          onPress={togglePlayPause}
-          activeOpacity={0.8}
-        >
-          {(!isPlaying || !isVideoLoaded) && !isSeekingOperation && (
-            <View style={styles.playButton}>
-              <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
-            </View>
-          )}
-        </TouchableOpacity>
+        {(!isPlaying ||
+          !isVideoLoaded ||
+          (isSeeking && !wasPlayingBeforeSeek) ||
+          showInitialLoading) && (
+          <TouchableOpacity
+            style={[
+              styles.videoOverlay,
+              (!isPlaying || !isVideoLoaded || showInitialLoading) && {
+                backgroundColor: theme.colors.backdrop,
+              },
+            ]}
+            onPress={togglePlayPause}
+            activeOpacity={0.8}
+            disabled={showInitialLoading}
+          >
+            {showInitialLoading ? (
+              <ActivityIndicator size={36} color={theme.colors.primary} />
+            ) : (
+              <View style={styles.playButton}>
+                <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
 
         {renderVideoControls(false)}
       </View>
@@ -652,9 +717,7 @@ const RecordingDetailsScreen = () => {
           <View style={styles.errorCard}>
             <Ionicons name="alert-circle" size={48} style={styles.errorIcon} />
             <Text style={styles.errorTitle}>Unable to Load Recording</Text>
-            <Text style={styles.errorText}>
-              &quot;Something went wrong. Please try again.&quot;
-            </Text>
+            <Text style={styles.errorText}>Something went wrong. Please try again.</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
               <Text style={styles.retryText}>Try Again</Text>
             </TouchableOpacity>
@@ -681,19 +744,29 @@ const RecordingDetailsScreen = () => {
           style={styles.fullscreenVideo}
           contentFit="contain"
           nativeControls={false}
+          allowsFullscreen={false}
+          allowsPictureInPicture={false}
         />
 
-        <TouchableOpacity
-          style={styles.fullScreenVideoOverlay}
-          onPress={togglePlayPause}
-          activeOpacity={1}
-        >
-          {(!isPlaying || !isVideoLoaded) && !isSeekingOperation && (
-            <View style={styles.playButton}>
-              <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
-            </View>
-          )}
-        </TouchableOpacity>
+        {(!isPlaying ||
+          !isVideoLoaded ||
+          (isSeeking && !wasPlayingBeforeSeek) ||
+          showInitialLoading) && (
+          <TouchableOpacity
+            style={styles.fullScreenVideoOverlay}
+            onPress={togglePlayPause}
+            activeOpacity={1}
+            disabled={showInitialLoading}
+          >
+            {showInitialLoading ? (
+              <ActivityIndicator size={36} color={theme.colors.primary} />
+            ) : (
+              <View style={styles.playButton}>
+                <Ionicons name="play" size={30} color={theme.colors.onPrimary} />
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
 
         {renderVideoControls(true)}
       </View>

@@ -119,7 +119,7 @@ const WelcomeScreen = () => {
       shadowRadius: 4,
     },
     secondaryButtonText: {
-      color: theme.colors.onSurface,
+      color: theme.colors.primary,
     },
   });
 
@@ -131,7 +131,7 @@ const WelcomeScreen = () => {
     >
       <StatusBar style="light" translucent />
       <LinearGradient
-        colors={["rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 0.1)", "rgba(0, 0, 0, 0.5)"]}
+        colors={["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 0.7)"]}
         locations={[0, 0.4, 1]}
         style={styles.gradientOverlay}
       >
@@ -169,7 +169,7 @@ const WelcomeScreen = () => {
                 activeOpacity={0.8}
               >
                 <View style={styles.buttonContent}>
-                  <Ionicons name="person-add-outline" size={22} color={theme.colors.onSurface} />
+                  <Ionicons name="person-add-outline" size={22} color={theme.colors.primary} />
                   <Text style={[styles.buttonText, styles.secondaryButtonText]}>
                     Create Account
                   </Text>

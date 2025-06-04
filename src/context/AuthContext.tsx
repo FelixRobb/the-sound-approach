@@ -112,7 +112,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        // Original online logic continues here...
+        // Check if there's any stored auth data before calling Supabase
+        const hasStoredAuth = await AsyncStorage.getItem("offline_auth_token");
+
+        // If no stored auth data, this is likely a fresh install
+        if (!hasStoredAuth) {
+          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+
+          // Still set up the auth state listener for future auth events
+          authStateSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === "SIGNED_OUT") {
+              dispatch({ type: "SIGN_OUT" });
+            } else if (event === "TOKEN_REFRESHED" && session) {
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token: session.access_token,
+                user: session.user
+                  ? {
+                      id: session.user.id,
+                      email: session.user.email || "",
+                    }
+                  : null,
+              });
+            } else if (event === "SIGNED_IN" && session) {
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token: session.access_token,
+                user: session.user
+                  ? {
+                      id: session.user.id,
+                      email: session.user.email || "",
+                    }
+                  : null,
+              });
+            }
+          });
+          return;
+        }
+
+        // Original online logic continues here for existing users...
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
         // Check for refresh token errors
@@ -123,7 +161,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             sessionError.message.includes("Invalid Refresh Token") ||
             sessionError.message.includes("Refresh Token Not Found")
           ) {
-            await supabase.auth.signOut({ scope: "local" }); // Only clear local storage
+            // Clear all stored auth data
+            await AsyncStorage.multiRemove([
+              "offline_auth_token",
+              "offline_token_expiry",
+              "offline_user_data",
+            ]);
+            await supabase.auth.signOut({ scope: "local" });
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
             return;
           }
@@ -141,6 +185,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (userError) {
               // Session is invalid, clear it
+              await AsyncStorage.multiRemove([
+                "offline_auth_token",
+                "offline_token_expiry",
+                "offline_user_data",
+              ]);
               await supabase.auth.signOut({ scope: "local" });
               dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
               return;
@@ -158,6 +207,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 : null,
             });
           } catch (verificationError) {
+            await AsyncStorage.multiRemove([
+              "offline_auth_token",
+              "offline_token_expiry",
+              "offline_user_data",
+            ]);
             await supabase.auth.signOut({ scope: "local" });
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
             return;
@@ -314,6 +368,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               code_param: bookCode,
             });
           }
+
+          // Store offline authentication data
+          const expiryDate = new Date();
+          expiryDate.setMonth(expiryDate.getMonth() + 3);
+
+          await AsyncStorage.setItem("offline_auth_token", data.session.access_token);
+          await AsyncStorage.setItem("offline_token_expiry", expiryDate.toISOString());
+          await AsyncStorage.setItem(
+            "offline_user_data",
+            JSON.stringify({
+              id: data.user.id,
+              email: data.user.email || "",
+            })
+          );
 
           dispatch({
             type: "SIGN_IN",
