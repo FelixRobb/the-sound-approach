@@ -1,9 +1,11 @@
+// src/context/DownloadContext.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import type React from "react";
 import { createContext, useState, useEffect, useContext, useCallback } from "react";
 
 import { ENV } from "../config/env";
+import { clearUserDownloads } from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
 import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types";
 
@@ -240,51 +242,17 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Clear all downloads
+  // Clear all downloads - now uses the utility function
   const clearAllDownloads = async () => {
     try {
-      const userId = authState.user?.id || "anonymous";
+      const userId = authState.user?.id || null;
 
-      // Delete all download records
-      for (const recordingId of downloadedRecordings) {
-        const downloadKey = `download_${userId}_${recordingId}`;
-        const downloadData = await AsyncStorage.getItem(downloadKey);
+      // Use the utility function to clear downloads
+      await clearUserDownloads(userId);
 
-        if (downloadData) {
-          const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
-
-          // Delete files
-          try {
-            const audioInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
-            if (audioInfo.exists) {
-              await FileSystem.deleteAsync(downloadRecord.audio_path);
-            }
-          } catch (e) {
-            console.error("Error deleting files:", e);
-          }
-
-          // Remove from AsyncStorage
-          await AsyncStorage.removeItem(downloadKey);
-        }
-      }
-
-      // Clear the downloads list
-      const downloadsListKey = `downloads_list_${userId}`;
-      await AsyncStorage.removeItem(downloadsListKey);
-
-      // Update state
+      // Update local state
       setDownloadedRecordings([]);
       setDownloads({});
-
-      // Recreate downloads directory
-      const downloadsDir = FileSystem.documentDirectory + "downloads/";
-      const dirInfo = await FileSystem.getInfoAsync(downloadsDir);
-      if (dirInfo.exists) {
-        await FileSystem.deleteAsync(downloadsDir);
-      }
-      await FileSystem.makeDirectoryAsync(downloadsDir, { intermediates: true });
-
-      // Update storage usage
       setTotalStorageUsed(0);
     } catch (error) {
       console.error("Clear downloads error:", error);

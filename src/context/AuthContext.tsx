@@ -1,12 +1,16 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// src/context/AuthContext.tsx
 import NetInfo from "@react-native-community/netinfo";
 import type React from "react";
-import { createContext, useReducer, useEffect, useContext } from "react";
+import { createContext, useReducer, useEffect } from "react";
 
+import {
+  clearUserDownloads,
+  clearOfflineAuthData,
+  storeOfflineAuthData,
+  getOfflineAuthData,
+} from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
 import type { AuthAction, AuthContextType, AuthState } from "../types";
-
-import { DownloadContext } from "./DownloadContext";
 
 // Initial state
 const initialState: AuthState = {
@@ -65,7 +69,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const { clearAllDownloads } = useContext(DownloadContext);
 
   // Effect to check for stored token on app start
   useEffect(() => {
@@ -79,32 +82,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (!isConnected) {
           // When offline, check for stored offline token
-          const offlineToken = await AsyncStorage.getItem("offline_auth_token");
-          const tokenExpiry = await AsyncStorage.getItem("offline_token_expiry");
+          const { token, user, isValid } = await getOfflineAuthData();
 
-          if (offlineToken && tokenExpiry) {
-            const expiryDate = new Date(tokenExpiry);
-            const now = new Date();
-
-            if (now < expiryDate) {
-              // Token is still valid, restore offline session
-              const userData = await AsyncStorage.getItem("offline_user_data");
-              const user = userData ? JSON.parse(userData) : null;
-
-              dispatch({
-                type: "RESTORE_TOKEN",
-                token: offlineToken,
-                user,
-              });
-              return;
-            } else {
-              // Token expired, clear offline data
-              await AsyncStorage.multiRemove([
-                "offline_auth_token",
-                "offline_token_expiry",
-                "offline_user_data",
-              ]);
-            }
+          if (isValid) {
+            // Token is still valid, restore offline session
+            dispatch({
+              type: "RESTORE_TOKEN",
+              token,
+              user,
+            });
+            return;
+          } else {
+            // Token expired or invalid, clear offline data
+            await clearOfflineAuthData();
           }
 
           // No valid offline token
@@ -113,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Check if there's any stored auth data before calling Supabase
-        const hasStoredAuth = await AsyncStorage.getItem("offline_auth_token");
+        const { token: hasStoredAuth } = await getOfflineAuthData();
 
         // If no stored auth data, this is likely a fresh install
         if (!hasStoredAuth) {
@@ -162,11 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             sessionError.message.includes("Refresh Token Not Found")
           ) {
             // Clear all stored auth data
-            await AsyncStorage.multiRemove([
-              "offline_auth_token",
-              "offline_token_expiry",
-              "offline_user_data",
-            ]);
+            await clearOfflineAuthData();
             await supabase.auth.signOut({ scope: "local" });
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
             return;
@@ -185,11 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (userError) {
               // Session is invalid, clear it
-              await AsyncStorage.multiRemove([
-                "offline_auth_token",
-                "offline_token_expiry",
-                "offline_user_data",
-              ]);
+              await clearOfflineAuthData();
               await supabase.auth.signOut({ scope: "local" });
               dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
               return;
@@ -207,11 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 : null,
             });
           } catch (verificationError) {
-            await AsyncStorage.multiRemove([
-              "offline_auth_token",
-              "offline_token_expiry",
-              "offline_user_data",
-            ]);
+            await clearOfflineAuthData();
             await supabase.auth.signOut({ scope: "local" });
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
             return;
@@ -284,18 +262,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (data?.user && data?.session) {
           // Store offline authentication data
-          const expiryDate = new Date();
-          expiryDate.setMonth(expiryDate.getMonth() + 3); // 3 months from now
-
-          await AsyncStorage.setItem("offline_auth_token", data.session.access_token);
-          await AsyncStorage.setItem("offline_token_expiry", expiryDate.toISOString());
-          await AsyncStorage.setItem(
-            "offline_user_data",
-            JSON.stringify({
-              id: data.user.id,
-              email: data.user.email || "",
-            })
-          );
+          await storeOfflineAuthData(data.session.access_token, {
+            id: data.user.id,
+            email: data.user.email || "",
+          });
 
           dispatch({
             type: "SIGN_IN",
@@ -370,18 +340,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           // Store offline authentication data
-          const expiryDate = new Date();
-          expiryDate.setMonth(expiryDate.getMonth() + 3);
-
-          await AsyncStorage.setItem("offline_auth_token", data.session.access_token);
-          await AsyncStorage.setItem("offline_token_expiry", expiryDate.toISOString());
-          await AsyncStorage.setItem(
-            "offline_user_data",
-            JSON.stringify({
-              id: data.user.id,
-              email: data.user.email || "",
-            })
-          );
+          await storeOfflineAuthData(data.session.access_token, {
+            id: data.user.id,
+            email: data.user.email || "",
+          });
 
           dispatch({
             type: "SIGN_IN",
@@ -399,11 +361,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut: async () => {
       try {
         // Clear offline authentication data
-        await AsyncStorage.multiRemove([
-          "offline_auth_token",
-          "offline_token_expiry",
-          "offline_user_data",
-        ]);
+        await clearOfflineAuthData();
+
+        // Clear user downloads
+        await clearUserDownloads(state.user?.id || null);
 
         // Only try to sign out from Supabase if online
         const { isConnected } = await NetInfo.fetch();
@@ -411,7 +372,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await supabase.auth.signOut();
         }
 
-        await clearAllDownloads();
         dispatch({ type: "SIGN_OUT" });
       } catch (e) {
         console.error("Error signing out:", e);
@@ -450,8 +410,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        // If successful, sign out the user locally AND clear downloads
-        await clearAllDownloads();
+        // If successful, clear downloads and sign out the user locally
+        await clearUserDownloads(state.user?.id || null);
         dispatch({ type: "SIGN_OUT" });
       } catch (e) {
         console.error("Error deleting account:", e);
