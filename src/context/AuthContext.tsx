@@ -289,7 +289,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
 
         if (validationError) {
-          console.log(validationError);
           dispatch({ type: "AUTH_ERROR", error: "Error validating book code" });
           return;
         }

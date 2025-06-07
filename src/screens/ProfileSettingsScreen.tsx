@@ -14,7 +14,7 @@ import type { RootStackParamList } from "../types";
 
 const ProfileSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { state: authState, signOut, deleteAccount, clearError } = useContext(AuthContext);
+  const { state: authState, signOut, deleteAccount } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
   const { theme: themeMode, setTheme } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
@@ -170,22 +170,6 @@ const ProfileSettingsScreen = () => {
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
-    },
-    errorClose: {
-      marginLeft: 8,
-    },
-    errorContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.errorContainer,
-      borderRadius: 12,
-      flexDirection: "row",
-      margin: 16,
-      padding: 12,
-    },
-    errorMessage: {
-      color: theme.colors.error,
-      flex: 1,
-      marginLeft: 8,
     },
     header: {
       backgroundColor: theme.colors.surface,
@@ -526,17 +510,6 @@ const ProfileSettingsScreen = () => {
               <Text style={styles.infoValue}>••••••••</Text>
             </View>
           </View>
-
-          {/* Error message display */}
-          {authState.error && (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={20} color={theme.colors.error} />
-              <Text style={styles.errorMessage}>{authState.error}</Text>
-              <TouchableOpacity onPress={clearError} style={styles.errorClose}>
-                <Ionicons name="close" size={18} color={theme.colors.error} />
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
 
         {/* Appearance Section */}

@@ -3,11 +3,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 import { TextInput, Button, HelperText } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
+import ErrorAlert from "../components/ErrorAlert";
 import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
@@ -28,6 +29,15 @@ const SignUpScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  // Handle auth errors locally to this screen
+  useEffect(() => {
+    if (authState.error) {
+      setLocalError(authState.error);
+      clearError(); // Clear from global state immediately
+    }
+  }, [authState.error, clearError]);
 
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -40,39 +50,31 @@ const SignUpScreen = () => {
       top: 0,
     },
     button: {
-      borderRadius: 8,
+      borderRadius: 12,
+      elevation: 2,
       marginTop: 16,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     buttonContent: {
-      paddingVertical: 8,
+      paddingVertical: 12,
     },
     card: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
-      elevation: 4,
+      borderRadius: 16,
+      elevation: 6,
       marginHorizontal: 4,
-      padding: 24,
+      padding: 28,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDarkMode ? 0.4 : 0.15,
+      shadowRadius: 12,
     },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
-    },
-    errorContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.errorContainer,
-      borderRadius: 8,
-      flexDirection: "row",
-      marginBottom: 16,
-      padding: 12,
-    },
-    errorMessage: {
-      color: theme.colors.error,
-      flex: 1,
-      marginLeft: 8,
     },
     errorText: {
       color: theme.colors.error,
@@ -81,6 +83,13 @@ const SignUpScreen = () => {
     },
     form: {
       marginTop: 8,
+    },
+    headerIcon: {
+      alignSelf: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: 32,
+      marginBottom: 16,
+      padding: 16,
     },
     input: {
       backgroundColor: theme.colors.surface,
@@ -96,25 +105,30 @@ const SignUpScreen = () => {
     inputIconContainer: {
       height: "100%",
       justifyContent: "center",
-      left: 8,
+      left: 12,
       paddingTop: 8,
       position: "absolute",
       zIndex: 1,
     },
     inputOutline: {
-      borderRadius: 8,
+      borderRadius: 12,
+      borderWidth: 1.5,
     },
     loginContainer: {
+      borderTopColor: theme.colors.surfaceVariant,
+      borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "center",
       marginTop: 24,
+      paddingTop: 16,
     },
     loginLink: {
       color: theme.colors.primary,
-      fontWeight: "600",
+      fontWeight: "700",
     },
     loginText: {
-      color: theme.colors.onSurface,
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 15,
     },
     scrollContent: {
       flexGrow: 1,
@@ -123,57 +137,67 @@ const SignUpScreen = () => {
       paddingVertical: 24,
     },
     subtitle: {
-      color: theme.colors.onSurface,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 16,
+      lineHeight: 22,
       marginBottom: 24,
       textAlign: "center",
     },
     title: {
       color: theme.colors.onSurface,
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: "700",
       marginBottom: 8,
       textAlign: "center",
     },
     tooltip: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 8,
-      elevation: 5,
-      padding: 12,
+      borderColor: theme.colors.outline,
+      borderRadius: 12,
+      borderWidth: 1,
+      elevation: 8,
+      padding: 16,
       position: "absolute",
       right: 0,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      top: 30,
-      width: width * 0.7,
+      shadowRadius: 8,
+      top: 40,
+      width: width * 0.8,
       zIndex: 20,
     },
     // eslint-disable-next-line react-native/no-color-literals
     tooltipArrow: {
       borderBottomColor: theme.colors.surface,
-      borderBottomWidth: 10,
+      borderBottomWidth: 12,
       borderLeftColor: "transparent",
-      borderLeftWidth: 10,
+      borderLeftWidth: 12,
       borderRightColor: "transparent",
-      borderRightWidth: 10,
+      borderRightWidth: 12,
       height: 0,
       position: "absolute",
-      right: 10,
-      top: -10,
+      right: 12,
+      top: -12,
       width: 0,
     },
     tooltipContainer: {
+      padding: 8,
       position: "absolute",
-      right: 10,
-      top: 5,
+      right: 12,
+      top: 12,
       zIndex: 10,
     },
     tooltipText: {
       color: theme.colors.onSurface,
       fontSize: 14,
       lineHeight: 20,
+    },
+    tooltipTitle: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 8,
     },
   });
 
@@ -199,7 +223,7 @@ const SignUpScreen = () => {
     setEmailError("");
     setPasswordError("");
     setBookCodeError("");
-    clearError();
+    setLocalError(null);
 
     // Validate inputs
     let isValid = true;
@@ -236,9 +260,14 @@ const SignUpScreen = () => {
       await signUp(email, password, bookCode);
     } catch (error) {
       console.error("Signup error:", error);
+      setLocalError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDismissError = () => {
+    setLocalError(null);
   };
 
   // Background pattern
@@ -251,8 +280,14 @@ const SignUpScreen = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
+          <View style={styles.headerIcon}>
+            <Ionicons name="person-add-outline" size={32} color={theme.colors.primary} />
+          </View>
+
           <Text style={styles.title}>Join The Sound Approach</Text>
-          <Text style={styles.subtitle}>Enter your details to create a new account</Text>
+          <Text style={styles.subtitle}>Create your account to start your birding adventure</Text>
+
+          <ErrorAlert error={localError} onDismiss={handleDismissError} />
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
@@ -327,40 +362,32 @@ const SignUpScreen = () => {
                 error={!!bookCodeError}
                 style={styles.input}
                 outlineStyle={styles.inputOutline}
-                right={
-                  <TouchableOpacity
-                    style={styles.tooltipContainer}
-                    onPress={() => setShowTooltip(!showTooltip)}
-                  >
-                    <Ionicons
-                      name="information-circle-outline"
-                      size={22}
-                      color={theme.colors.primary}
-                    />
-                    {showTooltip && (
-                      <View style={styles.tooltip}>
-                        <View style={styles.tooltipArrow} />
-                        <Text style={styles.tooltipText}>
-                          The book code is an 8-character code found on the inside cover of
-                          &quot;The Sound Approach to Birding&quot; book.
-                        </Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                }
               />
+              <TouchableOpacity
+                style={styles.tooltipContainer}
+                onPress={() => setShowTooltip(!showTooltip)}
+              >
+                <Ionicons
+                  name="information-circle-outline"
+                  size={22}
+                  color={theme.colors.primary}
+                />
+                {showTooltip && (
+                  <View style={styles.tooltip}>
+                    <View style={styles.tooltipArrow} />
+                    <Text style={styles.tooltipTitle}>Book Code Help</Text>
+                    <Text style={styles.tooltipText}>
+                      The book code is an 8-character code found on the inside cover of &quot;The
+                      Sound Approach to Birding&quot; book. It consists of letters and numbers.
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
             {bookCodeError ? (
               <HelperText type="error" style={styles.errorText}>
                 <Ionicons name="alert-circle-outline" size={14} /> {bookCodeError}
               </HelperText>
-            ) : null}
-
-            {authState.error ? (
-              <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={20} color={theme.colors.error} />
-                <Text style={styles.errorMessage}>{authState.error}</Text>
-              </View>
             ) : null}
 
             <Button
@@ -371,13 +398,14 @@ const SignUpScreen = () => {
               style={styles.button}
               contentStyle={styles.buttonContent}
             >
-              Create Account
+              {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
 
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
               <TouchableOpacity
                 onPress={() => {
+                  setLocalError(null); // Clear local error when navigating
                   navigation.navigate("Login");
                 }}
               >

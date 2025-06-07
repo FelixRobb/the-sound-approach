@@ -3,11 +3,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { TextInput, Button, HelperText } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
+import ErrorAlert from "../components/ErrorAlert";
 import { AuthContext } from "../context/AuthContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
@@ -23,6 +24,15 @@ const LoginScreen = () => {
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  // Handle auth errors locally to this screen
+  useEffect(() => {
+    if (authState.error) {
+      setLocalError(authState.error);
+      clearError(); // Clear from global state immediately
+    }
+  }, [authState.error, clearError]);
 
   // Create styles based on theme
   const styles = StyleSheet.create({
@@ -36,39 +46,31 @@ const LoginScreen = () => {
       top: 0,
     },
     button: {
-      borderRadius: 8,
+      borderRadius: 12,
+      elevation: 2,
       marginTop: 8,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     buttonContent: {
-      paddingVertical: 8,
+      paddingVertical: 12,
     },
     card: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
-      elevation: 4,
+      borderRadius: 16,
+      elevation: 6,
       marginHorizontal: 4,
-      padding: 24,
+      padding: 28,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDarkMode ? 0.4 : 0.15,
+      shadowRadius: 12,
     },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
-    },
-    errorContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.errorContainer,
-      borderRadius: 8,
-      flexDirection: "row",
-      marginBottom: 16,
-      padding: 12,
-    },
-    errorMessage: {
-      color: theme.colors.error,
-      flex: 1,
-      marginLeft: 8,
     },
     errorText: {
       color: theme.colors.error,
@@ -92,13 +94,14 @@ const LoginScreen = () => {
     inputIconContainer: {
       height: "100%",
       justifyContent: "center",
-      left: 8,
+      left: 12,
       paddingTop: 8,
       position: "absolute",
       zIndex: 1,
     },
     inputOutline: {
-      borderRadius: 8,
+      borderRadius: 12,
+      borderWidth: 1.5,
     },
     scrollContent: {
       flexGrow: 1,
@@ -107,29 +110,41 @@ const LoginScreen = () => {
       paddingVertical: 24,
     },
     signupContainer: {
+      borderTopColor: theme.colors.surfaceVariant,
+      borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "center",
       marginTop: 24,
+      paddingTop: 16,
     },
     signupLink: {
       color: theme.colors.primary,
-      fontWeight: "600",
+      fontWeight: "700",
     },
     signupText: {
       color: theme.colors.onSurfaceVariant,
+      fontSize: 15,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 16,
+      lineHeight: 22,
       marginBottom: 24,
       textAlign: "center",
     },
     title: {
       color: theme.colors.onSurface,
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: "700",
       marginBottom: 8,
       textAlign: "center",
+    },
+    welcomeIcon: {
+      alignSelf: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: 32,
+      marginBottom: 16,
+      padding: 16,
     },
   });
 
@@ -143,7 +158,7 @@ const LoginScreen = () => {
     // Reset errors
     setEmailError("");
     setPasswordError("");
-    clearError();
+    setLocalError(null);
 
     // Validate inputs
     let isValid = true;
@@ -169,9 +184,14 @@ const LoginScreen = () => {
       await signIn(email, password);
     } catch (error) {
       console.error("Login error:", error);
+      setLocalError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDismissError = () => {
+    setLocalError(null);
   };
 
   // Background pattern
@@ -184,8 +204,14 @@ const LoginScreen = () => {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
+          <View style={styles.welcomeIcon}>
+            <Ionicons name="person-circle-outline" size={32} color={theme.colors.primary} />
+          </View>
+
           <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+          <Text style={styles.subtitle}>Sign in to continue your birding journey</Text>
+
+          <ErrorAlert error={localError} onDismiss={handleDismissError} />
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
@@ -244,13 +270,6 @@ const LoginScreen = () => {
               </HelperText>
             ) : null}
 
-            {authState.error ? (
-              <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={20} color={theme.colors.error} />
-                <Text style={styles.errorMessage}>{authState.error}</Text>
-              </View>
-            ) : null}
-
             <Button
               mode="contained"
               onPress={handleSubmit}
@@ -259,13 +278,14 @@ const LoginScreen = () => {
               style={styles.button}
               contentStyle={styles.buttonContent}
             >
-              Sign In
+              {isLoading ? "Signing In..." : "Sign In"}
             </Button>
 
             <View style={styles.signupContainer}>
               <Text style={styles.signupText}>Don&apos;t have an account? </Text>
               <TouchableOpacity
                 onPress={() => {
+                  setLocalError(null); // Clear local error when navigating
                   navigation.navigate("SignUp");
                 }}
               >
