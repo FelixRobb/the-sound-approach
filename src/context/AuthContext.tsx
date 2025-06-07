@@ -283,20 +283,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp: async (email: string, password: string, bookCode: string) => {
       try {
         // First validate the book code
-        const { data: isAvailable, error: availabilityError } = await supabase.rpc(
-          "check_book_code_validity",
-          {
-            book_code: bookCode,
-          }
+        const { data: isAvailable, error: validationError } = await supabase.rpc(
+          "is_book_code_available",
+          { code_param: bookCode }
         );
-        if (availabilityError || !isAvailable) {
-          console.log(availabilityError, isAvailable);
-          dispatch({ type: "AUTH_ERROR", error: "Invalid or unavailable book code" });
+
+        if (validationError) {
+          console.log(validationError);
+          dispatch({ type: "AUTH_ERROR", error: "Error validating book code" });
           return;
         }
 
-        // Proceed with sign-up
+        if (!isAvailable) {
+          dispatch({
+            type: "AUTH_ERROR",
+            error: "Invalid book code or maximum activations reached",
+          });
+          return;
+        }
 
+        // Then sign up with email and password
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
