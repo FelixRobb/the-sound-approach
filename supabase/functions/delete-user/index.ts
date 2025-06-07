@@ -60,21 +60,7 @@ serve(async (req) => {
 
     const userId = user.id;
 
-    // 1. Delete user downloads
-    const { error: downloadsError } = await supabaseAdmin
-      .from("user_downloads")
-      .delete()
-      .eq("user_id", userId);
-
-    if (downloadsError) {
-      console.error("Error deleting user downloads:", downloadsError);
-      return new Response(JSON.stringify({ error: "Failed to delete user downloads" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // 2. Delete user activations and decrement book code activation counts
+    // Delete user activations and decrement book code activation counts
     const { data: activations, error: activationsSelectError } = await supabaseAdmin
       .from("user_activations")
       .select("book_code_id")

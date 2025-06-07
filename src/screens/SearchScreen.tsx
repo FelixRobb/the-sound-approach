@@ -219,61 +219,54 @@ const SearchScreen = () => {
       fontSize: 18,
       fontWeight: "600",
     },
+    // Updated result card styles to match downloads screen
     resultCard: {
       backgroundColor: theme.colors.surface,
-      borderLeftColor: theme.colors.primary,
-      borderLeftWidth: 4,
       borderRadius: 16,
       elevation: 3,
-      marginVertical: 10,
+      marginVertical: 8,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
     },
     resultCardContent: {
       padding: 16,
+    },
+    resultCardHeader: {
+      borderBottomColor: theme.colors.surfaceVariant,
+      borderBottomWidth: 1,
+      flexDirection: "row",
+      marginBottom: 12,
+      paddingBottom: 8,
     },
     resultCount: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 14,
       marginTop: 8,
     },
-    resultHeader: {
-      alignItems: "flex-start",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 10,
-    },
     resultMeta: {
+      alignItems: "center",
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 8,
-      marginTop: 10,
+      marginTop: 8,
     },
     resultTitle: {
       color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "700",
+      fontSize: 17,
+      fontWeight: "bold",
+      marginBottom: 2,
     },
-    resultTitleContainer: {
-      flex: 1,
-      marginRight: 8,
-    },
-    resultTypeIndicator: {
+    resultActions: {
       alignItems: "center",
-      backgroundColor: theme.colors.onSecondary,
-      borderRadius: 8,
       flexDirection: "row",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      justifyContent: "space-between",
+      marginTop: 12,
     },
-    resultTypeText: {
-      color: theme.colors.secondary,
-      fontSize: 12,
-      fontWeight: "500",
-      marginLeft: 4,
+    resultInfo: {
+      flex: 1,
     },
     resultsHeader: {
       color: theme.colors.primary,
@@ -283,7 +276,7 @@ const SearchScreen = () => {
       marginTop: 16,
     },
     scientificName: {
-      color: theme.colors.onSurface,
+      color: theme.colors.onSurfaceVariant,
       fontSize: 14,
       fontStyle: "italic",
       marginTop: 2,
@@ -313,33 +306,8 @@ const SearchScreen = () => {
       marginVertical: 16,
       width: "100%",
     },
-    speciesCard: {
-      backgroundColor: theme.colors.surface,
-      borderLeftColor: theme.colors.secondary,
-      borderLeftWidth: 4,
-      borderRadius: 16,
-      elevation: 3,
-      marginVertical: 10,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.4,
-      shadowRadius: 6,
-    },
-    speciesCardContent: {
-      padding: 16,
-    },
-    speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "700",
-    },
-    speciesScientificName: {
-      color: theme.colors.onSurface,
-      fontSize: 14,
-      fontStyle: "italic",
-      marginBottom: 10,
-      marginTop: 2,
+    separator: {
+      height: 8,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
@@ -347,11 +315,24 @@ const SearchScreen = () => {
       fontStyle: "italic",
       marginTop: 2,
     },
-
     title: {
       color: theme.colors.primary,
       fontSize: 28,
       fontWeight: "bold",
+    },
+    typeIndicator: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 8,
+      flexDirection: "row",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    typeText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+      fontWeight: "500",
+      marginLeft: 4,
     },
     viewDetailButton: {
       alignItems: "center",
@@ -512,40 +493,42 @@ const SearchScreen = () => {
         }}
       >
         <View style={styles.resultCardContent}>
-          <View style={styles.resultHeader}>
-            <View style={styles.resultTitleContainer}>
-              <Text style={styles.resultTitle}>{item.title}</Text>
-              {item.species && (
-                <Text style={styles.scientificName}>{item.species.scientific_name}</Text>
-              )}
-            </View>
+          <View style={styles.resultCardHeader}>
+            <Text style={styles.resultTitle}>{item.title}</Text>
+            {item.species && (
+              <Text style={styles.scientificName}>{item.species.scientific_name}</Text>
+            )}
             {isDownloaded(item.id) && <DownloadedBadge />}
           </View>
 
-          <View style={styles.resultMeta}>
-            <PageBadge page={item.book_page_number} />
-
-            <View style={styles.resultTypeIndicator}>
-              <Ionicons name="musical-notes-outline" size={12} color={theme.colors.secondary} />
-              <Text style={styles.resultTypeText}>Recording</Text>
+          <View style={styles.resultActions}>
+            <View style={styles.resultInfo}>
+              <View style={styles.resultMeta}>
+                <PageBadge page={item.book_page_number} />
+                <View style={styles.typeIndicator}>
+                  <Ionicons
+                    name="musical-notes-outline"
+                    size={12}
+                    color={theme.colors.onSurfaceVariant}
+                  />
+                  <Text style={styles.typeText}>Recording</Text>
+                </View>
+              </View>
             </View>
+
+            {isConnected && (
+              <TouchableOpacity
+                style={styles.viewDetailButton}
+                onPress={() => {
+                  handleNavigateToRecording(item.id);
+                }}
+              >
+                <Text style={styles.viewDetailText}>View Details</Text>
+                <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-
-        {isConnected && (
-          <View style={styles.cardFooter}>
-            <View>{/* You could add additional info here if needed */}</View>
-            <TouchableOpacity
-              style={styles.viewDetailButton}
-              onPress={() => {
-                handleNavigateToRecording(item.id);
-              }}
-            >
-              <Text style={styles.viewDetailText}>View Details</Text>
-              <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
-            </TouchableOpacity>
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
@@ -554,37 +537,40 @@ const SearchScreen = () => {
   const renderSpeciesItem = ({ item }: { item: Species }) => {
     return (
       <TouchableOpacity
-        style={styles.speciesCard}
+        style={styles.resultCard}
         onPress={() => {
           handleNavigateToSpecies(item.id);
         }}
       >
-        <View style={styles.speciesCardContent}>
-          <View>
-            <Text style={styles.speciesName}>{item.common_name}</Text>
-            <Text style={styles.speciesScientificName}>{item.scientific_name}</Text>
-            <View style={styles.resultMeta}>
-              <View style={styles.resultTypeIndicator}>
-                <Ionicons name="leaf-outline" size={12} color={theme.colors.secondary} />
-                <Text style={styles.resultTypeText}>Species</Text>
+        <View style={styles.resultCardContent}>
+          <View style={styles.resultCardHeader}>
+            <Text style={styles.resultTitle}>{item.common_name}</Text>
+            <Text style={styles.scientificName}>{item.scientific_name}</Text>
+          </View>
+
+          <View style={styles.resultActions}>
+            <View style={styles.resultInfo}>
+              <View style={styles.resultMeta}>
+                <View style={styles.typeIndicator}>
+                  <Ionicons name="leaf-outline" size={12} color={theme.colors.onSurfaceVariant} />
+                  <Text style={styles.typeText}>Species</Text>
+                </View>
               </View>
             </View>
+
+            {isConnected && (
+              <TouchableOpacity
+                style={styles.viewDetailButton}
+                onPress={() => {
+                  handleNavigateToSpecies(item.id);
+                }}
+              >
+                <Text style={styles.viewDetailText}>View Details</Text>
+                <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-
-        {isConnected && (
-          <View style={styles.cardFooter}>
-            <TouchableOpacity
-              style={styles.viewDetailButton}
-              onPress={() => {
-                handleNavigateToSpecies(item.id);
-              }}
-            >
-              <Text style={styles.viewDetailText}>View Details</Text>
-              <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
-            </TouchableOpacity>
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
@@ -626,8 +612,11 @@ const SearchScreen = () => {
         {species.length > 0 && (
           <>
             <Text style={styles.resultsHeader}>Species</Text>
-            {species.map((item) => (
-              <View key={`species-${item.id}`}>{renderSpeciesItem({ item })}</View>
+            {species.map((item, index) => (
+              <View key={`species-${item.id}`}>
+                {renderSpeciesItem({ item })}
+                {index < species.length - 1 && <View style={styles.separator} />}
+              </View>
             ))}
           </>
         )}
@@ -637,8 +626,11 @@ const SearchScreen = () => {
         {recordings.length > 0 && (
           <>
             <Text style={styles.resultsHeader}>Recordings</Text>
-            {recordings.map((item) => (
-              <View key={`recording-${item.id}`}>{renderRecordingItem({ item })}</View>
+            {recordings.map((item, index) => (
+              <View key={`recording-${item.id}`}>
+                {renderRecordingItem({ item })}
+                {index < recordings.length - 1 && <View style={styles.separator} />}
+              </View>
             ))}
           </>
         )}
