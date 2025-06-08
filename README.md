@@ -27,7 +27,7 @@ A React Native mobile application for high-quality audio playback with sonogram 
 ## Prerequisites
 
 - Node.js (v16 or higher)
-- npm or yarn
+- Yarn (required)
 - Expo CLI
 - iOS Simulator (for iOS development)
 - Android Studio & Android SDK (for Android development)
@@ -44,13 +44,13 @@ cd the-sound-approach
 2. Install dependencies:
 
 ```bash
-npm install
+yarn install
 ```
 
 3. Start the development server:
 
 ```bash
-npm start
+yarn start
 ```
 
 ## Running the App
@@ -58,13 +58,13 @@ npm start
 - For iOS:
 
 ```bash
-npm run ios
+yarn ios
 ```
 
 - For Android:
 
 ```bash
-npm run android
+yarn android
 ```
 
 ## Project Structure
@@ -86,20 +86,20 @@ src/
 ### Android
 
 ```bash
-npm run build:android:production
+yarn build:android:production
 ```
 
 ### iOS
 
 ```bash
-npm run build:ios:production
+yarn build:ios:production
 ```
 
 ## Development
 
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint errors
-- `npm run format` - Format code with Prettier
+- `yarn lint` - Run ESLint
+- `yarn lint:fix` - Fix ESLint errors
+- `yarn format` - Format code with Prettier
 
 ## Environment Variables
 
