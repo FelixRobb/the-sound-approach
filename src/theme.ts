@@ -70,7 +70,7 @@ const Colors = {
     disabled: "rgb(209, 213, 219)",
     outline: "rgb(229, 231, 235)",
     divider: "rgb(243, 244, 246)",
-    shadow: "rgba(0, 0, 0, 0.1)",
+    shadow: "rgba(0, 0, 0, 0.14)",
     overlay: "rgba(0, 0, 0, 0.5)",
     backdrop: "rgba(17, 24, 39, 0.7)",
   },

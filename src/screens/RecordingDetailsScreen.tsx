@@ -244,9 +244,6 @@ const RecordingDetailsScreen = () => {
     },
     loadingCard: {
       alignItems: "center",
-      borderRadius: 16,
-      elevation: 4,
-      padding: 24,
       width: width * 0.9,
     },
     loadingContainer: {
@@ -254,12 +251,6 @@ const RecordingDetailsScreen = () => {
       flex: 1,
       justifyContent: "center",
       padding: 20,
-    },
-    loadingText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      marginTop: 16,
-      textAlign: "center",
     },
     pageBadgeWrapper: {
       alignSelf: "flex-start",
@@ -701,7 +692,6 @@ const RecordingDetailsScreen = () => {
         <View style={styles.loadingContainer}>
           <View style={styles.loadingCard}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Loading recording...</Text>
           </View>
         </View>
       </View>

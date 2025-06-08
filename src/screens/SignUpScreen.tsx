@@ -3,8 +3,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState, useContext, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { useState, useContext, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+  TextInput as RNTextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { TextInput, Button, HelperText } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
@@ -30,6 +40,9 @@ const SignUpScreen = () => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  const passwordInputRef = useRef<RNTextInput>(null);
+  const bookCodeInputRef = useRef<RNTextInput>(null);
 
   // Handle auth errors locally to this screen
   useEffect(() => {
@@ -274,11 +287,18 @@ const SignUpScreen = () => {
   const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <BackgroundPattern />
       <DetailHeader title="Create Account" />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.card}>
           <View style={styles.headerIcon}>
             <Ionicons name="person-add-outline" size={32} color={theme.colors.primary} />
@@ -307,6 +327,8 @@ const SignUpScreen = () => {
                 error={!!emailError}
                 style={styles.input}
                 outlineStyle={styles.inputOutline}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
               />
             </View>
             {emailError ? (
@@ -331,6 +353,9 @@ const SignUpScreen = () => {
                 error={!!passwordError}
                 style={styles.input}
                 outlineStyle={styles.inputOutline}
+                returnKeyType="next"
+                onSubmitEditing={() => bookCodeInputRef.current?.focus()}
+                ref={passwordInputRef}
                 right={
                   <TextInput.Icon
                     icon={showPassword ? "eye-off" : "eye"}
@@ -362,6 +387,9 @@ const SignUpScreen = () => {
                 error={!!bookCodeError}
                 style={styles.input}
                 outlineStyle={styles.inputOutline}
+                returnKeyType="done"
+                onSubmitEditing={handleSubmit}
+                ref={bookCodeInputRef}
               />
               <TouchableOpacity
                 style={styles.tooltipContainer}
@@ -415,7 +443,7 @@ const SignUpScreen = () => {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

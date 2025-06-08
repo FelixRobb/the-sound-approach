@@ -618,6 +618,7 @@ const SearchScreen = () => {
               color={isConnected ? theme.colors.primary : theme.colors.onSurfaceDisabled}
             />
             <TextInput
+              textAlignVertical="center"
               placeholder="Search species, recordings, or pages..."
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}

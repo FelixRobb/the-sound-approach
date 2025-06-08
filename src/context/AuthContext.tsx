@@ -66,6 +66,29 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   }
 };
 
+// Helper function to check if error is a refresh token error
+const isRefreshTokenError = (error: any): boolean => {
+  const message = error?.message || "";
+  return (
+    message.includes("refresh_token_not_found") ||
+    message.includes("Invalid Refresh Token") ||
+    message.includes("Refresh Token Not Found") ||
+    message.includes("AuthApiError: Invalid Refresh Token")
+  );
+};
+
+// Helper function to safely clear auth state
+const clearAuthState = async () => {
+  try {
+    await clearOfflineAuthData();
+    // Use 'local' scope to avoid server call if offline
+    await supabase.auth.signOut({ scope: "local" });
+  } catch (error) {
+    console.warn("Error clearing auth state:", error);
+    // Continue anyway - we still want to clear local state
+  }
+};
+
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -74,172 +97,175 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let authStateSubscription: { data: { subscription: { unsubscribe: () => void } } } | null =
       null;
+    let isMounted = true;
 
     const bootstrapAsync = async () => {
       try {
-        // Check if we're offline first
+        // First, clear any existing session to prevent automatic refresh attempts
+        // This prevents the refresh token error on first load
+        await supabase.auth.signOut({ scope: "local" });
+
+        // Set up auth state listener FIRST to catch any auth events
+        authStateSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (!isMounted) return;
+
+          console.log("Auth state change:", event);
+
+          switch (event) {
+            case "SIGNED_OUT":
+              dispatch({ type: "SIGN_OUT" });
+              break;
+
+            case "TOKEN_REFRESHED":
+              if (session) {
+                // Store the refreshed token
+                await storeOfflineAuthData(session.access_token, {
+                  id: session.user.id,
+                  email: session.user.email || "",
+                });
+
+                dispatch({
+                  type: "RESTORE_TOKEN",
+                  token: session.access_token,
+                  user: {
+                    id: session.user.id,
+                    email: session.user.email || "",
+                  },
+                });
+              }
+              break;
+
+            case "SIGNED_IN":
+              if (session) {
+                await storeOfflineAuthData(session.access_token, {
+                  id: session.user.id,
+                  email: session.user.email || "",
+                });
+
+                dispatch({
+                  type: "RESTORE_TOKEN",
+                  token: session.access_token,
+                  user: {
+                    id: session.user.id,
+                    email: session.user.email || "",
+                  },
+                });
+              }
+              break;
+          }
+        });
+
+        // Check network connectivity
         const { isConnected } = await NetInfo.fetch();
 
         if (!isConnected) {
-          // When offline, check for stored offline token
+          // Handle offline scenario
           const { token, user, isValid } = await getOfflineAuthData();
 
-          if (isValid) {
-            // Token is still valid, restore offline session
+          if (isValid && token && user) {
             dispatch({
               type: "RESTORE_TOKEN",
               token,
               user,
             });
-            return;
           } else {
-            // Token expired or invalid, clear offline data
             await clearOfflineAuthData();
+            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
           }
-
-          // No valid offline token
-          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
           return;
         }
 
-        // Check if there's any stored auth data before calling Supabase
+        // Check for stored offline auth data
         const { token: hasStoredAuth } = await getOfflineAuthData();
 
-        // If no stored auth data, this is likely a fresh install
         if (!hasStoredAuth) {
-          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-
-          // Still set up the auth state listener for future auth events
-          authStateSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === "SIGNED_OUT") {
-              dispatch({ type: "SIGN_OUT" });
-            } else if (event === "TOKEN_REFRESHED" && session) {
-              dispatch({
-                type: "RESTORE_TOKEN",
-                token: session.access_token,
-                user: session.user
-                  ? {
-                      id: session.user.id,
-                      email: session.user.email || "",
-                    }
-                  : null,
-              });
-            } else if (event === "SIGNED_IN" && session) {
-              dispatch({
-                type: "RESTORE_TOKEN",
-                token: session.access_token,
-                user: session.user
-                  ? {
-                      id: session.user.id,
-                      email: session.user.email || "",
-                    }
-                  : null,
-              });
-            }
-          });
-          return;
-        }
-
-        // Original online logic continues here for existing users...
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-        // Check for refresh token errors
-        if (sessionError) {
-          // If it's a refresh token error, clear the session and sign out
-          if (
-            sessionError.message.includes("refresh_token_not_found") ||
-            sessionError.message.includes("Invalid Refresh Token") ||
-            sessionError.message.includes("Refresh Token Not Found")
-          ) {
-            // Clear all stored auth data
-            await clearOfflineAuthData();
-            await supabase.auth.signOut({ scope: "local" });
-            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-            return;
-          }
-
-          // Handle other session errors
+          // No stored auth - this is likely a fresh install
           dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
           return;
         }
 
-        if (sessionData?.session) {
-          // Verify the session is still valid by making a simple request
-          try {
-            // Test the session by getting user info
-            const { error: userError } = await supabase.auth.getUser();
+        // Try to get current session
+        try {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
-            if (userError) {
-              // Session is invalid, clear it
-              await clearOfflineAuthData();
-              await supabase.auth.signOut({ scope: "local" });
+          if (sessionError) {
+            if (isRefreshTokenError(sessionError)) {
+              console.log("Refresh token error detected, clearing auth state");
+              await clearAuthState();
               dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
               return;
             }
 
-            // Session is valid, restore the user state
-            dispatch({
-              type: "RESTORE_TOKEN",
-              token: sessionData.session.access_token,
-              user: sessionData.session.user
-                ? {
-                    id: sessionData.session.user.id,
-                    email: sessionData.session.user.email || "",
-                  }
-                : null,
-            });
-          } catch (verificationError) {
-            await clearOfflineAuthData();
-            await supabase.auth.signOut({ scope: "local" });
+            // Other session errors
+            console.warn("Session error:", sessionError);
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
             return;
           }
-        } else {
-          // No active session
+
+          if (sessionData?.session) {
+            // Verify session is still valid
+            const { error: userError } = await supabase.auth.getUser();
+
+            if (userError) {
+              if (isRefreshTokenError(userError)) {
+                console.log("User verification failed with refresh token error");
+                await clearAuthState();
+                dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+                return;
+              }
+
+              // Other user errors
+              console.warn("User verification error:", userError);
+              await clearAuthState();
+              dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+              return;
+            }
+
+            // Session is valid
+            await storeOfflineAuthData(sessionData.session.access_token, {
+              id: sessionData.session.user.id,
+              email: sessionData.session.user.email || "",
+            });
+
+            dispatch({
+              type: "RESTORE_TOKEN",
+              token: sessionData.session.access_token,
+              user: {
+                id: sessionData.session.user.id,
+                email: sessionData.session.user.email || "",
+              },
+            });
+          } else {
+            // No active session
+            await clearOfflineAuthData();
+            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+          }
+        } catch (verificationError) {
+          console.error("Verification error:", verificationError);
+
+          if (isRefreshTokenError(verificationError)) {
+            await clearAuthState();
+          }
+
           dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
         }
+      } catch (error) {
+        console.error("Failed to restore authentication state:", error);
 
-        // Subscribe to auth state changes
-        authStateSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === "SIGNED_OUT") {
-            // User signed out or was deleted
-            dispatch({ type: "SIGN_OUT" });
-          } else if (event === "TOKEN_REFRESHED" && session) {
-            // Token was successfully refreshed
-            dispatch({
-              type: "RESTORE_TOKEN",
-              token: session.access_token,
-              user: session.user
-                ? {
-                    id: session.user.id,
-                    email: session.user.email || "",
-                  }
-                : null,
-            });
-          } else if (event === "SIGNED_IN" && session) {
-            // User signed in
-            dispatch({
-              type: "RESTORE_TOKEN",
-              token: session.access_token,
-              user: session.user
-                ? {
-                    id: session.user.id,
-                    email: session.user.email || "",
-                  }
-                : null,
-            });
-          }
-        });
-      } catch (e) {
-        console.error("Failed to restore authentication state:", e);
+        // If it's a refresh token error, clear everything
+        if (isRefreshTokenError(error)) {
+          await clearAuthState();
+        }
+
         dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
       }
     };
 
     bootstrapAsync();
 
-    // Clean up subscription when unmounting
+    // Cleanup function
     return () => {
+      isMounted = false;
       if (authStateSubscription) {
         authStateSubscription.data.subscription.unsubscribe();
       }
@@ -280,6 +306,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" });
       }
     },
+
     signUp: async (email: string, password: string, bookCode: string) => {
       try {
         // First validate the book code
@@ -357,6 +384,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" });
       }
     },
+
     signOut: async () => {
       try {
         // Clear offline authentication data
@@ -369,6 +397,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { isConnected } = await NetInfo.fetch();
         if (isConnected) {
           await supabase.auth.signOut();
+        } else {
+          // If offline, just sign out locally
+          await supabase.auth.signOut({ scope: "local" });
         }
 
         dispatch({ type: "SIGN_OUT" });
@@ -377,6 +408,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SIGN_OUT" });
       }
     },
+
     deleteAccount: async () => {
       try {
         // Get the current session
@@ -420,6 +452,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
     },
+
     clearError: () => {
       dispatch({ type: "AUTH_ERROR", error: null });
     },

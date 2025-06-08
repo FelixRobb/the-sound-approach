@@ -14,7 +14,6 @@ import {
   GestureResponderEvent,
 } from "react-native";
 
-import OfflineIndicator from "../components/OfflineIndicator";
 import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
 import { NetworkContext } from "../context/NetworkContext";
@@ -320,24 +319,27 @@ const MainTabNavigator: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: -16 },
-      shadowOpacity: 0.8,
-      shadowRadius: 20,
     },
+    // eslint-disable-next-line react-native/no-color-literals
     tabBar: {
       backgroundColor: theme.colors.surface,
       borderTopLeftRadius: 25,
       borderTopRightRadius: 25,
       borderTopWidth: 0,
-      elevation: 16,
+      elevation: 18,
       height: Platform.OS === "ios" ? 90 : 70,
       paddingBottom: Platform.OS === "ios" ? 26 : 10,
       paddingHorizontal: 8,
       paddingTop: 10,
+      shadowColor: "000",
+      shadowOffset: {
+        width: 0,
+        height: -2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
     },
   });
-
   return (
     <View style={styles.container}>
       <Tab.Navigator
@@ -399,7 +401,6 @@ const MainTabNavigator: React.FC = () => {
         <Tab.Screen name="Downloads" component={DownloadsNavigator} />
         <Tab.Screen name="Profile" component={ProfileNavigator} />
       </Tab.Navigator>
-      <OfflineIndicator />
     </View>
   );
 };
