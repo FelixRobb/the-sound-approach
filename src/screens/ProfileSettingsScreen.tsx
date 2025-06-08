@@ -14,7 +14,7 @@ import type { RootStackParamList } from "../types";
 
 const ProfileSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { state: authState, signOut, deleteAccount } = useContext(AuthContext);
+  const { state: authState, signOut } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
   const { theme: themeMode, setTheme } = useContext(ThemeContext);
   const { isConnected } = useContext(NetworkContext);
@@ -105,20 +105,7 @@ const ProfileSettingsScreen = () => {
       );
       return;
     }
-    Alert.alert(
-      "Delete Account",
-      "Are you sure you want to delete your account? This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await deleteAccount();
-          },
-        },
-      ]
-    );
+    navigation.navigate("DeleteAccount");
   };
 
   // Create styles with theme support

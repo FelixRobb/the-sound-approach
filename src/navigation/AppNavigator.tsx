@@ -20,6 +20,7 @@ import { NetworkContext } from "../context/NetworkContext";
 import { OfflineContext, OfflineProvider } from "../context/OfflineContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import OfflineNavigator from "../navigation/OfflineNavigator";
+import DeleteAccountScreen from "../screens/DeleteAccountScreen";
 import DownloadsScreen from "../screens/DownloadsScreen";
 import LoginScreen from "../screens/LoginScreen";
 import OfflineNoticeScreen from "../screens/OfflineNoticeScreen";
@@ -442,6 +443,15 @@ const MainNavigator: React.FC = () => {
             presentation: "modal",
             gestureEnabled: true,
             animation: "slide_from_bottom",
+          }}
+        />
+        <MainStack.Screen
+          name="DeleteAccount"
+          component={DeleteAccountScreen}
+          options={{
+            presentation: "card",
+            gestureEnabled: true,
+            animation: "slide_from_right",
           }}
         />
       </MainStack.Navigator>

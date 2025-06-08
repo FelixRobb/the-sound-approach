@@ -67,8 +67,9 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 };
 
 // Helper function to check if error is a refresh token error
-const isRefreshTokenError = (error: any): boolean => {
-  const message = error?.message || "";
+const isRefreshTokenError = (error: unknown): boolean => {
+  const message =
+    typeof error === "object" && error !== null && "message" in error ? String(error.message) : "";
   return (
     message.includes("refresh_token_not_found") ||
     message.includes("Invalid Refresh Token") ||
@@ -101,15 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const bootstrapAsync = async () => {
       try {
-        // First, clear any existing session to prevent automatic refresh attempts
-        // This prevents the refresh token error on first load
-        await supabase.auth.signOut({ scope: "local" });
-
         // Set up auth state listener FIRST to catch any auth events
         authStateSubscription = supabase.auth.onAuthStateChange(async (event, session) => {
           if (!isMounted) return;
-
-          console.log("Auth state change:", event);
 
           switch (event) {
             case "SIGNED_OUT":
@@ -175,53 +170,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        // Check for stored offline auth data
+        // Check for stored offline auth data first
         const { token: hasStoredAuth } = await getOfflineAuthData();
 
         if (!hasStoredAuth) {
-          // No stored auth - this is likely a fresh install
-          dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-          return;
-        }
-
-        // Try to get current session
-        try {
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
-          if (sessionError) {
-            if (isRefreshTokenError(sessionError)) {
-              console.log("Refresh token error detected, clearing auth state");
-              await clearAuthState();
-              dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-              return;
-            }
-
-            // Other session errors
-            console.warn("Session error:", sessionError);
-            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-            return;
-          }
-
-          if (sessionData?.session) {
-            // Verify session is still valid
-            const { error: userError } = await supabase.auth.getUser();
-
-            if (userError) {
-              if (isRefreshTokenError(userError)) {
-                console.log("User verification failed with refresh token error");
-                await clearAuthState();
-                dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-                return;
-              }
-
-              // Other user errors
-              console.warn("User verification error:", userError);
-              await clearAuthState();
-              dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-              return;
-            }
-
-            // Session is valid
+          if (!sessionError && sessionData?.session) {
+            // Valid session found, store it
             await storeOfflineAuthData(sessionData.session.access_token, {
               id: sessionData.session.user.id,
               email: sessionData.session.user.email || "",
@@ -235,28 +191,144 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: sessionData.session.user.email || "",
               },
             });
-          } else {
-            // No active session
-            await clearOfflineAuthData();
-            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
-          }
-        } catch (verificationError) {
-          console.error("Verification error:", verificationError);
-
-          if (isRefreshTokenError(verificationError)) {
-            await clearAuthState();
+            return;
           }
 
           dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+          return;
+        }
+
+        // We have stored auth data, try to restore session
+        try {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+          // Handle refresh token errors specifically
+          if (sessionError && isRefreshTokenError(sessionError as Error)) {
+            await clearAuthState();
+            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+            return;
+          }
+
+          if (sessionError) {
+            // Other session errors - log but try to continue with offline data
+            console.warn("Session error:", sessionError);
+
+            // Fall back to offline data if available and valid
+            const { token, user, isValid } = await getOfflineAuthData();
+            if (isValid && token && user) {
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token,
+                user,
+              });
+            } else {
+              await clearOfflineAuthData();
+              dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+            }
+            return;
+          }
+
+          if (sessionData?.session) {
+            // Session exists, verify it's still valid
+            try {
+              const { error: userError } = await supabase.auth.getUser();
+
+              if (userError && isRefreshTokenError(userError as Error)) {
+                await clearAuthState();
+                dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+                return;
+              }
+
+              if (userError) {
+                // Other user errors - try offline fallback
+                console.warn("User verification error:", userError);
+                const { token, user, isValid } = await getOfflineAuthData();
+                if (isValid && token && user) {
+                  dispatch({
+                    type: "RESTORE_TOKEN",
+                    token,
+                    user,
+                  });
+                } else {
+                  await clearAuthState();
+                  dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+                }
+                return;
+              }
+
+              // Session is valid, update stored data
+              await storeOfflineAuthData(sessionData.session.access_token, {
+                id: sessionData.session.user.id,
+                email: sessionData.session.user.email || "",
+              });
+
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token: sessionData.session.access_token,
+                user: {
+                  id: sessionData.session.user.id,
+                  email: sessionData.session.user.email || "",
+                },
+              });
+            } catch (verificationError) {
+              console.error("Session verification error:", verificationError);
+
+              if (isRefreshTokenError(verificationError)) {
+                await clearAuthState();
+                dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+              } else {
+                // Try offline fallback for other errors
+                const { token, user, isValid } = await getOfflineAuthData();
+                if (isValid && token && user) {
+                  dispatch({
+                    type: "RESTORE_TOKEN",
+                    token,
+                    user,
+                  });
+                } else {
+                  await clearOfflineAuthData();
+                  dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+                }
+              }
+            }
+          } else {
+            // No active session, check offline data
+            const { token, user, isValid } = await getOfflineAuthData();
+            if (isValid && token && user) {
+              // Use offline data temporarily
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token,
+                user,
+              });
+            } else {
+              await clearOfflineAuthData();
+              dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+            }
+          }
+        } catch (error) {
+          console.error("Bootstrap error:", error);
+
+          // If it's a refresh token error, clear everything
+          if (isRefreshTokenError(error)) {
+            await clearAuthState();
+            dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+          } else {
+            // For other errors, try offline fallback
+            const { token, user, isValid } = await getOfflineAuthData();
+            if (isValid && token && user) {
+              dispatch({
+                type: "RESTORE_TOKEN",
+                token,
+                user,
+              });
+            } else {
+              dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to restore authentication state:", error);
-
-        // If it's a refresh token error, clear everything
-        if (isRefreshTokenError(error)) {
-          await clearAuthState();
-        }
-
         dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
       }
     };
@@ -409,7 +481,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     },
 
-    deleteAccount: async () => {
+    deleteAccount: async (password: string) => {
       try {
         // Get the current session
         const {
@@ -419,6 +491,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (sessionError || !session) {
           dispatch({ type: "AUTH_ERROR", error: "No active session found" });
+          return;
+        }
+
+        // Verify the password first
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: session.user.email || "",
+          password,
+        });
+
+        if (signInError) {
+          dispatch({ type: "AUTH_ERROR", error: "Invalid password" });
           return;
         }
 

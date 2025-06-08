@@ -79,7 +79,7 @@ export type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, bookCode: string) => Promise<void>;
   signOut: () => Promise<void>;
-  deleteAccount: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   clearError: () => void;
 };
 
@@ -192,6 +192,7 @@ export type RootStackParamList = {
   OfflineNotice: undefined;
   Profile: undefined;
   DownloadsList: undefined;
+  DeleteAccount: undefined;
 };
 
 export type MainTabParamList = {
