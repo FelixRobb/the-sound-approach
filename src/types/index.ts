@@ -234,7 +234,7 @@ export type ProfileStackParamList = {
 };
 
 export type OfflineStackParamList = {
-  DownloadsList: undefined;
+  OfflineMain: undefined;
   OfflineNotice: undefined;
 };
 

@@ -24,7 +24,6 @@ import {
 import DetailHeader from "../components/DetailHeader";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
@@ -36,7 +35,6 @@ const RecordingDetailsScreen = () => {
   const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
-  const { isConnected } = useContext(NetworkContext);
   const { downloadRecording, isDownloaded, downloads, deleteDownload } =
     useContext(DownloadContext);
 
@@ -384,8 +382,8 @@ const RecordingDetailsScreen = () => {
 
   const sonogramVideoUri = useMemo(() => {
     if (!recording) return null;
-    return getSonogramVideoUri(recording, isConnected);
-  }, [recording, isConnected]);
+    return getSonogramVideoUri(recording);
+  }, [recording]);
 
   // Initialize the video player
   const videoPlayer = useVideoPlayer(sonogramVideoUri, (player) => {
@@ -839,17 +837,16 @@ const RecordingDetailsScreen = () => {
               </View>
             )}
           </View>
-          {isConnected && (
-            <TouchableOpacity
-              style={styles.speciesButton}
-              onPress={() =>
-                navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
-              }
-            >
-              <Text style={styles.speciesButtonText}>View Species Details</Text>
-              <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
-            </TouchableOpacity>
-          )}
+
+          <TouchableOpacity
+            style={styles.speciesButton}
+            onPress={() =>
+              navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
+            }
+          >
+            <Text style={styles.speciesButtonText}>View Species Details</Text>
+            <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.videoContainer}>

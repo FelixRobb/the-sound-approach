@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
@@ -17,7 +16,6 @@ const ProfileSettingsScreen = () => {
   const { state: authState, signOut } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
   const { theme: themeMode, setTheme } = useContext(ThemeContext);
-  const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
 
@@ -36,13 +34,6 @@ const ProfileSettingsScreen = () => {
 
   // Handle sign out
   const handleSignOut = async () => {
-    if (!isConnected) {
-      Alert.alert("Cannot Sign Out While Offline", "You need to be online to sign out.", [
-        { text: "OK" },
-      ]);
-      return;
-    }
-
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -61,15 +52,6 @@ const ProfileSettingsScreen = () => {
 
   // Handle clear all downloads
   const handleClearAllDownloads = () => {
-    if (!isConnected) {
-      Alert.alert(
-        "Cannot Clear Downloads While Offline",
-        "You need to be online to clear all downloaded recordings.",
-        [{ text: "OK" }]
-      );
-      return;
-    }
-
     Alert.alert(
       "Clear All Downloads",
       "Are you sure you want to delete all downloads? This action cannot be undone.",
@@ -97,14 +79,6 @@ const ProfileSettingsScreen = () => {
 
   // Handle delete account
   const handleDeleteAccount = () => {
-    if (!isConnected) {
-      Alert.alert(
-        "Cannot Delete Account While Offline",
-        "You need to be online to delete your account.",
-        [{ text: "OK" }]
-      );
-      return;
-    }
     navigation.navigate("DeleteAccount");
   };
 
@@ -133,10 +107,6 @@ const ProfileSettingsScreen = () => {
     actionButtonDanger: {
       backgroundColor: theme.colors.errorContainer,
     },
-    actionButtonDisabled: {
-      backgroundColor: theme.colors.surfaceDisabled,
-      opacity: 0.6,
-    },
     actionButtonIcon: {
       marginRight: 16,
     },
@@ -148,9 +118,6 @@ const ProfileSettingsScreen = () => {
     actionButtonTextDanger: {
       color: theme.colors.onErrorContainer,
       fontWeight: "600",
-    },
-    actionButtonTextDisabled: {
-      color: theme.colors.onSurfaceDisabled,
     },
     avatarContainer: {
       alignItems: "center",
@@ -273,29 +240,7 @@ const ProfileSettingsScreen = () => {
     headerInner: {
       paddingHorizontal: 20,
     },
-    offlineBanner: {
-      alignItems: "center",
-      backgroundColor: theme.colors.error,
-      borderColor: theme.colors.onError,
-      borderRadius: 12,
-      borderWidth: 1,
-      flexDirection: "row",
-      marginHorizontal: 20,
-      marginTop: 16,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      shadowColor: theme.colors.error,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-    },
-    offlineBannerText: {
-      color: theme.colors.onError,
-      flex: 1,
-      fontSize: 14,
-      fontWeight: "600",
-      marginLeft: 12,
-    },
+
     profileCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 20,
@@ -352,10 +297,6 @@ const ProfileSettingsScreen = () => {
       flex: 1,
       paddingVertical: 12,
     },
-    storageButtonDisabled: {
-      backgroundColor: theme.colors.surfaceDisabled,
-      opacity: 0.6,
-    },
     storageButtonPrimary: {
       backgroundColor: theme.colors.tertiary,
     },
@@ -367,9 +308,6 @@ const ProfileSettingsScreen = () => {
     storageButtonText: {
       fontSize: 14,
       fontWeight: "600",
-    },
-    storageButtonTextDisabled: {
-      color: theme.colors.onSurfaceDisabled,
     },
     storageButtonTextPrimary: {
       color: theme.colors.onPrimary,
@@ -469,13 +407,6 @@ const ProfileSettingsScreen = () => {
         <Text style={styles.title}>Profile & Settings</Text>
         <Text style={styles.subtitle}>Manage your account and preferences</Text>
       </View>
-
-      {!isConnected && (
-        <View style={styles.offlineBanner}>
-          <Ionicons name="cloud-offline-outline" size={20} color={theme.colors.onError} />
-          <Text style={styles.offlineBannerText}>Offline Mode - Limited functionality</Text>
-        </View>
-      )}
     </View>
   );
 
@@ -592,46 +523,24 @@ const ProfileSettingsScreen = () => {
 
           <View style={styles.storageActions}>
             <TouchableOpacity
-              style={[
-                styles.storageButton,
-                styles.storageButtonSecondary,
-                !isConnected && styles.storageButtonDisabled,
-              ]}
+              style={[styles.storageButton, styles.storageButtonSecondary]}
               onPress={() =>
                 navigation.navigate("MainTabs", {
                   screen: "Downloads",
                   params: { screen: "DownloadsList" },
                 })
               }
-              disabled={!isConnected}
             >
-              <Text
-                style={[
-                  styles.storageButtonText,
-                  styles.storageButtonTextSecondary,
-                  !isConnected && styles.storageButtonTextDisabled,
-                ]}
-              >
+              <Text style={[styles.storageButtonText, styles.storageButtonTextSecondary]}>
                 Manage Files
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.storageButton,
-                styles.storageButtonPrimary,
-                !isConnected && styles.storageButtonDisabled,
-              ]}
+              style={[styles.storageButton, styles.storageButtonPrimary]}
               onPress={handleClearAllDownloads}
-              disabled={!isConnected}
             >
-              <Text
-                style={[
-                  styles.storageButtonText,
-                  styles.storageButtonTextPrimary,
-                  !isConnected && styles.storageButtonTextDisabled,
-                ]}
-              >
+              <Text style={[styles.storageButtonText, styles.storageButtonTextPrimary]}>
                 Clear All
               </Text>
             </TouchableOpacity>
@@ -652,46 +561,21 @@ const ProfileSettingsScreen = () => {
         <DownloadsCard />
 
         {/* Action Buttons */}
-        <TouchableOpacity
-          style={[styles.actionButton, !isConnected && styles.actionButtonDisabled]}
-          onPress={handleSignOut}
-          disabled={!isConnected}
-        >
+        <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
           <View style={styles.actionButtonIcon}>
-            <Ionicons
-              name="log-out-outline"
-              size={22}
-              color={isConnected ? theme.colors.primary : theme.colors.onSurfaceDisabled}
-            />
+            <Ionicons name="log-out-outline" size={22} color={theme.colors.primary} />
           </View>
-          <Text style={[styles.actionButtonText, !isConnected && styles.actionButtonTextDisabled]}>
-            Sign Out
-          </Text>
+          <Text style={styles.actionButtonText}>Sign Out</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.actionButtonDanger,
-            !isConnected && styles.actionButtonDisabled,
-          ]}
+          style={[styles.actionButton, styles.actionButtonDanger]}
           onPress={handleDeleteAccount}
-          disabled={!isConnected}
         >
           <View style={styles.actionButtonIcon}>
-            <Ionicons
-              name="trash-outline"
-              size={22}
-              color={isConnected ? theme.colors.onErrorContainer : theme.colors.onSurfaceDisabled}
-            />
+            <Ionicons name="trash-outline" size={22} color={theme.colors.onErrorContainer} />
           </View>
-          <Text
-            style={[
-              styles.actionButtonText,
-              styles.actionButtonTextDanger,
-              !isConnected && styles.actionButtonTextDisabled,
-            ]}
-          >
+          <Text style={[styles.actionButtonText, styles.actionButtonTextDanger]}>
             Delete Account
           </Text>
         </TouchableOpacity>

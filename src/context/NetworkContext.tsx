@@ -13,7 +13,7 @@ export const NetworkContext = createContext<NetworkContextType>({
 });
 
 export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected] = useState(false);
   const [previousConnectionState, setPreviousConnectionState] = useState(true);
   const [networkRestoreCallbacks, setNetworkRestoreCallbacks] = useState<(() => void)[]>([]);
 
@@ -42,7 +42,6 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Set a debounce timeout (500ms) to avoid rapid toggling
     connectivityTimeout.current = setTimeout(() => {
-      setIsConnected(state);
       connectivityTimeout.current = null;
     }, 500);
   }, []);
@@ -72,7 +71,6 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Skip state changes on first load to avoid interrupting initial navigation
       if (isFirstLoad.current) {
         isFirstLoad.current = false;
-        setIsConnected(connectionStatus);
         return;
       }
 
@@ -83,7 +81,6 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Initial check
     NetInfo.fetch().then((state) => {
       const connectionStatus = state.isConnected !== null ? state.isConnected : true;
-      setIsConnected(connectionStatus);
     });
 
     // Cleanup

@@ -14,14 +14,12 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AuthContext } from "../context/AuthContext";
-import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
 
 const DeleteAccountScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { deleteAccount } = useContext(AuthContext);
-  const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
 
@@ -30,15 +28,6 @@ const DeleteAccountScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDeleteAccount = async () => {
-    if (!isConnected) {
-      Alert.alert(
-        "Cannot Delete Account While Offline",
-        "You need to be online to delete your account.",
-        [{ text: "OK" }]
-      );
-      return;
-    }
-
     if (confirmText !== "DELETE MY ACCOUNT") {
       Alert.alert("Error", "Please type 'DELETE MY ACCOUNT' to confirm.");
       return;
@@ -225,11 +214,11 @@ const DeleteAccountScreen = () => {
         <TouchableOpacity
           style={[
             styles.deleteButton,
-            (!isConnected || isLoading || confirmText !== "DELETE MY ACCOUNT" || !password) &&
+            (isLoading || confirmText !== "DELETE MY ACCOUNT" || !password) &&
               styles.deleteButtonDisabled,
           ]}
           onPress={handleDeleteAccount}
-          disabled={!isConnected || isLoading || confirmText !== "DELETE MY ACCOUNT" || !password}
+          disabled={isLoading || confirmText !== "DELETE MY ACCOUNT" || !password}
         >
           <Text style={styles.deleteButtonText}>
             {isLoading ? "Deleting Account..." : "Delete My Account"}

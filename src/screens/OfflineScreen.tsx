@@ -21,14 +21,13 @@ import { DownloadContext } from "../context/DownloadContext";
 import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
-import { RootStackParamList } from "../types";
+import { OfflineStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
 
-const DownloadsScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
-    useContext(DownloadContext);
+const OfflineScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
+  const { totalStorageUsed, getDownloadedRecordings } = useContext(DownloadContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
 
@@ -89,58 +88,6 @@ const DownloadsScreen = () => {
     loadDownloads();
   }, [loadDownloads]);
 
-  // Handle delete download
-  const handleDeleteDownload = (item: DownloadRecord) => {
-    Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          deleteDownload(item.recording_id)
-            .then(() => {
-              setDownloads((prev) =>
-                prev.filter((download) => download.recording_id !== item.recording_id)
-              );
-            })
-            .catch((error) => {
-              console.error("Delete error:", error);
-            });
-        },
-      },
-    ]);
-  };
-
-  // Handle clear all downloads
-  const handleClearAllDownloads = () => {
-    Alert.alert(
-      "Clear All Downloads",
-      "Are you sure you want to delete all downloads? This cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Clear All",
-          style: "destructive",
-          onPress: () => {
-            clearAllDownloads()
-              .then(() => {
-                setDownloads([]);
-              })
-              .catch((error) => {
-                console.error("Clear downloads error:", error);
-              });
-          },
-        },
-      ]
-    );
-  };
-
   // Create styles with theme support
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -152,28 +99,9 @@ const DownloadsScreen = () => {
       right: 0,
       top: 0,
     },
-    clearAllButton: {
-      backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-    },
-    clearAllText: {
-      color: theme.colors.onTertiary,
-      fontSize: 14,
-      fontWeight: "bold",
-    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
-    },
-    deleteButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.error,
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      width: 40,
     },
     downloadActions: {
       alignItems: "center",
@@ -268,6 +196,14 @@ const DownloadsScreen = () => {
       justifyContent: "space-between",
       marginBottom: 16,
     },
+    infoButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 22,
+      height: 44,
+      justifyContent: "center",
+      width: 44,
+    },
     listContent: {
       padding: 16,
       paddingBottom: 80,
@@ -296,6 +232,27 @@ const DownloadsScreen = () => {
       marginTop: 16,
       textAlign: "center",
     },
+    offlineBanner: {
+      alignItems: "center",
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: 12,
+      flexDirection: "row",
+      marginHorizontal: 20,
+      marginVertical: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      shadowColor: theme.colors.error,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+    },
+    offlineBannerText: {
+      color: theme.colors.onErrorContainer,
+      flex: 1,
+      fontSize: 15,
+      fontWeight: "600",
+      marginLeft: 12,
+    },
     pageBadgeWrapper: {
       alignSelf: "flex-start",
       marginVertical: 2,
@@ -319,20 +276,34 @@ const DownloadsScreen = () => {
     },
     storageInfo: {
       alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 12,
       flexDirection: "row",
-      justifyContent: "space-between",
+      marginHorizontal: 20,
+      marginVertical: 8,
+      padding: 16,
     },
-    storageInfoContainer: {
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+    storageInfoIcon: {
+      alignItems: "center",
+      backgroundColor: theme.colors.tertiary,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      marginRight: 12,
+      width: 40,
     },
-    storageText: {
-      color: theme.colors.tertiary,
-      fontSize: 14,
-      fontWeight: "500",
+    storageInfoText: {
+      flex: 1,
+    },
+    storageMainText: {
+      color: theme.colors.onSurface,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    storageSubText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 13,
+      marginTop: 2,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
@@ -345,36 +316,6 @@ const DownloadsScreen = () => {
       fontWeight: "bold",
     },
   });
-
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
-
-  // Custom header component
-  const Header = () => (
-    <View style={styles.header}>
-      <View style={styles.headerInner}>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Downloads</Text>
-            <Text style={styles.subtitle}>Manage your offline recordings</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.storageInfoContainer}>
-        <View style={styles.storageInfo}>
-          <Text style={styles.storageText}>Storage used: {formatBytes(totalStorageUsed)}</Text>
-          <TouchableOpacity
-            style={[styles.clearAllButton, downloads.length === 0 && { opacity: 0.5 }]}
-            disabled={downloads.length === 0}
-            onPress={handleClearAllDownloads}
-          >
-            <Text style={styles.clearAllText}>Clear All</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
 
   // Ensure the audioUri has the file:// prefix and is well-formed
   const ensureFileUri = (path: string) => {
@@ -389,7 +330,11 @@ const DownloadsScreen = () => {
     const audioUri = ensureFileUri(item.audio_path);
 
     const handleItemPress = () => {
-      navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
+      Alert.alert(
+        "Offline Mode",
+        "Recording details are not available while offline. You can still play downloaded recordings.",
+        [{ text: "OK" }]
+      );
     };
 
     return (
@@ -421,13 +366,6 @@ const DownloadsScreen = () => {
                   <MiniAudioPlayer trackId={item.recording_id} audioUri={audioUri} size={40} />
                 </View>
               )}
-
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteDownload(item)}
-              >
-                <Ionicons name="trash-outline" size={22} color={theme.colors.onError} />
-              </TouchableOpacity>
             </View>
           </View>
         </TouchableOpacity>
@@ -439,12 +377,59 @@ const DownloadsScreen = () => {
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyCard}>
-        <Ionicons name="cloud-download-outline" size={60} color={theme.colors.primary} />
-        <Text style={styles.emptyTitle}>No Downloads</Text>
+        <Ionicons name="cloud-offline-outline" size={60} color={theme.colors.primary} />
+        <Text style={styles.emptyTitle}>No Offline Content</Text>
         <Text style={styles.emptyText}>
-          Downloaded recordings will appear here for offline listening.
+          You don&apos;t have any downloaded recordings. Connect to the internet to browse and
+          download recordings for offline use.
         </Text>
       </View>
+    </View>
+  );
+
+  // Background pattern
+  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
+
+  // Custom header component
+  const Header = () => (
+    <View style={styles.header}>
+      <View style={styles.headerInner}>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>Offline Mode</Text>
+            <Text style={styles.subtitle}>Your downloaded recordings</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.infoButton}
+            onPress={() => navigation.navigate("OfflineNotice")}
+          >
+            <Ionicons name="information-outline" size={20} color={theme.colors.onSurfaceVariant} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.offlineBanner}>
+        <Ionicons name="cloud-offline-outline" size={22} color={theme.colors.onErrorContainer} />
+        <Text style={styles.offlineBannerText}>
+          You&apos;re offline - Only downloaded content is available
+        </Text>
+      </View>
+
+      {downloads.length > 0 && (
+        <View style={styles.storageInfo}>
+          <View style={styles.storageInfoIcon}>
+            <Ionicons name="folder" size={20} color={theme.colors.onTertiary} />
+          </View>
+          <View style={styles.storageInfoText}>
+            <Text style={styles.storageMainText}>
+              {downloads.length} recording{downloads.length !== 1 ? "s" : ""} available
+            </Text>
+            <Text style={styles.storageSubText}>
+              Using {formatBytes(totalStorageUsed)} of storage
+            </Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 
@@ -458,7 +443,7 @@ const DownloadsScreen = () => {
         <View style={styles.loadingContainer}>
           <View style={styles.loadingCard}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Loading downloads...</Text>
+            <Text style={styles.loadingText}>Loading offline content...</Text>
           </View>
         </View>
       </View>
@@ -495,4 +480,4 @@ const DownloadsScreen = () => {
   );
 };
 
-export default DownloadsScreen;
+export default OfflineScreen;
