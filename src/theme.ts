@@ -80,7 +80,7 @@ const Colors = {
     // Primary system
     primary: "rgb(228, 106, 36)", // Lighter for dark theme
     onPrimary: "rgb(92, 38, 0)",
-    primaryContainer: "rgb(200, 95, 15)",
+    primaryContainer: "rgb(150, 66, 3)",
     onPrimaryContainer: "rgb(255, 224, 178)",
 
     // Secondary system
