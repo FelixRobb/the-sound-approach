@@ -1,4 +1,5 @@
 // src/context/AuthContext.tsx
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
 import type React from "react";
 import { createContext, useReducer, useEffect } from "react";
@@ -19,6 +20,7 @@ const initialState: AuthState = {
   userToken: null,
   user: null,
   error: null,
+  hasCompletedOnboarding: false,
 };
 
 // Create context
@@ -29,6 +31,7 @@ export const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   deleteAccount: async () => {},
   clearError: () => {},
+  completeOnboarding: async () => {},
 });
 
 // Reducer function
@@ -40,6 +43,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         userToken: action.token,
         user: action.user,
         isLoading: false,
+        hasCompletedOnboarding: action.hasCompletedOnboarding ?? state.hasCompletedOnboarding,
       };
     case "SIGN_IN":
       return {
@@ -48,6 +52,16 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         userToken: action.token,
         user: action.user,
         error: null,
+        hasCompletedOnboarding: action.hasCompletedOnboarding ?? true, // Existing users have completed onboarding
+      };
+    case "SIGN_UP":
+      return {
+        ...state,
+        isSignout: false,
+        userToken: action.token,
+        user: action.user,
+        error: null,
+        hasCompletedOnboarding: false, // New users need to complete onboarding
       };
     case "SIGN_OUT":
       return {
@@ -55,6 +69,12 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isSignout: true,
         userToken: null,
         user: null,
+        hasCompletedOnboarding: false,
+      };
+    case "COMPLETE_ONBOARDING":
+      return {
+        ...state,
+        hasCompletedOnboarding: true,
       };
     case "AUTH_ERROR":
       return {
@@ -90,6 +110,17 @@ const clearAuthState = async () => {
   }
 };
 
+// Helper function to check onboarding completion status
+const checkOnboardingStatus = async (userId: string): Promise<boolean> => {
+  try {
+    const onboardingStatus = await AsyncStorage.getItem(`onboarding_completed_${userId}`);
+    return onboardingStatus === "true";
+  } catch (error) {
+    console.error("Error checking onboarding status:", error);
+    return true; // Default to completed for existing users
+  }
+};
+
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -119,6 +150,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   email: session.user.email || "",
                 });
 
+                // Check onboarding status
+                const hasCompletedOnboarding = await checkOnboardingStatus(session.user.id);
+
                 dispatch({
                   type: "RESTORE_TOKEN",
                   token: session.access_token,
@@ -126,6 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     id: session.user.id,
                     email: session.user.email || "",
                   },
+                  hasCompletedOnboarding,
                 });
               }
               break;
@@ -137,14 +172,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   email: session.user.email || "",
                 });
 
-                dispatch({
-                  type: "RESTORE_TOKEN",
-                  token: session.access_token,
-                  user: {
-                    id: session.user.id,
-                    email: session.user.email || "",
-                  },
-                });
+                // Only check onboarding status if we don't already have a user token
+                // This prevents overriding the onboarding status for new signups
+                if (!state.userToken) {
+                  const hasCompletedOnboarding = await checkOnboardingStatus(session.user.id);
+
+                  dispatch({
+                    type: "RESTORE_TOKEN",
+                    token: session.access_token,
+                    user: {
+                      id: session.user.id,
+                      email: session.user.email || "",
+                    },
+                    hasCompletedOnboarding,
+                  });
+                }
               }
               break;
           }
@@ -262,6 +304,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: sessionData.session.user.email || "",
               });
 
+              // Check onboarding status for existing users
+              const hasCompletedOnboarding = await checkOnboardingStatus(
+                sessionData.session.user.id
+              );
+
               dispatch({
                 type: "RESTORE_TOKEN",
                 token: sessionData.session.access_token,
@@ -269,6 +316,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   id: sessionData.session.user.id,
                   email: sessionData.session.user.email || "",
                 },
+                hasCompletedOnboarding,
               });
             } catch (verificationError) {
               console.error("Session verification error:", verificationError);
@@ -342,7 +390,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authStateSubscription.data.subscription.unsubscribe();
       }
     };
-  }, []);
+  }, [state.userToken]);
 
   // Auth actions
   const authActions = {
@@ -365,6 +413,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: data.user.email || "",
           });
 
+          // Check onboarding status for existing users
+          const hasCompletedOnboarding = await checkOnboardingStatus(data.user.id);
+
           dispatch({
             type: "SIGN_IN",
             token: data.session.access_token,
@@ -372,6 +423,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: data.user.id,
               email: data.user.email || "",
             },
+            hasCompletedOnboarding,
           });
         }
       } catch (e) {
@@ -444,7 +496,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
 
           dispatch({
-            type: "SIGN_IN",
+            type: "SIGN_UP",
             token: data.session.access_token,
             user: {
               id: data.user.id,
@@ -538,6 +590,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     clearError: () => {
       dispatch({ type: "AUTH_ERROR", error: null });
+    },
+
+    completeOnboarding: async () => {
+      try {
+        // Store onboarding completion status
+        const userId = state.user?.id;
+        if (userId) {
+          await AsyncStorage.setItem(`onboarding_completed_${userId}`, "true");
+        }
+        dispatch({ type: "COMPLETE_ONBOARDING" });
+      } catch (error) {
+        console.error("Error completing onboarding:", error);
+      }
     },
   };
 

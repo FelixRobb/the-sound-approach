@@ -66,13 +66,21 @@ export type AuthState = {
   userToken: string | null;
   user: User | null;
   error: string | null;
+  hasCompletedOnboarding: boolean;
 };
 
 export type AuthAction =
-  | { type: "RESTORE_TOKEN"; token: string | null; user: User | null }
-  | { type: "SIGN_IN"; token: string; user: User }
+  | {
+      type: "RESTORE_TOKEN";
+      token: string | null;
+      user: User | null;
+      hasCompletedOnboarding?: boolean;
+    }
+  | { type: "SIGN_IN"; token: string; user: User; hasCompletedOnboarding?: boolean }
+  | { type: "SIGN_UP"; token: string; user: User }
   | { type: "SIGN_OUT" }
-  | { type: "AUTH_ERROR"; error: string | null };
+  | { type: "AUTH_ERROR"; error: string | null }
+  | { type: "COMPLETE_ONBOARDING" };
 
 export type AuthContextType = {
   state: AuthState;
@@ -81,6 +89,7 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
   clearError: () => void;
+  completeOnboarding: () => Promise<void>;
 };
 
 // ==========================================
@@ -185,6 +194,7 @@ export type RootStackParamList = {
   Welcome: undefined;
   SignUp: undefined;
   Login: undefined;
+  Onboarding: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   RecordingDetails: { recordingId: string };
   SpeciesDetails: { speciesId: string };
