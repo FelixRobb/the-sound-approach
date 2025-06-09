@@ -25,6 +25,7 @@ import DownloadsScreen from "../screens/DownloadsScreen";
 import LoginScreen from "../screens/LoginScreen";
 import OfflineNoticeScreen from "../screens/OfflineNoticeScreen";
 import OfflineWelcomeScreen from "../screens/OfflineWelcomeScreen";
+import OnboardingScreen from "../screens/OnboardingScreen";
 import ProfileSettingsScreen from "../screens/ProfileSettingsScreen";
 import RecordingDetailsScreen from "../screens/RecordingDetailsScreen";
 import RecordingsListScreen from "../screens/RecordingsListScreen";
@@ -231,6 +232,22 @@ const AuthNavigator: React.FC = () => {
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
+    </AuthStack.Navigator>
+  );
+};
+
+// Onboarding navigator - separate from auth flow
+const OnboardingNavigator: React.FC = () => {
+  return (
+    <AuthStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: "fade",
+        gestureEnabled: false, // Prevent going back during onboarding
+        presentation: "card",
+      }}
+    >
+      <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
     </AuthStack.Navigator>
   );
 };
@@ -523,10 +540,15 @@ const AppNavigator: React.FC = () => {
         <AudioProvider>
           <OfflineProvider>
             {authState.userToken ? (
-              // User is authenticated (either online or offline)
-              isConnected ? (
+              // User is authenticated
+              !authState.hasCompletedOnboarding ? (
+                // Show onboarding for new users
+                <OnboardingNavigator />
+              ) : isConnected ? (
+                // Show main app for users who completed onboarding
                 <MainNavigator />
               ) : (
+                // Show offline mode for users who completed onboarding
                 <OfflineNavigator />
               )
             ) : // User is not authenticated

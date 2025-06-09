@@ -108,27 +108,34 @@ const ProfileSettingsScreen = () => {
     navigation.navigate("DeleteAccount");
   };
 
-  // Create styles with theme support
   const styles = StyleSheet.create({
+    accountDetails: {
+      borderTopColor: theme.colors.surfaceVariant,
+      borderTopWidth: 1,
+      paddingBottom: 20,
+      paddingHorizontal: 24,
+      paddingTop: 60,
+    },
     actionButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: 16,
-      elevation: 3,
+      elevation: 2,
       flexDirection: "row",
       marginBottom: 12,
-      padding: 16,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     actionButtonDanger: {
       backgroundColor: theme.colors.errorContainer,
     },
     actionButtonDisabled: {
       backgroundColor: theme.colors.surfaceDisabled,
-      opacity: 0.5,
+      opacity: 0.6,
     },
     actionButtonIcon: {
       marginRight: 16,
@@ -145,6 +152,22 @@ const ProfileSettingsScreen = () => {
     actionButtonTextDisabled: {
       color: theme.colors.onSurfaceDisabled,
     },
+    avatarContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.surface,
+      borderRadius: 50,
+      borderWidth: 4,
+      elevation: 8,
+      height: 100,
+      justifyContent: "center",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      width: 100,
+      zIndex: 300,
+    },
     backgroundPattern: {
       backgroundColor: theme.colors.background,
       bottom: 0,
@@ -154,9 +177,85 @@ const ProfileSettingsScreen = () => {
       right: 0,
       top: 0,
     },
+    cardContent: {
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+    },
+    cardHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    cardIcon: {
+      marginRight: 12,
+    },
+    cardTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 16,
+      fontWeight: "600",
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
+    },
+    detailContent: {
+      flex: 1,
+    },
+    detailIcon: {
+      marginRight: 16,
+      width: 20,
+    },
+    detailLabel: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "500",
+      marginBottom: 2,
+    },
+    detailRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginBottom: 16,
+    },
+    detailRowLast: {
+      marginBottom: 0,
+    },
+    detailValue: {
+      color: theme.colors.onSurface,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    downloadsCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 2,
+      marginBottom: 24,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+    },
+    downloadsContent: {
+      paddingBottom: 20,
+      paddingHorizontal: 20,
+    },
+    downloadsHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    downloadsTitle: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    downloadsTitleText: {
+      color: theme.colors.onSurface,
+      fontSize: 16,
+      fontWeight: "600",
+      marginLeft: 12,
     },
     header: {
       backgroundColor: theme.colors.surface,
@@ -174,30 +273,6 @@ const ProfileSettingsScreen = () => {
     headerInner: {
       paddingHorizontal: 20,
     },
-    infoContent: {
-      flex: 1,
-    },
-    infoIcon: {
-      alignItems: "center",
-      marginRight: 16,
-      width: 24,
-    },
-    infoItem: {
-      alignItems: "center",
-      flexDirection: "row",
-      padding: 16,
-      paddingVertical: 12,
-    },
-    infoLabel: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "500",
-    },
-    infoValue: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginTop: 2,
-    },
     offlineBanner: {
       alignItems: "center",
       backgroundColor: theme.colors.error,
@@ -208,7 +283,7 @@ const ProfileSettingsScreen = () => {
       marginHorizontal: 20,
       marginTop: 16,
       paddingHorizontal: 16,
-      paddingVertical: 6,
+      paddingVertical: 8,
       shadowColor: theme.colors.error,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -217,132 +292,165 @@ const ProfileSettingsScreen = () => {
     offlineBannerText: {
       color: theme.colors.onError,
       flex: 1,
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: "600",
       marginLeft: 12,
     },
+    profileCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      elevation: 4,
+      marginBottom: 24,
+      marginTop: 50,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+    },
+    profileHeader: {
+      alignItems: "center",
+      left: 0,
+      position: "absolute",
+      right: 0,
+      top: -50,
+      zIndex: 400,
+    },
     scrollContent: {
       padding: 16,
-      paddingBottom: 80,
+      paddingBottom: 100,
     },
-    sectionCard: {
+    settingsCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 16,
-      elevation: 3,
+      elevation: 2,
       marginBottom: 16,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    sectionHeader: {
-      alignItems: "center",
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomWidth: 1,
-      flexDirection: "row",
-      padding: 16,
-      paddingBottom: 12,
-    },
-    sectionTitle: {
-      color: theme.colors.primary,
-      fontSize: 18,
-      fontWeight: "bold",
-      marginLeft: 12,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
     },
     storageActions: {
       flexDirection: "row",
       gap: 12,
-      marginTop: 12,
     },
     storageBar: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 6,
-      height: 12,
-      marginVertical: 8,
+      backgroundColor: theme.colors.outline,
+      borderRadius: 4,
+      height: 6,
+      marginBottom: 16,
       overflow: "hidden",
     },
     storageBarFill: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 6,
+      borderRadius: 4,
       height: "100%",
     },
     storageButton: {
-      backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
+      alignItems: "center",
+      borderRadius: 10,
       flex: 1,
-      paddingVertical: 10,
+      paddingVertical: 12,
     },
     storageButtonDisabled: {
       backgroundColor: theme.colors.surfaceDisabled,
+      opacity: 0.6,
+    },
+    storageButtonPrimary: {
+      backgroundColor: theme.colors.tertiary,
+    },
+    storageButtonSecondary: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderColor: theme.colors.outline,
+      borderWidth: 1,
     },
     storageButtonText: {
-      color: theme.colors.onTertiary,
       fontSize: 14,
       fontWeight: "600",
-      textAlign: "center",
     },
     storageButtonTextDisabled: {
       color: theme.colors.onSurfaceDisabled,
     },
-    storageContainer: {
+    storageButtonTextPrimary: {
+      color: theme.colors.onPrimary,
+    },
+    storageButtonTextSecondary: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    storageDetails: {
+      flex: 1,
+    },
+    storageIconContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.tertiary,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      marginRight: 16,
+      width: 40,
+    },
+    storageInfo: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 12,
+      flexDirection: "row",
+      marginBottom: 16,
       padding: 16,
     },
-    storageHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginBottom: 12,
-    },
-    storageText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      textAlign: "center",
-    },
-    storageTitle: {
+    storageMainText: {
       color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "500",
-      marginLeft: 12,
+      fontSize: 15,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+    storageSubText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 13,
+    },
+    storageUsed: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "600",
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 15,
       marginTop: 2,
     },
-    themeContainer: {
-      padding: 16,
-    },
     themeLabel: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "500",
-      marginBottom: 12,
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
     },
     themeOption: {
       alignItems: "center",
-      flex: 1,
-      flexDirection: "row",
-      gap: 8,
+      borderRadius: 18,
       justifyContent: "center",
-      paddingVertical: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
     },
-    themeOptionSelected: {
+    themeOptionActive: {
       backgroundColor: theme.colors.tertiary,
     },
     themeOptionText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: "500",
     },
-    themeOptionTextSelected: {
-      color: theme.colors.onTertiary,
+    themeOptionTextActive: {
+      color: theme.colors.onPrimary,
       fontWeight: "600",
     },
-    themeOptions: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 12,
+    themeRow: {
+      alignItems: "center",
       flexDirection: "row",
-      overflow: "hidden",
+      justifyContent: "space-between",
+    },
+    themeSelector: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 20,
+      flexDirection: "row",
+      padding: 2,
     },
     title: {
       color: theme.colors.primary,
@@ -359,107 +467,175 @@ const ProfileSettingsScreen = () => {
     <View style={styles.header}>
       <View style={styles.headerInner}>
         <Text style={styles.title}>Profile & Settings</Text>
-        <Text style={styles.subtitle}>Customize your experience</Text>
+        <Text style={styles.subtitle}>Manage your account and preferences</Text>
       </View>
 
       {!isConnected && (
         <View style={styles.offlineBanner}>
-          <Ionicons name="cloud-offline-outline" size={22} color={theme.colors.onError} />
-          <Text style={styles.offlineBannerText}>Offline Mode - Some features are unavailable</Text>
+          <Ionicons name="cloud-offline-outline" size={20} color={theme.colors.onError} />
+          <Text style={styles.offlineBannerText}>Offline Mode - Limited functionality</Text>
         </View>
       )}
     </View>
   );
 
-  // Theme options component
-  const ThemeSection = () => {
+  // Profile card with account details
+  const ProfileCard = () => (
+    <View style={styles.profileCard}>
+      <View style={styles.profileHeader}>
+        <View style={styles.avatarContainer}>
+          <Ionicons name="person" size={50} color={theme.colors.onPrimary} />
+        </View>
+      </View>
+      <View style={styles.accountDetails}>
+        <View style={styles.detailRow}>
+          <View style={styles.detailIcon}>
+            <Ionicons name="mail-outline" size={18} color={theme.colors.primary} />
+          </View>
+          <View style={styles.detailContent}>
+            <Text style={styles.detailLabel}>Email Address</Text>
+            <Text style={styles.detailValue}>{authState.user?.email || "Not available"}</Text>
+          </View>
+        </View>
+
+        <View style={[styles.detailRow, styles.detailRowLast]}>
+          <View style={styles.detailIcon}>
+            <Ionicons name="key-outline" size={18} color={theme.colors.primary} />
+          </View>
+          <View style={styles.detailContent}>
+            <Text style={styles.detailLabel}>Book Access Code</Text>
+            <Text style={styles.detailValue}>••••••••</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  // Theme settings card
+  const ThemeCard = () => {
     const themeOptions = [
-      { mode: "light", icon: "sunny-outline" as const, label: "Light" },
-      { mode: "system", icon: "contrast-outline" as const, label: "Auto" },
-      { mode: "dark", icon: "moon-outline" as const, label: "Dark" },
+      { mode: "light", label: "Light" },
+      { mode: "system", label: "Auto" },
+      { mode: "dark", label: "Dark" },
     ];
 
     return (
-      <View style={styles.themeContainer}>
-        <Text style={styles.themeLabel}>Theme Preference</Text>
-        <View style={styles.themeOptions}>
-          {themeOptions.map((option) => (
-            <TouchableOpacity
-              key={option.mode}
-              style={[styles.themeOption, themeMode === option.mode && styles.themeOptionSelected]}
-              onPress={() => setTheme(option.mode as "light" | "dark" | "system")}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={option.icon}
-                size={18}
-                color={
-                  themeMode === option.mode
-                    ? theme.colors.onTertiary
-                    : theme.colors.onSurfaceVariant
-                }
-              />
-              <Text
-                style={[
-                  styles.themeOptionText,
-                  themeMode === option.mode && styles.themeOptionTextSelected,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      <View style={styles.settingsCard}>
+        <View style={styles.cardHeader}>
+          <Ionicons
+            name="color-palette-outline"
+            size={20}
+            color={theme.colors.primary}
+            style={styles.cardIcon}
+          />
+          <Text style={styles.cardTitle}>Appearance</Text>
+        </View>
+        <View style={styles.cardContent}>
+          <View style={styles.themeRow}>
+            <Text style={styles.themeLabel}>Theme</Text>
+            <View style={styles.themeSelector}>
+              {themeOptions.map((option) => (
+                <TouchableOpacity
+                  key={option.mode}
+                  style={[
+                    styles.themeOption,
+                    themeMode === option.mode && styles.themeOptionActive,
+                  ]}
+                  onPress={() => setTheme(option.mode as "light" | "dark" | "system")}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.themeOptionText,
+                      themeMode === option.mode && styles.themeOptionTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </View>
       </View>
     );
   };
 
-  // Storage section component
-  const StorageSection = () => {
+  // Downloads card
+  const DownloadsCard = () => {
     const storagePercentage = Math.min((totalStorageUsed / (500 * 1024 * 1024)) * 100, 100);
 
     return (
-      <View style={styles.storageContainer}>
-        <View style={styles.storageHeader}>
-          <Ionicons name="folder-outline" size={20} color={theme.colors.tertiary} />
-          <Text style={styles.storageTitle}>Storage Management</Text>
+      <View style={styles.downloadsCard}>
+        <View style={styles.downloadsHeader}>
+          <View style={styles.downloadsTitle}>
+            <Ionicons name="cloud-download-outline" size={20} color={theme.colors.primary} />
+            <Text style={styles.downloadsTitleText}>Downloads & Storage</Text>
+          </View>
+          <Text style={styles.storageUsed}>{formatBytes(totalStorageUsed)}</Text>
         </View>
 
-        <View style={styles.storageBar}>
-          <View style={[styles.storageBarFill, { width: `${storagePercentage}%` }]} />
-        </View>
+        <View style={styles.downloadsContent}>
+          <View style={styles.storageInfo}>
+            <View style={styles.storageIconContainer}>
+              <Ionicons name="folder" size={20} color={theme.colors.onTertiary} />
+            </View>
+            <View style={styles.storageDetails}>
+              <Text style={styles.storageMainText}>{formatBytes(totalStorageUsed)} used</Text>
+              <Text style={styles.storageSubText}>of 500 MB available</Text>
+            </View>
+          </View>
 
-        <Text style={styles.storageText}>{formatBytes(totalStorageUsed)} used of 500 MB</Text>
+          <View style={styles.storageBar}>
+            <View style={[styles.storageBarFill, { width: `${storagePercentage}%` }]} />
+          </View>
 
-        <View style={styles.storageActions}>
-          <TouchableOpacity
-            style={[styles.storageButton, !isConnected && styles.storageButtonDisabled]}
-            onPress={() =>
-              navigation.navigate("MainTabs", {
-                screen: "Downloads",
-                params: { screen: "DownloadsList" },
-              })
-            }
-            disabled={!isConnected}
-          >
-            <Text
-              style={[styles.storageButtonText, !isConnected && styles.storageButtonTextDisabled]}
+          <View style={styles.storageActions}>
+            <TouchableOpacity
+              style={[
+                styles.storageButton,
+                styles.storageButtonSecondary,
+                !isConnected && styles.storageButtonDisabled,
+              ]}
+              onPress={() =>
+                navigation.navigate("MainTabs", {
+                  screen: "Downloads",
+                  params: { screen: "DownloadsList" },
+                })
+              }
+              disabled={!isConnected}
             >
-              Manage Downloads
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.storageButtonText,
+                  styles.storageButtonTextSecondary,
+                  !isConnected && styles.storageButtonTextDisabled,
+                ]}
+              >
+                Manage Files
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.storageButton, !isConnected && styles.storageButtonDisabled]}
-            onPress={handleClearAllDownloads}
-            disabled={!isConnected}
-          >
-            <Text
-              style={[styles.storageButtonText, !isConnected && styles.storageButtonTextDisabled]}
+            <TouchableOpacity
+              style={[
+                styles.storageButton,
+                styles.storageButtonPrimary,
+                !isConnected && styles.storageButtonDisabled,
+              ]}
+              onPress={handleClearAllDownloads}
+              disabled={!isConnected}
             >
-              Clear All
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.storageButtonText,
+                  styles.storageButtonTextPrimary,
+                  !isConnected && styles.storageButtonTextDisabled,
+                ]}
+              >
+                Clear All
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -470,56 +646,12 @@ const ProfileSettingsScreen = () => {
       <BackgroundPattern />
       <Header />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Account Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="person-circle-outline" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>Account Information</Text>
-          </View>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ProfileCard />
+        <ThemeCard />
+        <DownloadsCard />
 
-          <View style={styles.infoItem}>
-            <View style={styles.infoIcon}>
-              <Ionicons name="mail-outline" size={20} color={theme.colors.tertiary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Email Address</Text>
-              <Text style={styles.infoValue}>{authState.user?.email || "Not available"}</Text>
-            </View>
-          </View>
-
-          <View style={styles.infoItem}>
-            <View style={styles.infoIcon}>
-              <Ionicons name="book-outline" size={20} color={theme.colors.tertiary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Book Code</Text>
-              <Text style={styles.infoValue}>••••••••</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Appearance Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="color-palette-outline" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>Appearance</Text>
-          </View>
-
-          <ThemeSection />
-        </View>
-
-        {/* Storage Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="cloud-download-outline" size={24} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>Downloads & Storage</Text>
-          </View>
-
-          <StorageSection />
-        </View>
-
-        {/* Account Actions */}
+        {/* Action Buttons */}
         <TouchableOpacity
           style={[styles.actionButton, !isConnected && styles.actionButtonDisabled]}
           onPress={handleSignOut}
@@ -528,7 +660,7 @@ const ProfileSettingsScreen = () => {
           <View style={styles.actionButtonIcon}>
             <Ionicons
               name="log-out-outline"
-              size={24}
+              size={22}
               color={isConnected ? theme.colors.primary : theme.colors.onSurfaceDisabled}
             />
           </View>
@@ -549,7 +681,7 @@ const ProfileSettingsScreen = () => {
           <View style={styles.actionButtonIcon}>
             <Ionicons
               name="trash-outline"
-              size={24}
+              size={22}
               color={isConnected ? theme.colors.onErrorContainer : theme.colors.onSurfaceDisabled}
             />
           </View>

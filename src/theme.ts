@@ -75,12 +75,12 @@ const Colors = {
     backdrop: "rgba(17, 24, 39, 0.7)",
   },
 
-  // Dark theme colors (completely separate)
+  // Dark theme colors (completely separate) - Modern, polished dark theme
   dark: {
     // Primary system
-    primary: "rgb(255, 152, 92)", // Lighter for dark theme
+    primary: "rgb(228, 106, 36)", // Lighter for dark theme
     onPrimary: "rgb(92, 38, 0)",
-    primaryContainer: "rgb(200, 95, 15)",
+    primaryContainer: "rgb(150, 66, 3)",
     onPrimaryContainer: "rgb(255, 224, 178)",
 
     // Secondary system
@@ -95,16 +95,16 @@ const Colors = {
     tertiaryContainer: "rgb(4, 120, 87)",
     onTertiaryContainer: "rgb(209, 250, 229)",
 
-    // Surface system
-    background: "rgb(6, 6, 7)",
-    onBackground: "rgb(250, 250, 250)",
-    surface: "rgb(15, 15, 16)",
-    onSurface: "rgb(250, 250, 250)",
-    surfaceVariant: "rgb(39, 39, 42)",
-    onSurfaceVariant: "rgb(212, 212, 216)",
-    surfaceLow: "rgb(18, 18, 20)",
-    surfaceHigh: "rgb(39, 39, 42)",
-    surfaceHighest: "rgb(63, 63, 70)",
+    // Surface system - Modern dark with true blacks and subtle grays
+    background: "rgb(0, 0, 0)", // Pure black for modern OLED-friendly design
+    onBackground: "rgb(255, 255, 255)",
+    surface: "rgb(11, 11, 11)", // Very dark gray for cards and surfaces
+    onSurface: "rgb(255, 255, 255)",
+    surfaceVariant: "rgb(18, 18, 18)", // Slightly lighter for variants
+    onSurfaceVariant: "rgb(220, 220, 220)",
+    surfaceLow: "rgb(4, 4, 4)", // Darker than surface for depth
+    surfaceHigh: "rgb(24, 24, 24)", // Elevated surfaces
+    surfaceHighest: "rgb(32, 32, 32)", // Highest elevation surfaces
 
     // Status colors for dark theme (adjusted for dark backgrounds)
     success: "rgb(74, 222, 128)", // Brighter green for dark
@@ -127,16 +127,16 @@ const Colors = {
     infoContainer: "rgb(30, 58, 138)",
     onInfoContainer: "rgb(219, 234, 254)",
 
-    // Utility colors
-    text: "rgb(250, 250, 250)",
-    textSecondary: "rgb(212, 212, 216)",
-    textTertiary: "rgb(161, 161, 170)",
-    disabled: "rgb(113, 113, 122)",
-    outline: "rgb(63, 63, 70)",
-    divider: "rgb(39, 39, 42)",
-    shadow: "rgba(0, 0, 0, 0.3)",
-    overlay: "rgba(0, 0, 0, 0.7)",
-    backdrop: "rgba(0, 0, 0, 0.8)",
+    // Utility colors - Enhanced for modern dark theme
+    text: "rgb(255, 255, 255)", // Pure white for primary text
+    textSecondary: "rgb(200, 200, 200)", // Softer white for secondary text
+    textTertiary: "rgb(150, 150, 150)", // Muted for tertiary text
+    disabled: "rgb(100, 100, 100)", // Darker disabled state
+    outline: "rgb(40, 40, 40)", // Subtle outlines
+    divider: "rgb(24, 24, 24)", // Subtle dividers
+    shadow: "rgba(0, 0, 0, 0.6)", // Stronger shadows for depth
+    overlay: "rgba(0, 0, 0, 0.8)", // Darker overlay
+    backdrop: "rgba(0, 0, 0, 0.9)", // Almost opaque backdrop
   },
 
   // Accent colors (shared but with variations)
