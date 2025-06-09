@@ -10,11 +10,11 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
-  Alert,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import CustomModal from "../components/CustomModal";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
@@ -35,6 +35,13 @@ const DownloadsScreen = () => {
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showClearAllModal, setShowClearAllModal] = useState(false);
+  const [selectedDownload, setSelectedDownload] = useState<DownloadRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   // Format bytes to human-readable size
   const formatBytes = (bytes: number, decimals = 2) => {
@@ -91,54 +98,44 @@ const DownloadsScreen = () => {
 
   // Handle delete download
   const handleDeleteDownload = (item: DownloadRecord) => {
-    Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          deleteDownload(item.recording_id)
-            .then(() => {
-              setDownloads((prev) =>
-                prev.filter((download) => download.recording_id !== item.recording_id)
-              );
-            })
-            .catch((error) => {
-              console.error("Delete error:", error);
-            });
-        },
-      },
-    ]);
+    setSelectedDownload(item);
+    setShowDeleteModal(true);
   };
 
   // Handle clear all downloads
   const handleClearAllDownloads = () => {
-    Alert.alert(
-      "Clear All Downloads",
-      "Are you sure you want to delete all downloads? This cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Clear All",
-          style: "destructive",
-          onPress: () => {
-            clearAllDownloads()
-              .then(() => {
-                setDownloads([]);
-              })
-              .catch((error) => {
-                console.error("Clear downloads error:", error);
-              });
-          },
-        },
-      ]
-    );
+    setShowClearAllModal(true);
+  };
+
+  const confirmDeleteDownload = async () => {
+    if (!selectedDownload) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteDownload(selectedDownload.recording_id);
+      setDownloads((prev) =>
+        prev.filter((download) => download.recording_id !== selectedDownload.recording_id)
+      );
+    } catch (error) {
+      console.error("Delete error:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setSelectedDownload(null);
+    }
+  };
+
+  const confirmClearAllDownloads = async () => {
+    setIsClearing(true);
+    try {
+      await clearAllDownloads();
+      setDownloads([]);
+    } catch (error) {
+      console.error("Clear downloads error:", error);
+    } finally {
+      setIsClearing(false);
+      setShowClearAllModal(false);
+    }
   };
 
   // Create styles with theme support
@@ -490,6 +487,58 @@ const DownloadsScreen = () => {
             tintColor={theme.colors.primary}
           />
         }
+      />
+
+      {/* Delete Download Modal */}
+      <CustomModal
+        visible={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedDownload(null);
+        }}
+        title="Delete Download"
+        message={`Are you sure you want to delete "${selectedDownload?.title || "this recording"}"? You'll need to download it again for offline use.`}
+        icon="trash-outline"
+        iconColor={theme.colors.error}
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => {
+              setShowDeleteModal(false);
+              setSelectedDownload(null);
+            },
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: confirmDeleteDownload,
+            style: "destructive",
+            loading: isDeleting,
+          },
+        ]}
+      />
+
+      {/* Clear All Downloads Modal */}
+      <CustomModal
+        visible={showClearAllModal}
+        onClose={() => setShowClearAllModal(false)}
+        title="Clear All Downloads"
+        message="Are you sure you want to delete all downloads? This action cannot be undone and you'll need to download recordings again for offline use."
+        icon="trash-outline"
+        iconColor={theme.colors.error}
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => setShowClearAllModal(false),
+            style: "cancel",
+          },
+          {
+            text: "Clear All",
+            onPress: confirmClearAllDownloads,
+            style: "destructive",
+            loading: isClearing,
+          },
+        ]}
       />
     </View>
   );

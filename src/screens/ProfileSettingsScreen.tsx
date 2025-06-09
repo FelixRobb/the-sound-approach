@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useContext } from "react";
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from "react-native";
+import { useContext, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import CustomModal from "../components/CustomModal";
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { ThemeContext } from "../context/ThemeContext";
@@ -18,6 +19,12 @@ const ProfileSettingsScreen = () => {
   const { theme: themeMode, setTheme } = useContext(ThemeContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
+
+  // Modal states
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showClearDownloadsModal, setShowClearDownloadsModal] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isClearingDownloads, setIsClearingDownloads] = useState(false);
 
   // Format bytes to human-readable size
   const formatBytes = (bytes: number, decimals = 2) => {
@@ -33,48 +40,37 @@ const ProfileSettingsScreen = () => {
   };
 
   // Handle sign out
-  const handleSignOut = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch (error) {
-            console.error("Sign out error:", error);
-          }
-        },
-      },
-    ]);
+  const handleSignOut = () => {
+    setShowSignOutModal(true);
+  };
+
+  const confirmSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      setIsSigningOut(false);
+      setShowSignOutModal(false);
+    }
   };
 
   // Handle clear all downloads
   const handleClearAllDownloads = () => {
-    Alert.alert(
-      "Clear All Downloads",
-      "Are you sure you want to delete all downloads? This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Clear All",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearAllDownloads();
-              Alert.alert("Success", "All downloads have been cleared.");
-            } catch (error) {
-              console.error("Clear downloads error:", error);
-              Alert.alert("Error", "Failed to clear downloads. Please try again later.");
-            }
-          },
-        },
-      ]
-    );
+    setShowClearDownloadsModal(true);
+  };
+
+  const confirmClearAllDownloads = async () => {
+    setIsClearingDownloads(true);
+    try {
+      await clearAllDownloads();
+    } catch (error) {
+      console.error("Clear downloads error:", error);
+    } finally {
+      setIsClearingDownloads(false);
+      setShowClearDownloadsModal(false);
+    }
   };
 
   // Handle delete account
@@ -580,6 +576,52 @@ const ProfileSettingsScreen = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Sign Out Modal */}
+      <CustomModal
+        visible={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        title="Sign Out"
+        message="Are you sure you want to sign out? You'll need to sign in again to access your account."
+        icon="log-out-outline"
+        iconColor={theme.colors.primary}
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => setShowSignOutModal(false),
+            style: "cancel",
+          },
+          {
+            text: "Sign Out",
+            onPress: confirmSignOut,
+            style: "destructive",
+            loading: isSigningOut,
+          },
+        ]}
+      />
+
+      {/* Clear Downloads Modal */}
+      <CustomModal
+        visible={showClearDownloadsModal}
+        onClose={() => setShowClearDownloadsModal(false)}
+        title="Clear All Downloads"
+        message="Are you sure you want to delete all downloads? This action cannot be undone and you'll need to download recordings again for offline use."
+        icon="trash-outline"
+        iconColor={theme.colors.error}
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => setShowClearDownloadsModal(false),
+            style: "cancel",
+          },
+          {
+            text: "Clear All",
+            onPress: confirmClearAllDownloads,
+            style: "destructive",
+            loading: isClearingDownloads,
+          },
+        ]}
+      />
     </View>
   );
 };

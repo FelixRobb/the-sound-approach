@@ -13,7 +13,7 @@ export const NetworkContext = createContext<NetworkContextType>({
 });
 
 export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
   const [previousConnectionState, setPreviousConnectionState] = useState(true);
   const [networkRestoreCallbacks, setNetworkRestoreCallbacks] = useState<(() => void)[]>([]);
 
@@ -42,6 +42,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Set a debounce timeout (500ms) to avoid rapid toggling
     connectivityTimeout.current = setTimeout(() => {
+      setIsConnected(state);
       connectivityTimeout.current = null;
     }, 500);
   }, []);
@@ -50,11 +51,14 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // If connection was just restored (was offline before but now online)
     if (isConnected && !previousConnectionState) {
       // Execute all registered callbacks
-      networkRestoreCallbacks.forEach((callback) => {
+      networkRestoreCallbacks.forEach((callback, index) => {
         try {
           callback();
         } catch (error) {
-          console.error("Error executing network restore callback:", error);
+          console.error(
+            `[NetworkContext] Error executing network restore callback ${index + 1}:`,
+            error
+          );
         }
       });
     }
@@ -71,6 +75,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Skip state changes on first load to avoid interrupting initial navigation
       if (isFirstLoad.current) {
         isFirstLoad.current = false;
+        setIsConnected(connectionStatus);
         return;
       }
 
@@ -81,6 +86,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Initial check
     NetInfo.fetch().then((state) => {
       const connectionStatus = state.isConnected !== null ? state.isConnected : true;
+      setIsConnected(connectionStatus);
     });
 
     // Cleanup

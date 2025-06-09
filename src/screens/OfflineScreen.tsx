@@ -10,11 +10,11 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
-  Alert,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import CustomModal from "../components/CustomModal";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
@@ -34,6 +34,7 @@ const OfflineScreen = () => {
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showOfflineModal, setShowOfflineModal] = useState(false);
 
   // Format bytes to human-readable size
   const formatBytes = (bytes: number, decimals = 2) => {
@@ -330,11 +331,7 @@ const OfflineScreen = () => {
     const audioUri = ensureFileUri(item.audio_path);
 
     const handleItemPress = () => {
-      Alert.alert(
-        "Offline Mode",
-        "Recording details are not available while offline. You can still play downloaded recordings.",
-        [{ text: "OK" }]
-      );
+      setShowOfflineModal(true);
     };
 
     return (
@@ -475,6 +472,23 @@ const OfflineScreen = () => {
             tintColor={theme.colors.primary}
           />
         }
+      />
+
+      {/* Offline Mode Modal */}
+      <CustomModal
+        visible={showOfflineModal}
+        onClose={() => setShowOfflineModal(false)}
+        title="Offline Mode"
+        message="Recording details are not available while offline. You can still play downloaded recordings."
+        icon="cloud-offline-outline"
+        iconColor={theme.colors.primary}
+        buttons={[
+          {
+            text: "OK",
+            onPress: () => setShowOfflineModal(false),
+            style: "default",
+          },
+        ]}
       />
     </View>
   );

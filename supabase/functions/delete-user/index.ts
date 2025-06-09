@@ -67,7 +67,6 @@ serve(async (req) => {
       );
     }
     const userId = user.id;
-    console.log(`Starting account deletion process for user: ${userId}`);
     // Step 1: Get the user's single activation record
     const { data: userActivation, error: activationSelectError } = await supabaseAdmin
       .from("user_activations")
@@ -93,7 +92,6 @@ serve(async (req) => {
     const deletionErrors = [];
     // Step 2a: Decrement activation count for the user's book code (if exists)
     if (userActivation) {
-      console.log(`Processing book code activation: ${userActivation.book_code_id}`);
       try {
         const { error: decrementError } = await supabaseAdmin.rpc(
           "decrement_book_code_activation",
@@ -104,17 +102,11 @@ serve(async (req) => {
         if (decrementError) {
           console.error(`Error decrementing book code activation:`, decrementError);
           deletionErrors.push(`Failed to decrement book code: ${decrementError.message}`);
-        } else {
-          console.log(
-            `Successfully decremented activation for book code: ${userActivation.book_code_id}`
-          );
         }
       } catch (e) {
         console.error(`Unexpected error decrementing book code:`, e);
         deletionErrors.push(`Unexpected error decrementing book code: ${e.message}`);
       }
-    } else {
-      console.log("No activation record found for user - skipping book code decrement");
     }
     // Step 2b: Delete user activation record
     const { error: userActivationError } = await supabaseAdmin
@@ -124,17 +116,19 @@ serve(async (req) => {
     if (userActivationError) {
       console.error("Error deleting user activation:", userActivationError);
       deletionErrors.push(`Failed to delete user activation: ${userActivationError.message}`);
-    } else {
-      console.log("Successfully deleted user activation");
     }
-    // Step 3: Delete any other user-related data if needed
-    // Add additional cleanup operations here if you have other tables
-    // For example:
-    // - User preferences
-    // - User downloads
-    // - User activity logs
-    // etc.
-    // Step 4: Delete the user from Supabase Auth
+    const { error: userCodeResetError } = await supabaseAdmin
+      .from("book_codes")
+      .update({
+        activations_used: supabaseAdmin.rpc("decrement_book_code_activation", {
+          book_code_id_param: userActivation.book_code_id,
+        }),
+      })
+      .eq("id", userActivation.book_code_id);
+    if (userCodeResetError) {
+      console.error("Error resetting book code activations:", userCodeResetError);
+      deletionErrors.push(`Failed to reset book code activations: ${userCodeResetError.message}`);
+    }
     const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (deleteUserError) {
       console.error("Error deleting user from auth:", deleteUserError);

@@ -43,14 +43,6 @@ const OfflineNoticeScreen = () => {
       marginBottom: 24,
       textAlign: "center",
     },
-
-    noDownloadsText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontStyle: "italic",
-      marginBottom: 24,
-      textAlign: "center",
-    },
     title: {
       color: theme.colors.onSurface,
       fontSize: 24,
@@ -72,25 +64,19 @@ const OfflineNoticeScreen = () => {
         <Text style={styles.description}>
           {hasDownloads
             ? "You are in offline mode. You can only access your downloaded recordings."
-            : "You don&apos;t have any downloaded recordings to access offline."}
+            : "You don't have any downloaded recordings to access offline. Please connect to the internet to browse and download recordings for offline use."}
         </Text>
 
-        {hasDownloads ? (
-          <Button
-            mode="contained"
-            icon="download"
-            onPress={() => {
-              navigation.navigate("OfflineMain");
-            }}
-            style={styles.button}
-          >
-            Return to Offline Content
-          </Button>
-        ) : (
-          <Text style={styles.noDownloadsText}>
-            Connect to the internet to browse and download recordings for offline use.
-          </Text>
-        )}
+        <Button
+          mode="contained"
+          icon="download"
+          onPress={() => {
+            navigation.navigate("OfflineMain");
+          }}
+          style={styles.button}
+        >
+          Return to Offline Content
+        </Button>
       </View>
     </View>
   );

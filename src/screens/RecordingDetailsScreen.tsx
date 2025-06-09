@@ -13,7 +13,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   BackHandler,
   StatusBar,
@@ -21,13 +20,14 @@ import {
   Dimensions,
 } from "react-native";
 
+import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
-import type { Recording, RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
 
@@ -47,6 +47,11 @@ const RecordingDetailsScreen = () => {
   const [videoError, setVideoError] = useState(false);
   const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
   const [showInitialLoading, setShowInitialLoading] = useState(true);
+
+  // Modal states
+  const [showDownloadErrorModal, setShowDownloadErrorModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -549,26 +554,26 @@ const RecordingDetailsScreen = () => {
       await downloadRecording(recording);
     } catch (error) {
       console.error("Download error:", error);
-      Alert.alert("Download Error", "Failed to download the recording. Please try again.");
+      setShowDownloadErrorModal(true);
     }
   };
 
-  const handleDeleteDownload = async (item: Recording) => {
-    Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          deleteDownload(item.id).catch((error) => {
-            console.error("Delete error:", error);
-          });
-        },
-      },
-    ]);
+  const handleDeleteDownload = async () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteDownload = async () => {
+    if (!recording) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteDownload(recording.id);
+    } catch (error) {
+      console.error("Delete error:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -864,10 +869,7 @@ const RecordingDetailsScreen = () => {
         <View style={styles.downloadCard}>
           {getDownloadStatus() === "completed" ? (
             <View style={styles.downloadedContainer}>
-              <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={() => handleDeleteDownload(recording)}
-              >
+              <TouchableOpacity style={styles.downloadButton} onPress={handleDeleteDownload}>
                 <Ionicons name="trash-outline" size={24} color={theme.colors.onPrimary} />
                 <Text style={styles.downloadButtonText}>Remove Download</Text>
               </TouchableOpacity>
@@ -887,6 +889,46 @@ const RecordingDetailsScreen = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Download Error Modal */}
+      <CustomModal
+        visible={showDownloadErrorModal}
+        onClose={() => setShowDownloadErrorModal(false)}
+        title="Download Error"
+        message="Failed to download the recording. Please check your connection and try again."
+        icon="cloud-download-outline"
+        iconColor={theme.colors.error}
+        buttons={[
+          {
+            text: "OK",
+            onPress: () => setShowDownloadErrorModal(false),
+            style: "default",
+          },
+        ]}
+      />
+
+      {/* Delete Download Modal */}
+      <CustomModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Remove Download"
+        message="Are you sure you want to remove this download? You'll need to download it again for offline use."
+        icon="trash-outline"
+        iconColor={theme.colors.error}
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => setShowDeleteModal(false),
+            style: "cancel",
+          },
+          {
+            text: "Remove",
+            onPress: confirmDeleteDownload,
+            style: "destructive",
+            loading: isDeleting,
+          },
+        ]}
+      />
     </View>
   );
 };
