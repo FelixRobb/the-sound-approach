@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useContext } from "react";
 import { StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -37,7 +38,9 @@ const AppContent = () => {
           <NetworkProvider>
             <AuthProvider>
               <DownloadProvider>
-                <AppNavigator />
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <AppNavigator />
+                </GestureHandlerRootView>
               </DownloadProvider>
             </AuthProvider>
           </NetworkProvider>

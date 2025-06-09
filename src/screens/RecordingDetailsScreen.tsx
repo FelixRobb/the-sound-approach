@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
 import { useNavigation, useRoute, type RouteProp, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +18,8 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
+import { Slider } from "react-native-awesome-slider";
+import { useSharedValue } from "react-native-reanimated";
 
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
@@ -58,6 +59,11 @@ const RecordingDetailsScreen = () => {
   const videoViewRef = useRef(null);
   const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isComponentMountedRef = useRef(true);
+
+  // Add these lines for react-native-awesome-slider
+  const sliderProgress = useSharedValue(0);
+  const sliderMin = useSharedValue(0);
+  const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
 
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -428,6 +434,7 @@ const RecordingDetailsScreen = () => {
     if (payload.status === "readyToPlay" && !isVideoLoaded) {
       setIsVideoLoaded(true);
       setVideoDuration(videoPlayer.duration || 0);
+      sliderMax.value = videoPlayer.duration || 1; // Update slider max value
       setVideoError(false);
       setShowInitialLoading(false);
     } else if (payload.status === "error" || payload.status === "idle") {
@@ -446,6 +453,7 @@ const RecordingDetailsScreen = () => {
     // Only update position when not actively seeking
     if (!isSeeking) {
       setVideoPosition(payload.currentTime);
+      sliderProgress.value = payload.currentTime;
     }
   });
 
@@ -617,6 +625,8 @@ const RecordingDetailsScreen = () => {
     try {
       // Set the video position
       videoPlayer.currentTime = value;
+      sliderProgress.value = value;
+      setVideoPosition(value);
 
       // Resume playing if it was playing before seeking
       if (wasPlayingBeforeSeek) {
@@ -644,16 +654,38 @@ const RecordingDetailsScreen = () => {
         </TouchableOpacity>
 
         <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={Math.max(videoDuration, 0.1)}
-          value={videoPosition}
+          progress={sliderProgress}
+          minimumValue={sliderMin}
+          maximumValue={sliderMax}
           onSlidingStart={onSeekStart}
           onSlidingComplete={onSeekComplete}
-          minimumTrackTintColor={theme.colors.primary}
-          maximumTrackTintColor={theme.colors.surfaceVariant}
-          thumbTintColor={theme.colors.tertiary}
-          disabled={!isVideoLoaded}
+          thumbWidth={16}
+          renderThumb={() => (
+            <View
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 8,
+                backgroundColor: theme.colors.tertiary,
+                shadowColor: theme.colors.shadow,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.3,
+                shadowRadius: 2,
+                elevation: 2,
+              }}
+            />
+          )}
+          theme={{
+            minimumTrackTintColor: theme.colors.primary,
+            maximumTrackTintColor: theme.colors.surfaceVariant,
+          }}
+          containerStyle={{ flex: 1, height: 30, marginHorizontal: 12 }}
+          disable={!isVideoLoaded}
+          disableTapEvent
+          bubble={(value) => formatTime(value)}
+          bubbleTextStyle={{
+            color: theme.colors.onTertiary,
+          }}
         />
 
         <Text style={styles.timeText}>
