@@ -1,12 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, type RouteProp, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { useEventListener } from "expo";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useVideoPlayer, VideoView } from "expo-video";
-import React, { useState, useContext, useMemo, useRef, useEffect } from "react";
+import React, { useState, useContext, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -53,6 +53,8 @@ const RecordingDetailsScreen = () => {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const videoViewRef = useRef(null);
+  const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isComponentMountedRef = useRef(true);
 
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -386,29 +388,49 @@ const RecordingDetailsScreen = () => {
   }, [recording, isConnected]);
 
   // Initialize the video player
-  const videoPlayer = useVideoPlayer(sonogramVideoUri || null, (player) => {
+  const videoPlayer = useVideoPlayer(sonogramVideoUri, (player) => {
+    if (!player) return;
+
     player.timeUpdateEventInterval = 0.1; // More frequent updates for smoother slider
     player.loop = false;
 
     // Force load the video on iOS by setting a small volume initially
-    if (player && sonogramVideoUri) {
+    if (sonogramVideoUri) {
       player.volume = 0.01;
-      // Preload the video
-      setTimeout(() => {
-        player.volume = 1;
+      // Preload the video with proper cleanup
+      volumeTimeoutRef.current = setTimeout(() => {
+        if (isComponentMountedRef.current && player) {
+          player.volume = 1;
+        }
       }, 100);
     }
   });
 
+  // Reset video state when URI changes or becomes null
+  const resetVideoState = useCallback(() => {
+    setVideoError(false);
+    setIsVideoLoaded(false);
+    setVideoDuration(0);
+    setVideoPosition(0);
+    setShowInitialLoading(!!sonogramVideoUri);
+    setIsPlaying(false);
+    setIsSeeking(false);
+    setWasPlayingBeforeSeek(false);
+  }, [sonogramVideoUri]);
+
   // Listen for video ready/loaded events
   useEventListener(videoPlayer, "statusChange", (payload) => {
+    if (!isComponentMountedRef.current) return;
+
     if (payload.status === "readyToPlay" && !isVideoLoaded) {
       setIsVideoLoaded(true);
       setVideoDuration(videoPlayer.duration || 0);
       setVideoError(false);
       setShowInitialLoading(false);
-    } else if (payload.status === "error") {
-      setVideoError(true);
+    } else if (payload.status === "error" || payload.status === "idle") {
+      if (payload.status === "error") {
+        setVideoError(true);
+      }
       setIsVideoLoaded(false);
       setShowInitialLoading(false);
     }
@@ -416,33 +438,24 @@ const RecordingDetailsScreen = () => {
 
   // Listen for timeUpdate event to update the position
   useEventListener(videoPlayer, "timeUpdate", (payload) => {
+    if (!isComponentMountedRef.current) return;
+
     // Only update position when not actively seeking
     if (!isSeeking) {
       setVideoPosition(payload.currentTime);
     }
-
-    // Set duration if not already set
-    if (videoDuration === 0 && videoPlayer.duration > 0) {
-      setVideoDuration(videoPlayer.duration);
-      setIsVideoLoaded(true);
-    }
   });
 
-  // Listen for status changes
+  // Listen for playing state changes
   useEventListener(videoPlayer, "playingChange", (payload) => {
+    if (!isComponentMountedRef.current) return;
     setIsPlaying(payload.isPlaying);
   });
 
-  // Preload video when URI changes
+  // Handle video URI changes
   useEffect(() => {
-    if (sonogramVideoUri && videoPlayer) {
-      setVideoError(false);
-      setIsVideoLoaded(false);
-      setVideoDuration(0);
-      setVideoPosition(0);
-      setShowInitialLoading(true);
-    }
-  }, [sonogramVideoUri, videoPlayer]);
+    resetVideoState();
+  }, [resetVideoState]);
 
   // Handle orientation and fullscreen changes
   useEffect(() => {
@@ -499,10 +512,30 @@ const RecordingDetailsScreen = () => {
     return () => backHandler.remove();
   }, [isVideoFullscreen]);
 
+  // Handle screen focus/blur - pause video when navigating forward to another screen
+  useFocusEffect(
+    useCallback(() => {
+      // Screen is focused - no action needed
+      return () => {
+        // Screen is losing focus - pause the video if it exists and is playing
+        if (videoPlayer) {
+          try {
+            videoPlayer.pause();
+          } catch (error) {
+            // Video player might be disposed, which is fine
+          }
+        }
+      };
+    }, [videoPlayer])
+  );
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Cleanup if needed
+      isComponentMountedRef.current = false;
+      if (volumeTimeoutRef.current) {
+        clearTimeout(volumeTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -547,12 +580,17 @@ const RecordingDetailsScreen = () => {
   };
 
   const togglePlayPause = async () => {
-    if (!isVideoLoaded) return;
+    if (!isVideoLoaded || !videoPlayer) return;
 
-    if (isPlaying) {
-      videoPlayer.pause();
-    } else {
-      videoPlayer.play();
+    try {
+      if (isPlaying) {
+        videoPlayer.pause();
+      } else {
+        videoPlayer.play();
+      }
+    } catch (error) {
+      console.error("Error toggling play/pause:", error);
+      setVideoError(true);
     }
   };
 
@@ -565,25 +603,28 @@ const RecordingDetailsScreen = () => {
     // Remember if we were playing before seeking
     setWasPlayingBeforeSeek(isPlaying);
     // Pause the video during seeking to prevent position conflicts
-    if (isPlaying) {
+    if (isPlaying && videoPlayer) {
       videoPlayer.pause();
     }
   };
 
   const onSeekComplete = (value: number) => {
-    if (!isVideoLoaded) return;
+    if (!isVideoLoaded || !videoPlayer) return;
 
-    // Set the video position
-    videoPlayer.currentTime = value;
-    setVideoPosition(value);
+    try {
+      // Set the video position
+      videoPlayer.currentTime = value;
 
-    // Resume playing if it was playing before seeking
-    if (wasPlayingBeforeSeek) {
-      videoPlayer.play();
+      // Resume playing if it was playing before seeking
+      if (wasPlayingBeforeSeek) {
+        videoPlayer.play();
+      }
+    } catch (error) {
+      console.error("Error seeking video:", error);
+    } finally {
+      // Always stop seeking
+      setIsSeeking(false);
     }
-
-    // Stop seeking
-    setIsSeeking(false);
   };
 
   const renderVideoControls = (isFullscreen = false) => {
@@ -718,6 +759,7 @@ const RecordingDetailsScreen = () => {
   }
 
   if (isVideoFullscreen) {
+    // Exit fullscreen if no video URI available
     if (!sonogramVideoUri) {
       setIsVideoFullscreen(false);
       return null;
