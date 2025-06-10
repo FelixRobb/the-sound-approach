@@ -521,11 +521,15 @@ const AppNavigator: React.FC = () => {
 
     if (authState.userToken) {
       // User is authenticated
-      if (!authState.hasCompletedOnboarding) {
-        return <OnboardingNavigator />;
-      } else if (isConnected) {
-        return <MainNavigator />;
+      if (isConnected) {
+        // Online authenticated user
+        if (!authState.hasCompletedOnboarding) {
+          return <OnboardingNavigator />;
+        } else {
+          return <MainNavigator />;
+        }
       } else {
+        // Offline authenticated user - skip onboarding and go to offline mode
         return <OfflineNavigator />;
       }
     } else {
