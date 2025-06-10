@@ -199,7 +199,6 @@ export type RootStackParamList = {
   RecordingDetails: { recordingId: string };
   SpeciesDetails: { speciesId: string };
   Search: undefined;
-  OfflineNotice: undefined;
   Profile: undefined;
   DownloadsList: undefined;
   DeleteAccount: undefined;
@@ -234,7 +233,7 @@ export type ProfileStackParamList = {
 };
 
 export type OfflineStackParamList = {
-  DownloadsList: undefined;
+  OfflineMain: undefined;
   OfflineNotice: undefined;
 };
 

@@ -1,6 +1,5 @@
-// src/context/AuthContext.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
+import { fetch as NetFetch } from "@react-native-community/netinfo";
 import type React from "react";
 import { createContext, useReducer, useEffect } from "react";
 
@@ -11,7 +10,7 @@ import {
   getOfflineAuthData,
 } from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
-import type { AuthAction, AuthContextType, AuthState } from "../types";
+import type { AuthAction, AuthContextType, AuthState, User } from "../types";
 
 // Initial state
 const initialState: AuthState = {
@@ -193,11 +192,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         // Check network connectivity
-        const { isConnected } = await NetInfo.fetch();
+        const { isConnected } = await NetFetch();
 
         if (!isConnected) {
           // Handle offline scenario
-          const { token, user, isValid } = await getOfflineAuthData();
+          const { token, user, isValid } = (await getOfflineAuthData()) as {
+            token: string | null;
+            user: User | null;
+            isValid: boolean;
+          };
 
           if (isValid && token && user) {
             dispatch({
@@ -256,7 +259,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.warn("Session error:", sessionError);
 
             // Fall back to offline data if available and valid
-            const { token, user, isValid } = await getOfflineAuthData();
+            const { token, user, isValid } = (await getOfflineAuthData()) as {
+              token: string | null;
+              user: User | null;
+              isValid: boolean;
+            };
             if (isValid && token && user) {
               dispatch({
                 type: "RESTORE_TOKEN",
@@ -284,7 +291,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (userError) {
                 // Other user errors - try offline fallback
                 console.warn("User verification error:", userError);
-                const { token, user, isValid } = await getOfflineAuthData();
+                const { token, user, isValid } = (await getOfflineAuthData()) as {
+                  token: string | null;
+                  user: User | null;
+                  isValid: boolean;
+                };
                 if (isValid && token && user) {
                   dispatch({
                     type: "RESTORE_TOKEN",
@@ -326,7 +337,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
               } else {
                 // Try offline fallback for other errors
-                const { token, user, isValid } = await getOfflineAuthData();
+                const { token, user, isValid } = (await getOfflineAuthData()) as {
+                  token: string | null;
+                  user: User | null;
+                  isValid: boolean;
+                };
                 if (isValid && token && user) {
                   dispatch({
                     type: "RESTORE_TOKEN",
@@ -341,7 +356,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } else {
             // No active session, check offline data
-            const { token, user, isValid } = await getOfflineAuthData();
+            const { token, user, isValid } = (await getOfflineAuthData()) as {
+              token: string | null;
+              user: User | null;
+              isValid: boolean;
+            };
             if (isValid && token && user) {
               // Use offline data temporarily
               dispatch({
@@ -363,7 +382,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             dispatch({ type: "RESTORE_TOKEN", token: null, user: null });
           } else {
             // For other errors, try offline fallback
-            const { token, user, isValid } = await getOfflineAuthData();
+            const { token, user, isValid } = (await getOfflineAuthData()) as {
+              token: string | null;
+              user: User | null;
+              isValid: boolean;
+            };
             if (isValid && token && user) {
               dispatch({
                 type: "RESTORE_TOKEN",
@@ -426,7 +449,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             hasCompletedOnboarding,
           });
         }
-      } catch (e) {
+      } catch (error) {
         dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" });
       }
     },
@@ -434,10 +457,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp: async (email: string, password: string, bookCode: string) => {
       try {
         // First validate the book code
-        const { data: isAvailable, error: validationError } = await supabase.rpc(
+        const { data: isAvailable, error: validationError } = (await supabase.rpc(
           "is_book_code_available",
           { code_param: bookCode }
-        );
+        )) as { data: boolean; error: Error | null };
 
         if (validationError) {
           dispatch({ type: "AUTH_ERROR", error: "Error validating book code" });
@@ -470,11 +493,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (data?.user && data?.session) {
           // Associate the user with the book code
-          const { data: bookCodeData } = await supabase
+          const { data: bookCodeData } = (await supabase
             .from("book_codes")
             .select("id")
             .eq("code", bookCode)
-            .single();
+            .single()) as { data: { id: string } | null; error: Error | null };
 
           if (bookCodeData) {
             // Create user activation record
@@ -518,7 +541,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await clearUserDownloads(state.user?.id || null);
 
         // Only try to sign out from Supabase if online
-        const { isConnected } = await NetInfo.fetch();
+        const { isConnected } = await NetFetch();
         if (isConnected) {
           await supabase.auth.signOut();
         } else {
@@ -569,7 +592,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
         });
 
-        const result = await response.json();
+        const result = (await response.json()) as { error: string | null };
 
         if (!response.ok) {
           dispatch({ type: "AUTH_ERROR", error: result.error || "Failed to delete account" });

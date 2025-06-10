@@ -387,7 +387,6 @@ const RecordingsListScreen = () => {
   } = useQuery({
     queryKey: ["recordings"],
     queryFn: fetchRecordingsByBookOrder,
-    enabled: isConnected, // Only fetch when online
   });
 
   // Fetch species
@@ -399,17 +398,13 @@ const RecordingsListScreen = () => {
   } = useQuery({
     queryKey: ["species"],
     queryFn: fetchSpecies,
-    enabled: isConnected, // Only fetch when online
   });
 
   // Effect to refetch data when connection is restored
   useEffect(() => {
-    if (isConnected) {
-      // Refetch data when we come back online
-      refetchRecordings();
-      refetchSpecies();
-    }
-  }, [isConnected, refetchRecordings, refetchSpecies]);
+    refetchRecordings();
+    refetchSpecies();
+  }, [refetchRecordings, refetchSpecies]);
 
   // Calculate search score for recordings based on match quality
   const getRecordingSearchScore = (recording: Recording, query: string): number => {
@@ -692,26 +687,24 @@ const RecordingsListScreen = () => {
               <Text style={styles.title}>Library</Text>
               <Text style={styles.subtitle}>Explore bird recordings and species</Text>
             </View>
-            {isConnected && (
-              <View style={styles.headerActions}>
-                <TouchableOpacity
-                  style={styles.headerButton}
-                  onPress={() => {
-                    setShowSearch((prev) => !prev);
-                    setSearchInput("");
-                  }}
-                >
-                  <Ionicons
-                    name={showSearch ? "close" : "search"}
-                    size={20}
-                    color={theme.colors.onSurfaceVariant}
-                  />
-                </TouchableOpacity>
-              </View>
-            )}
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={() => {
+                  setShowSearch((prev) => !prev);
+                  setSearchInput("");
+                }}
+              >
+                <Ionicons
+                  name={showSearch ? "close" : "search"}
+                  size={20}
+                  color={theme.colors.onSurfaceVariant}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {showSearch && isConnected ? (
+          {showSearch ? (
             <View style={styles.searchContainer}>
               <Ionicons name="search" size={20} color={theme.colors.tertiary} />
               <TextInput
@@ -720,7 +713,6 @@ const RecordingsListScreen = () => {
                 value={searchInput}
                 onChangeText={setSearchInput}
                 style={styles.searchInput}
-                autoFocus
                 selectionColor={theme.colors.primary}
                 returnKeyType="search"
               />
@@ -733,7 +725,7 @@ const RecordingsListScreen = () => {
           ) : (
             <AnimatedTabBar activeTab={activeTab} onTabChange={setActiveTab} theme={theme} />
           )}
-          {isConnected && activeTab === "book" && (
+          {activeTab === "book" && (
             <View style={styles.filterButtonsContainer}>
               <ScrollView
                 horizontal
@@ -928,15 +920,7 @@ const RecordingsListScreen = () => {
         </View>
       </View>
 
-      {!isConnected ? (
-        <View style={styles.listContainer}>
-          <FlatList
-            data={[]}
-            renderItem={() => null}
-            ListEmptyComponent={<EmptyState type="recordings" />}
-          />
-        </View>
-      ) : recordingsLoading || speciesLoading ? (
+      {recordingsLoading || speciesLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>
@@ -951,47 +935,45 @@ const RecordingsListScreen = () => {
           </Text>
         </View>
       ) : (
-        isConnected && (
-          <>
-            <View style={styles.listContainer}>
-              {/* Only render the active tab's FlatList */}
-              {activeTab === "book" && (
-                <FlatList
-                  data={filteredAndSortedRecordings}
-                  renderItem={renderRecordingItem}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={false}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={recordingsLoading}
-                      onRefresh={refetchRecordings}
-                      colors={[theme.colors.primary]}
-                      tintColor={theme.colors.primary}
-                    />
-                  }
-                  ListEmptyComponent={<EmptyState type="recordings" />}
-                />
-              )}
-              {activeTab === "species" && (
-                <FlatList
-                  data={filteredAndSortedSpecies}
-                  renderItem={renderSpeciesItem}
-                  keyExtractor={(item) => item.id}
-                  showsVerticalScrollIndicator={false}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={speciesLoading}
-                      onRefresh={refetchSpecies}
-                      colors={[theme.colors.primary]}
-                      tintColor={theme.colors.primary}
-                    />
-                  }
-                  ListEmptyComponent={<EmptyState type="species" />}
-                />
-              )}
-            </View>
-          </>
-        )
+        <>
+          <View style={styles.listContainer}>
+            {/* Only render the active tab's FlatList */}
+            {activeTab === "book" && (
+              <FlatList
+                data={filteredAndSortedRecordings}
+                renderItem={renderRecordingItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={recordingsLoading}
+                    onRefresh={refetchRecordings}
+                    colors={[theme.colors.primary]}
+                    tintColor={theme.colors.primary}
+                  />
+                }
+                ListEmptyComponent={<EmptyState type="recordings" />}
+              />
+            )}
+            {activeTab === "species" && (
+              <FlatList
+                data={filteredAndSortedSpecies}
+                renderItem={renderSpeciesItem}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={speciesLoading}
+                    onRefresh={refetchSpecies}
+                    colors={[theme.colors.primary]}
+                    tintColor={theme.colors.primary}
+                  />
+                }
+                ListEmptyComponent={<EmptyState type="species" />}
+              />
+            )}
+          </View>
+        </>
       )}
     </View>
   );

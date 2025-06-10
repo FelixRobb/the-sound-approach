@@ -1,15 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 
-import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { RootStackParamList } from "../types";
 
 const OfflineIndicator = () => {
-  const { isConnected } = useContext(NetworkContext);
   const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const screenWidth = Dimensions.get("window").width;
@@ -57,10 +54,6 @@ const OfflineIndicator = () => {
       marginLeft: 8,
     },
   });
-
-  if (isConnected) {
-    return null;
-  }
 
   return (
     <View style={styles.container}>

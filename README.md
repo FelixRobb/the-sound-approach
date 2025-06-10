@@ -97,8 +97,6 @@ yarn build:ios:production
 
 ## Development
 
-- `yarn lint` - Run ESLint
-- `yarn lint:fix` - Fix ESLint errors
 - `yarn format` - Format code with Prettier
 
 ## Environment Variables

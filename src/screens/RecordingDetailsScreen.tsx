@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
 import { useNavigation, useRoute, type RouteProp, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
@@ -13,22 +12,23 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   BackHandler,
   StatusBar,
   Animated,
   Dimensions,
 } from "react-native";
+import { Slider } from "react-native-awesome-slider";
+import { useSharedValue } from "react-native-reanimated";
 
+import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
-import type { Recording, RootStackParamList } from "../types";
+import type { RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
 
@@ -36,7 +36,6 @@ const RecordingDetailsScreen = () => {
   const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
-  const { isConnected } = useContext(NetworkContext);
   const { downloadRecording, isDownloaded, downloads, deleteDownload } =
     useContext(DownloadContext);
 
@@ -50,11 +49,21 @@ const RecordingDetailsScreen = () => {
   const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
   const [showInitialLoading, setShowInitialLoading] = useState(true);
 
+  // Modal states
+  const [showDownloadErrorModal, setShowDownloadErrorModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const videoViewRef = useRef(null);
   const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isComponentMountedRef = useRef(true);
+
+  // Add these lines for react-native-awesome-slider
+  const sliderProgress = useSharedValue(0);
+  const sliderMin = useSharedValue(0);
+  const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
 
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -301,6 +310,17 @@ const RecordingDetailsScreen = () => {
       height: 40,
       marginHorizontal: 12,
     },
+    sliderThumb: {
+      backgroundColor: theme.colors.tertiary,
+      borderRadius: 8,
+      elevation: 2,
+      height: 16,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2,
+      width: 16,
+    },
     speciesButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -384,8 +404,8 @@ const RecordingDetailsScreen = () => {
 
   const sonogramVideoUri = useMemo(() => {
     if (!recording) return null;
-    return getSonogramVideoUri(recording, isConnected);
-  }, [recording, isConnected]);
+    return getSonogramVideoUri(recording);
+  }, [recording]);
 
   // Initialize the video player
   const videoPlayer = useVideoPlayer(sonogramVideoUri, (player) => {
@@ -425,6 +445,7 @@ const RecordingDetailsScreen = () => {
     if (payload.status === "readyToPlay" && !isVideoLoaded) {
       setIsVideoLoaded(true);
       setVideoDuration(videoPlayer.duration || 0);
+      sliderMax.value = videoPlayer.duration || 1; // Update slider max value
       setVideoError(false);
       setShowInitialLoading(false);
     } else if (payload.status === "error" || payload.status === "idle") {
@@ -443,6 +464,7 @@ const RecordingDetailsScreen = () => {
     // Only update position when not actively seeking
     if (!isSeeking) {
       setVideoPosition(payload.currentTime);
+      sliderProgress.value = payload.currentTime;
     }
   });
 
@@ -551,26 +573,26 @@ const RecordingDetailsScreen = () => {
       await downloadRecording(recording);
     } catch (error) {
       console.error("Download error:", error);
-      Alert.alert("Download Error", "Failed to download the recording. Please try again.");
+      setShowDownloadErrorModal(true);
     }
   };
 
-  const handleDeleteDownload = async (item: Recording) => {
-    Alert.alert("Delete Download", "Are you sure you want to delete this download?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          deleteDownload(item.id).catch((error) => {
-            console.error("Delete error:", error);
-          });
-        },
-      },
-    ]);
+  const handleDeleteDownload = async () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteDownload = async () => {
+    if (!recording) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteDownload(recording.id);
+    } catch (error) {
+      console.error("Delete error:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -614,6 +636,8 @@ const RecordingDetailsScreen = () => {
     try {
       // Set the video position
       videoPlayer.currentTime = value;
+      sliderProgress.value = value;
+      setVideoPosition(value);
 
       // Resume playing if it was playing before seeking
       if (wasPlayingBeforeSeek) {
@@ -641,16 +665,24 @@ const RecordingDetailsScreen = () => {
         </TouchableOpacity>
 
         <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={Math.max(videoDuration, 0.1)}
-          value={videoPosition}
+          progress={sliderProgress}
+          minimumValue={sliderMin}
+          maximumValue={sliderMax}
           onSlidingStart={onSeekStart}
           onSlidingComplete={onSeekComplete}
-          minimumTrackTintColor={theme.colors.primary}
-          maximumTrackTintColor={theme.colors.surfaceVariant}
-          thumbTintColor={theme.colors.tertiary}
-          disabled={!isVideoLoaded}
+          thumbWidth={16}
+          theme={{
+            minimumTrackTintColor: theme.colors.primary,
+            maximumTrackTintColor: theme.colors.surfaceVariant,
+          }}
+          containerStyle={styles.slider}
+          disable={!isVideoLoaded}
+          disableTapEvent
+          bubble={(value) => formatTime(value)}
+          bubbleTextStyle={{
+            color: theme.colors.onTertiary,
+          }}
+          renderThumb={() => <View style={styles.sliderThumb} />}
         />
 
         <Text style={styles.timeText}>
@@ -839,17 +871,16 @@ const RecordingDetailsScreen = () => {
               </View>
             )}
           </View>
-          {isConnected && (
-            <TouchableOpacity
-              style={styles.speciesButton}
-              onPress={() =>
-                navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
-              }
-            >
-              <Text style={styles.speciesButtonText}>View Species Details</Text>
-              <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
-            </TouchableOpacity>
-          )}
+
+          <TouchableOpacity
+            style={styles.speciesButton}
+            onPress={() =>
+              navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
+            }
+          >
+            <Text style={styles.speciesButtonText}>View Species Details</Text>
+            <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.videoContainer}>
@@ -867,10 +898,7 @@ const RecordingDetailsScreen = () => {
         <View style={styles.downloadCard}>
           {getDownloadStatus() === "completed" ? (
             <View style={styles.downloadedContainer}>
-              <TouchableOpacity
-                style={styles.downloadButton}
-                onPress={() => handleDeleteDownload(recording)}
-              >
+              <TouchableOpacity style={styles.downloadButton} onPress={handleDeleteDownload}>
                 <Ionicons name="trash-outline" size={24} color={theme.colors.onPrimary} />
                 <Text style={styles.downloadButtonText}>Remove Download</Text>
               </TouchableOpacity>
@@ -890,6 +918,46 @@ const RecordingDetailsScreen = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Download Error Modal */}
+      <CustomModal
+        visible={showDownloadErrorModal}
+        onClose={() => setShowDownloadErrorModal(false)}
+        title="Download Error"
+        message="Failed to download the recording. Please check your connection and try again."
+        icon="cloud-download-outline"
+        iconColor={theme.colors.error}
+        buttons={[
+          {
+            text: "OK",
+            onPress: () => setShowDownloadErrorModal(false),
+            style: "default",
+          },
+        ]}
+      />
+
+      {/* Delete Download Modal */}
+      <CustomModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Remove Download"
+        message="Are you sure you want to remove this download? You'll need to download it again for offline use."
+        icon="trash-outline"
+        iconColor={theme.colors.error}
+        buttons={[
+          {
+            text: "Cancel",
+            onPress: () => setShowDeleteModal(false),
+            style: "cancel",
+          },
+          {
+            text: "Remove",
+            onPress: confirmDeleteDownload,
+            style: "destructive",
+            loading: isDeleting,
+          },
+        ]}
+      />
     </View>
   );
 };

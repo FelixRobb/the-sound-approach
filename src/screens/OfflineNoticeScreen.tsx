@@ -6,13 +6,11 @@ import { View, Text, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import type { RootStackParamList } from "../types";
+import type { OfflineStackParamList } from "../types";
 
 const OfflineNoticeScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isConnected } = useContext(NetworkContext);
+  const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const { downloadedRecordings } = useContext(DownloadContext);
   const { theme } = useThemedStyles();
 
@@ -45,29 +43,6 @@ const OfflineNoticeScreen = () => {
       marginBottom: 24,
       textAlign: "center",
     },
-
-    noDownloadsText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontStyle: "italic",
-      marginBottom: 24,
-      textAlign: "center",
-    },
-    reconnectedContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: 8,
-      flexDirection: "row",
-      marginTop: 24,
-      padding: 12,
-      width: "100%",
-    },
-    reconnectedText: {
-      color: theme.colors.onPrimary,
-      flex: 1,
-      fontSize: 14,
-      marginLeft: 8,
-    },
     title: {
       color: theme.colors.onSurface,
       fontSize: 24,
@@ -89,34 +64,19 @@ const OfflineNoticeScreen = () => {
         <Text style={styles.description}>
           {hasDownloads
             ? "You are in offline mode. You can only access your downloaded recordings."
-            : "You don't have any downloaded recordings to access offline."}
+            : "You don't have any downloaded recordings to access offline. Please connect to the internet to browse and download recordings for offline use."}
         </Text>
 
-        {hasDownloads ? (
-          <Button
-            mode="contained"
-            icon="download"
-            onPress={() => {
-              navigation.navigate("DownloadsList");
-            }}
-            style={styles.button}
-          >
-            Return to Downloads
-          </Button>
-        ) : (
-          <Text style={styles.noDownloadsText}>
-            Connect to the internet to browse and download recordings for offline use.
-          </Text>
-        )}
-
-        {isConnected && (
-          <View style={styles.reconnectedContainer}>
-            <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
-            <Text style={styles.reconnectedText}>
-              You&apos;re back online! The app will automatically switch to online mode.
-            </Text>
-          </View>
-        )}
+        <Button
+          mode="contained"
+          icon="download"
+          onPress={() => {
+            navigation.navigate("OfflineMain");
+          }}
+          style={styles.button}
+        >
+          Return to Offline Content
+        </Button>
       </View>
     </View>
   );

@@ -35,8 +35,8 @@ export const getBestAudioUri = (
  * @param isConnected Boolean indicating if there's an internet connection
  * @returns The URI to the sonogram video or null if not available
  */
-export const getSonogramVideoUri = (recording: Recording, isConnected: boolean): string | null => {
-  if (!recording || !recording.sonogramvideoid || !isConnected) return null;
+export const getSonogramVideoUri = (recording: Recording): string | null => {
+  if (!recording || !recording.sonogramvideoid) return null;
 
   // Use public URL from Supabase for sonogram video
   const { data } = supabase.storage

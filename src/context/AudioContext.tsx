@@ -26,7 +26,7 @@ const AudioContext = createContext<AudioContextType>({
   isLoading: false,
   currentTrackId: null,
   error: null,
-  togglePlayPause: async () => false,
+  togglePlayPause: () => Promise.resolve(false),
 });
 
 // Provider component

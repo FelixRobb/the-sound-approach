@@ -18,7 +18,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DownloadedBadge from "../components/DownloadedBadge";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
 import type { Recording, RootStackParamList, Species } from "../types";
@@ -32,7 +31,6 @@ type SearchHistoryItem = {
 
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isConnected } = useContext(NetworkContext);
   const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useThemedStyles();
 
@@ -612,29 +610,22 @@ const SearchScreen = () => {
           </View>
 
           <View style={styles.searchContainer}>
-            <Ionicons
-              name="search"
-              size={20}
-              color={isConnected ? theme.colors.primary : theme.colors.onSurfaceDisabled}
-            />
+            <Ionicons name="search" size={20} color={theme.colors.primary} />
             <TextInput
               textAlignVertical="center"
               placeholder="Search species, recordings, or pages..."
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}
               onChangeText={(text) => {
-                if (isConnected) {
-                  setSearchQuery(text);
-                  handleSearch(text);
-                }
+                setSearchQuery(text);
+                handleSearch(text);
               }}
               style={styles.searchInput}
               selectionColor={theme.colors.primary}
               returnKeyType="search"
               onSubmitEditing={() => handleSearch(searchQuery)}
-              editable={isConnected}
             />
-            {searchQuery && isConnected && (
+            {searchQuery && (
               <TouchableOpacity onPress={() => setSearchQuery("")}>
                 <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
@@ -723,11 +714,7 @@ const SearchScreen = () => {
                       {new Date(item.timestamp).toLocaleDateString()}
                     </Text>
                   </View>
-                  <Ionicons
-                    name="search"
-                    size={20}
-                    color={isConnected ? theme.colors.secondary : theme.colors.onSurfaceDisabled}
-                  />
+                  <Ionicons name="search" size={20} color={theme.colors.secondary} />
                 </TouchableOpacity>
               )}
               keyExtractor={(item, index) => `recent-${index}`}
