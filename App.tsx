@@ -38,7 +38,7 @@ const AppContent = () => {
           <NetworkProvider>
             <AuthProvider>
               <DownloadProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
+                <GestureHandlerRootView style={styles.container}>
                   <AppNavigator />
                 </GestureHandlerRootView>
               </DownloadProvider>

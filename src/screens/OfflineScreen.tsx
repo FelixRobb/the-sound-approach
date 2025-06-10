@@ -76,7 +76,7 @@ const OfflineScreen = () => {
 
   // Check for downloads when screen comes into focus
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadDownloads();
       return () => {
         // Optional cleanup if needed

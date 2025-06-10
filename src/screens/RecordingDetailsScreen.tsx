@@ -310,6 +310,17 @@ const RecordingDetailsScreen = () => {
       height: 40,
       marginHorizontal: 12,
     },
+    sliderThumb: {
+      backgroundColor: theme.colors.tertiary,
+      borderRadius: 8,
+      elevation: 2,
+      height: 16,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2,
+      width: 16,
+    },
     speciesButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -660,32 +671,18 @@ const RecordingDetailsScreen = () => {
           onSlidingStart={onSeekStart}
           onSlidingComplete={onSeekComplete}
           thumbWidth={16}
-          renderThumb={() => (
-            <View
-              style={{
-                width: 16,
-                height: 16,
-                borderRadius: 8,
-                backgroundColor: theme.colors.tertiary,
-                shadowColor: theme.colors.shadow,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.3,
-                shadowRadius: 2,
-                elevation: 2,
-              }}
-            />
-          )}
           theme={{
             minimumTrackTintColor: theme.colors.primary,
             maximumTrackTintColor: theme.colors.surfaceVariant,
           }}
-          containerStyle={{ flex: 1, height: 30, marginHorizontal: 12 }}
+          containerStyle={styles.slider}
           disable={!isVideoLoaded}
           disableTapEvent
           bubble={(value) => formatTime(value)}
           bubbleTextStyle={{
             color: theme.colors.onTertiary,
           }}
+          renderThumb={() => <View style={styles.sliderThumb} />}
         />
 
         <Text style={styles.timeText}>

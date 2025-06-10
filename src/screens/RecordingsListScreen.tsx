@@ -713,7 +713,6 @@ const RecordingsListScreen = () => {
                 value={searchInput}
                 onChangeText={setSearchInput}
                 style={styles.searchInput}
-                autoFocus
                 selectionColor={theme.colors.primary}
                 returnKeyType="search"
               />

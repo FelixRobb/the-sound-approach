@@ -83,7 +83,7 @@ const DownloadsScreen = () => {
 
   // Check for downloads when screen comes into focus
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       loadDownloads();
       return () => {
         // Optional cleanup if needed
@@ -154,6 +154,9 @@ const DownloadsScreen = () => {
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 6,
+    },
+    clearAllButtonDisabled: {
+      opacity: 0.5,
     },
     clearAllText: {
       color: theme.colors.onTertiary,
@@ -362,7 +365,7 @@ const DownloadsScreen = () => {
         <View style={styles.storageInfo}>
           <Text style={styles.storageText}>Storage used: {formatBytes(totalStorageUsed)}</Text>
           <TouchableOpacity
-            style={[styles.clearAllButton, downloads.length === 0 && { opacity: 0.5 }]}
+            style={[styles.clearAllButton, downloads.length === 0 && styles.clearAllButtonDisabled]}
             disabled={downloads.length === 0}
             onPress={handleClearAllDownloads}
           >

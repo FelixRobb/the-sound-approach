@@ -30,6 +30,9 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, si
       justifyContent: "center",
       width: size + 8,
     },
+    pauseIcon: {
+      marginLeft: 0,
+    },
     playButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
@@ -42,6 +45,9 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, si
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
       width: size,
+    },
+    playIcon: {
+      marginLeft: 2,
     },
   });
 
@@ -71,10 +77,7 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, si
             name={getIconName()}
             size={size * 0.5}
             color={theme.colors.onPrimary}
-            // eslint-disable-next-line react-native/no-inline-styles
-            style={{
-              marginLeft: isCurrentlyPlaying ? 0 : 2,
-            }}
+            style={isCurrentlyPlaying ? styles.pauseIcon : styles.playIcon}
           />
         )}
       </View>

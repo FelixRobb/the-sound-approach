@@ -1,4 +1,4 @@
-import NetInfo from "@react-native-community/netinfo";
+import { addEventListener, fetch as NetFetch } from "@react-native-community/netinfo";
 import type React from "react";
 import { createContext, useState, useEffect, useCallback, useRef } from "react";
 
@@ -69,7 +69,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     // Subscribe to network state updates
-    const unsubscribe = NetInfo.addEventListener((state) => {
+    const unsubscribe = addEventListener((state) => {
       const connectionStatus = state.isConnected !== null ? state.isConnected : true;
 
       // Skip state changes on first load to avoid interrupting initial navigation
@@ -84,7 +84,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
 
     // Initial check
-    NetInfo.fetch().then((state) => {
+    NetFetch().then((state) => {
       const connectionStatus = state.isConnected !== null ? state.isConnected : true;
       setIsConnected(connectionStatus);
     });

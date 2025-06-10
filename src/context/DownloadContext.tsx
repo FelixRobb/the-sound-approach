@@ -7,7 +7,13 @@ import { createContext, useState, useEffect, useContext, useCallback } from "rea
 import { ENV } from "../config/env";
 import { clearUserDownloads } from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
-import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types";
+import type {
+  Recording,
+  DownloadRecord,
+  DownloadContextType,
+  DownloadInfo,
+  Species,
+} from "../types";
 
 import { AuthContext } from "./AuthContext";
 
@@ -21,7 +27,7 @@ export const DownloadContext = createContext<DownloadContextType>({
   clearAllDownloads: async () => {},
   isDownloaded: () => false,
   getDownloadPath: () => null,
-  getDownloadedRecordings: async () => [],
+  getDownloadedRecordings: () => Promise.resolve([]),
 });
 
 // Provider component
@@ -132,11 +138,11 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (recording.species_id) {
         try {
-          const { data: speciesData } = await supabase
+          const { data: speciesData } = (await supabase
             .from("species")
             .select("common_name, scientific_name")
             .eq("id", recording.species_id)
-            .single();
+            .single()) as { data: Species | null; error: Error | null };
 
           if (speciesData) {
             speciesName = speciesData.common_name;
