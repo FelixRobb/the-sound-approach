@@ -3,7 +3,7 @@
     "name": "The Sound Approach",
     "slug": "sound-approach-app",
     "version": "1.0.0",
-    "orientation": "default",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -23,7 +23,12 @@
       "infoPlist": {
         "UIBackgroundModes": ["audio", "audio", "audio", "audio"],
         "UIViewControllerBasedStatusBarAppearance": true,
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       },
       "bundleIdentifier": "com.robbfelix.soundapproachapp"
     },
