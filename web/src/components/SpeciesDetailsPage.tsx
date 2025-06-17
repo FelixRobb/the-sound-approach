@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader2, Search, Music } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
@@ -9,6 +9,10 @@ import PageBadge from "@/components/PageBadge";
 import { getBestAudioUri } from "@/lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "@/lib/supabase";
 import { Recording } from "@/types";
+
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
 
 export default function SpeciesDetailsPage() {
   const params = useParams();
@@ -61,106 +65,96 @@ export default function SpeciesDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading species recordings...</p>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-96">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Loading Species</h3>
+            <p className="text-muted-foreground text-center">Fetching species recordings...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-600 text-2xl">⚠️</span>
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Error Loading Species
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <button
-            onClick={handleBack}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-96">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Error Loading Species</h3>
+            <p className="text-muted-foreground text-center mb-4">{error}</p>
+            <Button onClick={handleBack} variant="default">
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (recordings.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+        <div className="bg-card border-b border-border sticky top-0 z-40">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
-              <button
-                onClick={handleBack}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+              <Button variant="ghost" size="icon" onClick={handleBack}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
               <div className="flex-1">
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">Species Details</h1>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">No recordings found</p>
+                <h1 className="text-xl font-bold text-foreground">Species Details</h1>
+                <p className="text-muted-foreground text-sm">No recordings found</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Empty State */}
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center max-w-md mx-auto p-6">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-gray-400 text-2xl">🔍</span>
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              No Recordings Found
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              No recordings are available for this species.
-            </p>
-          </div>
+        <div className="flex items-center justify-center min-h-[60vh] p-4">
+          <Card className="w-96">
+            <CardContent className="flex flex-col items-center justify-center p-8">
+              <Search className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Recordings Found</h3>
+              <p className="text-muted-foreground text-center">
+                No recordings are available for this species.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+      <div className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleBack}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
-            <div className="flex-1">
+            <Button variant="ghost" size="icon" onClick={handleBack}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
               {speciesInfo ? (
                 <>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  <h1 className="text-xl font-bold text-foreground truncate">
                     {speciesInfo.common_name}
                   </h1>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm italic">
+                  <p className="text-muted-foreground text-sm italic truncate">
                     {speciesInfo.scientific_name}
                   </p>
                 </>
               ) : (
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">Species Details</h1>
+                <h1 className="text-xl font-bold text-foreground">Species Details</h1>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
+              <Badge variant="secondary">
                 {recordings.length} recording{recordings.length !== 1 ? "s" : ""}
-              </span>
+              </Badge>
             </div>
           </div>
         </div>
@@ -173,41 +167,41 @@ export default function SpeciesDetailsPage() {
             const audioUri = getBestAudioUri(recording);
 
             return (
-              <div
+              <Card
                 key={recording.id}
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"
+                className="hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleRecordingClick(recording.id)}
               >
-                <div className="flex items-center gap-4">
-                  {/* Audio Player */}
-                  {audioUri && (
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <MiniAudioPlayer trackId={recording.id} audioUri={audioUri} size={40} />
-                    </div>
-                  )}
-
-                  {/* Recording Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {recording.title}
-                      </h3>
-                      <PageBadge page={recording.book_page_number} />
-                    </div>
-
-                    {recording.caption && (
-                      <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2">
-                        {recording.caption}
-                      </p>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    {/* Audio Player */}
+                    {audioUri && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <MiniAudioPlayer trackId={recording.id} audioUri={audioUri} size={40} />
+                      </div>
                     )}
-                  </div>
 
-                  {/* Arrow indicator */}
-                  <div className="text-gray-400">
-                    <ArrowLeft className="w-5 h-5 rotate-180" />
+                    {/* Recording Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-foreground truncate">
+                          {recording.title}
+                        </h3>
+                        <PageBadge page={recording.book_page_number} />
+                      </div>
+
+                      {recording.caption && (
+                        <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+                          {recording.caption}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Recording Icon */}
+                    <Music className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

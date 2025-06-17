@@ -16,6 +16,12 @@ import { useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
 
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
+
 export default function ProfilePage() {
   const { state, signOut, changePassword, deleteAccount, resetOnboarding } = useAuth();
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -104,312 +110,311 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="max-w-2xl mx-auto p-6">
+    <div className="h-full overflow-auto bg-background">
+      <div className="max-w-2xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile & Settings</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage your account and preferences</p>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Profile & Settings</h1>
+          <p className="text-muted-foreground">Manage your account and preferences</p>
         </div>
 
         {/* Message */}
         {message && (
-          <div
-            className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${
-              message.type === "success"
-                ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-                : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-            }`}
-          >
+          <Alert variant={message.type === "success" ? "default" : "destructive"}>
             {message.type === "success" ? (
-              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <CheckCircle className="h-4 w-4" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="h-4 w-4" />
             )}
-            <p
-              className={`text-sm ${
-                message.type === "success"
-                  ? "text-green-700 dark:text-green-300"
-                  : "text-red-700 dark:text-red-300"
-              }`}
-            >
-              {message.text}
-            </p>
-          </div>
+            <AlertDescription>{message.text}</AlertDescription>
+          </Alert>
         )}
 
         {/* Profile Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Account Details
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">Your account information</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-gray-400" />
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                <User className="w-8 h-8 text-primary" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Email Address
-                </p>
-                <p className="text-gray-900 dark:text-white">
-                  {state.user?.email ?? "Not available"}
-                </p>
+                <CardTitle>Account Details</CardTitle>
+                <CardDescription>Your account information</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Mail className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Email Address</p>
+                <p className="text-muted-foreground">{state.user?.email ?? "Not available"}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Key className="w-5 h-5 text-gray-400" />
+              <Key className="w-5 h-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Book Access Code
-                </p>
-                <p className="text-gray-900 dark:text-white">••••••••</p>
+                <p className="text-sm font-medium text-foreground">Book Access Code</p>
+                <p className="text-muted-foreground">••••••••</p>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Actions */}
-        <div className="space-y-4">
-          {/* Change Password */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between mb-4">
+        {/* Change Password */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Change Password
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Update your account password
-                </p>
+                <CardTitle>Change Password</CardTitle>
+                <CardDescription>Update your account password</CardDescription>
               </div>
-              <button
-                onClick={() => setShowChangePassword(!showChangePassword)}
-                className="px-4 py-2 text-blue-600 hover:text-blue-700 font-medium"
-              >
+              <Button variant="outline" onClick={() => setShowChangePassword(!showChangePassword)}>
                 {showChangePassword ? "Cancel" : "Change"}
-              </button>
+              </Button>
             </div>
+          </CardHeader>
 
-            {showChangePassword && (
+          {showChangePassword && (
+            <CardContent>
               <form onSubmit={handleChangePassword} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label htmlFor="currentPassword" className="text-sm font-medium">
                     Current Password
                   </label>
                   <div className="relative">
-                    <input
+                    <Input
+                      id="currentPassword"
                       type={showPasswords.current ? "text" : "password"}
                       value={passwordForm.currentPassword}
                       onChange={(e) =>
-                        setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))
+                        setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="pr-10"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() =>
-                        setShowPasswords((prev) => ({ ...prev, current: !prev.current }))
+                        setShowPasswords({ ...showPasswords, current: !showPasswords.current })
                       }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       {showPasswords.current ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="h-4 w-4" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label htmlFor="newPassword" className="text-sm font-medium">
                     New Password
                   </label>
                   <div className="relative">
-                    <input
+                    <Input
+                      id="newPassword"
                       type={showPasswords.new ? "text" : "password"}
                       value={passwordForm.newPassword}
                       onChange={(e) =>
-                        setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))
+                        setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                       }
                       required
-                      minLength={6}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="pr-10"
                     />
-                    <button
+                    <Button
                       type="button"
-                      onClick={() => setShowPasswords((prev) => ({ ...prev, new: !prev.new }))}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() =>
+                        setShowPasswords({ ...showPasswords, new: !showPasswords.new })
+                      }
                     >
                       {showPasswords.new ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="h-4 w-4" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <div className="space-y-2">
+                  <label htmlFor="confirmPassword" className="text-sm font-medium">
                     Confirm New Password
                   </label>
                   <div className="relative">
-                    <input
+                    <Input
+                      id="confirmPassword"
                       type={showPasswords.confirm ? "text" : "password"}
                       value={passwordForm.confirmPassword}
                       onChange={(e) =>
-                        setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                        setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      className="pr-10"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() =>
-                        setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))
+                        setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })
                       }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       {showPasswords.confirm ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="h-4 w-4" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? "Changing Password..." : "Change Password"}
-                </button>
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
+                    Update Password
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowChangePassword(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </form>
-            )}
-          </div>
-
-          {/* Development Options */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-300 mb-4">
-                Development Options
-              </h3>
-              <button
-                onClick={() => {
-                  resetOnboarding();
-                  // eslint-disable-next-line no-alert
-                  alert("Onboarding reset! Refresh the page to see the onboarding flow again.");
-                }}
-                className="w-full flex items-center gap-3 p-3 bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-300 dark:border-yellow-700 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/60 transition-colors"
-              >
-                <RefreshCw className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                <span className="font-medium text-yellow-900 dark:text-yellow-300">
-                  Reset Onboarding
-                </span>
-              </button>
-            </div>
+            </CardContent>
           )}
+        </Card>
 
-          {/* Sign Out */}
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <LogOut className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="font-medium text-gray-900 dark:text-white">Sign Out</span>
-          </button>
+        {/* Reset Onboarding */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Reset Onboarding</CardTitle>
+            <CardDescription>See the welcome tutorial again</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={resetOnboarding}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reset Tutorial
+            </Button>
+          </CardContent>
+        </Card>
 
-          {/* Delete Account */}
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
+        {/* Sign Out */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign Out</CardTitle>
+            <CardDescription>Sign out of your account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Delete Account */}
+        <Card className="border-destructive">
+          <CardHeader>
+            <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-red-900 dark:text-red-300">
-                  Delete Account
-                </h3>
-                <p className="text-sm text-red-700 dark:text-red-400">
-                  Permanently delete your account and all data
-                </p>
+                <CardTitle className="text-destructive">Delete Account</CardTitle>
+                <CardDescription>Permanently delete your account and all data</CardDescription>
               </div>
-              <button
+              <Button
+                variant="destructive"
                 onClick={() => setShowDeleteAccount(!showDeleteAccount)}
-                className="px-4 py-2 text-red-600 hover:text-red-700 font-medium"
               >
                 {showDeleteAccount ? "Cancel" : "Delete"}
-              </button>
+              </Button>
             </div>
+          </CardHeader>
 
-            {showDeleteAccount && (
+          {showDeleteAccount && (
+            <CardContent>
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  This action cannot be undone. This will permanently delete your account and remove
+                  all your data from our servers.
+                </AlertDescription>
+              </Alert>
+
               <form onSubmit={handleDeleteAccount} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-red-700 dark:text-red-300 mb-1">
-                    Enter your password to confirm
+                <div className="space-y-2">
+                  <label htmlFor="deletePassword" className="text-sm font-medium">
+                    Confirm with your password
                   </label>
                   <div className="relative">
-                    <input
+                    <Input
+                      id="deletePassword"
                       type={showPasswords.delete ? "text" : "password"}
                       value={deleteForm.password}
-                      onChange={(e) =>
-                        setDeleteForm((prev) => ({ ...prev, password: e.target.value }))
-                      }
+                      onChange={(e) => setDeleteForm({ ...deleteForm, password: e.target.value })}
                       required
-                      className="w-full px-3 py-2 pr-10 border border-red-300 dark:border-red-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-red-900/20 dark:text-white"
+                      className="pr-10"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() =>
-                        setShowPasswords((prev) => ({ ...prev, delete: !prev.delete }))
+                        setShowPasswords({ ...showPasswords, delete: !showPasswords.delete })
                       }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-400 hover:text-red-600"
                     >
                       {showPasswords.delete ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="h-4 w-4" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-red-700 dark:text-red-300 mb-1">
-                    Type &quot;DELETE&quot; to confirm
+                <div className="space-y-2">
+                  <label htmlFor="confirmText" className="text-sm font-medium">
+                    Type <Badge variant="destructive">DELETE</Badge> to confirm
                   </label>
-                  <input
+                  <Input
+                    id="confirmText"
                     type="text"
                     value={deleteForm.confirmText}
-                    onChange={(e) =>
-                      setDeleteForm((prev) => ({ ...prev, confirmText: e.target.value }))
-                    }
+                    onChange={(e) => setDeleteForm({ ...deleteForm, confirmText: e.target.value })}
                     required
-                    className="w-full px-3 py-2 border border-red-300 dark:border-red-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-red-900/20 dark:text-white"
-                    placeholder="DELETE"
+                    placeholder="Type DELETE to confirm"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {isSubmitting ? "Deleting Account..." : "Delete Account"}
-                </button>
+                <div className="flex gap-2">
+                  <Button type="submit" variant="destructive" disabled={isSubmitting}>
+                    {isSubmitting && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Account
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowDeleteAccount(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </form>
-            )}
-          </div>
-        </div>
+            </CardContent>
+          )}
+        </Card>
       </div>
     </div>
   );

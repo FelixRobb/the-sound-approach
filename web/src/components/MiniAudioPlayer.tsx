@@ -1,51 +1,55 @@
 "use client";
 
 import { Play, Pause, Loader2 } from "lucide-react";
+import { useState } from "react";
 
-import { useAudio } from "@/contexts/AudioContext";
-import { cn } from "@/lib/utils";
-import { MiniAudioPlayerProps } from "@/types";
+import { Button } from "./ui/button";
 
-export default function MiniAudioPlayer({ trackId, audioUri, size = 36 }: MiniAudioPlayerProps) {
-  const { isPlaying, isLoading, currentTrackId, togglePlayPause } = useAudio();
+type MiniAudioPlayerProps = {
+  trackId: string;
+  audioUri: string;
+  size?: number;
+};
 
-  const isCurrentTrack = currentTrackId === trackId;
-  const isCurrentlyPlaying = isPlaying && isCurrentTrack;
-  const isCurrentlyLoading = isLoading && isCurrentTrack;
+export default function MiniAudioPlayer({
+  trackId: _trackId,
+  audioUri: _audioUri,
+  size = 36,
+}: MiniAudioPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handlePress = async () => {
-    await togglePlayPause(audioUri, trackId);
+    // TODO: Implement audio playback logic
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsPlaying(!isPlaying);
+      setIsLoading(false);
+    }, 500);
   };
 
-  const buttonSize = size + 8;
-  const iconSize = Math.max(16, size * 0.5);
-
   return (
-    <div className="flex items-center justify-center">
-      <button
-        onClick={handlePress}
-        disabled={isCurrentlyLoading}
-        className={cn(
-          "flex items-center justify-center rounded-full transition-all duration-200",
-          "bg-blue-600 hover:bg-blue-700 disabled:opacity-50",
-          "shadow-lg hover:shadow-xl active:scale-95",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        )}
-        style={{
-          width: buttonSize,
-          height: buttonSize,
-          minWidth: buttonSize,
-          minHeight: buttonSize,
-        }}
-      >
-        {isCurrentlyLoading ? (
-          <Loader2 size={iconSize} className="text-white animate-spin" />
-        ) : isCurrentlyPlaying ? (
-          <Pause size={iconSize} className="text-white" />
-        ) : (
-          <Play size={iconSize} className="text-white ml-0.5" />
-        )}
-      </button>
-    </div>
+    <Button
+      variant="default"
+      size="icon"
+      onClick={handlePress}
+      disabled={isLoading}
+      className="rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+      style={{ width: size, height: size }}
+    >
+      {isLoading ? (
+        <Loader2 className="animate-spin" style={{ width: size * 0.5, height: size * 0.5 }} />
+      ) : isPlaying ? (
+        <Pause style={{ width: size * 0.5, height: size * 0.5 }} />
+      ) : (
+        <Play
+          style={{
+            width: size * 0.5,
+            height: size * 0.5,
+            marginLeft: size * 0.05, // Slight offset for visual centering
+          }}
+        />
+      )}
+    </Button>
   );
 }

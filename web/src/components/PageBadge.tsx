@@ -1,20 +1,17 @@
 import { Book } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { PageBadgeProps } from "@/types";
+import { Badge } from "./ui/badge";
+
+type PageBadgeProps = {
+  page: number | string;
+  className?: string;
+};
 
 export default function PageBadge({ page, className }: PageBadgeProps) {
   return (
-    <div
-      className={cn(
-        "inline-flex items-center gap-1.5 px-2 py-1",
-        "bg-gray-100 dark:bg-gray-800 rounded-md",
-        "text-xs font-medium text-gray-600 dark:text-gray-400",
-        className
-      )}
-    >
-      <Book size={12} />
-      <span>Page {page}</span>
-    </div>
+    <Badge variant="outline" className={className}>
+      <Book className="w-3 h-3 mr-1" />
+      Page {page}
+    </Badge>
   );
 }

@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowLeft, Pause, Play, Volume2, Maximize, Minimize } from "lucide-react";
+import {
+  ArrowLeft,
+  Pause,
+  Play,
+  Volume2,
+  Maximize,
+  Minimize,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
@@ -9,6 +18,11 @@ import PageBadge from "@/components/PageBadge";
 import { getBestAudioUri, getSonogramVideoUri } from "@/lib/mediaUtils";
 import { fetchRecordingById } from "@/lib/supabase";
 import { Recording } from "@/types";
+
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 export default function RecordingDetailsPage() {
   const params = useParams();
@@ -130,33 +144,31 @@ export default function RecordingDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading recording...</p>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-96">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Loading Recording</h3>
+            <p className="text-muted-foreground text-center">Fetching recording details...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error || !recording) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-600 text-2xl">⚠️</span>
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Error Loading Recording
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <button
-            onClick={handleBack}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go Back
-          </button>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-96">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Error Loading Recording</h3>
+            <p className="text-muted-foreground text-center mb-4">{error}</p>
+            <Button onClick={handleBack} variant="default">
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -165,26 +177,24 @@ export default function RecordingDetailsPage() {
   const videoUri = getSonogramVideoUri(recording);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+      <div className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleBack}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{recording.title}</h1>
+            <Button variant="ghost" size="icon" onClick={handleBack}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold text-foreground truncate">{recording.title}</h1>
               {recording.species && (
-                <button
+                <Button
+                  variant="link"
                   onClick={handleSpeciesClick}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm mt-1"
+                  className="p-0 h-auto text-sm text-left justify-start"
                 >
                   {recording.species.common_name} ({recording.species.scientific_name})
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex items-center gap-3">
@@ -196,147 +206,128 @@ export default function RecordingDetailsPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Video Player */}
         {videoUri && (
-          <div
-            ref={containerRef}
-            className={`mb-8 bg-black rounded-lg overflow-hidden ${
-              isVideoFullscreen ? "fixed inset-0 z-50" : "relative aspect-video"
-            }`}
-          >
-            <video
-              ref={videoRef}
-              src={videoUri}
-              className="w-full h-full object-contain"
-              onLoadedMetadata={handleVideoLoadedMetadata}
-              onTimeUpdate={handleVideoTimeUpdate}
-              onPlay={handleVideoPlay}
-              onPause={handleVideoPause}
-              onError={handleVideoError}
-              playsInline
-            />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Volume2 className="w-5 h-5" />
+                Sonogram Video
+              </CardTitle>
+              <CardDescription>
+                Visual representation of the sound with audio playback
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {videoError ? (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Failed to load sonogram video. Please try again later.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div ref={containerRef} className="relative bg-black rounded-lg overflow-hidden">
+                  <video
+                    ref={videoRef}
+                    src={videoUri}
+                    className="w-full h-auto"
+                    onLoadedMetadata={handleVideoLoadedMetadata}
+                    onTimeUpdate={handleVideoTimeUpdate}
+                    onPlay={handleVideoPlay}
+                    onPause={handleVideoPause}
+                    onError={handleVideoError}
+                    playsInline
+                  />
 
-            {/* Video Controls */}
-            {isVideoLoaded && !videoError && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <div className="flex items-center gap-4">
-                  {/* Play/Pause Button */}
-                  <button
-                    onClick={toggleVideoPlayPause}
-                    className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-                  >
-                    {isVideoPlaying ? (
-                      <Pause className="w-5 h-5 text-white" />
-                    ) : (
-                      <Play className="w-5 h-5 text-white ml-0.5" />
-                    )}
-                  </button>
+                  {/* Video Controls */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleVideoPlayPause}
+                        disabled={!isVideoLoaded}
+                        className="text-white hover:bg-white/20"
+                      >
+                        {isVideoPlaying ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5" />
+                        )}
+                      </Button>
 
-                  {/* Time Display */}
-                  <span className="text-white text-sm font-medium">
-                    {formatTime(videoPosition)} / {formatTime(videoDuration)}
-                  </span>
+                      <div className="flex-1">
+                        {isVideoLoaded && (
+                          <input
+                            type="range"
+                            min="0"
+                            max={videoDuration}
+                            value={videoPosition}
+                            onChange={handleVideoSeek}
+                            className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                          />
+                        )}
+                      </div>
 
-                  {/* Progress Bar */}
-                  <div className="flex-1 mx-4">
-                    <input
-                      type="range"
-                      min={0}
-                      max={videoDuration}
-                      value={videoPosition}
-                      onChange={handleVideoSeek}
-                      className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
-                    />
+                      <span className="text-white text-sm font-mono">
+                        {formatTime(videoPosition)} / {formatTime(videoDuration)}
+                      </span>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleFullscreen}
+                        className="text-white hover:bg-white/20"
+                      >
+                        {isVideoFullscreen ? (
+                          <Minimize className="w-5 h-5" />
+                        ) : (
+                          <Maximize className="w-5 h-5" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
-
-                  {/* Volume Icon */}
-                  <Volume2 className="w-5 h-5 text-white" />
-
-                  {/* Fullscreen Button */}
-                  <button
-                    onClick={toggleFullscreen}
-                    className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
-                  >
-                    {isVideoFullscreen ? (
-                      <Minimize className="w-5 h-5 text-white" />
-                    ) : (
-                      <Maximize className="w-5 h-5 text-white" />
-                    )}
-                  </button>
                 </div>
-              </div>
-            )}
-
-            {/* Video Error */}
-            {videoError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                <div className="text-center text-white">
-                  <p className="mb-2">Unable to load video</p>
-                  <p className="text-sm opacity-75">The sonogram video could not be loaded</p>
-                </div>
-              </div>
-            )}
-
-            {/* Loading State */}
-            {!isVideoLoaded && !videoError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-          </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
-        {/* Description Card */}
-        {recording.caption && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Description
-            </h2>
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{recording.caption}</p>
-          </div>
-        )}
+        {/* Recording Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recording Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recording.species && (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">{recording.species.common_name}</Badge>
+                <Badge variant="outline">{recording.species.scientific_name}</Badge>
+              </div>
+            )}
 
-        {/* Audio Player Card */}
-        {audioUri && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Audio Recording
-            </h2>
-            <div className="flex items-center gap-4">
-              <MiniAudioPlayer trackId={recording.id} audioUri={audioUri} size={48} />
+            {recording.caption && (
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">{recording.title}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  High-quality audio recording
-                </p>
+                <h4 className="font-medium text-foreground mb-2">Description</h4>
+                <p className="text-muted-foreground leading-relaxed">{recording.caption}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-foreground">Book Page:</span>
+                <span className="ml-2 text-muted-foreground">{recording.book_page_number}</span>
+              </div>
+              <div>
+                <span className="font-medium text-foreground">Recording ID:</span>
+                <span className="ml-2 text-muted-foreground font-mono">{recording.id}</span>
               </div>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Custom styles for video slider */}
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          border: 2px solid #ffffff;
-        }
-
-        .slider::-moz-range-thumb {
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          border: 2px solid #ffffff;
-        }
-      `}</style>
     </div>
   );
 }

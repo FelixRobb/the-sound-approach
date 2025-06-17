@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Music, Leaf, Clock, Loader2 } from "lucide-react";
+import { Search, Music, Leaf, Clock, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
@@ -11,6 +11,11 @@ import { Recording, Species, SearchFilter } from "@/types";
 
 import MiniAudioPlayer from "./MiniAudioPlayer";
 import PageBadge from "./PageBadge";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -124,68 +129,48 @@ export default function SearchPage() {
   const totalResults = filteredRecordings.length + filteredSpecies.length;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-background">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Search</h1>
-          <p className="text-gray-600 dark:text-gray-400">Find recordings and species</p>
+      <div className="p-6 space-y-6 border-b border-border bg-card/50">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Search</h1>
+          <p className="text-muted-foreground">Find recordings and species</p>
         </div>
 
         {/* Search Input */}
-        <div className="relative mb-4">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
+        <div className="relative">
+          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
             placeholder="Search species, recordings, or pages..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-lg"
+            className="pl-10 pr-10 text-lg h-12"
           />
           {searchQuery && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
             >
-              ×
-            </button>
+              <X className="w-4 h-4" />
+            </Button>
           )}
         </div>
 
         {/* Filter Tabs */}
         {searchQuery && (
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveFilter("all")}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeFilter === "all"
-                  ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setActiveFilter("species")}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeFilter === "species"
-                  ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Species
-            </button>
-            <button
-              onClick={() => setActiveFilter("recordings")}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeFilter === "recordings"
-                  ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              Recordings
-            </button>
-          </div>
+          <Tabs
+            value={activeFilter}
+            onValueChange={(value) => setActiveFilter(value as SearchFilter)}
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="species">Species</TabsTrigger>
+              <TabsTrigger value="recordings">Recordings</TabsTrigger>
+            </TabsList>
+          </Tabs>
         )}
       </div>
 
@@ -194,178 +179,212 @@ export default function SearchPage() {
         {searchQuery ? (
           <>
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                  <p className="text-gray-600 dark:text-gray-400">Searching...</p>
+              <Card className="p-12">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+                  <h3 className="text-lg font-semibold mb-2">Searching...</h3>
+                  <p className="text-muted-foreground">Finding relevant content...</p>
                 </div>
-              </div>
-            ) : totalResults === 0 ? (
-              <div className="text-center py-12">
-                <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No Results Found
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  We couldn&apos;t find any results for &quot;{searchQuery}&quot;
-                </p>
-              </div>
-            ) : (
+              </Card>
+            ) : totalResults > 0 ? (
               <div className="space-y-6">
-                {/* Results count */}
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Found {totalResults} {totalResults === 1 ? "result" : "results"}
-                </p>
+                {/* Results Summary */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Found {totalResults} result{totalResults !== 1 ? "s" : ""} for &quot;
+                    {searchQuery}&quot;
+                  </p>
+                </div>
 
                 {/* Species Results */}
                 {filteredSpecies.length > 0 && (
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                       <Leaf className="w-5 h-5" />
-                      Species
+                      Species ({filteredSpecies.length})
                     </h2>
-                    <div className="space-y-3">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {filteredSpecies.map((species) => (
-                        <div
+                        <Card
                           key={species.id}
-                          className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                          className="hover:shadow-lg transition-all duration-200 cursor-pointer group"
                           onClick={() => handleSpeciesClick(species.id)}
                         >
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {species.common_name}
-                          </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                            {species.scientific_name}
-                          </p>
-                          <div className="mt-2">
-                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-xs rounded-md">
-                              <Leaf className="w-3 h-3" />
-                              Species
-                            </span>
-                          </div>
-                        </div>
+                          <CardHeader>
+                            <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                              {species.common_name}
+                            </CardTitle>
+                            <CardDescription className="italic">
+                              {species.scientific_name}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-center text-sm text-muted-foreground">
+                              <Music className="w-4 h-4 mr-2" />
+                              View recordings
+                            </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* Recordings Results */}
+                {/* Recording Results */}
                 {filteredRecordings.length > 0 && (
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                       <Music className="w-5 h-5" />
-                      Recordings
+                      Recordings ({filteredRecordings.length})
                     </h2>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {filteredRecordings.map((recording) => {
                         const audioUri = getBestAudioUri(recording);
 
                         return (
-                          <div
+                          <Card
                             key={recording.id}
-                            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                            className="hover:shadow-lg transition-all duration-200 cursor-pointer group"
                             onClick={() => handleRecordingClick(recording.id)}
                           >
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                                  {recording.title}
-                                </h3>
-                                {recording.species && (
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                    {recording.species.scientific_name}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <PageBadge page={recording.book_page_number} />
-                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs rounded-md">
-                                  <Music className="w-3 h-3" />
-                                  Recording
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex items-start gap-4">
-                              <div className="flex-1 min-w-0">
-                                {recording.species && (
-                                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">
-                                    {recording.species.common_name}
-                                  </p>
-                                )}
-                                {recording.caption && (
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                    {recording.caption}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Audio Player */}
-                              {audioUri && (
-                                <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                                  <MiniAudioPlayer
-                                    trackId={recording.id}
-                                    audioUri={audioUri}
-                                    size={38}
-                                  />
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                                    {recording.title}
+                                  </CardTitle>
+                                  {recording.species && (
+                                    <CardDescription className="italic mt-1">
+                                      {recording.species.scientific_name}
+                                    </CardDescription>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                          </div>
+                                <div className="flex items-center space-x-2">
+                                  <PageBadge page={recording.book_page_number} />
+                                </div>
+                              </div>
+                            </CardHeader>
+
+                            <CardContent className="pt-0">
+                              <div className="flex items-start gap-4">
+                                <div className="flex-1 min-w-0">
+                                  {recording.species && (
+                                    <Badge variant="secondary" className="mb-2">
+                                      {recording.species.common_name}
+                                    </Badge>
+                                  )}
+                                  {recording.caption && (
+                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                      {recording.caption}
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* Audio Player */}
+                                {audioUri && (
+                                  <div
+                                    className="flex-shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MiniAudioPlayer
+                                      trackId={recording.id}
+                                      audioUri={audioUri}
+                                      size={40}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
                         );
                       })}
                     </div>
                   </div>
                 )}
               </div>
+            ) : (
+              <Card className="p-12">
+                <div className="text-center">
+                  <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No results found</h3>
+                  <p className="text-muted-foreground">
+                    Try adjusting your search terms or browse by category instead.
+                  </p>
+                </div>
+              </Card>
             )}
           </>
         ) : (
-          /* Recent Searches */
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Recent Searches
-              </h2>
-              {recentSearches.length > 0 && (
-                <button
-                  onClick={clearRecentSearches}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Clear All
-                </button>
-              )}
-            </div>
-
-            {recentSearches.length > 0 ? (
-              <div className="space-y-3">
-                {recentSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleRecentSearchClick(search)}
-                    className="w-full flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow text-left"
-                  >
-                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <Clock className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <span className="flex-1 text-gray-900 dark:text-white">{search}</span>
-                    <Search className="w-4 h-4 text-gray-400" />
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No Recent Searches
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Your recent searches will appear here
-                </p>
-              </div>
+          <div className="space-y-6">
+            {/* Recent Searches */}
+            {recentSearches.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Clock className="w-5 h-5" />
+                      Recent Searches
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" onClick={clearRecentSearches}>
+                      Clear all
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {recentSearches.map((search, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRecentSearchClick(search)}
+                        className="h-8"
+                      >
+                        {search}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
+
+            {/* Search Tips */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Search Tips</CardTitle>
+                <CardDescription>Get the most out of your search</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Species names</p>
+                    <p className="text-sm text-muted-foreground">
+                      Search by common or scientific names (e.g., &quot;Robin&quot; or &quot;Turdus
+                      migratorius&quot;)
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Page numbers</p>
+                    <p className="text-sm text-muted-foreground">
+                      Find recordings by book page number (e.g., &quot;42&quot;)
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Keywords</p>
+                    <p className="text-sm text-muted-foreground">
+                      Search recording titles and descriptions
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
