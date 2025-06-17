@@ -1,7 +1,7 @@
-import { Recording } from "@/types";
 import { ENV } from "@/config/env";
+import { Recording } from "@/types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 // Get the best available audio URI for a recording
 export const getBestAudioUri = (recording: Recording): string | null => {

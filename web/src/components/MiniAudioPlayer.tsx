@@ -1,9 +1,10 @@
 "use client";
 
 import { Play, Pause, Loader2 } from "lucide-react";
+
 import { useAudio } from "@/contexts/AudioContext";
-import { MiniAudioPlayerProps } from "@/types";
 import { cn } from "@/lib/utils";
+import { MiniAudioPlayerProps } from "@/types";
 
 export default function MiniAudioPlayer({ trackId, audioUri, size = 36 }: MiniAudioPlayerProps) {
   const { isPlaying, isLoading, currentTrackId, togglePlayPause } = useAudio();

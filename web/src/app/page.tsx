@@ -1,10 +1,11 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
-import WelcomePage from "@/components/WelcomePage";
-import OnboardingPage from "@/components/OnboardingPage";
-import DashboardPage from "@/components/DashboardPage";
 import { Loader2 } from "lucide-react";
+
+import DashboardPage from "@/components/DashboardPage";
+import OnboardingPage from "@/components/OnboardingPage";
+import WelcomePage from "@/components/WelcomePage";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
   const { state } = useAuth();

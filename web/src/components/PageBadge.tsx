@@ -1,6 +1,7 @@
 import { Book } from "lucide-react";
-import { PageBadgeProps } from "@/types";
+
 import { cn } from "@/lib/utils";
+import { PageBadgeProps } from "@/types";
 
 export default function PageBadge({ page, className }: PageBadgeProps) {
   return (

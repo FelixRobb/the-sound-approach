@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Music, Search, User, Menu, X } from "lucide-react";
+import { useState } from "react";
+
+import ProfilePage from "./ProfilePage";
 import RecordingsPage from "./RecordingsPage";
 import SearchPage from "./SearchPage";
-import ProfilePage from "./ProfilePage";
 
 type TabType = "recordings" | "search" | "profile";
 

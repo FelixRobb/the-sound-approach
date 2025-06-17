@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useRef, ReactNode, useCallback } from "react";
-import { createClient } from "@/lib/supabase";
+
 import { AudioPlayerState } from "@/types";
 
 type AudioContextType = {
@@ -105,7 +105,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           currentUriRef.current = null;
         });
 
-        audio.addEventListener("error", (e) => {
+        audio.addEventListener("error", () => {
           const error = "Failed to load audio";
           updateState({
             error,

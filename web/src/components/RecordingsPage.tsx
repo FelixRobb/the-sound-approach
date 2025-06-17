@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Book, Search, Loader2, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Book, Search, Filter, Loader2, AlertCircle } from "lucide-react";
-import { fetchRecordingsByBookOrder, fetchSpecies } from "@/lib/supabase";
-import { Recording, Species } from "@/types";
+import { useState, useEffect } from "react";
+
 import { getBestAudioUri } from "@/lib/mediaUtils";
+import { fetchRecordingsByBookOrder, fetchSpecies } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import { Recording, Species } from "@/types";
+
 import MiniAudioPlayer from "./MiniAudioPlayer";
 import PageBadge from "./PageBadge";
-import { cn } from "@/lib/utils";
 
 type TabType = "recordings" | "species";
 type SortBy = "page" | "title" | "species";
@@ -63,9 +65,9 @@ export default function RecordingsPage() {
       const query = searchQuery.toLowerCase();
       return (
         recording.title.toLowerCase().includes(query) ||
-        recording.species?.common_name.toLowerCase().includes(query) ||
-        recording.species?.scientific_name.toLowerCase().includes(query) ||
-        recording.caption.toLowerCase().includes(query) ||
+        (recording.species?.common_name.toLowerCase().includes(query) ??
+          recording.species?.scientific_name.toLowerCase().includes(query) ??
+          recording.caption.toLowerCase().includes(query)) ||
         recording.book_page_number.toString().includes(query)
       );
     })
@@ -77,7 +79,7 @@ export default function RecordingsPage() {
           comparison = a.title.localeCompare(b.title);
           break;
         case "species":
-          comparison = (a.species?.common_name || "").localeCompare(b.species?.common_name || "");
+          comparison = (a.species?.common_name ?? "").localeCompare(b.species?.common_name ?? "");
           break;
         case "page":
         default:

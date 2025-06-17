@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Play, Pause } from "lucide-react";
-import { fetchRecordingsBySpecies } from "@/lib/supabase";
-import { getBestAudioUri } from "@/lib/mediaUtils";
-import PageBadge from "@/components/PageBadge";
+import { useState, useEffect } from "react";
+
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
+import PageBadge from "@/components/PageBadge";
+import { getBestAudioUri } from "@/lib/mediaUtils";
+import { fetchRecordingsBySpecies } from "@/lib/supabase";
 import { Recording } from "@/types";
 
 export default function SpeciesDetailsPage() {
@@ -62,7 +63,7 @@ export default function SpeciesDetailsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Loading species recordings...</p>
         </div>
       </div>
@@ -168,7 +169,7 @@ export default function SpeciesDetailsPage() {
       {/* Content */}
       <div className="max-w-4xl mx-auto p-6">
         <div className="space-y-4">
-          {recordings.map((recording, index) => {
+          {recordings.map((recording) => {
             const audioUri = getBestAudioUri(recording);
 
             return (

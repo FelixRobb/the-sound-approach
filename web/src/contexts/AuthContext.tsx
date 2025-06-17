@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
+
 import { createClient } from "@/lib/supabase";
 import { AuthState } from "@/types";
 
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const hasCompleted = await checkOnboardingStatus();
           setState((prev) => ({
             ...prev,
-            user: { id: session.user.id, email: session.user.email! },
+            user: { id: session.user.id, email: session.user.email ?? "" },
             hasCompletedOnboarding: hasCompleted,
             isLoading: false,
           }));
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const hasCompleted = await checkOnboardingStatus();
         setState((prev) => ({
           ...prev,
-          user: { id: session.user.id, email: session.user.email! },
+          user: { id: session.user.id, email: session.user.email ?? "" },
           hasCompletedOnboarding: hasCompleted,
           error: null,
           isLoading: false,
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const checkOnboardingStatus = async (userId?: string): Promise<boolean> => {
+  const checkOnboardingStatus = async (): Promise<boolean> => {
     // For web, use localStorage to track onboarding completion
     if (typeof window === "undefined") return false;
     return localStorage.getItem("onboarding_completed") === "true";
@@ -199,59 +199,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const changePassword = async (currentPassword: string, newPassword: string) => {
     if (!state.user) throw new Error("No user logged in");
 
-    try {
-      // First verify current password by attempting to sign in
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: state.user.email,
-        password: currentPassword,
-      });
+    // First verify current password by attempting to sign in
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: state.user.email,
+      password: currentPassword,
+    });
 
-      if (verifyError) throw new Error("Current password is incorrect");
+    if (verifyError) throw new Error("Current password is incorrect");
 
-      // Update password
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
+    // Update password
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
 
-      if (error) throw error;
-    } catch (error) {
-      throw error;
-    }
+    if (error) throw error;
   };
 
   const deleteAccount = async (password: string) => {
     if (!state.user) throw new Error("No user logged in");
 
-    try {
-      // Verify password first
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: state.user.email,
-        password,
-      });
+    // Verify password first
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: state.user.email,
+      password,
+    });
 
-      if (verifyError) throw new Error("Password is incorrect");
+    if (verifyError) throw new Error("Password is incorrect");
 
-      // Call delete user function (this would need to be implemented as a Supabase function)
-      const { error } = await supabase.rpc("delete_user_account");
+    // Call delete user function (this would need to be implemented as a Supabase function)
+    const { error } = await supabase.rpc("delete_user_account");
 
-      if (error) throw error;
-    } catch (error) {
-      throw error;
-    }
+    if (error) throw error;
   };
 
   const completeOnboarding = async () => {
-    try {
-      // Store onboarding completion in localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("onboarding_completed", "true");
-      }
-
-      setState((prev) => ({ ...prev, hasCompletedOnboarding: true }));
-    } catch (error) {
-      console.error("Error completing onboarding:", error);
-      throw error;
+    // Store onboarding completion in localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("onboarding_completed", "true");
     }
+
+    setState((prev) => ({ ...prev, hasCompletedOnboarding: true }));
   };
 
   const clearError = () => {

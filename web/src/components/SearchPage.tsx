@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Search, Music, Leaf, Clock, Loader2 } from "lucide-react";
-import { searchRecordings } from "@/lib/supabase";
-import { Recording, Species, SearchFilter } from "@/types";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+
 import { getBestAudioUri } from "@/lib/mediaUtils";
+import { searchRecordings } from "@/lib/supabase";
+import { debounce } from "@/lib/utils";
+import { Recording, Species, SearchFilter } from "@/types";
+
 import MiniAudioPlayer from "./MiniAudioPlayer";
 import PageBadge from "./PageBadge";
-import { debounce } from "@/lib/utils";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -29,16 +31,6 @@ export default function SearchPage() {
     debouncedSearch(searchQuery);
   }, [searchQuery]);
 
-  // Perform search when debounced query changes
-  useEffect(() => {
-    if (debouncedQuery.trim()) {
-      performSearch(debouncedQuery);
-    } else {
-      setRecordings([]);
-      setSpecies([]);
-    }
-  }, [debouncedQuery]);
-
   // Load recent searches from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("recentSearches");
@@ -51,37 +43,53 @@ export default function SearchPage() {
     }
   }, []);
 
-  const performSearch = async (query: string) => {
-    setIsLoading(true);
+  const saveRecentSearch = useCallback(
+    (query: string) => {
+      const trimmedQuery = query.trim();
+      if (!trimmedQuery) return;
 
-    try {
-      const results = await searchRecordings(query);
-      setRecordings(results.recordings);
-      setSpecies(results.species);
+      const updated = [trimmedQuery, ...recentSearches.filter((s) => s !== trimmedQuery)].slice(
+        0,
+        10
+      );
 
-      // Save to recent searches
-      saveRecentSearch(query);
-    } catch (error) {
-      console.error("Search error:", error);
+      setRecentSearches(updated);
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
+    },
+    [recentSearches]
+  );
+
+  const performSearch = useCallback(
+    async (query: string) => {
+      setIsLoading(true);
+
+      try {
+        const results = await searchRecordings(query);
+        setRecordings(results.recordings);
+        setSpecies(results.species);
+
+        // Save to recent searches
+        saveRecentSearch(query);
+      } catch (error) {
+        console.error("Search error:", error);
+        setRecordings([]);
+        setSpecies([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [saveRecentSearch]
+  );
+
+  // Perform search when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
+      performSearch(debouncedQuery);
+    } else {
       setRecordings([]);
       setSpecies([]);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const saveRecentSearch = (query: string) => {
-    const trimmedQuery = query.trim();
-    if (!trimmedQuery) return;
-
-    const updated = [trimmedQuery, ...recentSearches.filter((s) => s !== trimmedQuery)].slice(
-      0,
-      10
-    );
-
-    setRecentSearches(updated);
-    localStorage.setItem("recentSearches", JSON.stringify(updated));
-  };
+  }, [debouncedQuery, performSearch]);
 
   const clearRecentSearches = () => {
     setRecentSearches([]);
@@ -199,7 +207,7 @@ export default function SearchPage() {
                   No Results Found
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  We couldn't find any results for "{searchQuery}"
+                  We couldn&apos;t find any results for &quot;{searchQuery}&quot;
                 </p>
               </div>
             ) : (

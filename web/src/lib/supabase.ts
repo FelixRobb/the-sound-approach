@@ -1,14 +1,15 @@
 import { createBrowserClient, createServerClient } from "@supabase/ssr";
-import { NextRequest, NextResponse } from "next/server";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+import { NextRequest } from "next/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 // Client-side Supabase client
 export const createClient = () => createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 // Server-side Supabase client for Server Components
-export const createServerComponentClient = (cookies: () => any) =>
+export const createServerComponentClient = (cookies: () => ReadonlyRequestCookies) =>
   createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
@@ -18,16 +19,16 @@ export const createServerComponentClient = (cookies: () => any) =>
   });
 
 // Server-side Supabase client for Route Handlers
-export const createRouteHandlerClient = (cookies: () => any) =>
+export const createRouteHandlerClient = (cookies: () => ReadonlyRequestCookies) =>
   createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookies().get(name)?.value;
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         cookies().set({ name, value, ...options });
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: Record<string, unknown>) {
         cookies().set({ name, value: "", ...options });
       },
     },
@@ -40,14 +41,14 @@ export const createMiddlewareClient = (request: NextRequest) =>
       get(name: string) {
         return request.cookies.get(name)?.value;
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         request.cookies.set({
           name,
           value,
           ...options,
         });
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: Record<string, unknown>) {
         request.cookies.set({
           name,
           value: "",
@@ -207,7 +208,7 @@ export const searchRecordings = async (query: string) => {
     }
 
     // Search for book page numbers if the query is numeric
-    let pageResults: any[] = [];
+    let pageResults: unknown[] = [];
     if (/^\d+$/.test(sanitizedQuery)) {
       const { data: pageData, error: pageError } = await supabase
         .from("recordings")

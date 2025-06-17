@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   User,
   Mail,
@@ -13,6 +12,8 @@ import {
   CheckCircle,
   RefreshCw,
 } from "lucide-react";
+import { useState } from "react";
+
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
@@ -159,7 +160,7 @@ export default function ProfilePage() {
                   Email Address
                 </p>
                 <p className="text-gray-900 dark:text-white">
-                  {state.user?.email || "Not available"}
+                  {state.user?.email ?? "Not available"}
                 </p>
               </div>
             </div>
@@ -308,6 +309,7 @@ export default function ProfilePage() {
               <button
                 onClick={() => {
                   resetOnboarding();
+                  // eslint-disable-next-line no-alert
                   alert("Onboarding reset! Refresh the page to see the onboarding flow again.");
                 }}
                 className="w-full flex items-center gap-3 p-3 bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-300 dark:border-yellow-700 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/60 transition-colors"
@@ -382,7 +384,7 @@ export default function ProfilePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-red-700 dark:text-red-300 mb-1">
-                    Type "DELETE" to confirm
+                    Type &quot;DELETE&quot; to confirm
                   </label>
                   <input
                     type="text"

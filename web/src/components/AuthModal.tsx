@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { X, LogIn, UserPlus, Loader2, AlertCircle } from "lucide-react";
+import { useState } from "react";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +38,6 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
       setEmail("");
       setPassword("");
       setBookCode("");
-    } catch (error) {
-      // Error is handled by the auth context
     } finally {
       setIsSubmitting(false);
     }
@@ -137,7 +136,7 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
                   placeholder="Enter your book code"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Found in your copy of "The Sound Approach to Birding"
+                  Found in your copy of &quot;The Sound Approach to Birding&quot;
                 </p>
               </div>
             )}

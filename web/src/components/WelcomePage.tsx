@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { LogIn, UserPlus, Disc } from "lucide-react";
+import { useState } from "react";
+
 import AuthModal from "./AuthModal";
 
 export default function WelcomePage() {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Music, Search, Download, Headphones, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+
 import { useAuth } from "@/contexts/AuthContext";
 
 type OnboardingStep = {
@@ -87,7 +88,7 @@ export default function OnboardingPage() {
           Welcome to The Sound Approach
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Let's get you started with your birding journey
+          Let&apos;s get you started with your birding journey
         </p>
       </div>
 
