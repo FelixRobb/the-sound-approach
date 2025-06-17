@@ -127,3 +127,25 @@ Required environment variables:
 - cursor 20€ per month, or 16€ per month paid yearly
 - expo based on usage. no idea how much, depends on what is used ok
 - email smtp??? needed for auth. resend is 20 month forever. but sound approach probably already has email services that could be used
+
+## Mobile App
+
+- Located in the root directory
+- Built with React Native (Expo)
+- Uses Supabase for backend/auth
+
+## Web Companion App
+
+- Located in `the-sound-approach-web/`
+- Built with Next.js, Tailwind CSS, shadcn/ui
+- Uses Supabase for backend/auth (same as mobile app)
+- No offline/downloads, but features recordings and species data
+
+## Shared Code
+
+- If needed, shared types or utilities can be placed in a new `shared/` directory at the root.
+- Each project manages its own dependencies and configuration.
+
+---
+
+For setup instructions, see the respective README in each project folder.
