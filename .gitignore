@@ -33,3 +33,4 @@ npm-debug.*
 /mp3s
 /package-lock.json
 /yarn.lock
+/the-sound-approach-web/.next
