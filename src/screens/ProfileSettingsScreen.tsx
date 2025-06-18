@@ -523,7 +523,6 @@ const ProfileSettingsScreen = () => {
               onPress={() =>
                 navigation.navigate("MainTabs", {
                   screen: "Downloads",
-                  params: { screen: "DownloadsList" },
                 })
               }
             >

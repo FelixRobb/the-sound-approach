@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { getFocusedRouteNameFromRoute, NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
@@ -209,10 +209,6 @@ const AnimatedTabLabel: React.FC<AnimatedTabLabelProps> = ({ focused, children, 
 const AuthStack = createNativeStackNavigator();
 const MainStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-const RecordingsStack = createNativeStackNavigator();
-const SearchStack = createNativeStackNavigator();
-const DownloadsStack = createNativeStackNavigator();
-const ProfileStack = createNativeStackNavigator();
 
 // Auth navigator
 const AuthNavigator: React.FC = () => {
@@ -250,85 +246,6 @@ const OnboardingNavigator: React.FC = () => {
   );
 };
 
-// Recordings stack navigator
-const RecordingsNavigator: React.FC = () => {
-  return (
-    <RecordingsStack.Navigator
-      screenOptions={{
-        headerShown: false,
-        animation: "fade",
-        gestureEnabled: true,
-        gestureDirection: "horizontal",
-        presentation: "card",
-        animationTypeForReplace: "push",
-      }}
-    >
-      <RecordingsStack.Screen name="RecordingsList" component={RecordingsListScreen} />
-      <RecordingsStack.Screen name="RecordingDetails" component={RecordingDetailsScreen} />
-      <RecordingsStack.Screen name="SpeciesDetails" component={SpeciesDetailsScreen} />
-    </RecordingsStack.Navigator>
-  );
-};
-
-// Search stack navigator
-const SearchNavigator: React.FC = () => {
-  return (
-    <SearchStack.Navigator
-      screenOptions={{
-        headerShown: false,
-        animation: "fade",
-        gestureEnabled: true,
-        gestureDirection: "horizontal",
-        presentation: "card",
-        animationTypeForReplace: "push",
-      }}
-    >
-      <SearchStack.Screen name="SearchMain" component={SearchScreen} />
-      <SearchStack.Screen name="RecordingDetails" component={RecordingDetailsScreen} />
-      <SearchStack.Screen name="SpeciesDetails" component={SpeciesDetailsScreen} />
-    </SearchStack.Navigator>
-  );
-};
-
-// Downloads stack navigator
-const DownloadsNavigator: React.FC = () => {
-  return (
-    <DownloadsStack.Navigator
-      screenOptions={{
-        headerShown: false,
-        animation: "fade",
-        gestureEnabled: true,
-        gestureDirection: "horizontal",
-        presentation: "card",
-        animationTypeForReplace: "push",
-      }}
-    >
-      <DownloadsStack.Screen name="DownloadsList" component={DownloadsScreen} />
-      <DownloadsStack.Screen name="RecordingDetails" component={RecordingDetailsScreen} />
-      <DownloadsStack.Screen name="SpeciesDetails" component={SpeciesDetailsScreen} />
-    </DownloadsStack.Navigator>
-  );
-};
-
-// Profile stack navigator
-const ProfileNavigator: React.FC = () => {
-  return (
-    <ProfileStack.Navigator
-      screenOptions={{
-        headerShown: false,
-        animation: "fade",
-        gestureEnabled: true,
-        gestureDirection: "horizontal",
-        presentation: "card",
-        animationTypeForReplace: "push",
-      }}
-    >
-      <ProfileStack.Screen name="ProfileMain" component={ProfileSettingsScreen} />
-      <DownloadsStack.Screen name="DownloadsList" component={DownloadsScreen} />
-    </ProfileStack.Navigator>
-  );
-};
-
 // Simple Main tab navigator with custom animations
 const MainTabNavigator: React.FC = () => {
   const { theme } = useThemedStyles();
@@ -360,63 +277,48 @@ const MainTabNavigator: React.FC = () => {
   return (
     <View style={styles.container}>
       <Tab.Navigator
-        screenOptions={({ route }) => {
-          const routeName = getFocusedRouteNameFromRoute(route);
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color }) => {
+            let iconName: keyof typeof Ionicons.glyphMap = "ellipse";
 
-          return {
-            tabBarIcon: ({ focused, color }) => {
-              let iconName: keyof typeof Ionicons.glyphMap = "ellipse";
+            switch (route.name) {
+              case "Recordings":
+                iconName = focused ? "musical-notes" : "musical-notes-outline";
+                break;
+              case "Search":
+                iconName = focused ? "search" : "search-outline";
+                break;
+              case "Downloads":
+                iconName = focused ? "download" : "download-outline";
+                break;
+              case "Profile":
+                iconName = focused ? "person" : "person-outline";
+                break;
+            }
 
-              switch (route.name) {
-                case "Recordings":
-                  iconName = focused ? "musical-notes" : "musical-notes-outline";
-                  break;
-                case "Search":
-                  iconName = focused ? "search" : "search-outline";
-                  break;
-                case "Downloads":
-                  iconName = focused ? "download" : "download-outline";
-                  break;
-                case "Profile":
-                  iconName = focused ? "person" : "person-outline";
-                  break;
-              }
-
-              return (
-                <AnimatedTabIcon
-                  focused={focused}
-                  iconName={iconName}
-                  color={color}
-                  theme={theme}
-                />
-              );
-            },
-            animation: "shift",
-            tabBarLabel: ({ focused, children }) => (
-              <AnimatedTabLabel focused={focused} theme={theme}>
-                {children}
-              </AnimatedTabLabel>
-            ),
-            tabBarButton: (props) => <AnimatedTabButton {...props} />,
-            animationDuration: 300,
-            headerShown: false,
-            tabBarHideOnKeyboard: true,
-            tabBarActiveTintColor: theme.colors.primary,
-            tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-            tabBarStyle: {
-              ...styles.tabBar,
-              display:
-                routeName === "RecordingDetails" || routeName === "SpeciesDetails"
-                  ? "none"
-                  : "flex",
-            },
-          };
-        }}
+            return (
+              <AnimatedTabIcon focused={focused} iconName={iconName} color={color} theme={theme} />
+            );
+          },
+          animation: "shift",
+          tabBarLabel: ({ focused, children }) => (
+            <AnimatedTabLabel focused={focused} theme={theme}>
+              {children}
+            </AnimatedTabLabel>
+          ),
+          tabBarButton: (props) => <AnimatedTabButton {...props} />,
+          animationDuration: 300,
+          headerShown: false,
+          tabBarHideOnKeyboard: true,
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+          tabBarStyle: styles.tabBar,
+        })}
       >
-        <Tab.Screen name="Recordings" component={RecordingsNavigator} />
-        <Tab.Screen name="Search" component={SearchNavigator} />
-        <Tab.Screen name="Downloads" component={DownloadsNavigator} />
-        <Tab.Screen name="Profile" component={ProfileNavigator} />
+        <Tab.Screen name="Recordings" component={RecordingsListScreen} />
+        <Tab.Screen name="Search" component={SearchScreen} />
+        <Tab.Screen name="Downloads" component={DownloadsScreen} />
+        <Tab.Screen name="Profile" component={ProfileSettingsScreen} />
       </Tab.Navigator>
     </View>
   );
@@ -443,6 +345,18 @@ const MainNavigator: React.FC = () => {
         }}
       >
         <MainStack.Screen name="MainTabs" component={MainTabNavigator} />
+        {/* Shared detail screens – mounted once for the whole app */}
+        <MainStack.Screen name="RecordingDetails" component={RecordingDetailsScreen} />
+        <MainStack.Screen name="SpeciesDetails" component={SpeciesDetailsScreen} />
+        <MainStack.Screen
+          name="DownloadsManager"
+          component={DownloadsScreen}
+          options={{
+            presentation: "card",
+            gestureEnabled: true,
+            animation: "slide_from_right",
+          }}
+        />
         <MainStack.Screen
           name="DeleteAccount"
           component={DeleteAccountScreen}
