@@ -1,7 +1,8 @@
 "use client";
 
 import { Play, Pause, Loader2 } from "lucide-react";
-import { useState } from "react";
+
+import { useAudio } from "@/contexts/AudioContext";
 
 import { Button } from "./ui/button";
 
@@ -11,21 +12,15 @@ type MiniAudioPlayerProps = {
   size?: number;
 };
 
-export default function MiniAudioPlayer({
-  trackId: _trackId,
-  audioUri: _audioUri,
-  size = 36,
-}: MiniAudioPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+export default function MiniAudioPlayer({ trackId, audioUri, size = 36 }: MiniAudioPlayerProps) {
+  const { isPlaying, isLoading, currentTrackId, togglePlayPause } = useAudio();
+
+  const isCurrentTrack = currentTrackId === trackId;
+  const isCurrentlyPlaying = isCurrentTrack && isPlaying;
+  const isCurrentlyLoading = isCurrentTrack && isLoading;
 
   const handlePress = async () => {
-    // TODO: Implement audio playback logic
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsPlaying(!isPlaying);
-      setIsLoading(false);
-    }, 500);
+    await togglePlayPause(audioUri, trackId);
   };
 
   return (
@@ -33,13 +28,13 @@ export default function MiniAudioPlayer({
       variant="default"
       size="icon"
       onClick={handlePress}
-      disabled={isLoading}
+      disabled={isCurrentlyLoading}
       className="rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
       style={{ width: size, height: size }}
     >
-      {isLoading ? (
+      {isCurrentlyLoading ? (
         <Loader2 className="animate-spin" style={{ width: size * 0.5, height: size * 0.5 }} />
-      ) : isPlaying ? (
+      ) : isCurrentlyPlaying ? (
         <Pause style={{ width: size * 0.5, height: size * 0.5 }} />
       ) : (
         <Play

@@ -4,7 +4,6 @@ import { Loader2 } from "lucide-react";
 
 import DashboardPage from "@/components/DashboardPage";
 import OnboardingPage from "@/components/OnboardingPage";
-import WelcomePage from "@/components/WelcomePage";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
@@ -21,10 +20,8 @@ export default function HomePage() {
     );
   }
 
-  if (!state.user) {
-    return <WelcomePage />;
-  }
-
+  // At this point, middleware ensures user is authenticated
+  // Show onboarding if not completed, otherwise show dashboard
   if (!state.hasCompletedOnboarding) {
     return <OnboardingPage />;
   }

@@ -120,7 +120,7 @@ const ProfileSettingsScreen = () => {
       backgroundColor: theme.colors.primary,
       borderColor: theme.colors.surface,
       borderRadius: 50,
-      borderWidth: 4,
+      borderWidth: 2,
       elevation: 16,
       height: 100,
       justifyContent: "center",

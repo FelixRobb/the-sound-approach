@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 
 import "./globals.css";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${inter.className} h-full bg-background text-foreground antialiased`}>
         <AuthProvider>
-          <AudioProvider>{children}</AudioProvider>
+          <AudioProvider>
+            <SidebarProvider>{children}</SidebarProvider>
+          </AudioProvider>
         </AuthProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 "use client";
 
 import { LogIn, UserPlus, Loader2, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +24,7 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
   const [password, setPassword] = useState("");
   const [bookCode, setBookCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +34,10 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
     try {
       if (mode === "signin") {
         await signIn(email, password);
+        router.push("/");
       } else {
         await signUp(email, password, bookCode);
+        router.push("/");
       }
       onClose();
       // Reset form

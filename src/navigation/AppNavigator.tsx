@@ -305,6 +305,7 @@ const DownloadsNavigator: React.FC = () => {
     >
       <DownloadsStack.Screen name="DownloadsList" component={DownloadsScreen} />
       <DownloadsStack.Screen name="RecordingDetails" component={RecordingDetailsScreen} />
+      <DownloadsStack.Screen name="SpeciesDetails" component={SpeciesDetailsScreen} />
     </DownloadsStack.Navigator>
   );
 };
