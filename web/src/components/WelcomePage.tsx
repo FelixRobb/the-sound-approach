@@ -3,12 +3,12 @@
 import { Music, LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 
-import { useAuth } from "@/contexts/AuthContext";
-
 import AuthModal from "./AuthModal";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function WelcomePage() {
   const { state } = useAuth();

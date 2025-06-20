@@ -7,10 +7,14 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import importPlugin from "eslint-plugin-import";
 import reactNative from "eslint-plugin-react-native";
 import prettier from "eslint-plugin-prettier";
+import prettierConfig from "eslint-config-prettier";
 
 const eslintConfig = [
   // Base recommended configurations
   js.configs.recommended,
+
+  // Prettier config to disable conflicting rules
+  prettierConfig,
 
   // Global ignores (replaces .eslintignore)
   {
@@ -91,11 +95,19 @@ const eslintConfig = [
       },
     },
     rules: {
+      // Disable base rule in favor of TypeScript version
+      "no-unused-vars": "off",
+      
       // TypeScript rules
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+        { 
+          argsIgnorePattern: "^_", 
+          varsIgnorePattern: "^_",
+          args: "after-used", // Only flag unused args after the last used one
+          ignoreRestSiblings: true // Ignore rest siblings in destructuring
+        },
       ],
       "@typescript-eslint/no-non-null-assertion": "warn",
 

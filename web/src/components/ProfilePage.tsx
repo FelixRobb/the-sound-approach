@@ -14,13 +14,13 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import { useAuth } from "@/contexts/AuthContext";
-
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
   const { state, signOut, changePassword, deleteAccount, resetOnboarding } = useAuth();

@@ -4,15 +4,15 @@ import { ArrowLeft, AlertCircle, Loader2, Search, Music } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
 import PageBadge from "@/components/PageBadge";
 import { getBestAudioUri } from "@/lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "@/lib/supabase";
 import { Recording } from "@/types";
-
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
 
 export default function SpeciesDetailsPage() {
   const params = useParams();

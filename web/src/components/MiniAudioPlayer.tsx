@@ -2,9 +2,9 @@
 
 import { Play, Pause, Loader2 } from "lucide-react";
 
-import { useAudio } from "@/contexts/AudioContext";
-
 import { Button } from "./ui/button";
+
+import { useAudio } from "@/contexts/AudioContext";
 
 type MiniAudioPlayerProps = {
   trackId: string;

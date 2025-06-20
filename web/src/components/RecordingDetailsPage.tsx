@@ -13,16 +13,16 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
+import { Alert, AlertDescription } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
 import PageBadge from "@/components/PageBadge";
 import { getBestAudioUri, getSonogramVideoUri } from "@/lib/mediaUtils";
 import { fetchRecordingById } from "@/lib/supabase";
 import { Recording } from "@/types";
-
-import { Alert, AlertDescription } from "./ui/alert";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 export default function RecordingDetailsPage() {
   const params = useParams();

@@ -16,11 +16,17 @@
   "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "prettier.requireConfig": true,
   "prettier.useEditorConfig": false,
-  "prettier.configPath": "./.prettierrc.json",
   "eslint.format.enable": false,
   "eslint.validate": ["typescript", "typescriptreact", "javascript", "javascriptreact"],
   "eslint.alwaysShowStatus": true,
-  "eslint.workingDirectories": ["."]
-}
+  "eslint.workingDirectories": ["./app", "./web"],
+  "files.associations": {
+    "*.tsx": "typescriptreact",
+    "*.ts": "typescript"
+  }
+} 

@@ -27,6 +27,8 @@ type SearchHistoryItem = {
   name: string;
   timestamp: string;
   query: string;
+  resultType: "recording" | "species";
+  resultId: string;
 };
 
 const SearchScreen = () => {
@@ -358,7 +360,11 @@ const SearchScreen = () => {
   }, []);
 
   // Save recent searches to storage with additional metadata
-  const saveRecentSearch = async (itemName: string) => {
+  const saveRecentSearch = async (
+    itemName: string,
+    resultType: "recording" | "species",
+    resultId: string
+  ) => {
     if (!itemName.trim()) return;
 
     try {
@@ -367,6 +373,8 @@ const SearchScreen = () => {
         name: itemName,
         timestamp: new Date().toISOString(),
         query: searchQuery, // Store the original query too
+        resultType,
+        resultId,
       };
 
       // Get existing searches
@@ -423,8 +431,8 @@ const SearchScreen = () => {
     // Find the recording by ID
     const recording = searchResults.recordings.find((rec) => rec.id === recordingId);
     if (recording) {
-      // Save the recording title instead of the search query
-      saveRecentSearch(recording.title);
+      // Save the recording title with type and ID
+      saveRecentSearch(recording.title, "recording", recording.id);
     }
     navigation.navigate("RecordingDetails", { recordingId });
   };
@@ -434,8 +442,8 @@ const SearchScreen = () => {
     // Find the species by ID
     const species = searchResults.species.find((sp) => sp.id === speciesId);
     if (species) {
-      // Save the species common name instead of the search query
-      saveRecentSearch(species.common_name);
+      // Save the species common name with type and ID
+      saveRecentSearch(species.common_name, "species", species.id);
     }
     navigation.navigate("SpeciesDetails", { speciesId });
   };
@@ -701,12 +709,30 @@ const SearchScreen = () => {
                 <TouchableOpacity
                   style={styles.recentItem}
                   onPress={() => {
-                    setSearchQuery(item.query);
-                    handleSearch(item.query);
+                    // Navigate directly to the result instead of searching
+                    if (item.resultType === "recording") {
+                      navigation.navigate("RecordingDetails", { recordingId: item.resultId });
+                    } else if (item.resultType === "species") {
+                      navigation.navigate("SpeciesDetails", { speciesId: item.resultId });
+                    } else {
+                      // Fallback for old format items without resultType
+                      setSearchQuery(item.query);
+                      handleSearch(item.query);
+                    }
                   }}
                 >
                   <View style={styles.recentItemIcon}>
-                    <Ionicons name="time-outline" size={22} color={theme.colors.tertiary} />
+                    <Ionicons
+                      name={
+                        item.resultType === "recording"
+                          ? "musical-notes-outline"
+                          : item.resultType === "species"
+                            ? "leaf-outline"
+                            : "time-outline"
+                      }
+                      size={22}
+                      color={theme.colors.tertiary}
+                    />
                   </View>
                   <View style={styles.recentItemTextContainer}>
                     <Text style={styles.recentQueryText}>{item.name}</Text>
@@ -714,7 +740,7 @@ const SearchScreen = () => {
                       {new Date(item.timestamp).toLocaleDateString()}
                     </Text>
                   </View>
-                  <Ionicons name="search" size={20} color={theme.colors.secondary} />
+                  <Ionicons name="chevron-forward" size={20} color={theme.colors.secondary} />
                 </TouchableOpacity>
               )}
               keyExtractor={(item, index) => `recent-${index}`}

@@ -3,11 +3,11 @@
 import { ChevronLeft, ChevronRight, Music, Search, Download, Check } from "lucide-react";
 import { useState } from "react";
 
-import { useAuth } from "@/contexts/AuthContext";
-
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 type OnboardingStep = {
   id: number;

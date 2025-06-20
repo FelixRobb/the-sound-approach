@@ -4,11 +4,6 @@ import { Search, Music, Leaf, Clock, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
-import { getBestAudioUri } from "@/lib/mediaUtils";
-import { searchRecordings } from "@/lib/supabase";
-import { debounce } from "@/lib/utils";
-import { Recording, Species, SearchFilter } from "@/types";
-
 import MiniAudioPlayer from "./MiniAudioPlayer";
 import PageBadge from "./PageBadge";
 import { Badge } from "./ui/badge";
@@ -16,6 +11,11 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+
+import { getBestAudioUri } from "@/lib/mediaUtils";
+import { searchRecordings } from "@/lib/supabase";
+import { debounce } from "@/lib/utils";
+import { Recording, Species, SearchFilter } from "@/types";
 
 export default function SearchPage() {
   const router = useRouter();

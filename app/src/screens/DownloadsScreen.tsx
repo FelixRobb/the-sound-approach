@@ -153,7 +153,7 @@ const DownloadsScreen = () => {
       alignItems: "center",
       flex: 1,
     },
-    backButton: {   
+    backButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: 20,

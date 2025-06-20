@@ -4,12 +4,12 @@ import { LogIn, UserPlus, Loader2, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { useAuth } from "@/contexts/AuthContext";
-
 import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 type AuthModalProps = {
   isOpen: boolean;

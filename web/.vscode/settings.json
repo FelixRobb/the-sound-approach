@@ -20,8 +20,7 @@
   "prettier.useEditorConfig": false,
   "prettier.configPath": "./.prettierrc.json",
   "eslint.format.enable": false,
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.validate": ["typescript", "typescriptreact", "javascript", "javascriptreact"],
   "eslint.alwaysShowStatus": true,
-  "eslint.workingDirectories": ["."],
-  "typescript.preferences.importModuleSpecifier": "relative"
+  "eslint.workingDirectories": ["."]
 }

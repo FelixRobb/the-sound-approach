@@ -4,6 +4,11 @@ import clsx from "clsx";
 import { Music, Search, User, Settings, Download, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 
+import ProfilePage from "./ProfilePage";
+import RecordingSidebar from "./RecordingSidebar";
+import RecordingsPage from "./RecordingsPage";
+import SearchPage from "./SearchPage";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,11 +24,6 @@ import {
   SidebarInset,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-import ProfilePage from "./ProfilePage";
-import RecordingSidebar from "./RecordingSidebar";
-import RecordingsPage from "./RecordingsPage";
-import SearchPage from "./SearchPage";
 
 type TabType = "recordings" | "search" | "profile";
 
