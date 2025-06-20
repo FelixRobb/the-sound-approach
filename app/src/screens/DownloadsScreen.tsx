@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
@@ -20,17 +20,27 @@ import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import type { DownloadRecord } from "../types";
-import { RootStackParamList } from "../types";
+import type { DownloadRecord, RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
 
 const DownloadsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute();
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
     useContext(DownloadContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
+
+  // Show back button when this screen is the stack-presented one (DownloadsManager)
+  // or if explicit param is provided.
+  const showBackButton =
+    route.name === "DownloadsManager" ||
+    (!!route.params && (route.params as { showBackButton?: boolean }).showBackButton === true);
+
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -140,6 +150,15 @@ const DownloadsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
+    backButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      height: 40,
+      justifyContent: "center",
+      marginRight: 12,
+      width: 40,
+    },
     backgroundPattern: {
       backgroundColor: theme.colors.background,
       bottom: 0,
@@ -354,9 +373,16 @@ const DownloadsScreen = () => {
     <View style={styles.header}>
       <View style={styles.headerInner}>
         <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Downloads</Text>
-            <Text style={styles.subtitle}>Manage your offline recordings</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+            {showBackButton && (
+              <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+                <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+              </TouchableOpacity>
+            )}
+            <View>
+              <Text style={styles.title}>Downloads</Text>
+              <Text style={styles.subtitle}>Manage your offline recordings</Text>
+            </View>
           </View>
         </View>
       </View>

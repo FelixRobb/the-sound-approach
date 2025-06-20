@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme colors based on mobile app theme */
+    --background: 249 250 251; /* theme.colors.light.background */
+    --foreground: 17 24 39; /* theme.colors.light.text */
+    --card: 255 255 255; /* theme.colors.light.surface */
+    --card-foreground: 17 24 39; /* theme.colors.light.onSurface */
+    --popover: 255 255 255; /* theme.colors.light.surface */
+    --popover-foreground: 17 24 39; /* theme.colors.light.onSurface */
+
+    /* Primary colors - Rich golden amber */
+    --primary: 25 90 47; /* Convert rgb(236, 121, 54) to HSL */
+    --primary-foreground: 255 255 255; /* theme.colors.light.onPrimary */
+    --primary-light: 25 100 67; /* Lighter amber */
+    --primary-dark: 25 92 42; /* Darker amber */
+
+    /* Secondary colors - Slate */
+    --secondary: 220 13 18; /* Convert rgb(100, 116, 139) to HSL */
+    --secondary-foreground: 255 255 255; /* theme.colors.light.onSecondary */
+
+    /* Tertiary colors - Emerald */
+    --tertiary: 158 64 52; /* Convert rgb(5, 150, 105) to HSL */
+    --tertiary-foreground: 255 255 255; /* theme.colors.light.onTertiary */
+
+    /* Status colors */
+    --success: 142 76 36; /* rgb(34, 197, 94) */
+    --success-foreground: 255 255 255;
+    --warning: 43 96 56; /* rgb(245, 158, 11) */
+    --warning-foreground: 255 255 255;
+    --destructive: 0 84 60; /* rgb(239, 68, 68) */
+    --destructive-foreground: 255 255 255;
+
+    /* Utility colors */
+    --muted: 220 14 96; /* theme.colors.light.surfaceVariant */
+    --muted-foreground: 220 9 46; /* theme.colors.light.onSurfaceVariant */
+    --accent: 258 90 66; /* Violet accent */
+    --accent-foreground: 255 255 255;
+
+    --border: 220 13 91; /* theme.colors.light.outline */
+    --input: 220 13 91; /* theme.colors.light.outline */
+    --ring: 25 90 47; /* Primary color for focus rings */
+
+    --radius: 0.75rem; /* 12px - matches mobile app border radius */ --sidebar-background: 0 0% 98%; --sidebar-foreground: 240 5.3% 26.1%; --sidebar-primary: 240 5.9% 10%; --sidebar-primary-foreground: 0 0% 98%; --sidebar-accent: 240 4.8% 95.9%; --sidebar-accent-foreground: 240 5.9% 10%; --sidebar-border: 220 13% 91%; --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark theme colors based on mobile app dark theme */
+    --background: 0 0 0; /* Pure black for modern OLED design */
+    --foreground: 255 255 255; /* Pure white for primary text */
+    --card: 0 0 4; /* Very dark gray for cards */
+    --card-foreground: 255 255 255;
+    --popover: 0 0 4;
+    --popover-foreground: 255 255 255;
+
+    /* Primary colors adjusted for dark theme */
+    --primary: 25 85 52; /* Lighter amber for dark theme */
+    --primary-foreground: 25 100 18; /* Dark amber text */
+    --primary-light: 25 100 67;
+    --primary-dark: 25 95 33;
+
+    /* Secondary colors for dark theme */
+    --secondary: 215 25 47; /* Lighter slate for dark */
+    --secondary-foreground: 220 39 11;
+
+    /* Tertiary colors for dark theme */
+    --tertiary: 167 76 65; /* Lighter emerald for dark */
+    --tertiary-foreground: 158 84 15;
+
+    /* Status colors for dark theme */
+    --success: 142 84 60; /* Brighter green for dark */
+    --success-foreground: 142 100 7;
+    --warning: 45 93 58; /* Brighter amber for dark */
+    --warning-foreground: 25 100 18;
+    --destructive: 0 91 71; /* Brighter red for dark */
+    --destructive-foreground: 0 86 20;
+
+    /* Utility colors for dark theme */
+    --muted: 0 0 7; /* Slightly lighter for variants */
+    --muted-foreground: 0 0 59; /* Softer white for secondary text */
+    --accent: 258 76 80; /* Brighter violet for dark */
+    --accent-foreground: 258 100 14;
+
+    --border: 0 0 16; /* Subtle outlines */
+    --input: 0 0 16;
+    --ring: 25 85 52;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: hsl(var(--muted) / 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+  }
+
+  /* Focus styles */
+  .focus-ring {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+
+  .focus-ring:focus {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--ring)),
+      0 0 0 4px hsl(var(--background));
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -200,15 +200,15 @@ export type RootStackParamList = {
   SpeciesDetails: { speciesId: string };
   Search: undefined;
   Profile: undefined;
-  DownloadsList: undefined;
+  DownloadsManager: { showBackButton?: boolean } | undefined;
   DeleteAccount: undefined;
 };
 
 export type MainTabParamList = {
-  Recordings: NavigatorScreenParams<RecordingsStackParamList>;
-  Search: NavigatorScreenParams<SearchStackParamList>;
-  Downloads: NavigatorScreenParams<DownloadsStackParamList>;
-  Profile: NavigatorScreenParams<ProfileStackParamList>;
+  Recordings: undefined;
+  Search: undefined;
+  Downloads: { showBackButton?: boolean } | undefined;
+  Profile: undefined;
 };
 
 export type RecordingsStackParamList = {
@@ -224,7 +224,7 @@ export type SearchStackParamList = {
 };
 
 export type DownloadsStackParamList = {
-  DownloadsList: undefined;
+  DownloadsList: { showBackButton?: boolean } | undefined;
   RecordingDetails: { recordingId: string };
 };
 
