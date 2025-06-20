@@ -292,8 +292,8 @@ const RecordingDetailsScreen = () => {
       left: "50%",
       transform: [{ translateX: -35 }, { translateY: -35 }],
       backgroundColor: "rgba(0, 0, 0, 0.75)",
-      width: 60,
-      height: 60,
+      width: 70,
+      height: 70,
       borderRadius: 35,
       zIndex: 2,
       alignItems: "center",
@@ -313,8 +313,8 @@ const RecordingDetailsScreen = () => {
       left: "50%",
       transform: [{ translateX: -35 }, { translateY: -35 }],
       backgroundColor: "rgba(0, 0, 0, 0.75)",
-      width: 60,
-      height: 60,
+      width: 70,
+      height: 70,
       borderRadius: 35,
       zIndex: 3,
       alignItems: "center",
@@ -326,6 +326,11 @@ const RecordingDetailsScreen = () => {
       elevation: 6,
       borderWidth: 2,
       borderColor: "rgba(255, 255, 255, 0.2)",
+    },
+    centerButtonTouch: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
     },
     videoTouchOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -864,13 +869,15 @@ const RecordingDetailsScreen = () => {
 
         {/* Pause button when playing and controls visible */}
         {isVideoLoaded && isPlaying && showControls && !isSeeking && !showInitialLoading && (
-          <TouchableOpacity
-            style={styles.pauseCenterButton}
-            onPress={togglePlayPause}
-            activeOpacity={1}
-          >
-            <Ionicons name="pause" size={32} color="#ffffff" />
-          </TouchableOpacity>
+          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+            <TouchableOpacity
+              onPress={togglePlayPause}
+              activeOpacity={1}
+              style={styles.centerButtonTouch}
+            >
+              <Ionicons name="pause" size={32} color="#ffffff" />
+            </TouchableOpacity>
+          </Animated.View>
         )}
 
         {/* Bottom controls */}
@@ -963,13 +970,15 @@ const RecordingDetailsScreen = () => {
 
         {/* Pause button when playing and controls visible */}
         {isVideoLoaded && isPlaying && showControls && !isSeeking && !showInitialLoading && (
-          <TouchableOpacity
-            style={styles.pauseCenterButton}
-            onPress={togglePlayPause}
-            activeOpacity={1}
-          >
-            <Ionicons name="pause" size={32} color="#ffffff" />
-          </TouchableOpacity>
+          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+            <TouchableOpacity
+              onPress={togglePlayPause}
+              activeOpacity={1}
+              style={styles.centerButtonTouch}
+            >
+              <Ionicons name="pause" size={32} color="#ffffff" />
+            </TouchableOpacity>
+          </Animated.View>
         )}
 
         {/* Bottom controls */}
