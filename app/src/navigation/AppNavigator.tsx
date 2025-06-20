@@ -470,11 +470,11 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <View style={backgroundStyle.container}>
-      <NavigationContainer theme={navTheme}>
-        <AudioProvider>{navigatorToShow}</AudioProvider>
-      </NavigationContainer>
-    </View>
+    <AudioProvider>
+      <View style={backgroundStyle.container}>
+        <NavigationContainer theme={navTheme}>{navigatorToShow}</NavigationContainer>
+      </View>
+    </AudioProvider>
   );
 };
 

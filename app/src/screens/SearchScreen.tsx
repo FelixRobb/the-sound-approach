@@ -183,6 +183,15 @@ const SearchScreen = () => {
       shadowOpacity: 0.3,
       shadowRadius: 3,
     },
+    recentItemContent: {
+      alignItems: "center",
+      flex: 1,
+      flexDirection: "row",
+      marginRight: 12,
+    },
+    recentItemAction: {
+      padding: 4,
+    },
     recentItemIcon: {
       alignItems: "center",
       backgroundColor: theme.colors.onTertiary,
@@ -341,15 +350,24 @@ const SearchScreen = () => {
           // Handle both old format (strings) and new format (objects)
           const parsedSearches = JSON.parse(savedSearches);
 
-          // Convert if needed
-          const formattedSearches = parsedSearches.map((item: string | SearchHistoryItem) => {
-            if (typeof item === "string") {
-              return { name: item, timestamp: new Date().toISOString(), query: item };
-            }
-            return item;
-          });
+          // Filter to only include valid SearchHistoryItem objects with required fields
+          const validSearches = parsedSearches
+            .map((item: string | SearchHistoryItem) => {
+              if (typeof item === "string") {
+                // Skip old string format items since we can't navigate directly without resultId
+                return null;
+              }
+              return item;
+            })
+            .filter(
+              (item: SearchHistoryItem | null): item is SearchHistoryItem =>
+                item !== null &&
+                !!item.resultType &&
+                !!item.resultId &&
+                (item.resultType === "recording" || item.resultType === "species")
+            );
 
-          setRecentSearches(formattedSearches);
+          setRecentSearches(validSearches);
         }
       } catch (error) {
         console.error("Error loading recent searches:", error);
@@ -706,44 +724,53 @@ const SearchScreen = () => {
             <FlatList
               data={recentSearches}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.recentItem}
-                  onPress={() => {
-                    // Navigate directly to the result instead of searching
-                    if (item.resultType === "recording") {
-                      navigation.navigate("RecordingDetails", { recordingId: item.resultId });
-                    } else if (item.resultType === "species") {
-                      navigation.navigate("SpeciesDetails", { speciesId: item.resultId });
-                    } else {
-                      // Fallback for old format items without resultType
+                <View style={styles.recentItem}>
+                  {/* Main content: tap to navigate directly */}
+                  <TouchableOpacity
+                    style={styles.recentItemContent}
+                    onPress={() => {
+                      if (item.resultType === "recording" && item.resultId) {
+                        navigation.navigate("RecordingDetails", { recordingId: item.resultId });
+                      } else if (item.resultType === "species" && item.resultId) {
+                        navigation.navigate("SpeciesDetails", { speciesId: item.resultId });
+                      }
+                    }}
+                  >
+                    <View style={styles.recentItemIcon}>
+                      <Ionicons
+                        name={
+                          item.resultType === "recording"
+                            ? "musical-notes-outline"
+                            : item.resultType === "species"
+                              ? "leaf-outline"
+                              : "time-outline"
+                        }
+                        size={22}
+                        color={theme.colors.tertiary}
+                      />
+                    </View>
+                    <View style={styles.recentItemTextContainer}>
+                      <Text style={styles.recentQueryText}>{item.name}</Text>
+                      <Text style={styles.recentItemTimestamp}>
+                        {new Date(item.timestamp).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={theme.colors.secondary} />
+                  </TouchableOpacity>
+
+                  {/* Secondary action: re-search */}
+                  <TouchableOpacity
+                    style={styles.recentItemAction}
+                    onPress={() => {
                       setSearchQuery(item.query);
                       handleSearch(item.query);
-                    }
-                  }}
-                >
-                  <View style={styles.recentItemIcon}>
-                    <Ionicons
-                      name={
-                        item.resultType === "recording"
-                          ? "musical-notes-outline"
-                          : item.resultType === "species"
-                            ? "leaf-outline"
-                            : "time-outline"
-                      }
-                      size={22}
-                      color={theme.colors.tertiary}
-                    />
-                  </View>
-                  <View style={styles.recentItemTextContainer}>
-                    <Text style={styles.recentQueryText}>{item.name}</Text>
-                    <Text style={styles.recentItemTimestamp}>
-                      {new Date(item.timestamp).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={theme.colors.secondary} />
-                </TouchableOpacity>
+                    }}
+                  >
+                    <Ionicons name="search" size={20} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                </View>
               )}
-              keyExtractor={(item, index) => `recent-${index}`}
+              keyExtractor={(item) => `recent-${item.name}`}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
           ) : (

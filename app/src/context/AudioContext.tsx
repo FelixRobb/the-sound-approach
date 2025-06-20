@@ -1,4 +1,3 @@
-import { useNavigationState } from "@react-navigation/native";
 import type React from "react";
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import "react-native-get-random-values";
@@ -18,6 +17,7 @@ type AudioContextType = {
 
   // Actions
   togglePlayPause: (uri: string, trackId: string) => Promise<boolean>;
+  stopPlayback: () => Promise<void>;
 };
 
 // Create the context with default values
@@ -27,6 +27,7 @@ const AudioContext = createContext<AudioContextType>({
   currentTrackId: null,
   error: null,
   togglePlayPause: () => Promise.resolve(false),
+  stopPlayback: () => Promise.resolve(),
 });
 
 // Provider component
@@ -47,12 +48,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     error: null,
   });
 
-  // Track the current playing URI to check if it's a local file
-  const [currentPlayingUri, setCurrentPlayingUri] = useState<string | null>(null);
-
-  // Track navigation state to detect screen changes
-  const currentRouteName = useNavigationState((state) => state?.routes[state.index]?.name);
-  const previousRouteRef = useRef<string | null>(null);
+  // Track the currently loaded/playing sound by its URI (no longer needed after offline-stop removal)
 
   // Set up listener for audio state changes
   useEffect(() => {
@@ -65,33 +61,16 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [listenerId, audioService]);
 
-  // Stop playback when route changes - ALWAYS
-  useEffect(() => {
-    // Skip on first render
-    if (previousRouteRef.current !== null && previousRouteRef.current !== currentRouteName) {
-      // Stop any playing audio when screen changes
-      audioService.stop().catch((error) => {
-        console.error("Error stopping playback during navigation:", error);
-      });
-      setCurrentPlayingUri(null);
-    }
-
-    previousRouteRef.current = currentRouteName;
-  }, [currentRouteName, audioService]);
-
-  // Stop playback when going offline ONLY if the current track is NOT a downloaded file
-  useEffect(() => {
-    if (
-      !isConnected &&
-      audioState.playbackState === "playing" &&
-      currentPlayingUri &&
-      !currentPlayingUri.startsWith("file://")
-    ) {
-      // Only stop if it's not a local file
-      audioService.stop().catch(console.error);
-      setCurrentPlayingUri(null);
-    }
-  }, [isConnected, audioState.playbackState, currentPlayingUri, audioService]);
+  /**
+   * Previous implementation stopped any remote-streamed audio as soon as
+   * the connection status briefly reported "offline".  Because NetInfo can
+   * fluctuate for a few milliseconds when a request starts, this resulted in
+   * playback being halted almost immediately after the user pressed the
+   * play-button.  We rely on the existing guard inside `togglePlayPause`
+   * (which simply refuses to start a remote track when the device is truly
+   * offline) and therefore no longer force-stop playback here – downloaded
+   * files can continue playing even if the user moves out of coverage.
+   */
 
   // Toggle play/pause for a track
   const togglePlayPause = async (uri: string, trackId: string): Promise<boolean> => {
@@ -100,23 +79,24 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!isConnected && !uri.startsWith("file://")) {
         return false;
       }
-
-      // Store the current playing URI for offline checks
-      setCurrentPlayingUri(uri);
-
       // Use the simplified playTrack method which handles all the logic
       const result = await audioService.playTrack(uri, trackId);
 
-      // Clear the URI if playback failed
-      if (!result) {
-        setCurrentPlayingUri(null);
-      }
+      // Nothing else to clear – AudioService handles its own state
 
       return result;
     } catch (error) {
       console.error("Error toggling playback:", error);
-      setCurrentPlayingUri(null);
       return false;
+    }
+  };
+
+  // Stop playback method
+  const stopPlayback = async (): Promise<void> => {
+    try {
+      await audioService.stop();
+    } catch (error) {
+      console.error("Error stopping playback:", error);
     }
   };
 
@@ -127,6 +107,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     currentTrackId: audioState.trackId,
     error: audioState.error,
     togglePlayPause,
+    stopPlayback,
   };
 
   return <AudioContext.Provider value={contextValue}>{children}</AudioContext.Provider>;
