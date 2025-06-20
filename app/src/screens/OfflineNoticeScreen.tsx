@@ -71,7 +71,17 @@ const OfflineNoticeScreen = () => {
           mode="contained"
           icon="download"
           onPress={() => {
-            navigation.navigate("OfflineMain");
+            try {
+              // First try to go back (dismiss the modal)
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                // Fallback: navigate to OfflineMain
+                navigation.navigate("OfflineMain");
+              }
+            } catch (error) {
+              console.error("Navigation error:", error);
+            }
           }}
           style={styles.button}
         >

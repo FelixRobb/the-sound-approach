@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
   View,
@@ -21,12 +20,10 @@ import { DownloadContext } from "../context/DownloadContext";
 import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
-import { OfflineStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
 
 const OfflineScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const { totalStorageUsed, getDownloadedRecordings } = useContext(DownloadContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
@@ -196,14 +193,6 @@ const OfflineScreen = () => {
       flexDirection: "row",
       justifyContent: "space-between",
       marginBottom: 16,
-    },
-    infoButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 22,
-      height: 44,
-      justifyContent: "center",
-      width: 44,
     },
     listContent: {
       padding: 16,
@@ -396,12 +385,6 @@ const OfflineScreen = () => {
             <Text style={styles.title}>Offline Mode</Text>
             <Text style={styles.subtitle}>Your downloaded recordings</Text>
           </View>
-          <TouchableOpacity
-            style={styles.infoButton}
-            onPress={() => navigation.navigate("OfflineNotice")}
-          >
-            <Ionicons name="information-outline" size={20} color={theme.colors.onSurfaceVariant} />
-          </TouchableOpacity>
         </View>
       </View>
 

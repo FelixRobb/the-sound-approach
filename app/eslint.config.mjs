@@ -97,16 +97,16 @@ const eslintConfig = [
     rules: {
       // Disable base rule in favor of TypeScript version
       "no-unused-vars": "off",
-      
+
       // TypeScript rules
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { 
-          argsIgnorePattern: "^_", 
+        {
+          argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           args: "after-used", // Only flag unused args after the last used one
-          ignoreRestSiblings: true // Ignore rest siblings in destructuring
+          ignoreRestSiblings: true, // Ignore rest siblings in destructuring
         },
       ],
       "@typescript-eslint/no-non-null-assertion": "warn",
@@ -147,7 +147,18 @@ const eslintConfig = [
       "import/no-duplicates": "error",
 
       // Prettier rules
-      "prettier/prettier": "warn",
+      "prettier/prettier": [
+        "warn",
+        {
+          semi: true,
+          singleQuote: false,
+          tabWidth: 2,
+          printWidth: 100,
+          trailingComma: "es5",
+          bracketSpacing: true,
+          endOfLine: "lf",
+        },
+      ],
 
       // General best practices
       "no-console": ["warn", { allow: ["warn", "error", "info"] }],
@@ -156,6 +167,15 @@ const eslintConfig = [
       "no-var": "error",
       "prefer-const": "error",
       eqeqeq: ["warn", "always"],
+
+      // Disable rules that conflict with Prettier
+      "max-len": "off",
+      indent: "off",
+      quotes: "off",
+      semi: "off",
+      "comma-dangle": "off",
+      "object-curly-spacing": "off",
+      "array-bracket-spacing": "off",
     },
   },
 ];

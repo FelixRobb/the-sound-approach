@@ -1,26 +1,24 @@
 {
-	"folders": [
-		{
-			"name": "Root",
-			"path": "."
-		}
-	],
-	"settings": {
-		"eslint.workingDirectories": [
-			"app",
-			"web"
-		],
-		"eslint.validate": [
-			"javascript",
-			"javascriptreact",
-			"typescript",
-			"typescriptreact"
-		],
-		"eslint.enable": true,
-		"eslint.codeAction.showDocumentation": {
-			"enable": true
-		},
-		"typescript.preferences.includePackageJsonAutoImports": "on",
-		"typescript.suggest.autoImports": true
-	}
+  "folders": [
+    {
+      "name": "Root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "eslint.workingDirectories": ["app", "web"],
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "eslint.enable": true,
+    "eslint.codeAction.showDocumentation": {
+      "enable": true
+    },
+    "eslint.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "prettier.requireConfig": true,
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "typescript.suggest.autoImports": true
+  }
 }

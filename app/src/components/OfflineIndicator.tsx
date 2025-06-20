@@ -4,11 +4,11 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import type { RootStackParamList } from "../types";
+import type { OfflineStackParamList } from "../types";
 
 const OfflineIndicator = () => {
   const { theme } = useThemedStyles();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const screenWidth = Dimensions.get("window").width;
 
   const styles = StyleSheet.create({

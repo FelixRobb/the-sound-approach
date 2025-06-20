@@ -75,7 +75,18 @@ const eslintConfig = [
     },
     rules: {
       // Prettier integration
-      "prettier/prettier": "warn",
+      "prettier/prettier": [
+        "warn",
+        {
+          semi: true,
+          singleQuote: false,
+          tabWidth: 2,
+          printWidth: 100,
+          trailingComma: "es5",
+          bracketSpacing: true,
+          endOfLine: "lf",
+        },
+      ],
 
       // TypeScript rules
       "@typescript-eslint/no-explicit-any": "warn",
@@ -121,6 +132,15 @@ const eslintConfig = [
       eqeqeq: ["warn", "always"],
       "no-unused-vars": "off", // Handled by TypeScript
       "no-undef": "off", // Handled by TypeScript
+
+      // Disable rules that conflict with Prettier
+      "max-len": "off",
+      indent: "off",
+      quotes: "off",
+      semi: "off",
+      "comma-dangle": "off",
+      "object-curly-spacing": "off",
+      "array-bracket-spacing": "off",
     },
   },
 ];
