@@ -32,8 +32,6 @@ const DownloadsScreen = () => {
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
 
-  // Show back button when this screen is the stack-presented one (DownloadsManager)
-  // or if explicit param is provided.
   const showBackButton =
     route.name === "DownloadsManager" ||
     (!!route.params && (route.params as { showBackButton?: boolean }).showBackButton === true);
@@ -150,7 +148,12 @@ const DownloadsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    backButton: {
+    headerRowInner: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    backButton: {   
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: 20,
@@ -373,7 +376,7 @@ const DownloadsScreen = () => {
     <View style={styles.header}>
       <View style={styles.headerInner}>
         <View style={styles.headerRow}>
-          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+          <View style={styles.headerRowInner}>
             {showBackButton && (
               <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
                 <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />

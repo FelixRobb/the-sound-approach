@@ -3,6 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "moduleResolution": "bundler",
+    "composite": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
