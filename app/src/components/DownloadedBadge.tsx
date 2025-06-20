@@ -9,6 +9,7 @@ interface DownloadedBadgeProps {
   textStyle?: TextStyle;
   iconSize?: number;
   label?: string;
+  compact?: boolean;
 }
 
 const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
@@ -16,6 +17,7 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
   textStyle,
   iconSize = 14,
   label = "Downloaded",
+  compact = false,
 }) => {
   const { theme } = useThemedStyles();
   const styles = StyleSheet.create({
@@ -27,6 +29,14 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
+    compactBadge: {
+      alignItems: "center",
+      backgroundColor: theme.colors.tertiary,
+      borderRadius: 6,
+      height: 20,
+      justifyContent: "center",
+      width: 20,
+    },
     text: {
       color: theme.colors.onTertiary,
       fontSize: 12,
@@ -34,6 +44,15 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
       marginLeft: 4,
     },
   });
+
+  if (compact) {
+    return (
+      <View style={[styles.compactBadge, style]}>
+        <Ionicons name="cloud-done-outline" size={12} color={theme.colors.onTertiary} />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.badge, style]}>
       <Ionicons name="cloud-done-outline" size={iconSize} color={theme.colors.onTertiary} />
