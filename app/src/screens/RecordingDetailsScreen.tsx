@@ -430,9 +430,11 @@ const RecordingDetailsScreen = () => {
       padding: 20,
       paddingBottom: 12,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.5, // Increased for more visible shadow
+      shadowRadius: 6, // Increased for a softer, larger shadow
+      borderBottomWidth: 1, // Added for extra separation
+      borderBottomColor: theme.colors.backdrop, // Subtle border color
     },
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,

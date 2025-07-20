@@ -121,94 +121,45 @@ export const searchRecordings = async (query: string): Promise<SearchResults> =>
     return { recordings: [], species: [] };
   }
 
-  const searchTerm = `%${sanitizedQuery}%`;
-
   try {
-    // Search for species by common name or scientific name
-    const { data: speciesData, error: speciesError } = await supabase
-      .from("species")
-      .select(
-        `
-        id,
-        common_name,
-        scientific_name,
-        created_at
-      `
-      )
-      .or(`common_name.ilike.${searchTerm},scientific_name.ilike.${searchTerm}`)
-      .order("common_name", { ascending: true });
-
-    if (speciesError) {
-      console.error("Species search error:", speciesError);
-      throw speciesError;
-    }
-
-    // Search recordings by title and caption
-    const { data: recordingsData, error: recordingsError } = await supabase
-      .from("recordings")
-      .select(
-        `
-        *,
-        species:species_id (
-          id,
-          common_name,
-          scientific_name
-        )
-      `
-      )
-      .or(`title.ilike.${searchTerm},caption.ilike.${searchTerm}`)
-      .order("book_page_number", { ascending: true });
-
-    if (recordingsError) {
-      console.error("Recordings search error:", recordingsError);
-      throw recordingsError;
-    }
-
-    // Search for book page numbers if the query is numeric
-    let pageResults: Recording[] = [];
-    if (/^\d+$/.test(sanitizedQuery)) {
-      const { data: pageData, error: pageError } = await supabase
-        .from("recordings")
-        .select(
-          `
-          *,
-          species:species_id (
-            id,
-            common_name,
-            scientific_name
-          )
-        `
-        )
-        .eq("book_page_number", parseInt(sanitizedQuery, 10))
-        .order("order_in_book", { ascending: true });
-
-      if (!pageError && pageData) {
-        pageResults = pageData;
-      }
-    }
-
-    // Combine and deduplicate recording results
-    const allRecordings = [...(recordingsData || []), ...pageResults];
-    const recordingIds = new Set();
-    const uniqueRecordings = allRecordings.filter((recording) => {
-      if (recordingIds.has(recording.id)) {
-        return false;
-      }
-      recordingIds.add(recording.id);
-      return true;
+    // Call the PostgreSQL function for weighted search
+    const { data, error } = await supabase.rpc("search_recordings", {
+      search_query: sanitizedQuery,
     });
 
-    // Sort recordings by book page number and then by order in book
-    const sortedRecordings = uniqueRecordings.sort((a, b) => {
-      if (a.book_page_number === b.book_page_number) {
-        return a.order_in_book - b.order_in_book;
-      }
-      return a.book_page_number - b.book_page_number;
-    });
+    if (error) {
+      console.error("Search function error:", error);
+      throw error;
+    }
+
+    // Process and separate results by type
+    const recordings: Recording[] = [];
+    const species: Species[] = [];
+
+    // Define type for search result items
+    type SearchResultItem = {
+      result_type: "recording" | "species";
+      result_data: Record<string, unknown>;
+      relevance_score: number;
+    };
+
+    if (data) {
+      data.forEach((item: SearchResultItem) => {
+        if (item.result_type === "recording") {
+          // Convert from JSONB to Recording type
+          const recordingData = item.result_data as unknown as Recording;
+          recordings.push(recordingData);
+        } else if (item.result_type === "species") {
+          // Convert from JSONB to Species type
+          const speciesData = item.result_data as unknown as Species;
+          species.push(speciesData);
+        }
+      });
+    }
 
     return {
-      recordings: sortedRecordings,
-      species: speciesData || [],
+      recordings,
+      species,
     };
   } catch (error) {
     console.error("Search error:", error);

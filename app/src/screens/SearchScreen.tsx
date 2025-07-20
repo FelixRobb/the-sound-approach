@@ -372,7 +372,24 @@ const SearchScreen = () => {
                 (item.resultType === "recording" || item.resultType === "species")
             );
 
-          setRecentSearches(validSearches);
+          // Filter out duplicates by resultType+resultId, keeping only the most recent
+          const uniqueSearches: SearchHistoryItem[] = [];
+          const seenItems = new Set<string>();
+
+          validSearches.forEach((item: SearchHistoryItem) => {
+            const key = `${item.resultType}-${item.resultId}`;
+            if (!seenItems.has(key)) {
+              seenItems.add(key);
+              uniqueSearches.push(item);
+            }
+          });
+
+          setRecentSearches(uniqueSearches);
+
+          // If we found and removed duplicates, update storage
+          if (uniqueSearches.length !== validSearches.length) {
+            await AsyncStorage.setItem("recentSearches", JSON.stringify(uniqueSearches));
+          }
         }
       } catch (error) {
         console.error("Error loading recent searches:", error);
@@ -404,10 +421,12 @@ const SearchScreen = () => {
       const savedSearches = await AsyncStorage.getItem("recentSearches");
       const searches: SearchHistoryItem[] = savedSearches ? JSON.parse(savedSearches) : [];
 
-      // Add to recent searches (avoid duplicates by name and limit to 10)
+      // Add to recent searches (avoid duplicates by resultType+resultId and limit to 10)
       const updatedSearches = [
         searchItem,
-        ...searches.filter((s: SearchHistoryItem) => s.name !== itemName),
+        ...searches.filter(
+          (s: SearchHistoryItem) => !(s.resultType === resultType && s.resultId === resultId)
+        ),
       ].slice(0, 10);
 
       setRecentSearches(updatedSearches);
@@ -441,6 +460,16 @@ const SearchScreen = () => {
     try {
       const results = await searchRecordings(query);
       setSearchResults(results);
+
+      // Update the active filter based on results
+      if (results.recordings.length > 0 && results.species.length === 0) {
+        setActiveFilter("recordings");
+      } else if (results.species.length > 0 && results.recordings.length === 0) {
+        setActiveFilter("species");
+      } else {
+        setActiveFilter("all");
+      }
+
       // Don't save search yet - we'll save it when user clicks on a result
     } catch (error) {
       console.error("Search error:", error);
@@ -607,23 +636,22 @@ const SearchScreen = () => {
         <Text style={styles.resultCount}>
           Found {totalResultCount} {totalResultCount === 1 ? "result" : "results"}
         </Text>
-
-        {species.length > 0 && (
+        {recordings.length > 0 && (
           <>
-            <Text style={styles.resultsHeader}>Species</Text>
-            {species.map((item) => (
-              <View key={`species-${item.id}`}>{renderSpeciesItem({ item })}</View>
+            <Text style={styles.resultsHeader}>Recordings</Text>
+            {recordings.map((item) => (
+              <View key={`recording-${item.id}`}>{renderRecordingItem({ item })}</View>
             ))}
           </>
         )}
 
         {species.length > 0 && recordings.length > 0 && <View style={styles.sectionDivider} />}
 
-        {recordings.length > 0 && (
+        {species.length > 0 && (
           <>
-            <Text style={styles.resultsHeader}>Recordings</Text>
-            {recordings.map((item) => (
-              <View key={`recording-${item.id}`}>{renderRecordingItem({ item })}</View>
+            <Text style={styles.resultsHeader}>Species</Text>
+            {species.map((item) => (
+              <View key={`species-${item.id}`}>{renderSpeciesItem({ item })}</View>
             ))}
           </>
         )}
