@@ -857,7 +857,7 @@ const RecordingDetailsScreen = () => {
         )}
 
         {/* Play button when paused */}
-        {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && (
+        {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && showControls && (
           <TouchableOpacity
             style={styles.playCenterButton}
             onPress={togglePlayPause}

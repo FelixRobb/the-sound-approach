@@ -306,7 +306,7 @@ const ProfileSettingsScreen = () => {
       fontWeight: "600",
     },
     storageButtonTextPrimary: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onTertiary,
     },
     storageButtonTextSecondary: {
       color: theme.colors.onSurfaceVariant,
@@ -371,7 +371,7 @@ const ProfileSettingsScreen = () => {
       fontWeight: "500",
     },
     themeOptionTextActive: {
-      color: theme.colors.onPrimary,
+      color: theme.colors.onTertiary,
       fontWeight: "600",
     },
     themeRow: {
