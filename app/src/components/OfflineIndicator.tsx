@@ -13,18 +13,19 @@ const OfflineIndicator = () => {
 
   const styles = StyleSheet.create({
     button: {
-      backgroundColor: theme.colors.onError,
+      backgroundColor: theme.colors.error,
       borderRadius: 12,
       marginBottom: 12,
       marginLeft: 8,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
+      paddingHorizontal: 10,
+      paddingVertical: 3,
     },
     buttonText: {
-      color: theme.colors.error,
+      color: theme.colors.onError,
       fontSize: 12,
       fontWeight: "600",
     },
+    // eslint-disable-next-line react-native/no-color-literals
     container: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -36,8 +37,15 @@ const OfflineIndicator = () => {
       height: 60,
       justifyContent: "space-between",
       paddingHorizontal: 16,
+      paddingLeft: 24,
       paddingVertical: 10,
-      shadowRadius: 4,
+      shadowColor: "000",
+      shadowOffset: {
+        width: 0,
+        height: -2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
       width: screenWidth,
     },
     content: {
@@ -58,7 +66,7 @@ const OfflineIndicator = () => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Ionicons name="cloud-offline" size={18} color={theme.colors.onError} />
+        <Ionicons name="cloud-offline" size={18} color={theme.colors.error} />
         <Text style={styles.text} numberOfLines={1} ellipsizeMode="tail">
           You&apos;re offline - Limited functionality available
         </Text>

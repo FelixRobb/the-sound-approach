@@ -162,15 +162,10 @@ const RecordingsListScreen = () => {
     filterButtonsContainer: {
       backgroundColor: theme.colors.surface,
       borderRadius: 24,
-      elevation: 3,
       marginHorizontal: 8,
       marginTop: 8,
       paddingHorizontal: 0,
       paddingTop: 6,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
     },
     filterDivider: {
       alignSelf: "center",
@@ -823,7 +818,17 @@ const RecordingsListScreen = () => {
                         sortOrder === "desc" && styles.filterButtonTextActive,
                       ]}
                     >
-                      {sortOrder === "asc" ? "A→Z" : "Z→A"}
+                      {sortOrder === "asc"
+                        ? sortBy === "page"
+                          ? "1→100"
+                          : sortBy === "title"
+                            ? "A→Z"
+                            : "A→Z"
+                        : sortBy === "page"
+                          ? "100→1"
+                          : sortBy === "title"
+                            ? "Z→A"
+                            : "Z→A"}
                     </Text>
                   </TouchableOpacity>
 

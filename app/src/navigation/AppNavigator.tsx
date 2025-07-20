@@ -444,8 +444,13 @@ const AppNavigator: React.FC = () => {
           return <MainNavigator />;
         }
       } else {
-        // Offline authenticated user - skip onboarding and go to offline mode
-        return <OfflineNavigator />;
+        // Offline authenticated user
+        // Show onboarding even in offline mode if not completed
+        if (!authState.hasCompletedOnboarding) {
+          return <OnboardingNavigator />;
+        } else {
+          return <OfflineNavigator />;
+        }
       }
     } else {
       // User is not authenticated

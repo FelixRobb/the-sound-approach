@@ -23,6 +23,7 @@ import { useSharedValue } from "react-native-reanimated";
 
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
+import LoadingScreen from "../components/LoadingScreen";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
@@ -53,6 +54,7 @@ const RecordingDetailsScreen = () => {
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const controlsOpacity = useRef(new Animated.Value(1)).current;
+  const backdropOpacity = useRef(new Animated.Value(0.5)).current;
 
   // Modal states
   const [showDownloadErrorModal, setShowDownloadErrorModal] = useState(false);
@@ -91,20 +93,26 @@ const RecordingDetailsScreen = () => {
     controlsContainer: {
       alignItems: "center",
       backgroundColor: "rgba(0, 0, 0, 0.8)",
-      borderRadius: 8,
-      bottom: 12,
+      borderRadius: 12,
+      bottom: 16,
       flexDirection: "row",
-      left: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      left: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       position: "absolute",
-      right: 12,
-      zIndex: 2,
+      right: 16,
+      zIndex: 10,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
       elevation: 5,
+    },
+    // New backdrop overlay style
+    controlsBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.backdrop,
+      zIndex: 2,
     },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
@@ -233,12 +241,12 @@ const RecordingDetailsScreen = () => {
     fullscreenControls: {
       alignItems: "center",
       backgroundColor: "rgba(0, 0, 0, 0.8)",
-      borderRadius: 8,
+      borderRadius: 12,
       bottom: 40,
       flexDirection: "row",
       left: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       position: "absolute",
       right: 20,
       zIndex: 1000,
@@ -271,75 +279,54 @@ const RecordingDetailsScreen = () => {
     fullscreenVideo: {
       flex: 1,
     },
-    loadingCard: {
-      alignItems: "center",
-      width: width * 0.9,
-    },
-    loadingContainer: {
-      alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      padding: 20,
-    },
     pageBadgeWrapper: {
       alignSelf: "flex-start",
       marginVertical: 2,
     },
-    // eslint-disable-next-line react-native/no-color-literals
-    playCenterButton: {
+    // Updated play button styles
+    playButton: {
       position: "absolute",
       top: "50%",
       left: "50%",
-      transform: [{ translateX: -35 }, { translateY: -35 }],
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
-      width: 70,
-      height: 70,
-      borderRadius: 35,
-      zIndex: 2,
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-      elevation: 6,
-      borderWidth: 2,
-      borderColor: "rgba(255, 255, 255, 0.2)",
     },
-    // eslint-disable-next-line react-native/no-color-literals
-    pauseCenterButton: {
+    // Updated pause button styles
+    pauseButton: {
       position: "absolute",
       top: "50%",
       left: "50%",
-      transform: [{ translateX: -35 }, { translateY: -35 }],
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
-      width: 70,
-      height: 70,
-      borderRadius: 35,
-      zIndex: 3,
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-      elevation: 6,
-      borderWidth: 2,
-      borderColor: "rgba(255, 255, 255, 0.2)",
     },
-    centerButtonTouch: {
-      flex: 1,
+    buttonIcon: {
+      marginLeft: isPlaying ? 0 : 4, // Slight adjustment for play icon centering
+    },
+    fullButtonTouchable: {
+      width: "100%",
+      height: "100%",
       alignItems: "center",
       justifyContent: "center",
     },
     videoTouchOverlay: {
       ...StyleSheet.absoluteFillObject,
-      zIndex: 1,
+      zIndex: 3,
     },
     playerContainer: {
       aspectRatio: 16 / 9,
       backgroundColor: theme.colors.background,
       width: "100%",
+      position: "relative",
     },
     playerContainerError: {
       alignItems: "center",
@@ -442,6 +429,10 @@ const RecordingDetailsScreen = () => {
     videoHeader: {
       padding: 20,
       paddingBottom: 12,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
     },
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -669,14 +660,21 @@ const RecordingDetailsScreen = () => {
   };
 
   const hideVideoControls = useCallback(() => {
-    Animated.timing(controlsOpacity, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
+    Animated.parallel([
+      Animated.timing(controlsOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
       setShowControls(false);
     });
-  }, [controlsOpacity]);
+  }, [controlsOpacity, backdropOpacity]);
 
   const resetControlsTimeout = useCallback(() => {
     if (controlsTimeoutRef.current) {
@@ -691,13 +689,20 @@ const RecordingDetailsScreen = () => {
 
   const showVideoControls = useCallback(() => {
     setShowControls(true);
-    Animated.timing(controlsOpacity, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(controlsOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropOpacity, {
+        toValue: 0.5,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
     resetControlsTimeout();
-  }, [controlsOpacity, resetControlsTimeout]);
+  }, [controlsOpacity, backdropOpacity, resetControlsTimeout]);
 
   const handleVideoPress = useCallback(() => {
     if (showControls) {
@@ -783,7 +788,7 @@ const RecordingDetailsScreen = () => {
           <Ionicons
             name={isPlaying ? "pause" : "play"}
             size={24}
-            color={isVideoLoaded ? "#ffffff" : "rgba(255, 255, 255, 0.5)"}
+            color={isVideoLoaded ? theme.colors.onTertiary : theme.colors.onTertiary}
           />
         </TouchableOpacity>
 
@@ -795,8 +800,8 @@ const RecordingDetailsScreen = () => {
           onSlidingComplete={onSeekComplete}
           thumbWidth={16}
           theme={{
-            minimumTrackTintColor: "#ffffff",
-            maximumTrackTintColor: "rgba(255, 255, 255, 0.3)",
+            minimumTrackTintColor: theme.colors.onTertiary,
+            maximumTrackTintColor: theme.colors.onTertiary,
           }}
           containerStyle={styles.slider}
           disable={!isVideoLoaded}
@@ -813,7 +818,11 @@ const RecordingDetailsScreen = () => {
         </Text>
 
         <TouchableOpacity style={styles.fullscreenButton} onPress={toggleFullscreen}>
-          <Ionicons name={isVideoFullscreen ? "contract" : "expand"} size={24} color="#ffffff" />
+          <Ionicons
+            name={isVideoFullscreen ? "contract" : "expand"}
+            size={24}
+            color={theme.colors.onTertiary}
+          />
         </TouchableOpacity>
       </Animated.View>
     );
@@ -850,6 +859,14 @@ const RecordingDetailsScreen = () => {
           activeOpacity={1}
         />
 
+        {/* Backdrop overlay that fades with controls */}
+        {showControls && (
+          <Animated.View
+            style={[styles.controlsBackdrop, { opacity: backdropOpacity }]}
+            pointerEvents="none"
+          />
+        )}
+
         {showInitialLoading && (
           <View style={[styles.videoOverlay, { backgroundColor: theme.colors.backdrop }]}>
             <ActivityIndicator size={36} color={theme.colors.primary} />
@@ -858,26 +875,26 @@ const RecordingDetailsScreen = () => {
 
         {/* Play button when paused */}
         {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && showControls && (
-          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+          <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
-              style={styles.playCenterButton}
               onPress={togglePlayPause}
               activeOpacity={0.8}
+              style={styles.fullButtonTouchable}
             >
-              <Ionicons name="play" size={32} color="#ffffff" />
+              <Ionicons name="play" size={40} color="white" style={styles.buttonIcon} />
             </TouchableOpacity>
           </Animated.View>
         )}
 
         {/* Pause button when playing and controls visible */}
         {isVideoLoaded && isPlaying && showControls && !isSeeking && !showInitialLoading && (
-          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+          <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
               onPress={togglePlayPause}
-              activeOpacity={1}
-              style={styles.centerButtonTouch}
+              activeOpacity={0.8}
+              style={styles.fullButtonTouchable}
             >
-              <Ionicons name="pause" size={32} color="#ffffff" />
+              <Ionicons name="pause" size={40} color="white" />
             </TouchableOpacity>
           </Animated.View>
         )}
@@ -892,17 +909,7 @@ const RecordingDetailsScreen = () => {
   const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <BackgroundPattern />
-        <DetailHeader title="Loading..." />
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-          </View>
-        </View>
-      </View>
-    );
+    return <LoadingScreen title="Loading Recording..." backgroundPattern={<BackgroundPattern />} />;
   }
 
   if (error || !recording) {
@@ -953,6 +960,14 @@ const RecordingDetailsScreen = () => {
           activeOpacity={1}
         />
 
+        {/* Backdrop overlay that fades with controls */}
+        {showControls && (
+          <Animated.View
+            style={[styles.controlsBackdrop, { opacity: backdropOpacity }]}
+            pointerEvents="none"
+          />
+        )}
+
         {showInitialLoading && (
           <View style={[styles.fullScreenVideoOverlay, { backgroundColor: theme.colors.backdrop }]}>
             <ActivityIndicator size={36} color={theme.colors.primary} />
@@ -961,26 +976,26 @@ const RecordingDetailsScreen = () => {
 
         {/* Play button when paused */}
         {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && showControls && (
-          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+          <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
-              style={styles.playCenterButton}
               onPress={togglePlayPause}
               activeOpacity={0.8}
+              style={styles.fullButtonTouchable}
             >
-              <Ionicons name="play" size={32} color="#ffffff" />
+              <Ionicons name="play" size={40} color="white" style={styles.buttonIcon} />
             </TouchableOpacity>
           </Animated.View>
         )}
 
         {/* Pause button when playing and controls visible */}
         {isVideoLoaded && isPlaying && showControls && !isSeeking && !showInitialLoading && (
-          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+          <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
               onPress={togglePlayPause}
-              activeOpacity={1}
-              style={styles.centerButtonTouch}
+              activeOpacity={0.8}
+              style={styles.fullButtonTouchable}
             >
-              <Ionicons name="pause" size={32} color="#ffffff" />
+              <Ionicons name="pause" size={40} color="white" />
             </TouchableOpacity>
           </Animated.View>
         )}

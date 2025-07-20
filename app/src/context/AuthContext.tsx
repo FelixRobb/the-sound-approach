@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetch as NetFetch } from "@react-native-community/netinfo";
 import type React from "react";
-import { createContext, useReducer, useEffect } from "react";
+import { createContext, useReducer, useEffect, useContext } from "react";
 
 import {
   clearUserDownloads,
@@ -11,6 +11,8 @@ import {
 } from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
 import type { AuthAction, AuthContextType, AuthState, User } from "../types";
+
+import { NetworkContext } from "./NetworkContext";
 
 // Initial state
 const initialState: AuthState = {
@@ -123,6 +125,44 @@ const checkOnboardingStatus = async (userId: string): Promise<boolean> => {
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const { onNetworkRestore } = useContext(NetworkContext);
+
+  // Add network restore callback to refresh session when network is restored
+  useEffect(() => {
+    const unsubscribe = onNetworkRestore(async () => {
+      try {
+        // Skip if no user is logged in
+        if (!state.userToken || !state.user) return;
+
+        // Refresh session when network is restored
+        const { data, error } = await supabase.auth.refreshSession();
+
+        if (error) {
+          console.warn("Failed to refresh session on network restore:", error);
+          return;
+        }
+
+        if (data?.session) {
+          // Check onboarding status
+          const hasCompletedOnboarding = await checkOnboardingStatus(data.session.user.id);
+
+          dispatch({
+            type: "RESTORE_TOKEN",
+            token: data.session.access_token,
+            user: {
+              id: data.session.user.id,
+              email: data.session.user.email || "",
+            },
+            hasCompletedOnboarding,
+          });
+        }
+      } catch (error) {
+        console.error("Error refreshing session on network restore:", error);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [onNetworkRestore, state.userToken, state.user]);
 
   // Effect to check for stored token on app start
   useEffect(() => {
@@ -203,10 +243,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
 
           if (isValid && token && user) {
+            // Check onboarding status even in offline mode
+            const hasCompletedOnboarding = await checkOnboardingStatus(user.id);
+
             dispatch({
               type: "RESTORE_TOKEN",
               token,
               user,
+              hasCompletedOnboarding,
             });
           } else {
             await clearOfflineAuthData();

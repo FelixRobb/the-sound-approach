@@ -1,9 +1,10 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useContext, useState } from "react";
+import { useContext, useState, useRef } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,6 +23,7 @@ const DeleteAccountScreen = () => {
   const { deleteAccount } = useContext(AuthContext);
   const { theme } = useThemedStyles();
   const insets = useSafeAreaInsets();
+  const confirmTextInputRef = useRef<TextInput>(null);
 
   const [password, setPassword] = useState("");
   const [confirmText, setConfirmText] = useState("");
@@ -157,7 +159,10 @@ const DeleteAccountScreen = () => {
   });
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <View style={styles.header}>
         <View style={styles.headerInner}>
           <Text style={styles.title}>Delete Account</Text>
@@ -178,8 +183,7 @@ const DeleteAccountScreen = () => {
             {"\n"}• Your account information
             {"\n"}• Your book code activation
             {"\n"}• All preferences and settings
-            {"\n\n"}This action cannot be undone. Please make sure you have backed up any important
-            data before proceeding.
+            {"\n\n"}This action cannot be undone.
           </Text>
         </View>
 
@@ -194,12 +198,16 @@ const DeleteAccountScreen = () => {
             placeholderTextColor={theme.colors.onSurfaceVariant}
             autoCapitalize="none"
             autoCorrect={false}
+            returnKeyType="next"
+            onSubmitEditing={() => confirmTextInputRef.current?.focus()}
+            blurOnSubmit={false}
           />
         </View>
 
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Type &quot;DELETE MY ACCOUNT&quot; to confirm</Text>
           <TextInput
+            ref={confirmTextInputRef}
             style={styles.input}
             value={confirmText}
             onChangeText={setConfirmText}
@@ -207,6 +215,7 @@ const DeleteAccountScreen = () => {
             placeholderTextColor={theme.colors.onSurfaceVariant}
             autoCapitalize="characters"
             autoCorrect={false}
+            returnKeyType="done"
           />
           <Text style={styles.confirmText}>This helps prevent accidental deletions</Text>
         </View>

@@ -4,10 +4,10 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
 import DownloadedBadge from "../components/DownloadedBadge";
+import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
@@ -136,29 +136,6 @@ const SpeciesDetailsScreen = () => {
       fontSize: 14,
       fontWeight: "500",
     },
-    loadingCard: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 4,
-      padding: 24,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-      width: width * 0.8,
-    },
-    loadingContainer: {
-      alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      padding: 24,
-    },
-    loadingText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      marginTop: 16,
-    },
     recordingContent: {
       flex: 1,
       paddingRight: 12,
@@ -232,19 +209,7 @@ const SpeciesDetailsScreen = () => {
 
   // Render loading state
   if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <BackgroundPattern />
-        <DetailHeader title="Loading..." />
-
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Loading species details...</Text>
-          </View>
-        </View>
-      </View>
-    );
+    return <LoadingScreen title="Loading Species..." backgroundPattern={<BackgroundPattern />} />;
   }
 
   // Render error state
