@@ -858,13 +858,15 @@ const RecordingDetailsScreen = () => {
 
         {/* Play button when paused */}
         {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && showControls && (
-          <TouchableOpacity
-            style={styles.playCenterButton}
-            onPress={togglePlayPause}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="play" size={32} color="#ffffff" />
-          </TouchableOpacity>
+          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+            <TouchableOpacity
+              style={styles.playCenterButton}
+              onPress={togglePlayPause}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="play" size={32} color="#ffffff" />
+            </TouchableOpacity>
+          </Animated.View>
         )}
 
         {/* Pause button when playing and controls visible */}
@@ -958,14 +960,16 @@ const RecordingDetailsScreen = () => {
         )}
 
         {/* Play button when paused */}
-        {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && (
-          <TouchableOpacity
-            style={styles.playCenterButton}
-            onPress={togglePlayPause}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="play" size={32} color="#ffffff" />
-          </TouchableOpacity>
+        {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && showControls && (
+          <Animated.View style={[styles.pauseCenterButton, { opacity: controlsOpacity }]}>
+            <TouchableOpacity
+              style={styles.playCenterButton}
+              onPress={togglePlayPause}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="play" size={32} color="#ffffff" />
+            </TouchableOpacity>
+          </Animated.View>
         )}
 
         {/* Pause button when playing and controls visible */}

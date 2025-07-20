@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { StatusBar } from "expo-status-bar";
 import { useContext, useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -263,8 +262,6 @@ const OnboardingScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
-
       <View style={styles.contentContainer}>
         {/* Header */}
         <View style={styles.header}>

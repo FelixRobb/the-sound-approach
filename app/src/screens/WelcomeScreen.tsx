@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
-import { StatusBar } from "expo-status-bar";
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -129,7 +128,6 @@ const WelcomeScreen = () => {
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <StatusBar style="light" translucent />
       <LinearGradient
         colors={["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 0.7)"]}
         locations={[0, 0.4, 1]}
