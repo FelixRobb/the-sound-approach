@@ -93,15 +93,15 @@ const RecordingDetailsScreen = () => {
     // eslint-disable-next-line react-native/no-color-literals
     controlsContainer: {
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      backgroundColor: theme.colors.backdrop,
       borderRadius: 12,
-      bottom: 16,
+      bottom: 10,
       flexDirection: "row",
-      left: 16,
+      left: 12,
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 8,
       position: "absolute",
-      right: 16,
+      right: 12,
       zIndex: 10,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
@@ -109,7 +109,6 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 3.84,
       elevation: 5,
     },
-    // New backdrop overlay style
     controlsBackdrop: {
       ...StyleSheet.absoluteFillObject,
       backgroundColor: theme.colors.backdrop,
@@ -361,7 +360,7 @@ const RecordingDetailsScreen = () => {
     },
     // eslint-disable-next-line react-native/no-color-literals
     sliderThumb: {
-      backgroundColor: "#ffffff",
+      backgroundColor: theme.colors.tertiary,
       borderRadius: 8,
       elevation: 2,
       height: 16,
@@ -408,7 +407,7 @@ const RecordingDetailsScreen = () => {
     },
     // eslint-disable-next-line react-native/no-color-literals
     timeText: {
-      color: "#ffffff",
+      color: theme.colors.tertiary,
       fontSize: 14,
       marginLeft: 8,
       fontWeight: "500",
@@ -813,11 +812,7 @@ const RecordingDetailsScreen = () => {
     return (
       <Animated.View style={[containerStyle, { opacity: controlsOpacity }]}>
         <TouchableOpacity onPress={togglePlayPause} disabled={!isVideoLoaded}>
-          <Ionicons
-            name={isPlaying ? "pause" : "play"}
-            size={24}
-            color={isVideoLoaded ? theme.colors.onTertiary : theme.colors.onTertiary}
-          />
+          <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.tertiary} />
         </TouchableOpacity>
 
         <Slider
@@ -828,15 +823,15 @@ const RecordingDetailsScreen = () => {
           onSlidingComplete={onSeekComplete}
           thumbWidth={16}
           theme={{
-            minimumTrackTintColor: theme.colors.onTertiary,
-            maximumTrackTintColor: theme.colors.onTertiary,
+            minimumTrackTintColor: theme.colors.tertiary,
+            maximumTrackTintColor: theme.colors.tertiary,
           }}
           containerStyle={styles.slider}
           disable={!isVideoLoaded}
           disableTapEvent
           bubble={(value) => formatTime(value)}
           bubbleTextStyle={{
-            color: theme.colors.onTertiary,
+            color: theme.colors.tertiary,
           }}
           renderThumb={() => <View style={styles.sliderThumb} />}
         />
@@ -849,7 +844,7 @@ const RecordingDetailsScreen = () => {
           <Ionicons
             name={isVideoFullscreen ? "contract" : "expand"}
             size={24}
-            color={theme.colors.onTertiary}
+            color={theme.colors.tertiary}
           />
         </TouchableOpacity>
       </Animated.View>
