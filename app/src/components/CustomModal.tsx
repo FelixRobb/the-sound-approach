@@ -44,7 +44,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
   buttons,
   closeOnBackdrop = true,
 }) => {
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme } = useThemedStyles();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -217,10 +217,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <StatusBar
-        backgroundColor={theme.colors.backdrop}
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-      />
+      <StatusBar backgroundColor={theme.colors.backdrop} />
       <TouchableWithoutFeedback onPress={handleBackdropPress}>
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
           <View style={styles.container}>

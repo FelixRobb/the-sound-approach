@@ -303,7 +303,8 @@ const SearchScreen = () => {
       flex: 1,
       fontSize: 16,
       marginLeft: 10,
-      paddingVertical: 10,
+      paddingVertical: 0,
+      textAlignVertical: "center",
     },
     sectionDivider: {
       backgroundColor: theme.colors.surfaceVariant,
@@ -680,7 +681,6 @@ const SearchScreen = () => {
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color={theme.colors.primary} />
             <TextInput
-              textAlignVertical="center"
               placeholder="Search species, recordings, or pages..."
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}

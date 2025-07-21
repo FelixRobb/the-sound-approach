@@ -49,6 +49,7 @@ const RecordingDetailsScreen = () => {
   const [videoError, setVideoError] = useState(false);
   const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
   const [showInitialLoading, setShowInitialLoading] = useState(true);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
 
   // Controls visibility state
   const [showControls, setShowControls] = useState(true);
@@ -446,6 +447,18 @@ const RecordingDetailsScreen = () => {
       fontSize: 18,
       fontWeight: "bold",
     },
+    replayButton: {
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      zIndex: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
   });
 
   // Fetch recording details
@@ -493,6 +506,7 @@ const RecordingDetailsScreen = () => {
     setIsPlaying(false);
     setIsSeeking(false);
     setWasPlayingBeforeSeek(false);
+    setIsVideoEnded(false);
   }, [sonogramVideoUri]);
 
   // Listen for video ready/loaded events
@@ -522,6 +536,11 @@ const RecordingDetailsScreen = () => {
     if (!isSeeking) {
       setVideoPosition(payload.currentTime);
       sliderProgress.value = payload.currentTime;
+
+      // Check if video has ended
+      if (payload.currentTime >= videoDuration && videoDuration > 0) {
+        setIsVideoEnded(true);
+      }
     }
   });
 
@@ -718,7 +737,14 @@ const RecordingDetailsScreen = () => {
     if (!isVideoLoaded || !videoPlayer) return;
 
     try {
-      if (isPlaying) {
+      if (isVideoEnded) {
+        // Reset video to beginning when ended
+        videoPlayer.currentTime = 0;
+        sliderProgress.value = 0;
+        setVideoPosition(0);
+        setIsVideoEnded(false);
+        videoPlayer.play();
+      } else if (isPlaying) {
         videoPlayer.pause();
       } else {
         videoPlayer.play();
@@ -876,30 +902,53 @@ const RecordingDetailsScreen = () => {
         )}
 
         {/* Play button when paused */}
-        {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && showControls && (
-          <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
+        {isVideoLoaded &&
+          !isPlaying &&
+          !isVideoEnded &&
+          !isSeeking &&
+          !showInitialLoading &&
+          showControls && (
+            <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
+              <TouchableOpacity
+                onPress={togglePlayPause}
+                activeOpacity={0.8}
+                style={styles.fullButtonTouchable}
+              >
+                <Ionicons name="play" size={40} color="white" style={styles.buttonIcon} />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+
+        {/* Replay button when video ended */}
+        {isVideoLoaded && isVideoEnded && !isSeeking && !showInitialLoading && showControls && (
+          <Animated.View style={[styles.replayButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
               onPress={togglePlayPause}
               activeOpacity={0.8}
               style={styles.fullButtonTouchable}
             >
-              <Ionicons name="play" size={40} color="white" style={styles.buttonIcon} />
+              <Ionicons name="refresh" size={40} color="white" />
             </TouchableOpacity>
           </Animated.View>
         )}
 
         {/* Pause button when playing and controls visible */}
-        {isVideoLoaded && isPlaying && showControls && !isSeeking && !showInitialLoading && (
-          <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
-            <TouchableOpacity
-              onPress={togglePlayPause}
-              activeOpacity={0.8}
-              style={styles.fullButtonTouchable}
-            >
-              <Ionicons name="pause" size={40} color="white" />
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+        {isVideoLoaded &&
+          isPlaying &&
+          !isVideoEnded &&
+          showControls &&
+          !isSeeking &&
+          !showInitialLoading && (
+            <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
+              <TouchableOpacity
+                onPress={togglePlayPause}
+                activeOpacity={0.8}
+                style={styles.fullButtonTouchable}
+              >
+                <Ionicons name="pause" size={40} color="white" />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
 
         {/* Bottom controls */}
         {showControls && renderVideoControls(false)}
@@ -977,30 +1026,53 @@ const RecordingDetailsScreen = () => {
         )}
 
         {/* Play button when paused */}
-        {isVideoLoaded && !isPlaying && !isSeeking && !showInitialLoading && showControls && (
-          <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
+        {isVideoLoaded &&
+          !isPlaying &&
+          !isVideoEnded &&
+          !isSeeking &&
+          !showInitialLoading &&
+          showControls && (
+            <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
+              <TouchableOpacity
+                onPress={togglePlayPause}
+                activeOpacity={0.8}
+                style={styles.fullButtonTouchable}
+              >
+                <Ionicons name="play" size={40} color="white" style={styles.buttonIcon} />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+
+        {/* Replay button when video ended */}
+        {isVideoLoaded && isVideoEnded && !isSeeking && !showInitialLoading && showControls && (
+          <Animated.View style={[styles.replayButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
               onPress={togglePlayPause}
               activeOpacity={0.8}
               style={styles.fullButtonTouchable}
             >
-              <Ionicons name="play" size={40} color="white" style={styles.buttonIcon} />
+              <Ionicons name="refresh" size={40} color="white" />
             </TouchableOpacity>
           </Animated.View>
         )}
 
         {/* Pause button when playing and controls visible */}
-        {isVideoLoaded && isPlaying && showControls && !isSeeking && !showInitialLoading && (
-          <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
-            <TouchableOpacity
-              onPress={togglePlayPause}
-              activeOpacity={0.8}
-              style={styles.fullButtonTouchable}
-            >
-              <Ionicons name="pause" size={40} color="white" />
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+        {isVideoLoaded &&
+          isPlaying &&
+          !isVideoEnded &&
+          showControls &&
+          !isSeeking &&
+          !showInitialLoading && (
+            <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
+              <TouchableOpacity
+                onPress={togglePlayPause}
+                activeOpacity={0.8}
+                style={styles.fullButtonTouchable}
+              >
+                <Ionicons name="pause" size={40} color="white" />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
 
         {/* Bottom controls */}
         {showControls && renderVideoControls(true)}

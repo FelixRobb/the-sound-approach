@@ -10,6 +10,7 @@ interface PageBadgeProps {
   textStyle?: TextStyle;
   iconSize?: number;
   labelPrefix?: string;
+  compact?: boolean;
 }
 
 const PageBadge: React.FC<PageBadgeProps> = ({
@@ -18,6 +19,7 @@ const PageBadge: React.FC<PageBadgeProps> = ({
   textStyle,
   iconSize = 14,
   labelPrefix = "Page ",
+  compact = false,
 }) => {
   const { theme } = useThemedStyles();
   const styles = StyleSheet.create({
@@ -26,24 +28,23 @@ const PageBadge: React.FC<PageBadgeProps> = ({
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 8,
       flexDirection: "row",
-      maxWidth: 140,
-      minWidth: 0,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      minHeight: 20,
     },
     text: {
       color: theme.colors.onSurfaceVariant,
-      flexShrink: 1,
-      fontSize: 12,
-      fontWeight: "500",
-      marginLeft: 4,
+      fontSize: 11,
+      fontWeight: "600",
+      marginLeft: 3,
+      lineHeight: 13,
     },
   });
   return (
     <View style={[styles.badge, style]}>
       <Ionicons name="book-outline" size={iconSize} color={theme.colors.onSurfaceVariant} />
       <Text style={[styles.text, textStyle]}>
-        {labelPrefix}
+        {!compact && labelPrefix}
         {page}
       </Text>
     </View>

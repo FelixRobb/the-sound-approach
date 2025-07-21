@@ -26,9 +26,9 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, si
   const styles = StyleSheet.create({
     buttonContainer: {
       alignItems: "center",
-      height: size + 8,
+      height: size + 4,
       justifyContent: "center",
-      width: size + 8,
+      width: size + 4,
     },
     pauseIcon: {
       marginLeft: 0,
@@ -41,13 +41,13 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, si
       height: size,
       justifyContent: "center",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
       width: size,
     },
     playIcon: {
-      marginLeft: 2,
+      marginLeft: 1,
     },
   });
 

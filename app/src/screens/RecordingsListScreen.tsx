@@ -66,6 +66,73 @@ const RecordingsListScreen = () => {
   );
 
   const styles = StyleSheet.create({
+    recordingCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 8,
+      marginHorizontal: 12,
+      marginVertical: 4,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 0.5 },
+      shadowOpacity: 0.4,
+      shadowRadius: 1,
+      elevation: 1,
+      borderBottomWidth: 0.5,
+      borderBottomColor: theme.colors.outlineVariant,
+    },
+    recordingMainContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    recordingLeftSection: {
+      flex: 1,
+      minWidth: 0,
+    },
+    recordingTopRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 4,
+    },
+    recordingTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 15,
+      fontWeight: "600",
+      lineHeight: 18,
+      flex: 1,
+      marginRight: 8,
+    },
+    recordingBadges: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      flexShrink: 0,
+    },
+    recordingSpecies: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    commonName: {
+      color: theme.colors.primary,
+      fontSize: 13,
+      fontWeight: "500",
+      lineHeight: 16,
+    },
+    scientificName: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 11,
+      fontStyle: "italic",
+      lineHeight: 14,
+      opacity: 0.8,
+    },
+    audioPlayerContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
     backgroundPattern: {
       backgroundColor: theme.colors.background,
       bottom: 0,
@@ -74,17 +141,6 @@ const RecordingsListScreen = () => {
       position: "absolute",
       right: 0,
       top: 0,
-    },
-    caption: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
-      lineHeight: 17,
-    },
-    commonName: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: "600",
-      lineHeight: 18,
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -201,7 +257,7 @@ const RecordingsListScreen = () => {
       paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.6,
       shadowRadius: 4,
       zIndex: 1,
     },
@@ -209,11 +265,6 @@ const RecordingsListScreen = () => {
       alignItems: "center",
       flexDirection: "row",
       flexShrink: 1,
-      gap: 8,
-    },
-    headerBadges: {
-      alignItems: "center",
-      flexDirection: "row",
       gap: 8,
     },
     headerButton: {
@@ -235,8 +286,9 @@ const RecordingsListScreen = () => {
       justifyContent: "space-between",
     },
     listContainer: {
+      marginTop: 4,
       flex: 1,
-      paddingHorizontal: 16,
+      paddingHorizontal: 0,
     },
     loadingContainer: {
       alignItems: "center",
@@ -246,55 +298,6 @@ const RecordingsListScreen = () => {
     },
     loadingText: {
       color: theme.colors.onSurface,
-    },
-    recordingActions: {
-      alignItems: "center",
-      justifyContent: "flex-start",
-      minWidth: 38,
-    },
-    recordingCard: {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderRadius: 12,
-      borderWidth: 0.5,
-      elevation: 2,
-      marginHorizontal: 2,
-      marginVertical: 4,
-      padding: 12,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-    },
-    recordingContent: {
-      alignItems: "flex-start",
-      flexDirection: "row",
-      gap: 12,
-      justifyContent: "space-between",
-    },
-    recordingHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 8,
-    },
-    recordingTextInfo: {
-      flex: 1,
-      gap: 6,
-    },
-    recordingTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "700",
-      lineHeight: 20,
-    },
-    scientificName: {
-      color: theme.colors.primary,
-      fontSize: 12,
-      fontStyle: "italic",
-      fontWeight: "400",
-      lineHeight: 15,
-      opacity: 0.75,
     },
     scrollViewFilters: {
       alignItems: "center",
@@ -335,13 +338,15 @@ const RecordingsListScreen = () => {
     speciesCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 12,
-      elevation: 2,
-      marginVertical: 8,
-      padding: 16,
+      marginHorizontal: 12,
+      marginVertical: 4,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
+      shadowOffset: { width: 0, height: 0.5 },
+      shadowOpacity: 0.4,
+      shadowRadius: 1,
+      elevation: 2,
     },
     speciesContent: {
       alignItems: "center",
@@ -354,9 +359,6 @@ const RecordingsListScreen = () => {
       fontWeight: "700",
       marginBottom: 4,
     },
-    speciesRow: {
-      gap: 3,
-    },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
       fontSize: 15,
@@ -366,10 +368,6 @@ const RecordingsListScreen = () => {
       color: theme.colors.primary,
       fontSize: 28,
       fontWeight: "bold",
-    },
-    titleContainer: {
-      flex: 1,
-      marginRight: 12,
     },
   });
 
@@ -576,45 +574,32 @@ const RecordingsListScreen = () => {
         }}
         activeOpacity={0.7}
       >
-        {/* Header row - Title with page and download status */}
-        <View style={styles.recordingHeader}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.recordingTitle} numberOfLines={1}>
-              {item.title}
-            </Text>
-          </View>
-          <View style={styles.headerBadges}>
-            <PageBadge page={item.book_page_number} />
-            {isItemDownloaded && <DownloadedBadge />}
-          </View>
-        </View>
-
-        {/* Content row - Species info and audio player */}
-        <View style={styles.recordingContent}>
-          <View style={styles.recordingTextInfo}>
-            {item.species && (
-              <View style={styles.speciesRow}>
-                <Text style={styles.commonName} numberOfLines={1}>
-                  {item.species.common_name}
-                </Text>
-                <Text style={styles.scientificName} numberOfLines={1}>
-                  {item.species.scientific_name}
-                </Text>
-              </View>
-            )}
-
-            {item.caption && (
-              <Text style={styles.caption} numberOfLines={2}>
-                {item.caption}
+        <View style={styles.recordingMainContent}>
+          <View style={styles.recordingLeftSection}>
+            <View style={styles.recordingTopRow}>
+              <Text style={styles.recordingTitle} numberOfLines={1}>
+                {item.title}
               </Text>
-            )}
+              <View style={styles.recordingBadges}>
+                <PageBadge page={item.book_page_number} compact />
+              </View>
+            </View>
+            <View style={styles.recordingSpecies}>
+              {isItemDownloaded && <DownloadedBadge smallRound />}
+              <Text style={styles.commonName} numberOfLines={1}>
+                {item.species?.common_name}
+                <Text style={styles.scientificName} numberOfLines={1}>
+                  , {item.species?.scientific_name}
+                </Text>
+              </Text>
+            </View>
           </View>
 
-          {/* Audio player positioned to align with species info */}
-          <View style={styles.recordingActions}>
+          {/* Audio player */}
+          <View style={styles.audioPlayerContainer}>
             {(() => {
               const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
-              return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={38} /> : null;
+              return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={32} /> : null;
             })()}
           </View>
         </View>

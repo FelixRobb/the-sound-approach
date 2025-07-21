@@ -10,6 +10,7 @@ interface DownloadedBadgeProps {
   iconSize?: number;
   label?: string;
   compact?: boolean;
+  smallRound?: boolean;
 }
 
 const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
@@ -18,37 +19,44 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
   iconSize = 14,
   label = "Downloaded",
   compact = false,
+  smallRound = false,
 }) => {
   const { theme } = useThemedStyles();
   const styles = StyleSheet.create({
     badge: {
       alignItems: "center",
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
+      borderRadius: smallRound ? 10 : 6,
       flexDirection: "row",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      minHeight: 20,
     },
     compactBadge: {
       alignItems: "center",
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 6,
-      height: 20,
+      borderRadius: smallRound ? 10 : 6,
+      height: smallRound ? 16 : 20,
       justifyContent: "center",
-      width: 20,
+      width: smallRound ? 16 : 20,
     },
     text: {
       color: theme.colors.onTertiary,
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: "600",
-      marginLeft: 4,
+      marginLeft: 3,
+      lineHeight: 13,
     },
   });
 
-  if (compact) {
+  if (compact || smallRound) {
     return (
       <View style={[styles.compactBadge, style]}>
-        <Ionicons name="cloud-done-outline" size={12} color={theme.colors.onTertiary} />
+        <Ionicons
+          name="cloud-done-outline"
+          size={smallRound ? 10 : 12}
+          color={theme.colors.onTertiary}
+        />
       </View>
     );
   }
