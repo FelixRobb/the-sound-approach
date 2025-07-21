@@ -13,6 +13,10 @@ export interface AudioPlayerState {
   trackId: string | null;
   playbackState: PlaybackState;
   error: string | null;
+  /** current playback position in seconds */
+  position: number;
+  /** total duration of the loaded track in seconds */
+  duration: number;
 }
 
 // Initial state
@@ -20,6 +24,8 @@ const initialState: AudioPlayerState = {
   trackId: null,
   playbackState: "idle",
   error: null,
+  position: 0,
+  duration: 0,
 };
 
 class AudioService {
@@ -119,8 +125,6 @@ class AudioService {
     }
 
     try {
-      // Reset to beginning
-      await this.sound.setPositionAsync(0);
       await this.sound.playAsync();
       this.updateState({ playbackState: "playing" });
       return true;
@@ -133,16 +137,14 @@ class AudioService {
     }
   }
 
-  // Pause the current track
-  private async pause(): Promise<boolean> {
+  // Pause the current track without unloading sound
+  public async pause(): Promise<boolean> {
     if (!this.sound || this.state.playbackState !== "playing") {
       return false;
     }
 
     try {
       await this.sound.pauseAsync();
-      // Reset to beginning when paused
-      await this.sound.setPositionAsync(0);
       this.updateState({ playbackState: "paused" });
       return true;
     } catch (error) {
@@ -171,6 +173,52 @@ class AudioService {
       this.sound = null;
       this.updateState({
         ...initialState,
+      });
+      return false;
+    }
+  }
+
+  // Load a track without starting playback (preload)
+  public async loadTrack(uri: string, trackId: string): Promise<boolean> {
+    try {
+      // If the requested track is already loaded, do nothing
+      if (this.state.trackId === trackId) {
+        return true;
+      }
+
+      // Stop any current track
+      await this.stop();
+
+      // Update state to loading
+      this.updateState({ trackId, playbackState: "loading", error: null });
+
+      // Create the sound without auto-play
+      const { sound, status } = await Audio.Sound.createAsync(
+        { uri },
+        { shouldPlay: false },
+        this.onPlaybackStatusUpdate
+      );
+
+      this.sound = sound;
+
+      if (status.isLoaded) {
+        const durationSec =
+          "durationMillis" in status && typeof status.durationMillis === "number"
+            ? status.durationMillis / 1000
+            : 0;
+
+        this.updateState({ playbackState: "paused", duration: durationSec, position: 0 });
+        return true;
+      }
+
+      // Failed to load
+      this.updateState({ playbackState: "idle", error: "Failed to load audio" });
+      return false;
+    } catch (error) {
+      this.updateState({
+        playbackState: "idle",
+        trackId: null,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return false;
     }
@@ -215,14 +263,53 @@ class AudioService {
       return;
     }
 
+    // Update position & duration continuously for UI components that require it
+    const positionSeconds =
+      "positionMillis" in status && typeof status.positionMillis === "number"
+        ? status.positionMillis / 1000
+        : 0;
+    const durationSeconds =
+      "durationMillis" in status && typeof status.durationMillis === "number"
+        ? status.durationMillis / 1000
+        : this.state.duration;
+
+    this.updateState({ position: positionSeconds, duration: durationSeconds });
+
     // Check if playback finished
     if (status.didJustFinish) {
       this.updateState({
         playbackState: "idle",
         trackId: null,
+        position: 0,
       });
     }
   };
+
+  /**
+   * Seek the current track to a given position in **seconds**
+   */
+  public async seekTo(positionSeconds: number): Promise<boolean> {
+    if (!this.sound) return false;
+
+    try {
+      await this.sound.setPositionAsync(positionSeconds * 1000);
+      this.updateState({ position: positionSeconds });
+      return true;
+    } catch (error) {
+      console.error("AudioService seek error", error);
+      return false;
+    }
+  }
+
+  /** Convenience: skip backward by given seconds (default 10s) */
+  public async skipBackward(seconds = 10): Promise<boolean> {
+    return this.seekTo(Math.max(0, this.state.position - seconds));
+  }
+
+  /** Convenience: skip forward by given seconds (default 10s) */
+  public async skipForward(seconds = 10): Promise<boolean> {
+    return this.seekTo(Math.min(this.state.duration, this.state.position + seconds));
+  }
 }
 
 export default AudioService;
