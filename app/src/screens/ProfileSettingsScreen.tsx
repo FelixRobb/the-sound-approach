@@ -431,7 +431,7 @@ const ProfileSettingsScreen = () => {
           </View>
           <View style={styles.detailContent}>
             <Text style={styles.detailLabel}>Book Access Code</Text>
-            <Text style={styles.detailValue}>••••••••</Text>
+            <Text style={styles.detailValue}>{authState.user?.bookCode ?? "Not available"}</Text>
           </View>
         </View>
       </View>

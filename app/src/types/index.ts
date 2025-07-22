@@ -58,6 +58,8 @@ export type UserDownload = {
 export type User = {
   id: string;
   email: string;
+  /** Optional 8-character book access code that links the user to a physical copy of the book */
+  bookCode?: string;
 };
 
 export type AuthState = {

@@ -123,6 +123,30 @@ const checkOnboardingStatus = async (userId: string): Promise<boolean> => {
   }
 };
 
+// Helper to retrieve the user’s book code from the user_activations table
+const fetchUserBookCode = async (userId: string): Promise<string | undefined> => {
+  try {
+    const { data, error } = await supabase
+      .from("user_activations")
+      // Join to book_codes table and get the code field
+      .select("book_codes(code)")
+      .eq("user_id", userId)
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.warn("Error fetching book code:", error);
+      return undefined;
+    }
+
+    const code = (data as { book_codes?: { code?: string } })?.book_codes?.code;
+    return code ?? undefined;
+  } catch (err) {
+    console.error("Unexpected error fetching book code:", err);
+    return undefined;
+  }
+};
+
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -147,12 +171,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Check onboarding status
           const hasCompletedOnboarding = await checkOnboardingStatus(data.session.user.id);
 
+          let restoredBookCode =
+            (data.session.user.user_metadata?.book_code as string | undefined) ?? undefined;
+
+          if (!restoredBookCode) {
+            restoredBookCode = await fetchUserBookCode(data.session.user.id);
+          }
+
           dispatch({
             type: "RESTORE_TOKEN",
             token: data.session.access_token,
             user: {
               id: data.session.user.id,
               email: data.session.user.email || "",
+              bookCode: restoredBookCode,
             },
             hasCompletedOnboarding,
           });
@@ -184,10 +216,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             case "TOKEN_REFRESHED":
               if (session) {
-                // Store the refreshed token
+                // Attempt to get book code from metadata; if missing, fetch from DB
+                let refreshedBookCode =
+                  (session.user.user_metadata?.book_code as string | undefined) ?? undefined;
+
+                if (!refreshedBookCode) {
+                  refreshedBookCode = await fetchUserBookCode(session.user.id);
+                }
+
+                // Store the refreshed token and book code
                 await storeOfflineAuthData(session.access_token, {
                   id: session.user.id,
                   email: session.user.email || "",
+                  bookCode: refreshedBookCode,
                 });
 
                 // Check onboarding status
@@ -199,6 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   user: {
                     id: session.user.id,
                     email: session.user.email || "",
+                    bookCode: refreshedBookCode,
                   },
                   hasCompletedOnboarding,
                 });
@@ -207,9 +249,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             case "SIGNED_IN":
               if (session) {
+                let signedInBookCode =
+                  (session.user.user_metadata?.book_code as string | undefined) ?? undefined;
+
+                if (!signedInBookCode) {
+                  signedInBookCode = await fetchUserBookCode(session.user.id);
+                }
+
                 await storeOfflineAuthData(session.access_token, {
                   id: session.user.id,
                   email: session.user.email || "",
+                  bookCode: signedInBookCode,
                 });
 
                 // Only check onboarding status if we don't already have a user token
@@ -223,6 +273,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     user: {
                       id: session.user.id,
                       email: session.user.email || "",
+                      bookCode: signedInBookCode,
                     },
                     hasCompletedOnboarding,
                   });
@@ -355,9 +406,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
 
               // Session is valid, update stored data
+              let restoredBookCode =
+                (sessionData.session.user.user_metadata?.book_code as string | undefined) ??
+                undefined;
+
+              if (!restoredBookCode) {
+                restoredBookCode = await fetchUserBookCode(sessionData.session.user.id);
+              }
+
               await storeOfflineAuthData(sessionData.session.access_token, {
                 id: sessionData.session.user.id,
                 email: sessionData.session.user.email || "",
+                bookCode: restoredBookCode,
               });
 
               // Check onboarding status for existing users
@@ -371,6 +431,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 user: {
                   id: sessionData.session.user.id,
                   email: sessionData.session.user.email || "",
+                  bookCode: restoredBookCode,
                 },
                 hasCompletedOnboarding,
               });
@@ -475,10 +536,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (data?.user && data?.session) {
-          // Store offline authentication data
+          // Try metadata first, then fall back to DB lookup
+          let bookCode = (data.user.user_metadata?.book_code as string | undefined) ?? undefined;
+
+          if (!bookCode) {
+            bookCode = await fetchUserBookCode(data.user.id);
+          }
+
+          // Store offline authentication data including the book code
           await storeOfflineAuthData(data.session.access_token, {
             id: data.user.id,
             email: data.user.email || "",
+            bookCode,
           });
 
           // Check onboarding status for existing users
@@ -490,6 +559,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user: {
               id: data.user.id,
               email: data.user.email || "",
+              bookCode,
             },
             hasCompletedOnboarding,
           });
@@ -557,10 +627,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           }
 
-          // Store offline authentication data
+          // Store offline authentication data including the new book code
           await storeOfflineAuthData(data.session.access_token, {
             id: data.user.id,
             email: data.user.email || "",
+            bookCode,
           });
 
           dispatch({
@@ -569,6 +640,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user: {
               id: data.user.id,
               email: data.user.email || "",
+              bookCode,
             },
           });
         }

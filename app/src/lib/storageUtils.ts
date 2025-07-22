@@ -77,7 +77,7 @@ export const clearOfflineAuthData = async () => {
  */
 export const storeOfflineAuthData = async (
   accessToken: string,
-  userData: { id: string; email: string }
+  userData: { id: string; email: string; bookCode?: string }
 ) => {
   try {
     const expiryDate = new Date();

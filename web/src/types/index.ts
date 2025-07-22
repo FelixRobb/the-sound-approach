@@ -38,6 +38,7 @@ export type UserActivation = {
 export type User = {
   id: string;
   email: string;
+  bookCode?: string;
 };
 
 // Authentication types
