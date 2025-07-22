@@ -24,6 +24,7 @@ import { useSharedValue } from "react-native-reanimated";
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
 import LoadingScreen from "../components/LoadingScreen";
+import MediaTabSwitcher from "../components/MediaTabSwitcher";
 import PageBadge from "../components/PageBadge";
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -56,7 +57,6 @@ const RecordingDetailsScreen = () => {
     seekTo: seekAudioTo,
     skipForward: skipAudioForward,
     skipBackward: skipAudioBackward,
-    stopPlayback,
     loadTrack,
   } = useAudio();
 
@@ -384,7 +384,7 @@ const RecordingDetailsScreen = () => {
       flex: 1,
       height: 40,
       marginHorizontal: 12,
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.tertiary,
     },
     // eslint-disable-next-line react-native/no-color-literals
     sliderThumb: {
@@ -397,32 +397,6 @@ const RecordingDetailsScreen = () => {
       shadowOpacity: 0.3,
       shadowRadius: 2,
       width: 16,
-    },
-
-    /* Media (Video / Audio) tab styles */
-    mediaTabsContainer: {
-      flexDirection: "row",
-      alignSelf: "center",
-      marginBottom: 12,
-      borderRadius: 8,
-      overflow: "hidden",
-    },
-    mediaTabButton: {
-      flex: 1,
-      paddingVertical: 8,
-      backgroundColor: theme.colors.surface,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    mediaTabButtonActive: {
-      backgroundColor: theme.colors.primary,
-    },
-    mediaTabText: {
-      color: theme.colors.onSurface,
-      fontWeight: "500",
-    },
-    mediaTabTextActive: {
-      color: theme.colors.onPrimary,
     },
 
     /* Audio specific styles */
@@ -516,6 +490,7 @@ const RecordingDetailsScreen = () => {
       gap: 2,
     },
     audioWaveformBar: {
+      backgroundColor: theme.colors.tertiary,
       width: 3,
       borderRadius: 1.5,
       opacity: 0.6,
@@ -635,6 +610,15 @@ const RecordingDetailsScreen = () => {
     return getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
   }, [recording, isDownloaded, getDownloadPath, isConnected]);
 
+  // Pre-load the audio as soon as we have the URI – mirrors video behaviour
+  useEffect(() => {
+    if (!audioUri || !recording) return;
+    // If this track is already loaded, `loadTrack` is a no-op
+    loadTrack(audioUri, recording.id).catch(() => {
+      // Ignore preload errors – the normal play action will surface any problems
+    });
+  }, [audioUri, recording, loadTrack]);
+
   // Shared values for audio slider
   const audioSliderProgress = useSharedValue(0);
   const audioSliderMin = useSharedValue(0);
@@ -689,24 +673,24 @@ const RecordingDetailsScreen = () => {
     if (!recording) return;
 
     if (tab === "audio") {
-      // Pause video playback when switching to audio
+      // Pause the video when focusing the audio tab
       if (videoPlayer) {
         try {
           videoPlayer.pause();
-        } catch (e) {
-          // ignore
+        } catch {
+          /* silent */
         }
       }
 
-      // Preload audio if not loaded
+      // Ensure the track is at least pre-loaded (will be a no-op if already)
       if (audioUri && currentTrackId !== recording.id) {
-        // Preload, ignore result
         loadTrack(audioUri, recording.id).catch(() => {});
       }
     } else {
-      // Stop audio playback for this recording when switching back to video
-      if (currentTrackId === recording.id) {
-        stopPlayback().catch(() => {});
+      // Just pause the audio instead of fully stopping/unloading it so the
+      // user can seamlessly switch back without re-loading.
+      if (currentTrackId === recording.id && isAudioPlaying && audioUri) {
+        toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
       }
     }
   };
@@ -1209,7 +1193,7 @@ const RecordingDetailsScreen = () => {
           <View style={styles.audioWaveformContainer}>
             {/* Audio waveform visualization placeholder */}
             <View style={styles.audioWaveformRow}>
-              {Array.from({ length: 40 }).map((_, index) => (
+              {Array.from({ length: 50 }).map((_, index) => (
                 <View
                   key={index}
                   style={[
@@ -1273,6 +1257,9 @@ const RecordingDetailsScreen = () => {
           <View style={styles.audioTimeContainer}>
             <Text style={styles.audioTimeText}>
               {formatTime(isCurrentAudioTrack ? audioPosition : 0)}
+            </Text>
+            <Text style={styles.audioTimeText}>
+              {getDownloadStatus() === "completed" ? "Playing from Download" : "Playing from Cloud"}
             </Text>
             <Text style={styles.audioTimeText}>{formatTime(audioDuration)}</Text>
           </View>
@@ -1446,48 +1433,27 @@ const RecordingDetailsScreen = () => {
             <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
           </TouchableOpacity>
         </View>
-
         {/* Media selector tabs */}
-        <View style={styles.mediaTabsContainer}>
-          <TouchableOpacity
-            style={[styles.mediaTabButton, activeTab === "video" && styles.mediaTabButtonActive]}
-            onPress={() => handleSelectTab("video")}
-          >
-            <Text style={[styles.mediaTabText, activeTab === "video" && styles.mediaTabTextActive]}>
-              Video
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.mediaTabButton, activeTab === "audio" && styles.mediaTabButtonActive]}
-            onPress={() => handleSelectTab("audio")}
-          >
-            <Text style={[styles.mediaTabText, activeTab === "audio" && styles.mediaTabTextActive]}>
-              Audio
-            </Text>
-          </TouchableOpacity>
+        <MediaTabSwitcher activeTab={activeTab} onTabChange={handleSelectTab} theme={theme} />
+        {/* Keep both media players mounted to avoid re-mount flashes; toggle visibility only */}
+        {/* eslint-disable-next-line react-native/no-inline-styles */}
+        <View style={[styles.videoContainer, { display: activeTab === "video" ? "flex" : "none" }]}>
+          <View style={styles.videoHeader}>
+            <Text style={styles.videoTitle}>Sonogram</Text>
+          </View>
+          {renderVideoPlayer()}
         </View>
-
-        {activeTab === "video" ? (
-          <View style={styles.videoContainer}>
-            <View style={styles.videoHeader}>
-              <Text style={styles.videoTitle}>Sonogram</Text>
-            </View>
-            {renderVideoPlayer()}
+        {/* eslint-disable-next-line react-native/no-inline-styles */}
+        <View style={[styles.audioContainer, { display: activeTab === "audio" ? "flex" : "none" }]}>
+          <View style={styles.audioHeader}>
+            <Text style={styles.videoTitle}>Audio</Text>
           </View>
-        ) : (
-          <View style={styles.audioContainer}>
-            <View style={styles.audioHeader}>
-              <Text style={styles.videoTitle}>Audio</Text>
-            </View>
-            {renderAudioPlayer()}
-          </View>
-        )}
-
+          {renderAudioPlayer()}
+        </View>
         <View style={styles.descriptionCard}>
           <Text style={styles.descriptionTitle}>Description</Text>
           <Text style={styles.descriptionText}>{recording.caption}</Text>
         </View>
-
         <View style={styles.downloadCard}>
           {getDownloadStatus() === "completed" ? (
             <View style={styles.downloadedContainer}>

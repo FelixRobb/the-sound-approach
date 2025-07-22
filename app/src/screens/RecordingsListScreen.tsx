@@ -98,7 +98,7 @@ const RecordingsListScreen = () => {
     },
     recordingTitle: {
       color: theme.colors.onSurface,
-      fontSize: 15,
+      fontSize: 17,
       fontWeight: "600",
       lineHeight: 18,
       flex: 1,
@@ -286,7 +286,7 @@ const RecordingsListScreen = () => {
       justifyContent: "space-between",
     },
     listContainer: {
-      marginTop: 4,
+      paddingTop: 0,
       flex: 1,
       paddingHorizontal: 0,
     },
@@ -589,7 +589,8 @@ const RecordingsListScreen = () => {
               <Text style={styles.commonName} numberOfLines={1}>
                 {item.species?.common_name}
                 <Text style={styles.scientificName} numberOfLines={1}>
-                  , {item.species?.scientific_name}
+                  {" "}
+                  • <Text style={styles.scientificName}>{item.species?.scientific_name}</Text>
                 </Text>
               </Text>
             </View>
