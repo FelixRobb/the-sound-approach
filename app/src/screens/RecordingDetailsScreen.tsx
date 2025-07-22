@@ -24,10 +24,14 @@ import { useSharedValue } from "react-native-reanimated";
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
 import LoadingScreen from "../components/LoadingScreen";
+import MediaTabSwitcher from "../components/MediaTabSwitcher";
 import PageBadge from "../components/PageBadge";
+import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
+import { NetworkContext } from "../context/NetworkContext";
+import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getSonogramVideoUri } from "../lib/mediaUtils";
+import { getSonogramVideoUri, getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
 
@@ -37,8 +41,26 @@ const RecordingDetailsScreen = () => {
   const { theme } = useThemedStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
-  const { downloadRecording, isDownloaded, downloads, deleteDownload } =
+  const { downloadRecording, isDownloaded, downloads, deleteDownload, getDownloadPath } =
     useContext(DownloadContext);
+
+  const { isConnected } = useContext(NetworkContext);
+
+  // Audio context
+  const {
+    isPlaying: isAudioPlaying,
+    isLoading: isAudioLoading,
+    currentTrackId,
+    position: audioPosition,
+    duration: audioDuration,
+    togglePlayPause: toggleAudioPlayPause,
+    seekTo: seekAudioTo,
+    skipForward: skipAudioForward,
+    skipBackward: skipAudioBackward,
+    loadTrack,
+  } = useAudio();
+
+  const [activeTab, setActiveTab] = useState<"video" | "audio">("video");
 
   const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -89,6 +111,11 @@ const RecordingDetailsScreen = () => {
     },
     content: {
       padding: 16,
+    },
+    audioSliderContainer: {
+      width: "100%",
+      marginBottom: 16,
+      paddingHorizontal: 8,
     },
     // eslint-disable-next-line react-native/no-color-literals
     controlsContainer: {
@@ -357,6 +384,7 @@ const RecordingDetailsScreen = () => {
       flex: 1,
       height: 40,
       marginHorizontal: 12,
+      backgroundColor: theme.colors.tertiary,
     },
     // eslint-disable-next-line react-native/no-color-literals
     sliderThumb: {
@@ -369,6 +397,106 @@ const RecordingDetailsScreen = () => {
       shadowOpacity: 0.3,
       shadowRadius: 2,
       width: 16,
+    },
+
+    /* Audio specific styles */
+    audioContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 3,
+      marginBottom: 16,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
+    },
+    audioHeader: {
+      padding: 20,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.backdrop,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.5,
+      shadowRadius: 6,
+    },
+    /* Beautiful audio player styles */
+    audioPlayerContainer: {
+      alignItems: "center",
+      paddingHorizontal: 16,
+      flexDirection: "column",
+      paddingVertical: 8,
+    },
+    audioWaveformContainer: {
+      width: "100%",
+      height: 60,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 30,
+      marginBottom: 24,
+      justifyContent: "center",
+      paddingHorizontal: 16,
+    },
+    audioControlsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 20,
+      gap: 32,
+    },
+    audioSkipButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.surfaceVariant,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 2,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+    },
+    audioPlayButton: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 4,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+    },
+    audioTimeContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      width: "100%",
+      paddingHorizontal: 8,
+    },
+    audioTimeText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 14,
+      fontWeight: "500",
+      fontVariant: ["tabular-nums"],
+    },
+    audioWaveformRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 2,
+    },
+    audioWaveformBar: {
+      backgroundColor: theme.colors.tertiary,
+      width: 3,
+      borderRadius: 1.5,
+      opacity: 0.6,
+    },
+    audioPlayButtonIcon: {
+      marginLeft: 2,
     },
     speciesButton: {
       alignItems: "center",
@@ -476,6 +604,36 @@ const RecordingDetailsScreen = () => {
     return getSonogramVideoUri(recording);
   }, [recording]);
 
+  // Determine best audio source (downloaded file takes precedence)
+  const audioUri = useMemo(() => {
+    if (!recording) return null;
+    return getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
+  }, [recording, isDownloaded, getDownloadPath, isConnected]);
+
+  // Pre-load the audio as soon as we have the URI – mirrors video behaviour
+  useEffect(() => {
+    if (!audioUri || !recording) return;
+    // If this track is already loaded, `loadTrack` is a no-op
+    loadTrack(audioUri, recording.id).catch(() => {
+      // Ignore preload errors – the normal play action will surface any problems
+    });
+  }, [audioUri, recording, loadTrack]);
+
+  // Shared values for audio slider
+  const audioSliderProgress = useSharedValue(0);
+  const audioSliderMin = useSharedValue(0);
+  const audioSliderMax = useSharedValue(1);
+
+  // Keep slider values in sync with playback position
+  const isCurrentAudioTrack = currentTrackId === recording?.id;
+
+  React.useEffect(() => {
+    if (isCurrentAudioTrack) {
+      audioSliderProgress.value = audioPosition;
+      audioSliderMax.value = audioDuration || 1;
+    }
+  }, [audioPosition, audioDuration, isCurrentAudioTrack, audioSliderProgress, audioSliderMax]);
+
   // Initialize the video player
   const videoPlayer = useVideoPlayer(sonogramVideoUri, (player) => {
     if (!player) return;
@@ -507,6 +665,73 @@ const RecordingDetailsScreen = () => {
     setWasPlayingBeforeSeek(false);
     setIsVideoEnded(false);
   }, [sonogramVideoUri]);
+
+  // Handle tab switching between video and audio
+  const handleSelectTab = (tab: "video" | "audio") => {
+    setActiveTab(tab);
+
+    if (!recording) return;
+
+    if (tab === "audio") {
+      // Pause the video when focusing the audio tab
+      if (videoPlayer) {
+        try {
+          videoPlayer.pause();
+        } catch {
+          /* silent */
+        }
+      }
+
+      // Ensure the track is at least pre-loaded (will be a no-op if already)
+      if (audioUri && currentTrackId !== recording.id) {
+        loadTrack(audioUri, recording.id).catch(() => {});
+      }
+    } else {
+      // Just pause the audio instead of fully stopping/unloading it so the
+      // user can seamlessly switch back without re-loading.
+      if (currentTrackId === recording.id && isAudioPlaying && audioUri) {
+        toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
+      }
+    }
+  };
+
+  // Audio controls helpers
+  const handleAudioPlayPause = () => {
+    if (!audioUri || !recording) return;
+    toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
+  };
+
+  const handleSkipBackward = () => {
+    if (!isCurrentAudioTrack) return;
+    skipAudioBackward(10).catch(() => {});
+  };
+
+  const handleSkipForward = () => {
+    if (!isCurrentAudioTrack) return;
+    skipAudioForward(10).catch(() => {});
+  };
+
+  const [audioWasPlayingBeforeSeek, setAudioWasPlayingBeforeSeek] = useState(false);
+
+  const onAudioSeekStart = () => {
+    if (!recording) return;
+    setAudioWasPlayingBeforeSeek(isAudioPlaying && isCurrentAudioTrack);
+
+    if (isAudioPlaying && isCurrentAudioTrack && audioUri) {
+      toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
+    }
+  };
+
+  const onAudioSeekComplete = (value: number) => {
+    if (!recording) return;
+
+    seekAudioTo(value).finally(() => {
+      if (audioWasPlayingBeforeSeek && audioUri) {
+        toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
+      }
+      // seek complete
+    });
+  };
 
   // Listen for video ready/loaded events
   useEventListener(videoPlayer, "statusChange", (payload) => {
@@ -951,6 +1176,98 @@ const RecordingDetailsScreen = () => {
     );
   };
 
+  // Render audio player controls
+  const renderAudioPlayer = () => {
+    if (!audioUri) {
+      return (
+        <View style={styles.playerContainerError}>
+          <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
+          <Text style={styles.descriptionTextError}>Audio source not available</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View>
+        <View style={styles.audioPlayerContainer}>
+          <View style={styles.audioWaveformContainer}>
+            {/* Audio waveform visualization placeholder */}
+            <View style={styles.audioWaveformRow}>
+              {Array.from({ length: 50 }).map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.audioWaveformBar,
+                    {
+                      height: Math.random() * 30 + 10,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.audioControlsRow}>
+            <TouchableOpacity style={styles.audioSkipButton} onPress={handleSkipBackward}>
+              <Ionicons name="play-back" size={24} color={theme.colors.tertiary} />
+            </TouchableOpacity>
+
+            {isAudioLoading && isCurrentAudioTrack ? (
+              <View style={styles.audioPlayButton}>
+                <ActivityIndicator size={36} color="white" />
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.audioPlayButton} onPress={handleAudioPlayPause}>
+                <Ionicons
+                  name={isAudioPlaying && isCurrentAudioTrack ? "pause" : "play"}
+                  size={36}
+                  color="white"
+                  style={styles.audioPlayButtonIcon}
+                />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.audioSkipButton} onPress={handleSkipForward}>
+              <Ionicons name="play-forward" size={24} color={theme.colors.tertiary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Audio progress slider with proper container */}
+          <View style={styles.audioSliderContainer}>
+            <Slider
+              progress={audioSliderProgress}
+              minimumValue={audioSliderMin}
+              maximumValue={audioSliderMax}
+              onSlidingStart={onAudioSeekStart}
+              onSlidingComplete={onAudioSeekComplete}
+              thumbWidth={16}
+              theme={{
+                minimumTrackTintColor: theme.colors.tertiary,
+                maximumTrackTintColor: theme.colors.tertiary,
+              }}
+              containerStyle={styles.slider} // Override container style for proper width
+              disable={!isCurrentAudioTrack || isAudioLoading}
+              disableTapEvent
+              bubble={(value) => formatTime(value)}
+              bubbleTextStyle={{ color: theme.colors.tertiary }}
+              renderThumb={() => <View style={styles.sliderThumb} />}
+            />
+          </View>
+
+          <View style={styles.audioTimeContainer}>
+            <Text style={styles.audioTimeText}>
+              {formatTime(isCurrentAudioTrack ? audioPosition : 0)}
+            </Text>
+            <Text style={styles.audioTimeText}>
+              {getDownloadStatus() === "completed" ? "Playing from Download" : "Playing from Cloud"}
+            </Text>
+            <Text style={styles.audioTimeText}>{formatTime(audioDuration)}</Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   // Background pattern component
   const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
@@ -1077,6 +1394,7 @@ const RecordingDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <NavigationAudioStopper />
       <BackgroundPattern />
       <DetailHeader
         title={recording.title}
@@ -1115,19 +1433,27 @@ const RecordingDetailsScreen = () => {
             <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
           </TouchableOpacity>
         </View>
-
-        <View style={styles.videoContainer}>
+        {/* Media selector tabs */}
+        <MediaTabSwitcher activeTab={activeTab} onTabChange={handleSelectTab} theme={theme} />
+        {/* Keep both media players mounted to avoid re-mount flashes; toggle visibility only */}
+        {/* eslint-disable-next-line react-native/no-inline-styles */}
+        <View style={[styles.videoContainer, { display: activeTab === "video" ? "flex" : "none" }]}>
           <View style={styles.videoHeader}>
             <Text style={styles.videoTitle}>Sonogram</Text>
           </View>
           {renderVideoPlayer()}
         </View>
-
+        {/* eslint-disable-next-line react-native/no-inline-styles */}
+        <View style={[styles.audioContainer, { display: activeTab === "audio" ? "flex" : "none" }]}>
+          <View style={styles.audioHeader}>
+            <Text style={styles.videoTitle}>Audio</Text>
+          </View>
+          {renderAudioPlayer()}
+        </View>
         <View style={styles.descriptionCard}>
           <Text style={styles.descriptionTitle}>Description</Text>
           <Text style={styles.descriptionText}>{recording.caption}</Text>
         </View>
-
         <View style={styles.downloadCard}>
           {getDownloadStatus() === "completed" ? (
             <View style={styles.downloadedContainer}>

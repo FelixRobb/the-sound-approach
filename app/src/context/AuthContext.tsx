@@ -8,6 +8,7 @@ import {
   clearOfflineAuthData,
   storeOfflineAuthData,
   getOfflineAuthData,
+  clearSearchHistory,
 } from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
 import type { AuthAction, AuthContextType, AuthState, User } from "../types";
@@ -583,6 +584,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Clear user downloads
         await clearUserDownloads(state.user?.id || null);
+
+        await clearSearchHistory();
 
         // Only try to sign out from Supabase if online
         const { isConnected } = await NetFetch();

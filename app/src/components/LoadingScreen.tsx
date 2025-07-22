@@ -21,7 +21,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     // Only show the loader if the loading takes more than 300ms
     const timer = setTimeout(() => {
       setShowLoader(true);
-    }, 300);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);

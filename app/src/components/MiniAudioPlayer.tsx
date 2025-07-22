@@ -65,8 +65,7 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, si
   return (
     <TouchableOpacity
       style={styles.buttonContainer}
-      onPress={handlePress}
-      disabled={isCurrentlyLoading}
+      onPress={!isCurrentlyLoading ? handlePress : undefined}
       activeOpacity={0.7}
     >
       <View style={getButtonStyle()}>

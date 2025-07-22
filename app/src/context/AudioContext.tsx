@@ -15,6 +15,18 @@ type AudioContextType = {
   currentTrackId: string | null;
   error: string | null;
 
+  // Position state
+  position: number;
+  duration: number;
+
+  // Seeking helpers
+  seekTo: (seconds: number) => Promise<boolean>;
+  skipForward: (seconds?: number) => Promise<boolean>;
+  skipBackward: (seconds?: number) => Promise<boolean>;
+
+  // Preload
+  loadTrack: (uri: string, trackId: string) => Promise<boolean>;
+
   // Actions
   togglePlayPause: (uri: string, trackId: string) => Promise<boolean>;
   stopPlayback: () => Promise<void>;
@@ -26,6 +38,12 @@ const AudioContext = createContext<AudioContextType>({
   isLoading: false,
   currentTrackId: null,
   error: null,
+  position: 0,
+  duration: 0,
+  seekTo: () => Promise.resolve(false),
+  skipForward: () => Promise.resolve(false),
+  skipBackward: () => Promise.resolve(false),
+  loadTrack: () => Promise.resolve(false),
   togglePlayPause: () => Promise.resolve(false),
   stopPlayback: () => Promise.resolve(),
 });
@@ -46,6 +64,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     trackId: null,
     playbackState: "idle",
     error: null,
+    position: 0,
+    duration: 0,
   });
 
   // Track the currently loaded/playing sound by its URI (no longer needed after offline-stop removal)
@@ -100,12 +120,34 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Seek helpers – simply proxy to AudioService
+  const seekTo = (seconds: number) => audioService.seekTo(seconds);
+  const skipForward = (seconds = 10) => audioService.skipForward(seconds);
+  const skipBackward = (seconds = 10) => audioService.skipBackward(seconds);
+
+  // Preload helper
+  const loadTrack = async (uri: string, trackId: string): Promise<boolean> => {
+    try {
+      if (!isConnected && !uri.startsWith("file://")) return false;
+      return await audioService.loadTrack(uri, trackId);
+    } catch (e) {
+      console.error("Error loading track:", e);
+      return false;
+    }
+  };
+
   // Context value
   const contextValue: AudioContextType = {
     isPlaying: audioState.playbackState === "playing",
     isLoading: audioState.playbackState === "loading",
     currentTrackId: audioState.trackId,
     error: audioState.error,
+    position: audioState.position ?? 0,
+    duration: audioState.duration ?? 0,
+    seekTo,
+    skipForward,
+    skipBackward,
+    loadTrack,
     togglePlayPause,
     stopPlayback,
   };

@@ -15,7 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { TextInput, Button, HelperText } from "react-native-paper";
+import { TextInput, HelperText } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
 import ErrorAlert from "../components/ErrorAlert";
@@ -63,16 +63,23 @@ const SignUpScreen = () => {
       top: 0,
     },
     button: {
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingVertical: 16,
       borderRadius: 12,
       elevation: 2,
       marginTop: 16,
-      shadowColor: theme.colors.primary,
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
     },
-    buttonContent: {
-      paddingVertical: 12,
+    buttonText: {
+      fontSize: 20,
+      marginLeft: 8,
+      color: theme.colors.onPrimary,
     },
     card: {
       backgroundColor: theme.colors.surface,
@@ -99,7 +106,7 @@ const SignUpScreen = () => {
     },
     headerIcon: {
       alignSelf: "center",
-      backgroundColor: theme.colors.primaryContainer,
+      backgroundColor: theme.colors.tertiaryContainer,
       borderRadius: 32,
       marginBottom: 16,
       padding: 16,
@@ -301,7 +308,7 @@ const SignUpScreen = () => {
       >
         <View style={styles.card}>
           <View style={styles.headerIcon}>
-            <Ionicons name="person-add-outline" size={32} color={theme.colors.primary} />
+            <Ionicons name="person-add-outline" size={32} color={theme.colors.tertiary} />
           </View>
 
           <Text style={styles.title}>Join The Sound Approach</Text>
@@ -312,7 +319,7 @@ const SignUpScreen = () => {
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="mail-outline" size={20} color={theme.colors.primary} />
+                <Ionicons name="mail-outline" size={20} color={theme.colors.tertiary} />
               </View>
               <TextInput
                 label="Email"
@@ -339,7 +346,7 @@ const SignUpScreen = () => {
 
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color={theme.colors.primary} />
+                <Ionicons name="lock-closed-outline" size={20} color={theme.colors.tertiary} />
               </View>
               <TextInput
                 label="Password"
@@ -360,7 +367,7 @@ const SignUpScreen = () => {
                   <TextInput.Icon
                     icon={showPassword ? "eye-off" : "eye"}
                     onPress={() => setShowPassword(!showPassword)}
-                    color={theme.colors.primary}
+                    color={theme.colors.tertiary}
                   />
                 }
               />
@@ -373,7 +380,7 @@ const SignUpScreen = () => {
 
             <View style={styles.inputContainer}>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="key-outline" size={20} color={theme.colors.primary} />
+                <Ionicons name="key-outline" size={20} color={theme.colors.tertiary} />
               </View>
               <TextInput
                 label="Book Code"
@@ -398,7 +405,7 @@ const SignUpScreen = () => {
                 <Ionicons
                   name="information-circle-outline"
                   size={22}
-                  color={theme.colors.primary}
+                  color={theme.colors.tertiary}
                 />
                 {showTooltip && (
                   <View style={styles.tooltip}>
@@ -418,16 +425,12 @@ const SignUpScreen = () => {
               </HelperText>
             ) : null}
 
-            <Button
-              mode="contained"
-              onPress={handleSubmit}
-              loading={isLoading}
-              disabled={isLoading}
-              style={styles.button}
-              contentStyle={styles.buttonContent}
-            >
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </Button>
+            <TouchableOpacity onPress={handleSubmit} disabled={isLoading} style={styles.button}>
+              <Ionicons name="person-add-outline" size={20} color={theme.colors.onPrimary} />
+              <Text style={styles.buttonText}>
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </Text>
+            </TouchableOpacity>
 
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>

@@ -496,7 +496,7 @@ const DownloadsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationAudioStopper />
+      <NavigationAudioStopper stopOnUnmount={false} />
 
       <BackgroundPattern />
       <Header />

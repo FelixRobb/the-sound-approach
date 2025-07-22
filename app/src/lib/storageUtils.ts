@@ -120,3 +120,11 @@ export const getOfflineAuthData = async () => {
     return { token: null, user: null, isValid: false };
   }
 };
+
+export const clearSearchHistory = async () => {
+  try {
+    await AsyncStorage.removeItem("recentSearches");
+  } catch (error) {
+    console.error("Error clearing search history:", error);
+  }
+};
