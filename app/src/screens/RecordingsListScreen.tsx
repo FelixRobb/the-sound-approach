@@ -8,6 +8,7 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  SectionList,
   TouchableOpacity,
   RefreshControl,
   TextInput,
@@ -68,33 +69,25 @@ const RecordingsListScreen = () => {
   const styles = StyleSheet.create({
     recordingCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 8,
+      borderRadius: 16,
       marginHorizontal: 12,
-      marginVertical: 4,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+      marginTop: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.outlineVariant,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 0.5 },
-      shadowOpacity: 0.4,
-      shadowRadius: 1,
-      elevation: 1,
-      borderBottomWidth: 0.5,
-      borderBottomColor: theme.colors.outlineVariant,
-    },
-    recordingMainContent: {
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 2,
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      justifyContent: "space-between",
     },
     recordingLeftSection: {
       flex: 1,
       minWidth: 0,
-    },
-    recordingTopRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: 4,
     },
     recordingTitle: {
       color: theme.colors.onSurface,
@@ -105,6 +98,7 @@ const RecordingsListScreen = () => {
       marginRight: 8,
     },
     recordingBadges: {
+      marginTop: 8,
       flexDirection: "row",
       alignItems: "center",
       gap: 4,
@@ -113,7 +107,7 @@ const RecordingsListScreen = () => {
     recordingSpecies: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      marginTop: 3,
     },
     commonName: {
       color: theme.colors.primary,
@@ -132,6 +126,7 @@ const RecordingsListScreen = () => {
       alignItems: "center",
       justifyContent: "center",
       flexShrink: 0,
+      marginLeft: 12,
     },
     backgroundPattern: {
       backgroundColor: theme.colors.background,
@@ -369,6 +364,33 @@ const RecordingsListScreen = () => {
       fontSize: 28,
       fontWeight: "bold",
     },
+    sectionHeader: {
+      backgroundColor: theme.colors.background,
+      paddingLeft: 20,
+      paddingRight: 20,
+      paddingTop: 20,
+      paddingBottom: 8,
+    },
+    sectionHeaderText: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    sectionSubHeaderText: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 13,
+      fontStyle: "italic",
+      marginTop: 2,
+    },
+    recordingCardIndented: {
+      marginLeft: 32,
+    },
+    caption: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+      fontStyle: "italic",
+      marginTop: 2,
+    },
   });
 
   // Fetch recordings by book order
@@ -562,48 +584,70 @@ const RecordingsListScreen = () => {
     })
     .map(({ item }) => item);
 
+  // Group recordings by species for SectionList when sorting by species
+  const recordingsSections = React.useMemo(() => {
+    if (sortBy !== "species" || !filteredAndSortedRecordings) return [];
+    const map = new Map<string, { title: string; data: Recording[] }>();
+    filteredAndSortedRecordings.forEach((rec) => {
+      const commonName = rec.species?.common_name || "Unknown Species";
+      const scientificName = rec.species?.scientific_name || "";
+      const title = scientificName ? `${commonName} • ${scientificName}` : commonName;
+      if (!map.has(commonName)) {
+        map.set(commonName, { title, data: [] });
+      }
+      map.get(commonName)?.data.push(rec);
+    });
+    return Array.from(map.values());
+  }, [filteredAndSortedRecordings, sortBy]);
+
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     const isItemDownloaded = isDownloaded(item.id);
+    const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
 
     return (
       <TouchableOpacity
-        style={styles.recordingCard}
+        style={[styles.recordingCard, sortBy === "species" && styles.recordingCardIndented]}
         onPress={() => {
           navigation.navigate("RecordingDetails", { recordingId: item.id });
         }}
-        activeOpacity={0.7}
+        activeOpacity={0.72}
       >
-        <View style={styles.recordingMainContent}>
-          <View style={styles.recordingLeftSection}>
-            <View style={styles.recordingTopRow}>
-              <Text style={styles.recordingTitle} numberOfLines={1}>
-                {item.title}
-              </Text>
-              <View style={styles.recordingBadges}>
-                <PageBadge page={item.book_page_number} compact />
-              </View>
-            </View>
+        <View style={styles.recordingLeftSection}>
+          <Text style={styles.recordingTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+
+          {sortBy !== "species" && (
             <View style={styles.recordingSpecies}>
-              {isItemDownloaded && <DownloadedBadge smallRound />}
               <Text style={styles.commonName} numberOfLines={1}>
                 {item.species?.common_name}
-                <Text style={styles.scientificName} numberOfLines={1}>
-                  {" "}
-                  • <Text style={styles.scientificName}>{item.species?.scientific_name}</Text>
-                </Text>
+              </Text>
+              <Text style={styles.scientificName} numberOfLines={1}>
+                {" "}
+                • {item.species?.scientific_name}
               </Text>
             </View>
-          </View>
+          )}
+          {sortBy === "species" && (
+            <View style={styles.recordingSpecies}>
+              <Text style={styles.caption} numberOfLines={2}>
+                {item.caption}
+              </Text>
+            </View>
+          )}
 
-          {/* Audio player */}
-          <View style={styles.audioPlayerContainer}>
-            {(() => {
-              const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
-              return uri ? <MiniAudioPlayer trackId={item.id} audioUri={uri} size={32} /> : null;
-            })()}
+          <View style={styles.recordingBadges}>
+            <PageBadge page={item.book_page_number} />
+            {isItemDownloaded && <DownloadedBadge />}
           </View>
         </View>
+
+        {uri && (
+          <View style={styles.audioPlayerContainer}>
+            <MiniAudioPlayer trackId={item.id} audioUri={uri} size={40} />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -929,23 +973,52 @@ const RecordingsListScreen = () => {
         <>
           <View style={styles.listContainer}>
             {/* Only render the active tab's FlatList */}
-            {activeTab === "book" && (
-              <FlatList
-                data={filteredAndSortedRecordings}
-                renderItem={renderRecordingItem}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={recordingsLoading}
-                    onRefresh={refetchRecordings}
-                    colors={[theme.colors.primary]}
-                    tintColor={theme.colors.primary}
-                  />
-                }
-                ListEmptyComponent={<EmptyState type="recordings" />}
-              />
-            )}
+            {activeTab === "book" &&
+              (sortBy === "species" ? (
+                <SectionList
+                  sections={recordingsSections}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderRecordingItem}
+                  renderSectionHeader={({ section: { title } }) => {
+                    const [commonName, scientificName] = title.split(" • ");
+                    return (
+                      <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionHeaderText}>{commonName}</Text>
+                        {scientificName && (
+                          <Text style={styles.sectionSubHeaderText}>{scientificName}</Text>
+                        )}
+                      </View>
+                    );
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={recordingsLoading}
+                      onRefresh={refetchRecordings}
+                      colors={[theme.colors.primary]}
+                      tintColor={theme.colors.primary}
+                    />
+                  }
+                  ListEmptyComponent={<EmptyState type="recordings" />}
+                />
+              ) : (
+                <FlatList
+                  data={filteredAndSortedRecordings}
+                  renderItem={renderRecordingItem}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={recordingsLoading}
+                      onRefresh={refetchRecordings}
+                      colors={[theme.colors.primary]}
+                      tintColor={theme.colors.primary}
+                    />
+                  }
+                  ListEmptyComponent={<EmptyState type="recordings" />}
+                />
+              ))}
+
             {activeTab === "species" && (
               <FlatList
                 data={filteredAndSortedSpecies}

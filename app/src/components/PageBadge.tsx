@@ -26,7 +26,7 @@ const PageBadge: React.FC<PageBadgeProps> = ({
     badge: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 8,
+      borderRadius: 6,
       flexDirection: "row",
       paddingHorizontal: 6,
       paddingVertical: 2,

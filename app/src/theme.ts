@@ -36,7 +36,7 @@ const Colors = {
     onBackground: "rgb(17, 24, 39)",
     surface: "rgb(255, 255, 255)",
     onSurface: "rgb(17, 24, 39)",
-    surfaceVariant: "rgb(243, 244, 246)",
+    surfaceVariant: "rgb(238, 238, 238)",
     onSurfaceVariant: "rgb(75, 85, 99)",
     surfaceLow: "rgb(248, 249, 250)",
     surfaceHigh: "rgb(255, 255, 255)",
@@ -100,8 +100,8 @@ const Colors = {
     onBackground: "rgb(255, 255, 255)",
     surface: "rgb(11, 11, 11)", // Very dark gray for cards and surfaces
     onSurface: "rgb(255, 255, 255)",
-    surfaceVariant: "rgb(18, 18, 18)", // Slightly lighter for variants
-    onSurfaceVariant: "rgb(220, 220, 220)",
+    surfaceVariant: "rgb(28, 28, 28)", // Slightly lighter for variants
+    onSurfaceVariant: "rgb(230, 230, 230)",
     surfaceLow: "rgb(4, 4, 4)", // Darker than surface for depth
     surfaceHigh: "rgb(24, 24, 24)", // Elevated surfaces
     surfaceHighest: "rgb(32, 32, 32)", // Highest elevation surfaces
