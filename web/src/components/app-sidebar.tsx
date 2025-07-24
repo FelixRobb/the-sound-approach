@@ -1,6 +1,7 @@
 "use client";
 
 import { Music, Download, Volume2, Search, User, Library } from "lucide-react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 
 import RecordingSidebar from "./RecordingSidebar";
@@ -72,15 +73,22 @@ export default function AppSidebar() {
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-3 px-2 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-sm">
-            <Volume2 className="h-4 w-4 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-sm font-semibold tracking-tight">The Sound Approach</h1>
-            <p className="text-xs text-muted-foreground">Bird Sound Library</p>
-          </div>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-sm">
+                <Volume2 className="size-4 text-white" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">The Sound Approach</span>
+                <span className="truncate text-xs text-muted-foreground">Bird Sound Library</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
@@ -106,7 +114,7 @@ export default function AppSidebar() {
 
         <SidebarSeparator />
 
-        <SidebarGroup className="flex-1">
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel className="flex items-center gap-2">
             <Music className="h-3 w-3" />
             Quick Access
@@ -115,9 +123,16 @@ export default function AppSidebar() {
             <RecordingSidebar />
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Collapsed state recordings */}
+        <SidebarGroup className="hidden group-data-[collapsible=icon]:block">
+          <SidebarGroupContent>
+            <RecordingSidebar collapsed />
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="group-data-[collapsible=icon]:hidden">
         <Card className="mx-2 mb-2 bg-muted/50">
           <CardContent className="p-3">
             <div className="flex items-center gap-3">
@@ -126,11 +141,13 @@ export default function AppSidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium">Offline Ready</p>
-                <p className="text-xs text-muted-foreground">Download for offline use</p>
+                <p className="text-xs text-muted-foreground">Download the app for offline use</p>
               </div>
-              <Badge variant="secondary" className="text-xs">
-                Pro
-              </Badge>
+              <Link href="https://apps.apple.com/us/app/the-sound-approach/id6749910000">
+                <Badge variant="secondary" className="text-xs">
+                  App
+                </Badge>
+              </Link>
             </div>
           </CardContent>
         </Card>

@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  ArrowLeft,
-  Pause,
-  Play,
-  Volume2,
-  Maximize,
-  Minimize,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader2, Volume2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import videojs from "video.js";
+import "video.js/dist/video-js.css";
 
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
@@ -32,17 +25,10 @@ export default function RecordingDetailsPage() {
   const [recording, setRecording] = useState<Recording | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Video player state
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
-  const [videoDuration, setVideoDuration] = useState(0);
-  const [videoPosition, setVideoPosition] = useState(0);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
 
   // Load recording data
   useEffect(() => {
@@ -64,73 +50,66 @@ export default function RecordingDetailsPage() {
     loadRecording();
   }, [recordingId]);
 
-  // Video event handlers
-  const handleVideoLoadedMetadata = () => {
-    if (videoRef.current) {
-      setVideoDuration(videoRef.current.duration);
-      setIsVideoLoaded(true);
-    }
-  };
-
-  const handleVideoTimeUpdate = () => {
-    if (videoRef.current) {
-      setVideoPosition(videoRef.current.currentTime);
-    }
-  };
-
-  const handleVideoPlay = () => setIsVideoPlaying(true);
-  const handleVideoPause = () => setIsVideoPlaying(false);
-  const handleVideoError = () => setVideoError(true);
-
-  const toggleVideoPlayPause = () => {
-    if (!videoRef.current) return;
-
-    if (isVideoPlaying) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play();
-    }
-  };
-
-  const handleVideoSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!videoRef.current) return;
-
-    const seekTime = parseFloat(e.target.value);
-    videoRef.current.currentTime = seekTime;
-    setVideoPosition(seekTime);
-  };
-
-  const toggleFullscreen = () => {
-    if (!containerRef.current) return;
-
-    if (!isVideoFullscreen) {
-      if (containerRef.current.requestFullscreen) {
-        containerRef.current.requestFullscreen();
-        setIsVideoFullscreen(true);
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsVideoFullscreen(false);
-      }
-    }
-  };
-
-  // Handle fullscreen change events
+  // Initialize video.js player
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsVideoFullscreen(!!document.fullscreenElement);
+    if (!recording || !videoRef.current) return;
+
+    const videoUri = getSonogramVideoUri(recording);
+    if (!videoUri) return;
+
+    // Create video element
+    const videoElement = document.createElement("video-js");
+    videoElement.classList.add("vjs-big-play-centered");
+    videoElement.setAttribute("data-setup", "{}");
+
+    // Clear any existing content and append video element
+    videoRef.current.innerHTML = "";
+    videoRef.current.appendChild(videoElement);
+
+    // Initialize Video.js player
+    const player = videojs(videoElement, {
+      controls: true,
+      responsive: true,
+      fluid: true,
+      playbackRates: [0.5, 1, 1.25, 1.5, 2],
+      sources: [
+        {
+          src: videoUri,
+          type: "video/mp4",
+        },
+      ],
+      poster: "",
+    });
+
+    player.ready(() => {
+      console.log("Video.js player is ready");
+    });
+
+    player.on("error", () => {
+      console.error("Video.js player error");
+      setVideoError(true);
+    });
+
+    playerRef.current = player;
+
+    // Cleanup function
+    return () => {
+      if (playerRef.current && !playerRef.current.isDisposed()) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
     };
+  }, [recording]);
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (playerRef.current && !playerRef.current.isDisposed()) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
   }, []);
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
 
   const handleBack = () => {
     router.back();
@@ -228,67 +207,8 @@ export default function RecordingDetailsPage() {
                   </AlertDescription>
                 </Alert>
               ) : (
-                <div ref={containerRef} className="relative bg-black rounded-lg overflow-hidden">
-                  <video
-                    ref={videoRef}
-                    src={videoUri}
-                    className="w-full h-auto"
-                    onLoadedMetadata={handleVideoLoadedMetadata}
-                    onTimeUpdate={handleVideoTimeUpdate}
-                    onPlay={handleVideoPlay}
-                    onPause={handleVideoPause}
-                    onError={handleVideoError}
-                    playsInline
-                  />
-
-                  {/* Video Controls */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                    <div className="flex items-center gap-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleVideoPlayPause}
-                        disabled={!isVideoLoaded}
-                        className="text-white hover:bg-white/20"
-                      >
-                        {isVideoPlaying ? (
-                          <Pause className="w-5 h-5" />
-                        ) : (
-                          <Play className="w-5 h-5" />
-                        )}
-                      </Button>
-
-                      <div className="flex-1">
-                        {isVideoLoaded && (
-                          <input
-                            type="range"
-                            min="0"
-                            max={videoDuration}
-                            value={videoPosition}
-                            onChange={handleVideoSeek}
-                            className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
-                          />
-                        )}
-                      </div>
-
-                      <span className="text-white text-sm font-mono">
-                        {formatTime(videoPosition)} / {formatTime(videoDuration)}
-                      </span>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleFullscreen}
-                        className="text-white hover:bg-white/20"
-                      >
-                        {isVideoFullscreen ? (
-                          <Minimize className="w-5 h-5" />
-                        ) : (
-                          <Maximize className="w-5 h-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                <div className="rounded-lg overflow-hidden bg-black">
+                  <div ref={videoRef} className="w-full" data-vjs-player />
                 </div>
               )}
             </CardContent>

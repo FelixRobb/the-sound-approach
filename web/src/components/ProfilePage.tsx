@@ -21,6 +21,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
+import ThemeToggleButton from "./ui/theme-toggle-button";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -334,7 +335,17 @@ export default function ProfilePage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Dark Mode Toggle */}
+              <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <p className="font-medium">Appearance</p>
+                  <p className="text-sm text-muted-foreground">Choose your preferred theme</p>
+                </div>
+                <ThemeToggleButton />
+              </div>
+
+              {/* Reset Tutorial */}
               <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <RefreshCw className="h-5 w-5 text-muted-foreground" />

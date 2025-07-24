@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 
 export default function WelcomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md justify-center items-center">
         <Card className="text-center shadow-2xl border-0">
           <CardHeader className="pb-4">
@@ -68,14 +68,14 @@ export default function WelcomePage() {
 
             {/* Auth Buttons */}
             <div className="space-y-3">
-              <Button asChild className="w-full" size="lg">
+              <Button variant="outline" asChild className="w-full" size="lg">
                 <Link href="/login">
                   <LogIn className="w-5 h-5 mr-2" />
                   Sign In
                 </Link>
               </Button>
 
-              <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
+              <Button variant="default" asChild className="w-full" size="lg">
                 <Link href="/signup">
                   <UserPlus className="w-5 h-5 mr-2" />
                   Create Account

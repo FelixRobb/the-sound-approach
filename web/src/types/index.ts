@@ -62,6 +62,13 @@ export type AuthAction =
   | { type: "RESET_ONBOARDING" };
 
 // Audio types
+export type AudioPlayerState = {
+  isPlaying: boolean;
+  isLoading: boolean;
+  currentTrackId: string | null;
+  error: string | null;
+};
+
 export type AudioState = {
   isPlaying: boolean;
   currentTrackId: string | null;
@@ -139,3 +146,12 @@ export const navigationItems = [
     description: "Manage your account and settings",
   },
 ];
+
+// Theme types
+export type ThemeMode = "light" | "dark" | "system";
+
+export type ThemeContextType = {
+  theme: ThemeMode;
+  isDarkMode: boolean;
+  setTheme: (theme: ThemeMode) => void;
+};

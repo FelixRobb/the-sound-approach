@@ -78,7 +78,7 @@ export default function OnboardingPage() {
   const isLastStep = currentStep === onboardingSteps.length - 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Progress indicators */}
         <div className="flex justify-center mb-8 space-x-2">
