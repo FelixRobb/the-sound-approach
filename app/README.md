@@ -122,7 +122,7 @@ Required environment variables:
 # Paid stuff
 
 - supabase 25€ per month ok
-- developer account apple 99€ per month
+- developer account apple 99€ per year
 - google developer 25€ onee time
 - cursor 20€ per month, or 16€ per month paid yearly
 - expo based on usage. no idea how much, depends on what is used ok
