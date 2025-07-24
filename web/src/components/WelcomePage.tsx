@@ -1,36 +1,12 @@
 "use client";
 
 import { Music, LogIn, UserPlus } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
 
-import AuthModal from "./AuthModal";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
-import { useAuth } from "@/contexts/AuthContext";
-
 export default function WelcomePage() {
-  const { state } = useAuth();
-  const [authModal, setAuthModal] = useState<{
-    isOpen: boolean;
-    mode: "signin" | "signup";
-  }>({
-    isOpen: false,
-    mode: "signin",
-  });
-
-  const openAuthModal = (mode: "signin" | "signup") => {
-    setAuthModal({ isOpen: true, mode });
-  };
-
-  const closeAuthModal = () => {
-    setAuthModal({ isOpen: false, mode: "signin" });
-  };
-
-  const handleModeChange = (mode: "signin" | "signup") => {
-    setAuthModal({ isOpen: true, mode });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md justify-center items-center">
@@ -92,25 +68,18 @@ export default function WelcomePage() {
 
             {/* Auth Buttons */}
             <div className="space-y-3">
-              <Button
-                onClick={() => openAuthModal("signin")}
-                className="w-full"
-                size="lg"
-                disabled={state.isLoading}
-              >
-                <LogIn className="w-5 h-5 mr-2" />
-                Sign In
+              <Button asChild className="w-full" size="lg">
+                <Link href="/login">
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Sign In
+                </Link>
               </Button>
 
-              <Button
-                onClick={() => openAuthModal("signup")}
-                variant="outline"
-                className="w-full"
-                size="lg"
-                disabled={state.isLoading}
-              >
-                <UserPlus className="w-5 h-5 mr-2" />
-                Create Account
+              <Button asChild variant="outline" className="w-full bg-transparent" size="lg">
+                <Link href="/signup">
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Create Account
+                </Link>
               </Button>
             </div>
 
@@ -123,14 +92,6 @@ export default function WelcomePage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={authModal.isOpen}
-        onClose={closeAuthModal}
-        mode={authModal.mode}
-        onModeChange={handleModeChange}
-      />
     </div>
   );
 }

@@ -3,9 +3,8 @@ import type { NextRequest } from "next/server";
 
 import { createMiddlewareClient } from "@/lib/supabase";
 
-// Paths that never require an authenticated session. Add any new publicly
-// accessible paths here so that they bypass the Supabase lookup completely.
-const PUBLIC_PATHS = ["/favicon.ico", "/service-worker.js"];
+// Paths that never require an authenticated session
+const PUBLIC_PATHS = ["/favicon.ico", "/service-worker.js", "/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
   console.log("Middleware running for:", request.nextUrl.pathname);
@@ -18,8 +17,7 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    // Bypass auth check for explicitly public paths to avoid unnecessary
-    // Supabase calls (which log errors when no refresh token exists).
+    // Bypass auth check for explicitly public paths
     const { pathname } = request.nextUrl;
     if (PUBLIC_PATHS.includes(pathname)) {
       console.log("Public path detected – skipping auth check");
@@ -28,9 +26,6 @@ export async function middleware(request: NextRequest) {
 
     const supabase = createMiddlewareClient(request);
 
-    // Prefer getSession over getUser. getSession() returns null without
-    // throwing when there is no valid session, avoiding noisy "Invalid
-    // Refresh Token" errors.
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -44,30 +39,30 @@ export async function middleware(request: NextRequest) {
       userId: user?.id || "none",
     });
 
-    // If an authenticated user somehow lands on the public welcome page,
-    // send them to the main dashboard instead.
-    if (isAuthenticatedUser && pathname === "/welcome") {
-      console.log("Authenticated user on /welcome – redirecting to /");
+    // If an authenticated user somehow lands on auth pages, send them to the main dashboard
+    if (isAuthenticatedUser && ["/login", "/signup"].includes(pathname)) {
+      console.log("Authenticated user on auth page – redirecting to /");
       return NextResponse.redirect(new URL("/", request.url));
     }
-    // Redirect unauthenticated users to the welcome page **except** when they
-    // are already on /welcome to avoid an infinite redirect loop.
-    if (!isAuthenticatedUser && pathname !== "/welcome") {
-      console.log("Unauthenticated – redirecting to /welcome");
-      return NextResponse.redirect(new URL("/welcome", request.url));
+
+    // For the root path, let it through - the page component will handle auth state
+    if (pathname === "/") {
+      console.log("Root path – allowing through");
+      return response;
     }
 
-    // User is authenticated – allow the request.
+    // Redirect unauthenticated users to root for protected routes
+    if (!isAuthenticatedUser && !PUBLIC_PATHS.includes(pathname)) {
+      console.log("Unauthenticated – redirecting to /");
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
     console.log("Allowing request to continue");
     return response;
   } catch (error) {
-    // If you are here, a Supabase client could not be created!
-    // This is likely because you have not set up environment variables.
     console.error("Middleware error:", error);
-    // On any unexpected error, fall back to letting the request through for
-    // public paths or redirecting to the welcome page for protected paths.
     const { pathname } = request.nextUrl;
-    if (PUBLIC_PATHS.includes(pathname)) {
+    if (PUBLIC_PATHS.includes(pathname) || pathname === "/") {
       return NextResponse.next({
         request: {
           headers: request.headers,
@@ -75,15 +70,10 @@ export async function middleware(request: NextRequest) {
       });
     }
 
-    return NextResponse.redirect(new URL("/welcome", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except static files and API routes
-     */
-    "/((?!_next/static|_next/image|favicon.ico|service-worker.js).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|service-worker.js).*)"],
 };

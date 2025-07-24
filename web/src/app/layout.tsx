@@ -3,8 +3,7 @@ import { Inter } from "next/font/google";
 import type React from "react";
 
 import "./globals.css";
-import AppSidebar from "@/components/app-sidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import LayoutWrapper from "@/components/LayoutWrapper";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -21,10 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} h-full bg-background text-foreground antialiased`}>
         <AuthProvider>
           <AudioProvider>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>{children}</SidebarInset>
-            </SidebarProvider>
+            <LayoutWrapper>{children}</LayoutWrapper>
           </AudioProvider>
         </AuthProvider>
       </body>

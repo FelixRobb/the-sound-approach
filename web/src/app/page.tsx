@@ -6,6 +6,7 @@ import OnboardingPage from "@/components/OnboardingPage";
 import RecordingsPage from "@/components/RecordingsPage";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import WelcomePage from "@/components/WelcomePage";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
@@ -22,7 +23,11 @@ export default function HomePage() {
     );
   }
 
-  // At this point, middleware ensures user is authenticated
+  // Show welcome page for unauthenticated users
+  if (!state.user) {
+    return <WelcomePage />;
+  }
+
   // Show onboarding if not completed, otherwise show recordings
   if (!state.hasCompletedOnboarding) {
     return <OnboardingPage />;
