@@ -28,7 +28,7 @@ export default function SignupPage() {
 
     try {
       await signUp(email, password, bookCode);
-      router.push("/");
+      router.push("/onboarding");
     } catch (error) {
       // Error is handled by the auth context
     } finally {
@@ -113,7 +113,7 @@ export default function SignupPage() {
                   disabled={isSubmitting}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Found in your copy of "The Sound Approach to Birding"
+                  Found in your copy of &quot;The Sound Approach to Birding&quot;
                 </p>
               </div>
 

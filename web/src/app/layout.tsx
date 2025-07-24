@@ -3,8 +3,6 @@ import { Inter } from "next/font/google";
 import type React from "react";
 
 import "./globals.css";
-import LayoutWrapper from "@/components/LayoutWrapper";
-import { AudioProvider } from "@/contexts/AudioContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -18,11 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${inter.className} h-full bg-background text-foreground antialiased`}>
-        <AuthProvider>
-          <AudioProvider>
-            <LayoutWrapper>{children}</LayoutWrapper>
-          </AudioProvider>
-        </AuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

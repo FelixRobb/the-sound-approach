@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Music, Search, Download, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Badge } from "./ui/badge";
@@ -54,6 +55,7 @@ const onboardingSteps: OnboardingStep[] = [
 export default function OnboardingPage() {
   const { completeOnboarding } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
+  const router = useRouter();
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
@@ -69,6 +71,7 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     await completeOnboarding();
+    router.push("/dashboard");
   };
 
   const currentStepData = onboardingSteps[currentStep];

@@ -27,7 +27,7 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push("/");
+      router.push("/dashboard");
     } catch (error) {
       // Error is handled by the auth context
     } finally {
@@ -109,7 +109,7 @@ export default function LoginPage() {
             <div className="space-y-4">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link href="/signup" className="text-primary hover:underline font-medium">
                     Sign up
                   </Link>

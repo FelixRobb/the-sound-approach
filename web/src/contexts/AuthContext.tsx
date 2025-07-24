@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 import { createClient } from "@/lib/supabase";
@@ -29,6 +30,7 @@ const initialState: AuthState = {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(initialState);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     // Get initial session
@@ -249,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("onboarding_completed");
       setState((prev) => ({ ...prev, hasCompletedOnboarding: false }));
+      router.push("/onboarding");
     }
   };
 

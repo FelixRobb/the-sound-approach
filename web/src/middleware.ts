@@ -3,77 +3,66 @@ import type { NextRequest } from "next/server";
 
 import { createMiddlewareClient } from "@/lib/supabase";
 
-// Paths that never require an authenticated session
-const PUBLIC_PATHS = ["/favicon.ico", "/service-worker.js", "/login", "/signup"];
+// Routes that should always be accessible without an authenticated session
+const PUBLIC_PATHS = new Set([
+  "/", // the welcome / landing page
+  "/favicon.ico",
+  "/service-worker.js",
+  "/login",
+  "/signup",
+  "/welcome",
+]);
 
 export async function middleware(request: NextRequest) {
-  console.log("Middleware running for:", request.nextUrl.pathname);
+  const { pathname } = request.nextUrl;
 
-  try {
-    // Create response object
-    const response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
+  // Prepare a response object so Supabase can attach refreshed auth cookies to it
+  const response = NextResponse.next();
 
-    // Bypass auth check for explicitly public paths
-    const { pathname } = request.nextUrl;
-    if (PUBLIC_PATHS.includes(pathname)) {
-      console.log("Public path detected – skipping auth check");
-      return response;
+  // Initialise Supabase for the current middleware invocation
+  const supabase = createMiddlewareClient(request, response);
+
+  // Refresh the session if the access token has expired – this updates the cookies
+  // on the `response` object. We purposely do *not* use the returned `session.user`
+  // object, because it is not cryptographically verified.
+  await supabase.auth.getSession();
+
+  // Fetch the verified user object from Supabase Auth. This makes a network
+  // request to securely validate the access token.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isAuthenticated = !!user;
+
+  /*
+   * 1. Public routes – allow through for everyone. If the user is *already*
+   *    authenticated and tries to visit the auth pages (login / signup),
+   *    redirect them to their dashboard instead.
+   */
+  if (PUBLIC_PATHS.has(pathname)) {
+    if (isAuthenticated && (pathname === "/login" || pathname === "/signup")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-
-    const supabase = createMiddlewareClient(request);
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const user = session?.user;
-    const isAuthenticatedUser = !!user;
-
-    console.log("Auth check:", {
-      pathname,
-      isAuthenticatedUser,
-      userId: user?.id || "none",
-    });
-
-    // If an authenticated user somehow lands on auth pages, send them to the main dashboard
-    if (isAuthenticatedUser && ["/login", "/signup"].includes(pathname)) {
-      console.log("Authenticated user on auth page – redirecting to /");
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
-    // For the root path, let it through - the page component will handle auth state
-    if (pathname === "/") {
-      console.log("Root path – allowing through");
-      return response;
-    }
-
-    // Redirect unauthenticated users to root for protected routes
-    if (!isAuthenticatedUser && !PUBLIC_PATHS.includes(pathname)) {
-      console.log("Unauthenticated – redirecting to /");
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
-    console.log("Allowing request to continue");
     return response;
-  } catch (error) {
-    console.error("Middleware error:", error);
-    const { pathname } = request.nextUrl;
-    if (PUBLIC_PATHS.includes(pathname) || pathname === "/") {
-      return NextResponse.next({
-        request: {
-          headers: request.headers,
-        },
-      });
-    }
+  }
 
+  /*
+   * 2. Protected routes – if the user is not authenticated, kick them back to
+   *    the public landing page so the client-side logic can handle further
+   *    routing (e.g. showing the welcome screen or the login form).
+   */
+  if (!isAuthenticated) {
     return NextResponse.redirect(new URL("/", request.url));
   }
+
+  // 3. Authenticated user accessing a protected route – everything is good 🎉
+  return response;
 }
 
+// Apply this middleware to every route except Next.js internals and static
+// assets. We intentionally *do not* exclude the auth pages so we can redirect
+// authenticated users away from them.
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|service-worker.js).*)"],
 };
