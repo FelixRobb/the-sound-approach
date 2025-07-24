@@ -4,7 +4,6 @@ import { Music, LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 
 import AuthModal from "./AuthModal";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
@@ -34,7 +33,7 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md justify-center items-center">
         <Card className="text-center shadow-2xl border-0">
           <CardHeader className="pb-4">
             <div className="flex justify-center mb-6">
@@ -89,13 +88,6 @@ export default function WelcomePage() {
                   <p className="text-sm text-muted-foreground">Find species quickly</p>
                 </div>
               </div>
-            </div>
-
-            {/* Pro Badge */}
-            <div className="flex justify-center">
-              <Badge variant="default" className="px-4 py-1">
-                Professional Edition
-              </Badge>
             </div>
 
             {/* Auth Buttons */}

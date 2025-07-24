@@ -2,8 +2,10 @@
 
 import { Loader2 } from "lucide-react";
 
-import DashboardPage from "@/components/DashboardPage";
 import OnboardingPage from "@/components/OnboardingPage";
+import RecordingsPage from "@/components/RecordingsPage";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
@@ -21,10 +23,23 @@ export default function HomePage() {
   }
 
   // At this point, middleware ensures user is authenticated
-  // Show onboarding if not completed, otherwise show dashboard
+  // Show onboarding if not completed, otherwise show recordings
   if (!state.hasCompletedOnboarding) {
     return <OnboardingPage />;
   }
 
-  return <DashboardPage />;
+  return (
+    <div className="flex h-full flex-col">
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-semibold">Library</h1>
+        </div>
+      </header>
+      <div className="flex-1">
+        <RecordingsPage />
+      </div>
+    </div>
+  );
 }

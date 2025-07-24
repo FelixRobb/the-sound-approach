@@ -1,3 +1,5 @@
+import { Library, Search, User as UserIcon } from "lucide-react";
+
 // Core data types (ported from mobile app)
 export type Species = {
   id: string;
@@ -49,51 +51,61 @@ export type AuthState = {
   hasCompletedOnboarding: boolean;
 };
 
-// Audio player types
-export type AudioPlayerState = {
+export type AuthAction =
+  | { type: "LOADING" }
+  | { type: "SIGN_IN"; user: User }
+  | { type: "SIGN_UP"; user: User }
+  | { type: "SIGN_OUT" }
+  | { type: "ERROR"; error: string }
+  | { type: "RESTORE_TOKEN"; user: User; hasCompletedOnboarding: boolean }
+  | { type: "COMPLETE_ONBOARDING" }
+  | { type: "RESET_ONBOARDING" };
+
+// Audio types
+export type AudioState = {
   isPlaying: boolean;
-  isLoading: boolean;
   currentTrackId: string | null;
+  position: number;
+  duration: number;
+  isLoading: boolean;
   error: string | null;
 };
 
+export type AudioAction =
+  | { type: "PLAY"; trackId: string }
+  | { type: "PAUSE" }
+  | { type: "STOP" }
+  | { type: "SET_POSITION"; position: number }
+  | { type: "SET_DURATION"; duration: number }
+  | { type: "SET_LOADING"; isLoading: boolean }
+  | { type: "SET_ERROR"; error: string | null };
+
+// Download types
+export type DownloadState = {
+  downloads: Record<string, DownloadItem>;
+  isDownloading: boolean;
+  error: string | null;
+};
+
+export type DownloadItem = {
+  id: string;
+  title: string;
+  progress: number;
+  status: "pending" | "downloading" | "completed" | "error";
+  localUri?: string;
+};
+
+export type DownloadAction =
+  | { type: "START_DOWNLOAD"; item: DownloadItem }
+  | { type: "UPDATE_PROGRESS"; id: string; progress: number }
+  | { type: "COMPLETE_DOWNLOAD"; id: string; localUri: string }
+  | { type: "ERROR_DOWNLOAD"; id: string; error: string }
+  | { type: "REMOVE_DOWNLOAD"; id: string };
+
 // Search types
-export type SearchResults = {
-  recordings: Recording[];
-  species: Species[];
-};
-
-export type SearchFilter = "all" | "species" | "recordings";
-
-// Theme types
-export type ThemeMode = "light" | "dark" | "system";
-
-// Page props types
-export type RecordingPageProps = {
-  params: { id: string };
-};
-
-export type SpeciesPageProps = {
-  params: { id: string };
-};
+export type SearchFilter = "all" | "recordings" | "species";
 
 // Component prop types
-export type MiniAudioPlayerProps = {
-  trackId: string;
-  audioUri: string;
-  size?: number;
-};
-
-export type VideoPlayerProps = {
-  videoUri: string;
-  title?: string;
-};
-
-export type PageBadgeProps = {
-  page: number | string;
-  className?: string;
-};
-
 export type SpeciesCardProps = {
   species: Species;
   onClick?: () => void;
@@ -103,3 +115,27 @@ export type RecordingCardProps = {
   recording: Recording;
   onClick?: () => void;
 };
+
+// Navigation types
+export type TabType = "recordings" | "search" | "profile";
+
+export const navigationItems = [
+  {
+    id: "recordings" as TabType,
+    title: "Library",
+    icon: Library,
+    description: "Browse recordings by book order or species",
+  },
+  {
+    id: "search" as TabType,
+    title: "Search",
+    icon: Search,
+    description: "Find specific recordings and species",
+  },
+  {
+    id: "profile" as TabType,
+    title: "Profile",
+    icon: UserIcon,
+    description: "Manage your account and settings",
+  },
+];
