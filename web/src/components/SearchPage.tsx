@@ -49,21 +49,16 @@ export default function SearchPage() {
     }
   }, []);
 
-  const saveRecentSearch = useCallback(
-    (query: string) => {
-      const trimmedQuery = query.trim();
-      if (!trimmedQuery) return;
+  const saveRecentSearch = useCallback((query: string) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return;
 
-      const updated = [trimmedQuery, ...recentSearches.filter((s) => s !== trimmedQuery)].slice(
-        0,
-        10
-      );
-
-      setRecentSearches(updated);
+    setRecentSearches((prev) => {
+      const updated = [trimmedQuery, ...prev.filter((s) => s !== trimmedQuery)].slice(0, 10);
       localStorage.setItem("recentSearches", JSON.stringify(updated));
-    },
-    [recentSearches]
-  );
+      return updated;
+    });
+  }, []);
 
   const performSearch = useCallback(
     async (query: string) => {

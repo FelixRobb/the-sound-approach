@@ -129,7 +129,7 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
                       <Music className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex flex-1 flex-col items-start min-w-0 pl-2">
-                      <span className="truncate text-xs font-medium group-hover:text-primary transition-colors">
+                      <span className="truncate text-xs font-medium hover:text-primary transition-colors">
                         {rec.title}
                       </span>
                       <div className="flex items-center gap-1 w-full">

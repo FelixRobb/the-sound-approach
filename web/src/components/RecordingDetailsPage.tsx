@@ -28,7 +28,7 @@ export default function RecordingDetailsPage() {
   const [videoError, setVideoError] = useState(false);
 
   const videoRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<typeof videojs.players | null>(null);
 
   // Load recording data
   useEffect(() => {
@@ -79,10 +79,6 @@ export default function RecordingDetailsPage() {
         },
       ],
       poster: "",
-    });
-
-    player.ready(() => {
-      console.log("Video.js player is ready");
     });
 
     player.on("error", () => {
