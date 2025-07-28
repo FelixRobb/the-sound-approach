@@ -1,11 +1,23 @@
 "use client";
 
-import { Play, Pause, X, Move, AlertTriangle, Loader2 } from "lucide-react";
+import {
+  Play,
+  Pause,
+  X,
+  Move,
+  AlertTriangle,
+  Loader2,
+  ChevronUp,
+  ChevronDown,
+  SkipForward,
+  SkipBack,
+} from "lucide-react";
 import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
 
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
+import { Slider } from "./ui/slider";
 
 import { useAudio } from "@/contexts/AudioContext";
 
@@ -21,29 +33,46 @@ export default function FloatingAudioController() {
     currentTrackId,
     currentTrackUri,
     currentTrackTitle,
+    currentTime,
+    duration,
     error,
     togglePlayPause,
+    seekTo,
+    seekForward,
+    seekBackward,
     stop,
   } = useAudio();
   const [position, setPosition] = useState<Position>(() => {
-    // Start in bottom-right corner on larger screens, bottom-center on mobile
     if (typeof window !== "undefined") {
-      const isMobile = window.innerWidth < 768;
-      return isMobile
-        ? { x: window.innerWidth / 2 - 100, y: window.innerHeight - 100 }
-        : { x: window.innerWidth - 320, y: window.innerHeight - 100 };
+      try {
+        const storedPosition = localStorage.getItem("floatingAudioControllerPosition");
+        if (storedPosition) {
+          return JSON.parse(storedPosition);
+        }
+        // Start in bottom-right corner on larger screens, bottom-center on mobile
+        const isMobile = window.innerWidth < 768;
+        return isMobile
+          ? { x: window.innerWidth / 2 - 100, y: window.innerHeight - 100 }
+          : { x: window.innerWidth - 320, y: window.innerHeight - 100 };
+      } catch {
+        return { x: 20, y: 20 };
+      }
     }
     return { x: 20, y: 20 };
   });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const controllerRef = useRef<HTMLDivElement>(null);
   const dragStartPos = useRef<Position>({ x: 0, y: 0 });
 
   // Show/hide controller based on audio state
   useEffect(() => {
     setIsVisible(!!currentTrackId);
+    if (!currentTrackId) {
+      setIsExpanded(false);
+    }
   }, [currentTrackId]);
 
   // Handle window resize to keep controller in bounds
@@ -55,6 +84,14 @@ export default function FloatingAudioController() {
       const maxX = window.innerWidth - rect.width - 20;
       const maxY = window.innerHeight - rect.height - 20;
 
+      localStorage.setItem(
+        "floatingAudioControllerPosition",
+        JSON.stringify({
+          x: Math.min(Math.max(20, position.x), maxX),
+          y: Math.min(Math.max(20, position.y), maxY),
+        })
+      );
+
       setPosition((prev) => ({
         x: Math.min(Math.max(20, prev.x), maxX),
         y: Math.min(Math.max(20, prev.y), maxY),
@@ -63,7 +100,7 @@ export default function FloatingAudioController() {
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [position.x, position.y]);
 
   // Constrain position to screen bounds
   const constrainPosition = useCallback((pos: Position): Position => {
@@ -81,10 +118,20 @@ export default function FloatingAudioController() {
 
   // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent dragging when clicking on interactive elements
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("button") ||
+      target.closest('[role="slider"]') ||
+      target.closest(".slider-thumb")
+    ) {
+      return;
+    }
+
     // On mobile (when drag handle is hidden), allow dragging from anywhere on the controller
     const isMobile = window.innerWidth < 768;
-    const isDragHandle = (e.target as HTMLElement).closest("[data-drag-handle]");
-    const isControllerCard = (e.target as HTMLElement).closest("[data-controller-card]");
+    const isDragHandle = target.closest("[data-drag-handle]");
+    const isControllerCard = target.closest("[data-controller-card]");
 
     if (!isMobile && !isDragHandle) {
       return;
@@ -119,14 +166,28 @@ export default function FloatingAudioController() {
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  }, []);
+    localStorage.setItem(
+      "floatingAudioControllerPosition",
+      JSON.stringify({ x: position.x, y: position.y })
+    );
+  }, [position.x, position.y]);
 
   // Touch drag handlers
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Prevent dragging when touching interactive elements
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("button") ||
+      target.closest('[role="slider"]') ||
+      target.closest(".slider-thumb")
+    ) {
+      return;
+    }
+
     // On mobile (when drag handle is hidden), allow dragging from anywhere on the controller
     const isMobile = window.innerWidth < 768;
-    const isDragHandle = (e.target as HTMLElement).closest("[data-drag-handle]");
-    const isControllerCard = (e.target as HTMLElement).closest("[data-controller-card]");
+    const isDragHandle = target.closest("[data-drag-handle]");
+    const isControllerCard = target.closest("[data-controller-card]");
 
     if (!isMobile && !isDragHandle) {
       return;
@@ -164,7 +225,11 @@ export default function FloatingAudioController() {
 
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
-  }, []);
+    localStorage.setItem(
+      "floatingAudioControllerPosition",
+      JSON.stringify({ x: position.x, y: position.y })
+    );
+  }, [position.x, position.y]);
 
   // Set up global event listeners for dragging
   useEffect(() => {
@@ -197,6 +262,28 @@ export default function FloatingAudioController() {
     stop();
   };
 
+  const handleSeekForward = () => {
+    seekForward(10);
+  };
+
+  const handleSeekBackward = () => {
+    seekBackward(10);
+  };
+
+  const handleSliderChange = (value: number[]) => {
+    seekTo(value[0]);
+  };
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const formatTime = (time: number): string => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
   if (!isVisible) return null;
 
   return (
@@ -215,8 +302,11 @@ export default function FloatingAudioController() {
     >
       <Card
         data-controller-card
-        className="p-2 sm:p-3 shadow-lg border-2 bg-card/95 backdrop-blur-lg hover:shadow-xl transition-shadow max-w-[280px] sm:max-w-[320px]"
+        className={`p-2 sm:p-3 shadow-lg border-2 bg-card/95 backdrop-blur-lg hover:shadow-xl transition-all duration-300 ${
+          isExpanded ? "max-w-[320px] sm:max-w-[380px]" : "max-w-[280px] sm:max-w-[320px]"
+        }`}
       >
+        {/* Main Controls Row */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Drag handle - hidden on mobile for more space */}
           <div
@@ -255,7 +345,7 @@ export default function FloatingAudioController() {
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/recording/${currentTrackId}`}
-                  className="text-sm sm:text-sm font-medium text-foreground truncate hover:text-primary"
+                  className="text-sm sm:text-sm font-medium text-foreground truncate hover:text-primary block"
                 >
                   {currentTrackTitle || `Track ${currentTrackId?.slice(-4) || "Unknown"}`}
                 </Link>
@@ -265,6 +355,20 @@ export default function FloatingAudioController() {
               </div>
             </>
           )}
+
+          {/* Expand/Collapse button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleExpanded}
+            className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground hover:text-foreground flex-shrink-0"
+          >
+            {isExpanded ? (
+              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
+            ) : (
+              <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4" />
+            )}
+          </Button>
 
           {/* Close button */}
           <Button
@@ -276,6 +380,52 @@ export default function FloatingAudioController() {
             <X className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
         </div>
+
+        {/* Expanded Controls */}
+        {isExpanded && !error && (
+          <div className="mt-3 pt-3 border-t border-border/50 space-y-3">
+            {/* Seek Controls */}
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSeekBackward}
+                className="w-8 h-8 rounded-full"
+              >
+                <SkipBack className="w-4 h-4" />
+              </Button>
+
+              <div className="text-xs text-muted-foreground min-w-[35px] text-center">
+                {formatTime(currentTime)}
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSeekForward}
+                className="w-8 h-8 rounded-full"
+              >
+                <SkipForward className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Progress Slider */}
+            <div className="space-y-1">
+              <Slider
+                value={[currentTime]}
+                max={duration || 100}
+                step={1}
+                onValueChange={handleSliderChange}
+                className="w-full cursor-pointer"
+                disabled={!duration || duration === 0}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );

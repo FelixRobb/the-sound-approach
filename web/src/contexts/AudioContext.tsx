@@ -10,8 +10,13 @@ type AudioContextType = {
   currentTrackId: string | null;
   currentTrackUri: string | null;
   currentTrackTitle: string | null;
+  currentTime: number;
+  duration: number;
   error: string | null;
   togglePlayPause: (uri: string, trackId: string, title?: string) => Promise<boolean>;
+  seekTo: (time: number) => void;
+  seekForward: (seconds?: number) => void;
+  seekBackward: (seconds?: number) => void;
   stop: () => void;
 };
 
@@ -26,6 +31,8 @@ const initialState: AudioPlayerState = {
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AudioPlayerState>(initialState);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentUriRef = useRef<string | null>(null);
   const currentTitleRef = useRef<string | null>(null);
@@ -42,6 +49,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
     currentUriRef.current = null;
     currentTitleRef.current = null;
+    setCurrentTime(0);
+    setDuration(0);
     updateState({
       isPlaying: false,
       isLoading: false,
@@ -101,13 +110,28 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           updateState({ isPlaying: false });
         });
 
+        audio.addEventListener("timeupdate", () => {
+          setCurrentTime(audio.currentTime);
+        });
+
+        audio.addEventListener("loadedmetadata", () => {
+          setDuration(audio.duration);
+        });
+
+        audio.addEventListener("durationchange", () => {
+          setDuration(audio.duration);
+        });
+
         audio.addEventListener("ended", () => {
           updateState({
             isPlaying: false,
             currentTrackId: null,
           });
+          setCurrentTime(0);
+          setDuration(0);
           audioRef.current = null;
           currentUriRef.current = null;
+          currentTitleRef.current = null;
         });
 
         audio.addEventListener("error", () => {
@@ -118,8 +142,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
             isPlaying: false,
             currentTrackId: null,
           });
+          setCurrentTime(0);
+          setDuration(0);
           audioRef.current = null;
           currentUriRef.current = null;
+          currentTitleRef.current = null;
         });
 
         // Start playing
@@ -144,6 +171,32 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     [state.currentTrackId, state.isPlaying, updateState]
   );
 
+  const seekTo = useCallback((time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(0, Math.min(time, audioRef.current.duration || 0));
+    }
+  }, []);
+
+  const seekForward = useCallback(
+    (seconds: number = 10) => {
+      if (audioRef.current) {
+        const newTime = audioRef.current.currentTime + seconds;
+        seekTo(newTime);
+      }
+    },
+    [seekTo]
+  );
+
+  const seekBackward = useCallback(
+    (seconds: number = 10) => {
+      if (audioRef.current) {
+        const newTime = audioRef.current.currentTime - seconds;
+        seekTo(newTime);
+      }
+    },
+    [seekTo]
+  );
+
   return (
     <AudioContext.Provider
       value={{
@@ -152,8 +205,13 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         currentTrackId: state.currentTrackId,
         currentTrackUri: currentUriRef.current,
         currentTrackTitle: currentTitleRef.current,
+        currentTime,
+        duration,
         error: state.error,
         togglePlayPause,
+        seekTo,
+        seekForward,
+        seekBackward,
         stop,
       }}
     >

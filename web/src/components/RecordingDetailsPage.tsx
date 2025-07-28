@@ -237,14 +237,10 @@ export default function RecordingDetailsPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex flex-col gap-2 text-sm">
               <div>
                 <span className="font-medium text-foreground">Book Page:</span>
                 <span className="ml-2 text-muted-foreground">{recording.book_page_number}</span>
-              </div>
-              <div>
-                <span className="font-medium text-foreground">Recording ID:</span>
-                <span className="ml-2 text-muted-foreground font-mono">{recording.id}</span>
               </div>
             </div>
           </CardContent>
