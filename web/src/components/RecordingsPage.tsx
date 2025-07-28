@@ -230,6 +230,7 @@ export default function RecordingsPage() {
                               <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <MiniAudioPlayer
                                   trackId={recording.id}
+                                  title={recording.title}
                                   audioUri={audioUri}
                                   size={44}
                                 />

@@ -177,7 +177,12 @@ export default function SpeciesDetailsPage() {
                     {/* Audio Player */}
                     {audioUri && (
                       <div onClick={(e) => e.stopPropagation()}>
-                        <MiniAudioPlayer trackId={recording.id} audioUri={audioUri} size={40} />
+                        <MiniAudioPlayer
+                          trackId={recording.id}
+                          audioUri={audioUri}
+                          title={recording.title}
+                          size={40}
+                        />
                       </div>
                     )}
 

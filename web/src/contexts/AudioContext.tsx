@@ -8,8 +8,10 @@ type AudioContextType = {
   isPlaying: boolean;
   isLoading: boolean;
   currentTrackId: string | null;
+  currentTrackUri: string | null;
+  currentTrackTitle: string | null;
   error: string | null;
-  togglePlayPause: (uri: string, trackId: string) => Promise<boolean>;
+  togglePlayPause: (uri: string, trackId: string, title?: string) => Promise<boolean>;
   stop: () => void;
 };
 
@@ -26,6 +28,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AudioPlayerState>(initialState);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentUriRef = useRef<string | null>(null);
+  const currentTitleRef = useRef<string | null>(null);
 
   const updateState = useCallback((partialState: Partial<AudioPlayerState>) => {
     setState((prev) => ({ ...prev, ...partialState }));
@@ -38,6 +41,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       audioRef.current = null;
     }
     currentUriRef.current = null;
+    currentTitleRef.current = null;
     updateState({
       isPlaying: false,
       isLoading: false,
@@ -47,7 +51,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [updateState]);
 
   const togglePlayPause = useCallback(
-    async (uri: string, trackId: string): Promise<boolean> => {
+    async (uri: string, trackId: string, title?: string): Promise<boolean> => {
       try {
         // If same track is playing, just toggle pause/play
         if (state.currentTrackId === trackId && audioRef.current) {
@@ -78,6 +82,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         const audio = new Audio(uri);
         audioRef.current = audio;
         currentUriRef.current = uri;
+        currentTitleRef.current = title || null;
 
         // Set up event listeners
         audio.addEventListener("loadstart", () => {
@@ -145,6 +150,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
         isPlaying: state.isPlaying,
         isLoading: state.isLoading,
         currentTrackId: state.currentTrackId,
+        currentTrackUri: currentUriRef.current,
+        currentTrackTitle: currentTitleRef.current,
         error: state.error,
         togglePlayPause,
         stop,

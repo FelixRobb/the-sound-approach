@@ -258,6 +258,7 @@ export default function SearchPage() {
                                       <MiniAudioPlayer
                                         trackId={recording.id}
                                         audioUri={audioUri}
+                                        title={recording.title}
                                         size={44}
                                       />
                                     </div>

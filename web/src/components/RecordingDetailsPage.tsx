@@ -174,7 +174,13 @@ export default function RecordingDetailsPage() {
             </div>
             <div className="flex items-center gap-3">
               <PageBadge page={recording.book_page_number} />
-              {audioUri && <MiniAudioPlayer trackId={recording.id} audioUri={audioUri} />}
+              {audioUri && (
+                <MiniAudioPlayer
+                  trackId={recording.id}
+                  audioUri={audioUri}
+                  title={recording.title}
+                />
+              )}
             </div>
           </div>
         </div>
