@@ -270,15 +270,7 @@ const DownloadsScreen = () => {
       textAlign: "center",
     },
     header: {
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      elevation: 4,
-      paddingTop: 16 + insets.top,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      paddingTop: 8 + insets.top,
       zIndex: 1,
     },
     headerInner: {
@@ -345,9 +337,6 @@ const DownloadsScreen = () => {
       justifyContent: "space-between",
     },
     storageInfoContainer: {
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 10,
     },

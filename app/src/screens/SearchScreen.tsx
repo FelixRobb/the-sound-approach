@@ -131,16 +131,8 @@ const SearchScreen = () => {
       fontWeight: "600",
     },
     header: {
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      elevation: 4,
       paddingBottom: 20,
-      paddingTop: 16 + insets.top,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      paddingTop: 8 + insets.top,
       zIndex: 1,
     },
     headerInner: {
@@ -289,7 +281,7 @@ const SearchScreen = () => {
     searchContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outlineVariant,
+      borderColor: theme.colors.outline,
       borderRadius: 50,
       borderWidth: 1,
       flexDirection: "row",

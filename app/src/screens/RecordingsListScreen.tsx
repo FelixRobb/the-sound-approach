@@ -84,10 +84,6 @@ const RecordingsListScreen = () => {
       alignItems: "center",
       justifyContent: "space-between",
     },
-    recordingLeftSection: {
-      flex: 1,
-      minWidth: 0,
-    },
     recordingTitle: {
       color: theme.colors.onSurface,
       fontSize: 17,
@@ -95,6 +91,10 @@ const RecordingsListScreen = () => {
       lineHeight: 18,
       flex: 1,
       marginRight: 8,
+    },
+    recordingLeftSection: {
+      flex: 1,
+      minWidth: 0,
     },
     recordingBadges: {
       marginTop: 8,
@@ -249,6 +249,9 @@ const RecordingsListScreen = () => {
       flexShrink: 1,
       gap: 8,
     },
+    headerInner: {
+      paddingHorizontal: 20,
+    },
     headerButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
@@ -258,9 +261,6 @@ const RecordingsListScreen = () => {
       paddingHorizontal: 0,
       position: "relative",
       width: 44,
-    },
-    headerInner: {
-      paddingHorizontal: 20,
     },
     headerRow: {
       alignItems: "center",

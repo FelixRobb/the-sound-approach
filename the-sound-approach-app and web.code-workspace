@@ -14,31 +14,33 @@
         "changeProcessCWD": true
       },
       {
-        "directory": "./web", 
+        "directory": "./web",
         "changeProcessCWD": true
       }
     ],
     "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-    "eslint.format.enable": false,
+    "eslint.format.enable": true,
     "eslint.codeAction.showDocumentation": {
       "enable": true
     },
-    
+    "eslint.useFlatConfig": true,
+
     // Editor Actions on Save
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit"
     },
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    
+
     // Prettier Configuration
-    "prettier.requireConfig": true,
+    "prettier.requireConfig": false,
     "prettier.useEditorConfig": false,
-    
+    "prettier.enable": true,
+
     // TypeScript Configuration
     "typescript.preferences.includePackageJsonAutoImports": "on",
     "typescript.suggest.autoImports": true,
-    
+
     // Disable Jest (as specified in original config)
     "jest.enable": false
   }

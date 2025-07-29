@@ -80,8 +80,6 @@ const ProfileSettingsScreen = () => {
 
   const styles = StyleSheet.create({
     accountDetails: {
-      borderTopColor: theme.colors.surfaceVariant,
-      borderTopWidth: 1,
       paddingBottom: 20,
       paddingHorizontal: 24,
       paddingTop: 60,
@@ -118,9 +116,9 @@ const ProfileSettingsScreen = () => {
     avatarContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderColor: theme.colors.surface,
+      borderColor: theme.colors.outline,
       borderRadius: 50,
-      borderWidth: 2,
+      borderWidth: 4,
       elevation: 16,
       height: 100,
       justifyContent: "center",
@@ -221,22 +219,13 @@ const ProfileSettingsScreen = () => {
       marginLeft: 12,
     },
     header: {
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      elevation: 4,
       paddingBottom: 20,
-      paddingTop: 16 + insets.top,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      paddingTop: 8 + insets.top,
       zIndex: 1,
     },
     headerInner: {
       paddingHorizontal: 20,
     },
-
     profileCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: 20,
