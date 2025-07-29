@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
+import { SidebarTrigger } from "./ui/sidebar";
 
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
 import PageBadge from "@/components/PageBadge";
@@ -131,9 +132,10 @@ export default function SpeciesDetailsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-40">
+      <div className="bg-card border-b border-border sticky top-0">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
+            <SidebarTrigger className="-ml-1" />
             <Button variant="ghost" size="icon" onClick={handleBack}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -176,8 +178,13 @@ export default function SpeciesDetailsPage() {
                   <div className="flex items-center gap-4">
                     {/* Audio Player */}
                     {audioUri && (
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <MiniAudioPlayer trackId={recording.id} audioUri={audioUri} size={40} />
+                      <div className="flex-shrink-0">
+                        <MiniAudioPlayer
+                          trackId={recording.id}
+                          audioUri={audioUri}
+                          title={recording.title}
+                          size={40}
+                        />
                       </div>
                     )}
 

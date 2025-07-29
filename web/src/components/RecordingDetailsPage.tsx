@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { SidebarTrigger } from "./ui/sidebar";
 
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
 import PageBadge from "@/components/PageBadge";
@@ -154,12 +155,14 @@ export default function RecordingDetailsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-40">
+      <div className="bg-card border-b border-border sticky top-0">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
+            <SidebarTrigger className="-ml-1" />
             <Button variant="ghost" size="icon" onClick={handleBack}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
+
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-foreground truncate">{recording.title}</h1>
               {recording.species && (
@@ -174,7 +177,13 @@ export default function RecordingDetailsPage() {
             </div>
             <div className="flex items-center gap-3">
               <PageBadge page={recording.book_page_number} />
-              {audioUri && <MiniAudioPlayer trackId={recording.id} audioUri={audioUri} />}
+              {audioUri && (
+                <MiniAudioPlayer
+                  trackId={recording.id}
+                  audioUri={audioUri}
+                  title={recording.title}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -231,14 +240,10 @@ export default function RecordingDetailsPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex flex-col gap-2 text-sm">
               <div>
                 <span className="font-medium text-foreground">Book Page:</span>
                 <span className="ml-2 text-muted-foreground">{recording.book_page_number}</span>
-              </div>
-              <div>
-                <span className="font-medium text-foreground">Recording ID:</span>
-                <span className="ml-2 text-muted-foreground font-mono">{recording.id}</span>
               </div>
             </div>
           </CardContent>

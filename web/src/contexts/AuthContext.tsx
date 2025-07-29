@@ -130,45 +130,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Validate book code first
-      const { data: bookCodeData, error: bookCodeError } = await supabase
-        .from("book_codes")
-        .select("*")
-        .eq("code", bookCode)
-        .single();
+      // First validate the book code using RPC function like mobile app
+      const { data: isAvailable, error: validationError } = (await supabase.rpc(
+        "is_book_code_available",
+        { code_param: bookCode }
+      )) as { data: boolean; error: Error | null };
 
-      if (bookCodeError || !bookCodeData) {
-        throw new Error("Invalid book code");
+      if (validationError) {
+        throw new Error("Error validating book code");
       }
 
-      if (bookCodeData.activations_used >= bookCodeData.max_activations) {
-        throw new Error("Book code has reached maximum activations");
+      if (!isAvailable) {
+        throw new Error("Invalid book code or maximum activations reached");
       }
 
-      // Sign up user
+      // Then sign up with email and password
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            book_code: bookCode,
+          },
+        },
       });
 
       if (error) throw error;
       if (!data.user) throw new Error("Failed to create user");
 
-      // Create user activation record
-      const { error: activationError } = await supabase.from("user_activations").insert({
-        user_id: data.user.id,
-        book_code_id: bookCodeData.id,
-      });
+      if (data?.user && data?.session) {
+        // Associate the user with the book code
+        const { data: bookCodeData } = (await supabase
+          .from("book_codes")
+          .select("id")
+          .eq("code", bookCode)
+          .single()) as { data: { id: string } | null; error: Error | null };
 
-      if (activationError) throw activationError;
+        if (bookCodeData) {
+          // Create user activation record
+          const { error: activationError } = await supabase.from("user_activations").insert({
+            user_id: data.user.id,
+            book_code_id: bookCodeData.id,
+          });
 
-      // Update book code usage
-      const { error: updateError } = await supabase
-        .from("book_codes")
-        .update({ activations_used: bookCodeData.activations_used + 1 })
-        .eq("id", bookCodeData.id);
+          if (activationError) throw activationError;
 
-      if (updateError) throw updateError;
+          // Increment the activations_used counter using RPC function
+          const { error: incrementError } = await supabase.rpc("increment_book_code_activation", {
+            code_param: bookCode,
+          });
+
+          if (incrementError) throw incrementError;
+        }
+
+        // Update state with user info including book code
+        setState((prev) => ({
+          ...prev,
+          user: {
+            id: data.user?.id ?? "",
+            email: data.user?.email ?? "",
+            bookCode,
+          },
+          isLoading: false,
+        }));
+
+        router.push("/onboarding");
+      }
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -186,8 +213,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      // Note: We keep onboarding status even after sign out
-      // so users don't have to see it again on the same browser
+      localStorage.removeItem("onboarding_completed");
+      router.push("/");
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -220,18 +247,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = async (password: string) => {
     if (!state.user) throw new Error("No user logged in");
 
-    // Verify password first
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email: state.user.email,
-      password,
-    });
+    try {
+      // Get the current session
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-    if (verifyError) throw new Error("Password is incorrect");
+      if (sessionError || !session) {
+        throw new Error("No active session found");
+      }
 
-    // Call delete user function (this would need to be implemented as a Supabase function)
-    const { error } = await supabase.rpc("delete_user_account");
+      // Verify the password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session.user.email || "",
+        password,
+      });
 
-    if (error) throw error;
+      if (signInError) {
+        throw new Error("Invalid password");
+      }
+
+      // Get the Supabase URL from environment
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+      // Call the edge function to delete the user
+      const response = await fetch(`${supabaseUrl}/functions/v1/delete-user`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = (await response.json()) as { error: string | null };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete account");
+      }
+
+      // If successful, sign out the user locally
+      await signOut();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      throw error;
+    }
   };
 
   const completeOnboarding = async () => {

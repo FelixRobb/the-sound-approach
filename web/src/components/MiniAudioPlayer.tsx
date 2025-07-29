@@ -9,10 +9,16 @@ import { useAudio } from "@/contexts/AudioContext";
 type MiniAudioPlayerProps = {
   trackId: string;
   audioUri: string;
+  title?: string;
   size?: number;
 };
 
-export default function MiniAudioPlayer({ trackId, audioUri, size = 36 }: MiniAudioPlayerProps) {
+export default function MiniAudioPlayer({
+  trackId,
+  audioUri,
+  title,
+  size = 36,
+}: MiniAudioPlayerProps) {
   const { isPlaying, isLoading, currentTrackId, togglePlayPause } = useAudio();
 
   const isCurrentTrack = currentTrackId === trackId;
@@ -20,7 +26,7 @@ export default function MiniAudioPlayer({ trackId, audioUri, size = 36 }: MiniAu
   const isCurrentlyLoading = isCurrentTrack && isLoading;
 
   const handlePress = async () => {
-    await togglePlayPause(audioUri, trackId);
+    await togglePlayPause(audioUri, trackId, title);
   };
 
   return (

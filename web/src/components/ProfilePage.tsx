@@ -81,8 +81,8 @@ export default function ProfilePage() {
   const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (deleteForm.confirmText !== "DELETE") {
-      setMessage({ type: "error", text: "Please type DELETE to confirm" });
+    if (deleteForm.confirmText !== "DELETE MY ACCOUNT") {
+      setMessage({ type: "error", text: "Please type 'DELETE MY ACCOUNT' to confirm" });
       return;
     }
 
@@ -407,13 +407,22 @@ export default function ProfilePage() {
                 <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    This will permanently delete your account and remove all your data from our
-                    servers.
+                    <div className="space-y-2">
+                      <p className="font-semibold">⚠️ Warning</p>
+                      <p>Deleting your account will permanently remove all your data, including:</p>
+                      <ul className="list-disc list-inside text-sm space-y-1 ml-2">
+                        <li>Your account information</li>
+                        <li>Your book code activation</li>
+                        <li>All preferences and settings</li>
+                      </ul>
+                      <p className="font-medium">This action cannot be undone.</p>
+                    </div>
                   </AlertDescription>
                 </Alert>
 
                 <form onSubmit={handleDeleteAccount} className="space-y-4">
                   <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">{message?.text}</p>
                     <label htmlFor="deletePassword" className="text-sm font-medium">
                       Confirm with your password
                     </label>
@@ -448,7 +457,7 @@ export default function ProfilePage() {
                     <label htmlFor="confirmText" className="text-sm font-medium">
                       Type{" "}
                       <Badge variant="destructive" className="mx-1">
-                        DELETE
+                        DELETE MY ACCOUNT
                       </Badge>{" "}
                       to confirm
                     </label>
@@ -460,8 +469,12 @@ export default function ProfilePage() {
                         setDeleteForm({ ...deleteForm, confirmText: e.target.value })
                       }
                       required
-                      placeholder="Type DELETE to confirm"
+                      placeholder="Type DELETE MY ACCOUNT to confirm"
+                      className="uppercase"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      This helps prevent accidental deletions
+                    </p>
                   </div>
 
                   <div className="flex gap-2 pt-2">

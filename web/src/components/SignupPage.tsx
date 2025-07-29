@@ -1,6 +1,15 @@
 "use client";
 
-import { UserPlus, ArrowLeft, Loader2, AlertCircle, Music } from "lucide-react";
+import {
+  UserPlus,
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  Music,
+  Eye,
+  EyeOff,
+  HelpCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -10,6 +19,7 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -18,13 +28,69 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [bookCode, setBookCode] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [bookCodeError, setBookCodeError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
+  // Validate email format
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validate password (at least 6 characters)
+  const validatePassword = (password: string) => {
+    return password.length >= 6;
+  };
+
+  // Validate book code format (8 characters alphanumeric)
+  const validateBookCode = (code: string) => {
+    const codeRegex = /^[A-Za-z0-9]{8}$/;
+    return codeRegex.test(code);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+
+    // Reset errors
+    setEmailError("");
+    setPasswordError("");
+    setBookCodeError("");
     clearError();
+
+    // Validate inputs
+    let isValid = true;
+
+    if (!email) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    } else if (!validatePassword(password)) {
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
+    }
+
+    if (!bookCode) {
+      setBookCodeError("Book code is required");
+      isValid = false;
+    } else if (!validateBookCode(bookCode)) {
+      setBookCodeError("Book code must be 8 characters (letters and numbers)");
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    setIsSubmitting(true);
 
     try {
       await signUp(email, password, bookCode);
@@ -46,8 +112,8 @@ export default function SignupPage() {
                 <Music className="w-8 h-8" />
               </div>
             </div>
-            <CardTitle className="text-2xl">Create Account</CardTitle>
-            <CardDescription>Join The Sound Approach community</CardDescription>
+            <CardTitle className="text-2xl">Join The Sound Approach</CardTitle>
+            <CardDescription>Create your account to start your birding adventure</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -71,11 +137,21 @@ export default function SignupPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError("");
+                  }}
                   required
                   placeholder="Enter your email"
                   disabled={isSubmitting}
+                  className={emailError ? "border-destructive" : ""}
                 />
+                {emailError && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -85,33 +161,86 @@ export default function SignupPage() {
                 >
                   Password
                 </label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="Create a password"
-                  disabled={isSubmitting}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                    required
+                    placeholder="Create a password"
+                    disabled={isSubmitting}
+                    className={passwordError ? "border-destructive pr-10" : "pr-10"}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                {passwordError && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {passwordError}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <label
-                  htmlFor="bookCode"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Book Access Code
-                </label>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="bookCode"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Book Access Code
+                  </label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button type="button" variant="ghost" size="icon" className="h-4 w-4 p-0">
+                          <HelpCircle className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <div className="space-y-2">
+                          <p className="font-semibold">Book Code Help</p>
+                          <p className="text-sm">
+                            The book code is an 8-character code found on the inside cover of
+                            &quot;The Sound Approach to Birding&quot; book. It consists of letters
+                            and numbers.
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="bookCode"
                   type="text"
                   value={bookCode}
-                  onChange={(e) => setBookCode(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    setBookCode(e.target.value.toUpperCase());
+                    setBookCodeError("");
+                  }}
                   required
                   placeholder="Enter your book code"
                   disabled={isSubmitting}
+                  className={`uppercase ${bookCodeError ? "border-destructive" : ""}`}
+                  maxLength={8}
                 />
+                {bookCodeError && (
+                  <p className="text-sm text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {bookCodeError}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Found in your copy of &quot;The Sound Approach to Birding&quot;
                 </p>

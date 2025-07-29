@@ -112,6 +112,9 @@ const eslintConfig = [
 
       // Accessibility rules
       "jsx-a11y/alt-text": "error",
+      "jsx-a11y/anchor-is-valid": "error",
+      "jsx-a11y/click-events-have-key-events": "error",
+      "jsx-a11y/no-static-element-interactions": "error",
 
       // Import organization
       "import/order": [
