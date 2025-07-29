@@ -1,24 +1,26 @@
 {
   "folders": [
     {
-      "name": "Root",
-      "path": "."
-    }
+      "name": "The Sound Approach",
+      "path": ".",
+    },
   ],
+
   "settings": {
     "eslint.workingDirectories": ["app", "web"],
     "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
     "eslint.enable": true,
     "eslint.codeAction.showDocumentation": {
-      "enable": true
+      "enable": true,
     },
-    "eslint.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
     },
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "prettier.requireConfig": true,
     "typescript.preferences.includePackageJsonAutoImports": "on",
-    "typescript.suggest.autoImports": true
-  }
+    "typescript.suggest.autoImports": true,
+    "jest.enable": false,
+  },
 }
