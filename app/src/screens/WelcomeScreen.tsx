@@ -41,18 +41,17 @@ const WelcomeScreen = () => {
       flexDirection: "row",
       gap: 12,
       justifyContent: "center",
-      paddingHorizontal: 24,
-      paddingVertical: 16,
+      paddingHorizontal: 32,
+      paddingVertical: 18,
     },
     buttonSection: {
-      gap: 16,
       paddingBottom: 20,
-      paddingHorizontal: 8,
+      paddingHorizontal: 20,
     },
     buttonText: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: "600",
-      letterSpacing: 0.5,
+      letterSpacing: 0.3,
     },
     container: {
       flex: 1,
@@ -94,31 +93,40 @@ const WelcomeScreen = () => {
     },
     primaryButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 100,
-      elevation: 6,
-      padding: 4,
+      borderRadius: 16,
+      elevation: 8,
       shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
     },
     primaryButtonText: {
       color: theme.colors.onPrimary,
+      fontWeight: "700",
     },
     secondaryButton: {
-      backgroundColor: theme.colors.backdrop,
-      borderColor: theme.colors.primary,
-      borderRadius: 100,
-      borderWidth: 1.5,
-      elevation: 2,
-      padding: 4,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      alignSelf: "center",
+      marginTop: 24,
+    },
+    secondaryButtonContent: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 4,
+      justifyContent: "center",
     },
     secondaryButtonText: {
-      color: theme.colors.primary,
+      color: `${theme.colors.onSurface}80`,
+      fontSize: 15,
+      fontWeight: "400",
+    },
+    signInLink: {
+      color: theme.colors.tertiary,
+      fontSize: 15,
+      fontWeight: "500",
+      textDecorationLine: "underline",
+    },
+    signInIcon: {
+      marginLeft: 4,
     },
   });
 
@@ -129,7 +137,7 @@ const WelcomeScreen = () => {
       resizeMode="cover"
     >
       <LinearGradient
-        colors={["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 0.7)"]}
+        colors={["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.9)"]}
         locations={[0, 0.4, 1]}
         style={styles.gradientOverlay}
       >
@@ -152,25 +160,23 @@ const WelcomeScreen = () => {
             <View style={styles.buttonSection}>
               <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => navigation.navigate("Login")}
-                activeOpacity={0.8}
+                onPress={() => navigation.navigate("SignUp")}
+                activeOpacity={0.85}
               >
                 <View style={styles.buttonContent}>
-                  <Ionicons name="log-in-outline" size={22} color={theme.colors.onPrimary} />
-                  <Text style={[styles.buttonText, styles.primaryButtonText]}>Sign In</Text>
+                  <Ionicons name="person-add-outline" size={20} color={theme.colors.onPrimary} />
+                  <Text style={[styles.buttonText, styles.primaryButtonText]}>Create Account</Text>
                 </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.secondaryButton}
-                onPress={() => navigation.navigate("SignUp")}
-                activeOpacity={0.8}
+                onPress={() => navigation.navigate("Login")}
+                activeOpacity={0.6}
               >
-                <View style={styles.buttonContent}>
-                  <Ionicons name="person-add-outline" size={22} color={theme.colors.primary} />
-                  <Text style={[styles.buttonText, styles.secondaryButtonText]}>
-                    Create Account
-                  </Text>
+                <View style={styles.secondaryButtonContent}>
+                  <Text style={styles.secondaryButtonText}>Already have an account? </Text>
+                  <Text style={styles.signInLink}>Sign in</Text>
                 </View>
               </TouchableOpacity>
             </View>

@@ -34,6 +34,7 @@ export const AuthContext = createContext<AuthContextType>({
   deleteAccount: async () => {},
   clearError: () => {},
   completeOnboarding: async () => {},
+  resetOnboarding: async () => {},
 });
 
 // Reducer function
@@ -71,6 +72,11 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isSignout: true,
         userToken: null,
         user: null,
+        hasCompletedOnboarding: false,
+      };
+    case "RESET_ONBOARDING":
+      return {
+        ...state,
         hasCompletedOnboarding: false,
       };
     case "COMPLETE_ONBOARDING":
@@ -732,6 +738,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     clearError: () => {
       dispatch({ type: "AUTH_ERROR", error: null });
+    },
+
+    resetOnboarding: async () => {
+      dispatch({ type: "RESET_ONBOARDING" });
     },
 
     completeOnboarding: async () => {

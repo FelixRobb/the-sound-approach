@@ -82,7 +82,8 @@ export type AuthAction =
   | { type: "SIGN_UP"; token: string; user: User }
   | { type: "SIGN_OUT" }
   | { type: "AUTH_ERROR"; error: string | null }
-  | { type: "COMPLETE_ONBOARDING" };
+  | { type: "COMPLETE_ONBOARDING" }
+  | { type: "RESET_ONBOARDING" };
 
 export type AuthContextType = {
   state: AuthState;
@@ -92,6 +93,7 @@ export type AuthContextType = {
   deleteAccount: (password: string) => Promise<void>;
   clearError: () => void;
   completeOnboarding: () => Promise<void>;
+  resetOnboarding: () => Promise<void>;
 };
 
 // ==========================================

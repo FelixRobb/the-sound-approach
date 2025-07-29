@@ -68,9 +68,11 @@ const LoginScreen = () => {
       shadowOpacity: 0.1,
       shadowRadius: 4,
     },
+    buttonIcon: {
+      marginLeft: 8,
+    },
     buttonText: {
       fontSize: 22,
-      marginLeft: 8,
       color: theme.colors.onPrimary,
     },
     card: {
@@ -299,8 +301,13 @@ const LoginScreen = () => {
             ) : null}
 
             <TouchableOpacity onPress={handleSubmit} disabled={isLoading} style={styles.button}>
-              <Ionicons name="log-in-outline" size={20} color={theme.colors.onPrimary} />
               <Text style={styles.buttonText}>{isLoading ? "Signing In..." : "Sign In"}</Text>
+              <Ionicons
+                name="log-in-outline"
+                size={20}
+                color={theme.colors.onPrimary}
+                style={styles.buttonIcon}
+              />
             </TouchableOpacity>
 
             <View style={styles.signupContainer}>

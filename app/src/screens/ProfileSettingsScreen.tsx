@@ -14,7 +14,7 @@ import type { RootStackParamList } from "../types";
 
 const ProfileSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { state: authState, signOut } = useContext(AuthContext);
+  const { state: authState, signOut, resetOnboarding } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
   const { theme: themeMode, setTheme } = useContext(ThemeContext);
   const { theme } = useThemedStyles();
@@ -554,7 +554,12 @@ const ProfileSettingsScreen = () => {
         <ProfileCard />
         <ThemeCard />
         <DownloadsCard />
-
+        <TouchableOpacity style={styles.actionButton} onPress={resetOnboarding}>
+          <View style={styles.actionButtonIcon}>
+            <Ionicons name="refresh-outline" size={22} color={theme.colors.primary} />
+          </View>
+          <Text style={styles.actionButtonText}>Reset Onboarding</Text>
+        </TouchableOpacity>
         {/* Action Buttons */}
         <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
           <View style={styles.actionButtonIcon}>
