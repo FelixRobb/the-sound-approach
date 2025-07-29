@@ -33,10 +33,14 @@ export default function MiniAudioPlayer({
     <Button
       variant="default"
       size="icon"
-      onClick={handlePress}
-      disabled={isCurrentlyLoading}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (isCurrentlyLoading) return;
+        handlePress();
+      }}
       className="rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
       style={{ width: size, height: size }}
+      onPointerDown={(e) => e.preventDefault()}
     >
       {isCurrentlyLoading ? (
         <Loader2 className="animate-spin" style={{ width: size * 0.5, height: size * 0.5 }} />
@@ -47,7 +51,7 @@ export default function MiniAudioPlayer({
           style={{
             width: size * 0.5,
             height: size * 0.5,
-            marginLeft: size * 0.05, // Slight offset for visual centering
+            marginLeft: size * 0.05,
           }}
         />
       )}

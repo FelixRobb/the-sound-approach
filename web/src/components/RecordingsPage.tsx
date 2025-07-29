@@ -227,7 +227,10 @@ export default function RecordingsPage() {
                           <div className="flex items-start gap-4">
                             {/* Audio Player */}
                             {audioUri && (
-                              <div className="flex-shrink-0">
+                              <div
+                                className="flex-shrink-0"
+                                onPointerDown={(e) => e.preventDefault()}
+                              >
                                 <MiniAudioPlayer
                                   trackId={recording.id}
                                   title={recording.title}
