@@ -28,6 +28,8 @@ const eslintConfig = [
       "babel.config.js",
       "metro.config.js",
       "*.config.js",
+      "*.config.ts",
+      "prettier.config.js",
       "assets/**",
       "high quality recordings/**",
       "supabase/**",

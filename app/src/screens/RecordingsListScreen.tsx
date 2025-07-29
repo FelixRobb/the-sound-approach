@@ -27,7 +27,6 @@ import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
-import { borderRadius } from "../theme";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
 
@@ -211,12 +210,8 @@ const RecordingsListScreen = () => {
       fontWeight: "600",
     },
     filterButtonsContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 24,
       marginHorizontal: 8,
       marginTop: 8,
-      paddingHorizontal: 0,
-      paddingTop: 6,
     },
     filterDivider: {
       alignSelf: "center",
@@ -244,16 +239,8 @@ const RecordingsListScreen = () => {
       textTransform: "uppercase",
     },
     header: {
-      backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: borderRadius.xxl,
-      borderBottomRightRadius: borderRadius.xxl,
-      elevation: 4,
       paddingBottom: 8,
-      paddingTop: 16 + insets.top,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.6,
-      shadowRadius: 4,
+      paddingTop: 8 + insets.top,
       zIndex: 1,
     },
     headerActions: {

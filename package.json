@@ -1,8 +1,0 @@
-{
-  "name": "the-sound-approach",
-  "private": true,
-  "devDependencies": {
-    "prettier": "^3.6.2"
-  },
-  "dependencies": {}
-}

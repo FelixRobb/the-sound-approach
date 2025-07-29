@@ -30,6 +30,7 @@ const eslintConfig = [
       "*.config.js",
       "*.config.ts",
       "*.config.mjs",
+      "prettier.config.js",
     ],
   },
 

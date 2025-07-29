@@ -125,9 +125,6 @@ const WelcomeScreen = () => {
       fontWeight: "500",
       textDecorationLine: "underline",
     },
-    signInIcon: {
-      marginLeft: 4,
-    },
   });
 
   return (

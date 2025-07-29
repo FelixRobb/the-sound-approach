@@ -1,32 +1,21 @@
 {
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "editor.formatOnSave": true,
-  "eslint.alwaysShowStatus": true,
-  "eslint.format.enable": false,
-  "eslint.validate": ["typescript", "typescriptreact", "javascript", "javascriptreact"],
-  "eslint.workingDirectories": ["./app", "./web"],
-  "files.associations": {
-    "*.ts": "typescript",
-    "*.tsx": "typescriptreact"
-  },
-  "prettier.requireConfig": true,
-  "prettier.useEditorConfig": false
+  "eslint.format.enable": true,
+  "prettier.enable": false
 }

@@ -10,6 +10,7 @@ import { useThemedStyles } from "../hooks/useThemedStyles";
 type OnboardingStep = {
   id: number;
   icon: keyof typeof Ionicons.glyphMap;
+
   title: string;
   description: string;
   color: string;
