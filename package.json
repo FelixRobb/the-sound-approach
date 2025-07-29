@@ -1,4 +1,10 @@
 {
+  "name": "the-sound-approach-monorepo",
+  "private": true,
+  "workspaces": [
+    "app",
+    "web"
+  ],
   "devDependencies": {
     "prettier": "^3.6.2"
   },

@@ -2,6 +2,7 @@
   "name": "the-sound-approach",
   "version": "1.0.0",
   "main": "index.ts",
+  "private": true,
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
@@ -75,7 +76,6 @@
     "react-native-dotenv": "^3.4.11",
     "typescript": "5.3.3"
   },
-  "private": true,
   "expo": {
     "doctor": {
       "reactNativeDirectoryCheck": {
