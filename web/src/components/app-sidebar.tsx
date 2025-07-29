@@ -38,7 +38,7 @@ export default function AppSidebar() {
   const handleNavigation = (tabId: string) => {
     switch (tabId) {
       case "recordings":
-        router.push("/");
+        router.push("/dashboard");
         break;
       case "search":
         router.push("/search");

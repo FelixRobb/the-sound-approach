@@ -4,7 +4,6 @@ import {
   Play,
   Pause,
   X,
-  Move,
   AlertTriangle,
   Loader2,
   ChevronUp,
@@ -12,19 +11,15 @@ import {
   SkipForward,
   SkipBack,
 } from "lucide-react";
+import { motion, PanInfo } from "motion/react";
 import Link from "next/link";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Slider } from "./ui/slider";
 
 import { useAudio } from "@/contexts/AudioContext";
-
-type Position = {
-  x: number;
-  y: number;
-};
 
 export default function FloatingAudioController() {
   const {
@@ -42,280 +37,274 @@ export default function FloatingAudioController() {
     seekBackward,
     stop,
   } = useAudio();
-  const [position, setPosition] = useState<Position>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const storedPosition = localStorage.getItem("floatingAudioControllerPosition");
-        if (storedPosition) {
-          return JSON.parse(storedPosition);
-        }
-        // Start in bottom-right corner on larger screens, bottom-center on mobile
-        const isMobile = window.innerWidth < 768;
-        return isMobile
-          ? { x: window.innerWidth / 2 - 100, y: window.innerHeight - 100 }
-          : { x: window.innerWidth - 320, y: window.innerHeight - 100 };
-      } catch {
-        return { x: 20, y: 20 };
-      }
-    }
-    return { x: 20, y: 20 };
-  });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
-  const [isVisible, setIsVisible] = useState(false);
+
   const [isExpanded, setIsExpanded] = useState(false);
-  const controllerRef = useRef<HTMLDivElement>(null);
-  const dragStartPos = useRef<Position>({ x: 0, y: 0 });
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragDisabled, setIsDragDisabled] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  // Show/hide controller based on audio state
-  useEffect(() => {
-    setIsVisible(!!currentTrackId);
-    if (!currentTrackId) {
-      setIsExpanded(false);
-    }
-  }, [currentTrackId]);
-
-  // Handle window resize to keep controller in bounds
-  useEffect(() => {
-    const handleResize = () => {
-      if (!controllerRef.current) return;
-
-      const rect = controllerRef.current.getBoundingClientRect();
-      const maxX = window.innerWidth - rect.width - 20;
-      const maxY = window.innerHeight - rect.height - 20;
-
-      localStorage.setItem(
-        "floatingAudioControllerPosition",
-        JSON.stringify({
-          x: Math.min(Math.max(20, position.x), maxX),
-          y: Math.min(Math.max(20, position.y), maxY),
-        })
-      );
-
-      setPosition((prev) => ({
-        x: Math.min(Math.max(20, prev.x), maxX),
-        y: Math.min(Math.max(20, prev.y), maxY),
-      }));
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [position.x, position.y]);
-
-  // Constrain position to screen bounds
-  const constrainPosition = useCallback((pos: Position): Position => {
-    if (!controllerRef.current) return pos;
-
-    const rect = controllerRef.current.getBoundingClientRect();
-    const maxX = window.innerWidth - rect.width - 20;
-    const maxY = window.innerHeight - rect.height - 20;
-
-    return {
-      x: Math.min(Math.max(20, pos.x), maxX),
-      y: Math.min(Math.max(20, pos.y), maxY),
-    };
-  }, []);
-
-  // Mouse drag handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Prevent dragging when clicking on interactive elements
-    const target = e.target as HTMLElement;
-    if (
-      target.closest("button") ||
-      target.closest('[role="slider"]') ||
-      target.closest(".slider-thumb")
-    ) {
-      return;
-    }
-
-    // On mobile (when drag handle is hidden), allow dragging from anywhere on the controller
-    const isMobile = window.innerWidth < 768;
-    const isDragHandle = target.closest("[data-drag-handle]");
-    const isControllerCard = target.closest("[data-controller-card]");
-
-    if (!isMobile && !isDragHandle) {
-      return;
-    }
-
-    if (isMobile && !isControllerCard) {
-      return;
-    }
-
-    e.preventDefault();
-    setIsDragging(true);
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
-    setDragOffset({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    });
-  };
-
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isDragging) return;
-
-      const newPosition = constrainPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y,
-      });
-
-      setPosition(newPosition);
-    },
-    [isDragging, dragOffset, constrainPosition]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-    localStorage.setItem(
-      "floatingAudioControllerPosition",
-      JSON.stringify({ x: position.x, y: position.y })
-    );
-  }, [position.x, position.y]);
-
-  // Touch drag handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    // Prevent dragging when touching interactive elements
-    const target = e.target as HTMLElement;
-    if (
-      target.closest("button") ||
-      target.closest('[role="slider"]') ||
-      target.closest(".slider-thumb")
-    ) {
-      return;
-    }
-
-    // On mobile (when drag handle is hidden), allow dragging from anywhere on the controller
-    const isMobile = window.innerWidth < 768;
-    const isDragHandle = target.closest("[data-drag-handle]");
-    const isControllerCard = target.closest("[data-controller-card]");
-
-    if (!isMobile && !isDragHandle) {
-      return;
-    }
-
-    if (isMobile && !isControllerCard) {
-      return;
-    }
-
-    e.preventDefault();
-    const touch = e.touches[0];
-    setIsDragging(true);
-    dragStartPos.current = { x: touch.clientX, y: touch.clientY };
-    setDragOffset({
-      x: touch.clientX - position.x,
-      y: touch.clientY - position.y,
-    });
-  };
-
-  const handleTouchMove = useCallback(
-    (e: TouchEvent) => {
-      if (!isDragging) return;
-
-      e.preventDefault();
-      const touch = e.touches[0];
-      const newPosition = constrainPosition({
-        x: touch.clientX - dragOffset.x,
-        y: touch.clientY - dragOffset.y,
-      });
-
-      setPosition(newPosition);
-    },
-    [isDragging, dragOffset, constrainPosition]
-  );
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-    localStorage.setItem(
-      "floatingAudioControllerPosition",
-      JSON.stringify({ x: position.x, y: position.y })
-    );
-  }, [position.x, position.y]);
-
-  // Set up global event listeners for dragging
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
-      document.addEventListener("touchend", handleTouchEnd);
-
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-        document.removeEventListener("touchmove", handleTouchMove);
-        document.removeEventListener("touchend", handleTouchEnd);
+  // Get actual component dimensions
+  const getComponentDimensions = useCallback(() => {
+    if (!cardRef.current) {
+      // Fallback estimates
+      return {
+        width: isExpanded ? 380 : 320,
+        height: isExpanded ? 180 : 80,
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
-  const handlePlayPause = async () => {
-    if (!currentTrackId || !currentTrackUri) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    return {
+      width: rect.width,
+      height: rect.height,
+    };
+  }, [isExpanded]);
+
+  // Track window size for drag constraints
+  useEffect(() => {
+    const updateWindowSize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    updateWindowSize();
+    window.addEventListener("resize", updateWindowSize);
+    return () => window.removeEventListener("resize", updateWindowSize);
+  }, []);
+
+  // Calculate initial position synchronously for immediate use
+  const getInitialPosition = useCallback(() => {
+    if (!windowSize.width || !windowSize.height) {
+      return { x: 20, y: 20 }; // Fallback position
+    }
+
+    const saved = localStorage.getItem("floatingAudioController-position");
+
+    if (saved) {
+      try {
+        const savedPosition = JSON.parse(saved);
+        const dimensions = getComponentDimensions();
+        const margin = 16;
+
+        // Check if saved position is still valid for current window size
+        const isValid =
+          savedPosition.x >= margin &&
+          savedPosition.x <= windowSize.width - dimensions.width - margin &&
+          savedPosition.y >= margin &&
+          savedPosition.y <= windowSize.height - dimensions.height - margin;
+
+        if (isValid) {
+          return savedPosition;
+        }
+      } catch (error) {
+        console.warn("Failed to parse saved audio controller position:", error);
+      }
+    }
+
+    // Default to bottom-right with margin
+    const dimensions = getComponentDimensions();
+    const margin = 20;
+    return {
+      x: windowSize.width - dimensions.width - margin,
+      y: windowSize.height - dimensions.height - margin,
+    };
+  }, [windowSize, getComponentDimensions]);
+
+  // Initialize position immediately when window size is available
+  useEffect(() => {
+    if (!windowSize.width || !windowSize.height || isInitialized) return;
+
+    const initialPos = getInitialPosition();
+    setPosition(initialPos);
+    setIsInitialized(true);
+  }, [windowSize, getInitialPosition, isInitialized]);
+
+  // Recalculate constraints when component dimensions change
+  const constrainPosition = useCallback(
+    (pos: { x: number; y: number }) => {
+      if (!windowSize.width || !windowSize.height) return pos;
+
+      const dimensions = getComponentDimensions();
+      const margin = 16;
+
+      const constraints = {
+        left: margin,
+        right: windowSize.width - dimensions.width - margin,
+        top: margin,
+        bottom: windowSize.height - dimensions.height - margin,
+      };
+
+      return {
+        x: Math.max(constraints.left, Math.min(constraints.right, pos.x)),
+        y: Math.max(constraints.top, Math.min(constraints.bottom, pos.y)),
+      };
+    },
+    [windowSize, getComponentDimensions]
+  );
+
+  // Update position when expanded state changes to maintain bounds
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    // Small delay to allow component to resize
+    const timer = setTimeout(() => {
+      setPosition((prevPos) => {
+        const constrainedPos = constrainPosition(prevPos);
+
+        // Save the new constrained position
+        if (constrainedPos.x !== prevPos.x || constrainedPos.y !== prevPos.y) {
+          localStorage.setItem("floatingAudioController-position", JSON.stringify(constrainedPos));
+        }
+
+        return constrainedPos;
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [isExpanded, constrainPosition, isInitialized]);
+
+  // Calculate drag constraints for framer-motion
+  const dragConstraints = useMemo(() => {
+    if (!windowSize.width || !windowSize.height) return {};
+
+    const dimensions = getComponentDimensions();
+    const margin = 16;
+
+    return {
+      left: margin,
+      right: windowSize.width - dimensions.width - margin,
+      top: margin,
+      bottom: windowSize.height - dimensions.height - margin,
+    };
+  }, [windowSize, getComponentDimensions]);
+
+  // Optimized event handlers
+  const handlePlayPause = useCallback(async () => {
+    if (!currentTrackId || !currentTrackUri || isLoading) return;
 
     try {
       await togglePlayPause(currentTrackUri, currentTrackId);
     } catch (error) {
       console.error("Failed to toggle playback:", error);
     }
-  };
+  }, [currentTrackId, currentTrackUri, togglePlayPause, isLoading]);
 
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     stop();
-  };
+  }, [stop]);
 
-  const handleSeekForward = () => {
+  const handleSeekForward = useCallback(() => {
     seekForward(10);
-  };
+  }, [seekForward]);
 
-  const handleSeekBackward = () => {
+  const handleSeekBackward = useCallback(() => {
     seekBackward(10);
-  };
+  }, [seekBackward]);
 
-  const handleSliderChange = (value: number[]) => {
-    seekTo(value[0]);
-  };
+  const handleSliderChange = useCallback(
+    (value: number[]) => {
+      seekTo(value[0]);
+    },
+    [seekTo]
+  );
 
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-  };
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded((prev) => !prev);
+  }, []);
 
-  const formatTime = (time: number): string => {
+  // Save position when dragging ends
+  const handleDragEnd = useCallback(
+    (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      // Calculate the new position based on the current position plus the drag offset
+      const newPosition = {
+        x: position.x + info.offset.x,
+        y: position.y + info.offset.y,
+      };
+
+      // Ensure the position is within bounds
+      const constrainedPosition = constrainPosition(newPosition);
+
+      setPosition(constrainedPosition);
+      localStorage.setItem("floatingAudioController-position", JSON.stringify(constrainedPosition));
+    },
+    [position, constrainPosition]
+  );
+
+  // Handle window resize to reposition if needed
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const handleResize = () => {
+      setPosition((prevPos) => {
+        const constrainedPos = constrainPosition(prevPos);
+
+        if (constrainedPos.x !== prevPos.x || constrainedPos.y !== prevPos.y) {
+          localStorage.setItem("floatingAudioController-position", JSON.stringify(constrainedPos));
+        }
+
+        return constrainedPos;
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [constrainPosition, isInitialized]);
+
+  // Handle slider interactions to disable drag
+  const handleSliderPointerDown = useCallback(() => {
+    setIsDragDisabled(true);
+  }, []);
+
+  const handleSliderPointerUp = useCallback(() => {
+    setIsDragDisabled(false);
+  }, []);
+
+  // Stable time formatting
+  const formatTime = useCallback((time: number): string => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
+  }, []);
 
-  if (!isVisible) return null;
+  // Memoized formatted times - only update when time actually changes
+  const formattedCurrentTime = useMemo(() => formatTime(currentTime), [formatTime, currentTime]);
+  const formattedDuration = useMemo(() => formatTime(duration), [formatTime, duration]);
+
+  // Stable track display name
+  const trackDisplayName = useMemo(() => {
+    return currentTrackTitle || `Track ${currentTrackId?.slice(-4) || "Unknown"}`;
+  }, [currentTrackTitle, currentTrackId]);
+
+  if (!currentTrackId || !isInitialized || !windowSize.width || !windowSize.height) return null;
 
   return (
-    <div
-      ref={controllerRef}
-      className={`fixed z-50 transition-all duration-200 ${
-        isDragging ? "cursor-grabbing scale-105" : "cursor-grab"
-      }`}
+    <motion.div
+      drag={!isDragDisabled}
+      dragElastic={0.1}
+      dragMomentum={false}
+      dragTransition={{ bounceStiffness: 100, bounceDamping: 20 }}
+      dragConstraints={dragConstraints}
+      initial={position}
+      animate={position}
+      onDragEnd={handleDragEnd}
+      className="fixed z-50"
       style={{
-        left: position.x,
-        top: position.y,
-        touchAction: "none",
+        minWidth: "fit-content",
+        maxWidth: `calc(100vw - 32px)`,
       }}
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
     >
       <Card
-        data-controller-card
-        className={`p-2 sm:p-3 shadow-lg border-2 bg-card/95 backdrop-blur-lg hover:shadow-xl transition-all duration-300 ${
-          isExpanded ? "max-w-[320px] sm:max-w-[380px]" : "max-w-[280px] sm:max-w-[320px]"
+        ref={cardRef}
+        className={`p-2 sm:p-3 shadow-lg border-2 bg-card/95 backdrop-blur-lg transition-all duration-300 hover:shadow-xl ${
+          isExpanded ? "w-[320px] sm:w-[380px]" : "w-[280px] sm:w-[320px]"
         }`}
       >
         {/* Main Controls Row */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Drag handle - hidden on mobile for more space */}
-          <div
-            data-drag-handle
-            className="hidden sm:flex items-center justify-center w-6 h-6 text-muted-foreground hover:text-foreground transition-colors cursor-grab active:cursor-grabbing"
-          >
-            <Move className="w-4 h-4" />
-          </div>
-
           {/* Error state */}
           {error ? (
             <div className="flex items-center gap-2 text-destructive flex-1 min-w-0">
@@ -345,9 +334,9 @@ export default function FloatingAudioController() {
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/recording/${currentTrackId}`}
-                  className="text-sm sm:text-sm font-medium text-foreground truncate hover:text-primary block"
+                  className="text-sm font-medium text-foreground truncate hover:text-primary block"
                 >
-                  {currentTrackTitle || `Track ${currentTrackId?.slice(-4) || "Unknown"}`}
+                  {trackDisplayName}
                 </Link>
                 <div className="text-xs text-muted-foreground truncate">
                   {isLoading ? "Loading..." : isPlaying ? "Playing" : "Paused"}
@@ -394,11 +383,9 @@ export default function FloatingAudioController() {
               >
                 <SkipBack className="w-4 h-4" />
               </Button>
-
               <div className="text-xs text-muted-foreground min-w-[35px] text-center">
-                {formatTime(currentTime)}
+                {formattedCurrentTime}
               </div>
-
               <Button
                 variant="ghost"
                 size="icon"
@@ -410,7 +397,12 @@ export default function FloatingAudioController() {
             </div>
 
             {/* Progress Slider */}
-            <div className="space-y-1">
+            <div
+              className="space-y-1"
+              onPointerDown={handleSliderPointerDown}
+              onPointerUp={handleSliderPointerUp}
+              onPointerLeave={handleSliderPointerUp}
+            >
               <Slider
                 value={[currentTime]}
                 max={duration || 100}
@@ -420,13 +412,13 @@ export default function FloatingAudioController() {
                 disabled={!duration || duration === 0}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+                <span>{formattedCurrentTime}</span>
+                <span>{formattedDuration}</span>
               </div>
             </div>
           </div>
         )}
       </Card>
-    </div>
+    </motion.div>
   );
 }

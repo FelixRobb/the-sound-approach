@@ -112,6 +112,11 @@ export type DownloadAction =
 // Search types
 export type SearchFilter = "all" | "recordings" | "species";
 
+export type SearchResults = {
+  recordings: Recording[];
+  species: Species[];
+};
+
 // Component prop types
 export type SpeciesCardProps = {
   species: Species;
