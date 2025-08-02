@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useThemedStyles } from "../hooks/useThemedStyles";
 const OfflineWelcomeScreen = () => {
-  const { theme } = useThemedStyles();
+  const { theme, isDarkMode } = useThemedStyles();
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
@@ -31,24 +31,6 @@ const OfflineWelcomeScreen = () => {
     backgroundImage: {
       flex: 1,
     },
-    buttonContent: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 12,
-      justifyContent: "center",
-      paddingHorizontal: 24,
-      paddingVertical: 16,
-    },
-    buttonSection: {
-      gap: 16,
-      paddingBottom: 20,
-      paddingHorizontal: 8,
-    },
-    buttonText: {
-      fontSize: 17,
-      fontWeight: "600",
-      letterSpacing: 0.5,
-    },
     container: {
       flex: 1,
     },
@@ -57,22 +39,6 @@ const OfflineWelcomeScreen = () => {
       paddingBottom: Math.max(insets.bottom, 20),
       paddingHorizontal: 20,
       paddingTop: insets.top + 40,
-    },
-    disabledButton: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderColor: theme.colors.outline,
-      borderRadius: 100,
-      borderWidth: 1.5,
-      elevation: 0,
-      opacity: 0.8,
-      padding: 4,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    disabledButtonText: {
-      color: theme.colors.onSurfaceVariant,
     },
     gradientOverlay: {
       flex: 1,
@@ -104,7 +70,7 @@ const OfflineWelcomeScreen = () => {
       marginBottom: 32,
     },
     offlineMessage: {
-      backgroundColor: `${theme.colors.errorContainer}E6`,
+      backgroundColor: theme.colors.errorContainer,
       borderRadius: 12,
       marginBottom: 24,
       opacity: 0.8,
@@ -129,7 +95,11 @@ const OfflineWelcomeScreen = () => {
       resizeMode="cover"
     >
       <LinearGradient
-        colors={["rgba(0, 0, 0, 0.3)", "rgba(0, 0, 0, 0.1)", "rgba(0, 0, 0, 0.5)"]}
+        colors={
+          isDarkMode
+            ? ["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.9)"]
+            : ["rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.9)"]
+        }
         locations={[0, 0.4, 1]}
         style={styles.gradientOverlay}
       >
@@ -153,31 +123,6 @@ const OfflineWelcomeScreen = () => {
                 You&apos;re currently offline. Please connect to the internet to sign in or create
                 an account.
               </Text>
-            </View>
-
-            {/* Disabled buttons */}
-            <View style={styles.buttonSection}>
-              <View style={styles.disabledButton}>
-                <View style={styles.buttonContent}>
-                  <Ionicons name="log-in-outline" size={22} color={theme.colors.onSurfaceVariant} />
-                  <Text style={[styles.buttonText, styles.disabledButtonText]}>
-                    Sign In (Offline)
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.disabledButton}>
-                <View style={styles.buttonContent}>
-                  <Ionicons
-                    name="person-add-outline"
-                    size={22}
-                    color={theme.colors.onSurfaceVariant}
-                  />
-                  <Text style={[styles.buttonText, styles.disabledButtonText]}>
-                    Create Account (Offline)
-                  </Text>
-                </View>
-              </View>
             </View>
           </View>
         </View>

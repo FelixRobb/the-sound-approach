@@ -5,6 +5,7 @@ import { useContext, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -129,15 +130,7 @@ const ProfileSettingsScreen = () => {
       width: 100,
       zIndex: 300,
     },
-    backgroundPattern: {
-      backgroundColor: theme.colors.background,
-      bottom: 0,
-      left: 0,
-      opacity: 0.6,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
+
     cardContent: {
       paddingBottom: 20,
       paddingHorizontal: 20,
@@ -381,9 +374,6 @@ const ProfileSettingsScreen = () => {
       fontWeight: "bold",
     },
   });
-
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Header component
   const Header = () => (

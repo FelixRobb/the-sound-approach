@@ -18,6 +18,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AnimatedTabBar from "../components/AnimatedTabBar";
+import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
@@ -126,15 +127,6 @@ const RecordingsListScreen = () => {
       justifyContent: "center",
       flexShrink: 0,
       marginLeft: 12,
-    },
-    backgroundPattern: {
-      backgroundColor: theme.colors.background,
-      bottom: 0,
-      left: 0,
-      opacity: 0.6,
-      position: "absolute",
-      right: 0,
-      top: 0,
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -683,9 +675,6 @@ const RecordingsListScreen = () => {
       </Text>
     </View>
   );
-
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   return (
     <View style={styles.container}>

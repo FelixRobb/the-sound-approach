@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useContext } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from "react-native";
 
+import BackgroundPattern from "../components/BackgroundPattern";
 import DetailHeader from "../components/DetailHeader";
 import DownloadedBadge from "../components/DownloadedBadge";
 import LoadingScreen from "../components/LoadingScreen";
@@ -41,15 +42,6 @@ const SpeciesDetailsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    backgroundPattern: {
-      backgroundColor: theme.colors.background,
-      bottom: 0,
-      left: 0,
-      opacity: 0.6,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     badgeRow: {
       alignItems: "center",
       flexDirection: "row",
@@ -204,12 +196,9 @@ const SpeciesDetailsScreen = () => {
     refetch();
   };
 
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
-
   // Render loading state
   if (isLoading) {
-    return <LoadingScreen title="Loading Species..." backgroundPattern={<BackgroundPattern />} />;
+    return <LoadingScreen title="Loading Species..." />;
   }
 
   // Render error state

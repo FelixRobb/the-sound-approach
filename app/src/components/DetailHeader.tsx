@@ -22,8 +22,6 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
   const styles = StyleSheet.create({
     backButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
       height: 40,
       justifyContent: "center",
       marginRight: 12,

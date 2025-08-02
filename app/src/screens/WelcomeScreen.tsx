@@ -10,7 +10,7 @@ import type { RootStackParamList } from "../types";
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { theme } = useThemedStyles();
+  const { theme, isDarkMode } = useThemedStyles();
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
@@ -93,7 +93,7 @@ const WelcomeScreen = () => {
     },
     primaryButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 16,
+      borderRadius: 20,
       elevation: 8,
       shadowColor: theme.colors.primary,
       shadowOffset: { width: 0, height: 6 },
@@ -115,7 +115,7 @@ const WelcomeScreen = () => {
       justifyContent: "center",
     },
     secondaryButtonText: {
-      color: `${theme.colors.onSurface}80`,
+      color: theme.colors.onSurface,
       fontSize: 15,
       fontWeight: "400",
     },
@@ -134,7 +134,11 @@ const WelcomeScreen = () => {
       resizeMode="cover"
     >
       <LinearGradient
-        colors={["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.9)"]}
+        colors={
+          isDarkMode
+            ? ["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.9)"]
+            : ["rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.9)"]
+        }
         locations={[0, 0.4, 1]}
         style={styles.gradientOverlay}
       >

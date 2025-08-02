@@ -21,6 +21,7 @@ import {
 import { Slider } from "react-native-awesome-slider";
 import { useSharedValue } from "react-native-reanimated";
 
+import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
 import LoadingScreen from "../components/LoadingScreen";
@@ -96,15 +97,6 @@ const RecordingDetailsScreen = () => {
   const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
 
   const styles = StyleSheet.create({
-    backgroundPattern: {
-      backgroundColor: theme.colors.background,
-      bottom: 0,
-      left: 0,
-      opacity: 0.6,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -130,7 +122,7 @@ const RecordingDetailsScreen = () => {
       position: "absolute",
       right: 12,
       zIndex: 10,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
@@ -277,7 +269,7 @@ const RecordingDetailsScreen = () => {
       position: "absolute",
       right: 20,
       zIndex: 1000,
-      shadowColor: "#000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
@@ -1268,11 +1260,8 @@ const RecordingDetailsScreen = () => {
     );
   };
 
-  // Background pattern component
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
-
   if (isLoading) {
-    return <LoadingScreen title="Loading Recording..." backgroundPattern={<BackgroundPattern />} />;
+    return <LoadingScreen title="Loading Recording..." />;
   }
 
   if (error || !recording) {

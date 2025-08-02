@@ -15,6 +15,7 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
@@ -25,6 +26,23 @@ import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
 import type { Recording, RootStackParamList, Species } from "../types";
+
+// Custom debounce hook
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 // Define a type for search history items
 type SearchHistoryItem = {
@@ -42,25 +60,18 @@ const SearchScreen = () => {
   const { theme } = useThemedStyles();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms debounce delay
   const [searchResults, setSearchResults] = useState<SearchResults>({
     recordings: [],
     species: [],
   });
   const [recentSearches, setRecentSearches] = useState<SearchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings">("all");
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
-    backgroundPattern: {
-      backgroundColor: theme.colors.background,
-      bottom: 0,
-      left: 0,
-      opacity: 0.6,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     clearText: {
       color: theme.colors.tertiary,
       fontWeight: "600",
@@ -97,9 +108,6 @@ const SearchScreen = () => {
       textAlign: "center",
     },
     filterContainer: {
-      backgroundColor: theme.colors.surface,
-      borderBottomColor: theme.colors.outline,
-      borderBottomWidth: 1,
       flexDirection: "row",
       justifyContent: "space-around",
       paddingHorizontal: 16,
@@ -291,12 +299,14 @@ const SearchScreen = () => {
       paddingHorizontal: 16,
     },
     searchInput: {
+      width: "100%",
+      textAlignVertical: "center",
       color: theme.colors.onSurface,
       flex: 1,
       fontSize: 16,
       marginLeft: 10,
       paddingVertical: 0,
-      textAlignVertical: "center",
+      overflow: "hidden",
     },
     sectionDivider: {
       backgroundColor: theme.colors.surfaceVariant,
@@ -449,6 +459,7 @@ const SearchScreen = () => {
     if (!query.trim()) return;
 
     setIsLoading(true);
+    setHasSearched(true);
 
     try {
       const results = await searchRecordings(query);
@@ -470,6 +481,16 @@ const SearchScreen = () => {
       setIsLoading(false);
     }
   };
+
+  // Effect to handle debounced search
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      handleSearch(debouncedSearchQuery);
+    } else {
+      setSearchResults({ recordings: [], species: [] });
+      setIsLoading(false);
+    }
+  }, [debouncedSearchQuery]);
 
   // Handle navigation to recording details and save search
   const handleNavigateToRecording = (recordingId: string) => {
@@ -598,7 +619,7 @@ const SearchScreen = () => {
 
   // Render search results
   const renderSearchResults = () => {
-    if (isLoading) {
+    if (isLoading && !hasSearched) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -652,9 +673,6 @@ const SearchScreen = () => {
     );
   };
 
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
-
   return (
     <View style={styles.container}>
       <BackgroundPattern />
@@ -673,17 +691,15 @@ const SearchScreen = () => {
           <View style={styles.searchContainer}>
             <Ionicons name="search" size={20} color={theme.colors.primary} />
             <TextInput
-              placeholder="Search species, recordings, or pages..."
+              placeholder="Search species and recordings"
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={searchQuery}
-              onChangeText={(text) => {
-                setSearchQuery(text);
-                handleSearch(text);
-              }}
+              onChangeText={setSearchQuery}
               style={styles.searchInput}
               selectionColor={theme.colors.primary}
               returnKeyType="search"
-              onSubmitEditing={() => handleSearch(searchQuery)}
+              onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
+              textAlignVertical="center"
             />
             {searchQuery && (
               <TouchableOpacity onPress={() => setSearchQuery("")}>
@@ -741,7 +757,7 @@ const SearchScreen = () => {
         </View>
       </View>
 
-      {searchQuery ? (
+      {debouncedSearchQuery ? (
         <>{renderSearchResults()}</>
       ) : (
         <View style={styles.recentContainer}>

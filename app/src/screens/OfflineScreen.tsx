@@ -13,6 +13,7 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
@@ -88,15 +89,6 @@ const OfflineScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    backgroundPattern: {
-      backgroundColor: theme.colors.background,
-      bottom: 0,
-      left: 0,
-      opacity: 0.6,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -372,9 +364,6 @@ const OfflineScreen = () => {
       </View>
     </View>
   );
-
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   // Custom header component
   const Header = () => (

@@ -32,7 +32,7 @@ const Colors = {
     onTertiaryContainer: "rgb(6, 78, 59)",
 
     // Surface system
-    background: "rgb(249, 250, 251)",
+    background: "rgb(248, 245, 243)",
     onBackground: "rgb(17, 24, 39)",
     surface: "rgb(255, 255, 255)",
     onSurface: "rgb(17, 24, 39)",
@@ -78,8 +78,8 @@ const Colors = {
   // Dark theme colors (completely separate) - Modern, polished dark theme
   dark: {
     // Primary system
-    primary: "rgb(228, 106, 36)", // Lighter for dark theme
-    onPrimary: "rgb(92, 38, 0)",
+    primary: "rgb(238, 124, 17)", // Lighter for dark theme
+    onPrimary: "rgb(73, 31, 1)",
     primaryContainer: "rgb(150, 66, 3)",
     onPrimaryContainer: "rgb(255, 224, 178)",
 
@@ -90,7 +90,7 @@ const Colors = {
     onSecondaryContainer: "rgb(241, 245, 249)",
 
     // Tertiary system
-    tertiary: "rgb(52, 211, 153)", // Lighter emerald for dark
+    tertiary: "rgb(10, 223, 145)", // Lighter emerald for dark
     onTertiary: "rgb(6, 78, 59)",
     tertiaryContainer: "rgb(4, 120, 87)",
     onTertiaryContainer: "rgb(209, 250, 229)",

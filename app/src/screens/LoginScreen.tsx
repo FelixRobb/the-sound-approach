@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { TextInput, HelperText } from "react-native-paper";
 
+import BackgroundPattern from "../components/BackgroundPattern";
 import DetailHeader from "../components/DetailHeader";
 import ErrorAlert from "../components/ErrorAlert";
 import { AuthContext } from "../context/AuthContext";
@@ -45,35 +46,28 @@ const LoginScreen = () => {
 
   // Create styles based on theme
   const styles = StyleSheet.create({
-    backgroundPattern: {
-      backgroundColor: theme.colors.background,
-      bottom: 0,
-      left: 0,
-      opacity: 0.6,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
     button: {
       backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      elevation: 8,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
       alignItems: "center",
       flexDirection: "row",
+      gap: 12,
       justifyContent: "center",
+      paddingHorizontal: 32,
       paddingVertical: 16,
-      borderRadius: 12,
-      elevation: 2,
-      marginTop: 8,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
     },
     buttonIcon: {
       marginLeft: 8,
     },
     buttonText: {
-      fontSize: 22,
+      fontSize: 18,
       color: theme.colors.onPrimary,
+      fontWeight: "700",
     },
     card: {
       backgroundColor: theme.colors.surface,
@@ -211,9 +205,6 @@ const LoginScreen = () => {
   const handleDismissError = () => {
     setLocalError(null);
   };
-
-  // Background pattern
-  const BackgroundPattern = () => <View style={styles.backgroundPattern} />;
 
   return (
     <KeyboardAvoidingView
