@@ -24,7 +24,6 @@ import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { NetworkContext } from "../context/NetworkContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
@@ -624,7 +623,7 @@ const RecordingsListScreen = () => {
 
         {uri && (
           <View style={styles.audioPlayerContainer}>
-            <MiniAudioPlayer trackId={item.id} audioUri={uri} size={40} />
+            <MiniAudioPlayer recording={item} size={40} />
           </View>
         )}
       </TouchableOpacity>
@@ -678,8 +677,6 @@ const RecordingsListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationAudioStopper />
-
       <BackgroundPattern />
       <View style={styles.header}>
         <View style={styles.headerInner}>

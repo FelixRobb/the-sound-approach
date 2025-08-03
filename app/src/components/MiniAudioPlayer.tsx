@@ -1,37 +1,50 @@
 import { Ionicons } from "@expo/vector-icons";
-import type React from "react";
-import { TouchableOpacity, StyleSheet, View, ActivityIndicator } from "react-native";
+import React, { useContext } from "react";
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { useAudio } from "../context/AudioContext";
+import { DownloadContext } from "../context/DownloadContext";
+import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
+import { getBestAudioUri } from "../lib/mediaUtils";
+import type { Recording } from "../types";
 
 interface MiniAudioPlayerProps {
-  trackId: string;
-  audioUri: string;
   size?: number;
+  recording: Recording;
 }
 
-const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, size = 36 }) => {
-  const { isPlaying, isLoading, currentTrackId, togglePlayPause } = useAudio();
+const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
+  const { size = 36, recording } = props;
+
   const { theme } = useThemedStyles();
 
-  const isCurrentTrack = currentTrackId === trackId;
+  // Contexts & hooks
+  const { isPlaying, isLoading, currentRecording, togglePlayPause } = useAudio();
+  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
+  const { isConnected } = useContext(NetworkContext);
+
+  // Resolve identifiers & source
+  const audioUri = getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
+
+  // Derived playback state
+  const isCurrentTrack = currentRecording?.id === recording.id;
   const isCurrentlyPlaying = isPlaying && isCurrentTrack;
   const isCurrentlyLoading = isLoading && isCurrentTrack;
 
+  // Actions
   const handlePress = async () => {
-    await togglePlayPause(audioUri, trackId);
+    if (!audioUri) return;
+    await togglePlayPause(audioUri, recording);
   };
 
+  // Styles
   const styles = StyleSheet.create({
     buttonContainer: {
       alignItems: "center",
       height: size + 4,
       justifyContent: "center",
       width: size + 4,
-    },
-    pauseIcon: {
-      marginLeft: 0,
     },
     playButton: {
       alignItems: "center",
@@ -46,37 +59,29 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = ({ trackId, audioUri, si
       shadowRadius: 2,
       width: size,
     },
-    playIcon: {
+    iconOffsetPlay: {
       marginLeft: 1,
     },
   });
 
-  const getButtonStyle = () => {
-    if (isCurrentlyLoading) return [styles.playButton];
-    if (isCurrentlyPlaying) return [styles.playButton];
-    return styles.playButton;
-  };
-
-  const getIconName = () => {
-    if (isCurrentlyPlaying) return "pause";
-    return "play";
-  };
+  const disabled = !audioUri;
 
   return (
     <TouchableOpacity
       style={styles.buttonContainer}
-      onPress={!isCurrentlyLoading ? handlePress : undefined}
+      onPress={!isCurrentlyLoading && !disabled ? handlePress : undefined}
       activeOpacity={0.7}
+      disabled={disabled}
     >
-      <View style={getButtonStyle()}>
+      <View style={styles.playButton}>
         {isCurrentlyLoading ? (
           <ActivityIndicator size={Math.max(16, size * 0.45)} color={theme.colors.onPrimary} />
         ) : (
           <Ionicons
-            name={getIconName()}
+            name={isCurrentlyPlaying ? "pause" : "play"}
             size={size * 0.5}
             color={theme.colors.onPrimary}
-            style={isCurrentlyPlaying ? styles.pauseIcon : styles.playIcon}
+            style={!isCurrentlyPlaying ? styles.iconOffsetPlay : undefined}
           />
         )}
       </View>

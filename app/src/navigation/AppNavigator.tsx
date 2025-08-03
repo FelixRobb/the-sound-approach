@@ -14,6 +14,7 @@ import {
   GestureResponderEvent,
 } from "react-native";
 
+import GlobalAudioBar from "../components/GlobalAudioBar";
 import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
 import { NetworkContext } from "../context/NetworkContext";
@@ -477,7 +478,10 @@ const AppNavigator: React.FC = () => {
   return (
     <AudioProvider>
       <View style={backgroundStyle.container}>
-        <NavigationContainer theme={navTheme}>{navigatorToShow}</NavigationContainer>
+        <NavigationContainer theme={navTheme}>
+          {navigatorToShow}
+          <GlobalAudioBar />
+        </NavigationContainer>
       </View>
     </AudioProvider>
   );

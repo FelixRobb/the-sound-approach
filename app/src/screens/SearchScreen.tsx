@@ -20,10 +20,7 @@ import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getBestAudioUri } from "../lib/mediaUtils";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
 import type { Recording, RootStackParamList, Species } from "../types";
 
@@ -55,8 +52,7 @@ type SearchHistoryItem = {
 
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { isConnected } = useContext(NetworkContext);
+  const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useThemedStyles();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -544,7 +540,6 @@ const SearchScreen = () => {
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     // Determine the best audio URI (downloaded or remote HQ) for the mini player
-    const audioUri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
 
     return (
       <TouchableOpacity
@@ -582,7 +577,7 @@ const SearchScreen = () => {
 
           {/* Mini player shown on the right */}
           <View style={styles.resultCardRight}>
-            {audioUri && <MiniAudioPlayer trackId={item.id} audioUri={audioUri} size={34} />}
+            <MiniAudioPlayer recording={item} size={34} />
           </View>
         </View>
       </TouchableOpacity>
@@ -676,7 +671,6 @@ const SearchScreen = () => {
   return (
     <View style={styles.container}>
       <BackgroundPattern />
-      <NavigationAudioStopper />
 
       {/* Custom Header */}
       <View style={styles.header}>

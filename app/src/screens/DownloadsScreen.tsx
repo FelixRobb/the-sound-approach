@@ -19,7 +19,6 @@ import CustomModal from "../components/CustomModal";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord, RootStackParamList } from "../types";
 
@@ -70,18 +69,7 @@ const DownloadsScreen = () => {
     setIsLoading(true);
     try {
       const downloadedRecordings = await getDownloadedRecordings();
-      // Map the downloaded recordings to match the DownloadedRecording type
-      const formattedRecordings = downloadedRecordings.map((record) => ({
-        recording_id: record.recording_id,
-        audio_path: record.audio_path,
-        downloaded_at: record.downloaded_at,
-        title: record.title,
-        species_name: record.species_name,
-        scientific_name: record.scientific_name,
-        book_page_number: record.book_page_number,
-        caption: record.caption,
-      }));
-      setDownloads(formattedRecordings);
+      setDownloads(downloadedRecordings);
     } catch (error) {
       console.error("Error loading downloads:", error);
     } finally {
@@ -384,18 +372,8 @@ const DownloadsScreen = () => {
     </View>
   );
 
-  // Ensure the audioUri has the file:// prefix and is well-formed
-  const ensureFileUri = (path: string) => {
-    if (!path) return null;
-    if (path.startsWith("file://")) return path;
-    // Remove any accidental double slashes after file://
-    return "file://" + path.replace(/^\/+/, "");
-  };
-
   // Render download item
   const renderDownloadItem = ({ item }: { item: DownloadRecord }) => {
-    const audioUri = ensureFileUri(item.audio_path);
-
     const handleItemPress = () => {
       navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
     };
@@ -424,11 +402,9 @@ const DownloadsScreen = () => {
             </View>
 
             <View style={styles.downloadActions}>
-              {audioUri && (
-                <View style={styles.playButton}>
-                  <MiniAudioPlayer trackId={item.recording_id} audioUri={audioUri} size={40} />
-                </View>
-              )}
+              <View style={styles.playButton}>
+                <MiniAudioPlayer recording={item.recording} size={40} />
+              </View>
 
               <TouchableOpacity
                 style={styles.deleteButton}
@@ -475,8 +451,6 @@ const DownloadsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationAudioStopper stopOnUnmount={false} />
-
       <BackgroundPattern />
       <Header />
 

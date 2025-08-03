@@ -12,10 +12,7 @@ import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
 
@@ -24,8 +21,7 @@ const { width } = Dimensions.get("window");
 const SpeciesDetailsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
-  const { isConnected } = useContext(NetworkContext);
-  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
+  const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useThemedStyles();
 
   const { speciesId } = route.params;
@@ -240,7 +236,6 @@ const SpeciesDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationAudioStopper />
       <BackgroundPattern />
       <DetailHeader title={speciesName} subtitle={scientificName} />
 
@@ -282,18 +277,7 @@ const SpeciesDetailsScreen = () => {
                           {item.caption}
                         </Text>
                       </View>
-
-                      {(() => {
-                        const uri = getBestAudioUri(
-                          item,
-                          isDownloaded,
-                          getDownloadPath,
-                          isConnected
-                        );
-                        return uri ? (
-                          <MiniAudioPlayer trackId={item.id} audioUri={uri} size={36} />
-                        ) : null;
-                      })()}
+                      <MiniAudioPlayer recording={item} size={36} />
                     </TouchableOpacity>
                     {recordings.indexOf(item) < recordings.length - 1 && (
                       <View style={styles.divider} />

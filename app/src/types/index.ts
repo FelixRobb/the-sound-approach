@@ -110,6 +110,7 @@ export type DownloadInfo = {
 };
 
 export type DownloadRecord = {
+  recording: Recording;
   recording_id: string;
   audio_path: string;
   downloaded_at: number;

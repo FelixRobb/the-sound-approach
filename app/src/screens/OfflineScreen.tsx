@@ -18,7 +18,6 @@ import CustomModal from "../components/CustomModal";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import type { DownloadRecord } from "../types";
 
@@ -54,6 +53,7 @@ const OfflineScreen = () => {
       const downloadedRecordings = await getDownloadedRecordings();
       // Map the downloaded recordings to match the DownloadedRecording type
       const formattedRecordings = downloadedRecordings.map((record) => ({
+        recording: record.recording,
         recording_id: record.recording_id,
         audio_path: record.audio_path,
         downloaded_at: record.downloaded_at,
@@ -341,7 +341,7 @@ const OfflineScreen = () => {
             <View style={styles.downloadActions}>
               {audioUri && (
                 <View style={styles.playButton}>
-                  <MiniAudioPlayer trackId={item.recording_id} audioUri={audioUri} size={40} />
+                  <MiniAudioPlayer recording={item.recording} size={40} />
                 </View>
               )}
             </View>
@@ -421,8 +421,6 @@ const OfflineScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationAudioStopper />
-
       <BackgroundPattern />
       <Header />
 

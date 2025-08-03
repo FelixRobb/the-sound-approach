@@ -156,6 +156,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Save download info to AsyncStorage
       const userId = authState.user?.id || "anonymous";
       const downloadRecord: DownloadRecord = {
+        recording: recording,
         recording_id: recording.id,
         audio_path: audioPath,
         downloaded_at: Date.now(),
