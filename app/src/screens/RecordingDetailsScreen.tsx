@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEventListener } from "expo";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useVideoPlayer, VideoView } from "expo-video";
-import React, { useState, useContext, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -25,10 +25,11 @@ import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
 import LoadingScreen from "../components/LoadingScreen";
-import MediaTabSwitcher from "../components/MediaTabSwitcher";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
+import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
+import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
@@ -42,10 +43,12 @@ const RecordingDetailsScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const { downloadRecording, isDownloaded, downloads, deleteDownload } =
     useContext(DownloadContext);
-
-  const [activeTab, setActiveTab] = useState<"video" | "audio">("video");
+  const { stopPlayback } = useAudio();
 
   const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
+
+  // Hide GlobalAudioBar when in fullscreen mode
+  const { hide: hideGlobalAudioBar, show: showGlobalAudioBar } = useGlobalAudioBar();
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoDuration, setVideoDuration] = useState(0);
   const [videoPosition, setVideoPosition] = useState(0);
@@ -79,6 +82,21 @@ const RecordingDetailsScreen = () => {
   const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
 
   const styles = StyleSheet.create({
+    audioPlayerContainer: {
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      flexDirection: "row",
+      paddingVertical: 8,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      elevation: 3,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -87,7 +105,6 @@ const RecordingDetailsScreen = () => {
       padding: 16,
     },
 
-    // eslint-disable-next-line react-native/no-color-literals
     controlsContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.backdrop,
@@ -368,36 +385,6 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 2,
       width: 16,
     },
-
-    /* Audio specific styles */
-    audioContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 3,
-      marginBottom: 16,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    audioHeader: {
-      padding: 20,
-      paddingBottom: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.backdrop,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.5,
-      shadowRadius: 6,
-    },
-    /* Beautiful audio player styles */
-    audioPlayerContainer: {
-      alignItems: "center",
-      paddingHorizontal: 16,
-      flexDirection: "column",
-      paddingVertical: 8,
-    },
     speciesButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -455,8 +442,10 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 2.22,
     },
     videoHeader: {
-      padding: 20,
-      paddingBottom: 12,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: 12,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.5, // Increased for more visible shadow
@@ -473,6 +462,14 @@ const RecordingDetailsScreen = () => {
       color: theme.colors.onSurface,
       fontSize: 18,
       fontWeight: "bold",
+    },
+    audioTitle: {
+      color: theme.colors.onSurface,
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    audioPlayerContainerInner: {
+      marginLeft: 16,
     },
     replayButton: {
       position: "absolute",
@@ -499,9 +496,37 @@ const RecordingDetailsScreen = () => {
     queryFn: () => fetchRecordingById(route.params.recordingId),
   });
 
-  const sonogramVideoUri = useMemo(() => {
-    if (!recording) return null;
-    return getSonogramVideoUri(recording);
+  const [sonogramVideoUri, setSonogramVideoUri] = useState<string | null>(null);
+  const [isVideoUriLoading, setIsVideoUriLoading] = useState(false);
+
+  // Fetch sonogram video URI
+  useEffect(() => {
+    if (!recording) {
+      setSonogramVideoUri(null);
+      setIsVideoUriLoading(false);
+      setShowInitialLoading(false);
+      return;
+    }
+
+    // Start loading immediately when we have a recording
+    setIsVideoUriLoading(true);
+    setShowInitialLoading(false); // Hide initial loading while fetching URI
+    setVideoError(false); // Reset any previous errors
+
+    getSonogramVideoUri(recording)
+      .then((uri) => {
+        setSonogramVideoUri(uri);
+        setIsVideoUriLoading(false);
+        // Show initial loading if we got a valid URI
+        if (uri) {
+          setShowInitialLoading(true);
+        }
+      })
+      .catch(() => {
+        setSonogramVideoUri(null);
+        setIsVideoUriLoading(false);
+        setShowInitialLoading(false);
+      });
   }, [recording]);
 
   // Initialize the video player
@@ -529,30 +554,13 @@ const RecordingDetailsScreen = () => {
     setIsVideoLoaded(false);
     setVideoDuration(0);
     setVideoPosition(0);
-    setShowInitialLoading(!!sonogramVideoUri);
+    // Only show initial loading if we have a URI and we're not currently loading the URI
+    setShowInitialLoading(!!sonogramVideoUri && !isVideoUriLoading);
     setIsPlaying(false);
     setIsSeeking(false);
     setWasPlayingBeforeSeek(false);
     setIsVideoEnded(false);
-  }, [sonogramVideoUri]);
-
-  // Handle tab switching between video and audio
-  const handleSelectTab = (tab: "video" | "audio") => {
-    setActiveTab(tab);
-
-    if (!recording) return;
-
-    if (tab === "audio") {
-      // Pause the video when focusing the audio tab
-      if (videoPlayer) {
-        try {
-          videoPlayer.pause();
-        } catch {
-          /* silent */
-        }
-      }
-    }
-  };
+  }, [sonogramVideoUri, isVideoUriLoading]);
 
   // Listen for video ready/loaded events
   useEventListener(videoPlayer, "statusChange", (payload) => {
@@ -606,6 +614,7 @@ const RecordingDetailsScreen = () => {
       if (isVideoFullscreen) {
         StatusBar.setHidden(true);
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        hideGlobalAudioBar(); // Hide GlobalAudioBar in fullscreen
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 0,
@@ -620,6 +629,7 @@ const RecordingDetailsScreen = () => {
       } else {
         StatusBar.setHidden(false);
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        showGlobalAudioBar(); // Show GlobalAudioBar when exiting fullscreen
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 1,
@@ -639,8 +649,9 @@ const RecordingDetailsScreen = () => {
     return () => {
       StatusBar.setHidden(false);
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      showGlobalAudioBar(); // Ensure GlobalAudioBar is shown when component unmounts
     };
-  }, [isVideoFullscreen, fadeAnim, scaleAnim]);
+  }, [isVideoFullscreen, fadeAnim, scaleAnim, hideGlobalAudioBar, showGlobalAudioBar]);
 
   // Handle back button
   useEffect(() => {
@@ -790,8 +801,10 @@ const RecordingDetailsScreen = () => {
         setIsVideoEnded(false);
         videoPlayer.play();
       } else if (isPlaying) {
+        stopPlayback();
         videoPlayer.pause();
       } else {
+        stopPlayback();
         videoPlayer.play();
       }
       showVideoControls(); // Show controls when play/pause is triggered
@@ -898,13 +911,22 @@ const RecordingDetailsScreen = () => {
   };
 
   const renderVideoPlayer = () => {
-    if (!sonogramVideoUri || videoError) {
+    // Show error only if we're not loading and there's actually an error or no URI
+    if (!isVideoUriLoading && !sonogramVideoUri && !videoError) {
       return (
         <View style={styles.playerContainerError}>
           <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
-          <Text style={styles.descriptionTextError}>
-            {videoError ? "Error loading video" : "Video source not available"}
-          </Text>
+          <Text style={styles.descriptionTextError}>Video source not available</Text>
+        </View>
+      );
+    }
+
+    // Show error if there's a video error
+    if (videoError) {
+      return (
+        <View style={styles.playerContainerError}>
+          <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
+          <Text style={styles.descriptionTextError}>Error loading video</Text>
         </View>
       );
     }
@@ -936,7 +958,7 @@ const RecordingDetailsScreen = () => {
           />
         )}
 
-        {showInitialLoading && (
+        {(showInitialLoading || isVideoUriLoading) && (
           <View style={[styles.videoOverlay, { backgroundColor: theme.colors.backdrop }]}>
             <ActivityIndicator size={36} color={theme.colors.primary} />
           </View>
@@ -995,18 +1017,6 @@ const RecordingDetailsScreen = () => {
         {showControls && renderVideoControls(false)}
       </View>
     );
-  };
-
-  // Render audio player controls
-  const renderAudioPlayer = () => {
-    if (!recording) return null;
-    return (
-      <View style={styles.audioPlayerContainer}>
-        <MiniAudioPlayer recording={recording} size={72} />
-      </View>
-    );
-    /* Deprecated local audio controls – now handled by GlobalAudioBar */
-    //
   };
 
   if (isLoading) {
@@ -1170,23 +1180,21 @@ const RecordingDetailsScreen = () => {
             <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
           </TouchableOpacity>
         </View>
-        {/* Media selector tabs */}
-        <MediaTabSwitcher activeTab={activeTab} onTabChange={handleSelectTab} theme={theme} />
-        {/* Keep both media players mounted to avoid re-mount flashes; toggle visibility only */}
+
         {/* eslint-disable-next-line react-native/no-inline-styles */}
-        <View style={[styles.videoContainer, { display: activeTab === "video" ? "flex" : "none" }]}>
+        <View style={styles.videoContainer}>
           <View style={styles.videoHeader}>
             <Text style={styles.videoTitle}>Sonogram</Text>
+            <View style={styles.audioPlayerContainer}>
+              <Text style={styles.audioTitle}>Audio</Text>
+              <View style={styles.audioPlayerContainerInner}>
+                <MiniAudioPlayer recording={recording} size={30} onPress={togglePlayPause} />
+              </View>
+            </View>
           </View>
           {renderVideoPlayer()}
         </View>
-        {/* eslint-disable-next-line react-native/no-inline-styles */}
-        <View style={[styles.audioContainer, { display: activeTab === "audio" ? "flex" : "none" }]}>
-          <View style={styles.audioHeader}>
-            <Text style={styles.videoTitle}>Audio</Text>
-          </View>
-          {renderAudioPlayer()}
-        </View>
+
         <View style={styles.descriptionCard}>
           <Text style={styles.descriptionTitle}>Description</Text>
           <Text style={styles.descriptionText}>{recording.caption}</Text>

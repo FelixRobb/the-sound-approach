@@ -13,6 +13,7 @@ import { NetworkProvider } from "./src/context/NetworkContext";
 import { ThemeProvider, ThemeContext } from "./src/context/ThemeContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { lightTheme, darkTheme } from "./src/theme";
+import "expo-dev-client";
 
 // Create a client for React Query
 const queryClient = new QueryClient();

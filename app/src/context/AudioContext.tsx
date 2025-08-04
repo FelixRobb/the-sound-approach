@@ -4,8 +4,10 @@ import "react-native-get-random-values";
 import { v4 as uuidv4 } from "uuid";
 
 import AudioService, { type AudioPlayerState } from "../lib/AudioService";
+import { getBestAudioUri } from "../lib/mediaUtils";
 import { Recording } from "../types";
 
+import { DownloadContext } from "./DownloadContext";
 import { NetworkContext } from "./NetworkContext";
 
 // Context type definition
@@ -25,11 +27,8 @@ type AudioContextType = {
   skipForward: (seconds?: number) => Promise<boolean>;
   skipBackward: (seconds?: number) => Promise<boolean>;
 
-  // Preload
-  loadTrack: (uri: string, recording: Recording) => Promise<boolean>;
-
   // Actions
-  togglePlayPause: (uri: string, recording: Recording) => Promise<boolean>;
+  togglePlayPause: (recording: Recording) => Promise<boolean>;
   stopPlayback: () => Promise<void>;
 };
 
@@ -44,13 +43,13 @@ const AudioContext = createContext<AudioContextType>({
   seekTo: () => Promise.resolve(false),
   skipForward: () => Promise.resolve(false),
   skipBackward: () => Promise.resolve(false),
-  loadTrack: () => Promise.resolve(false),
   togglePlayPause: () => Promise.resolve(false),
   stopPlayback: () => Promise.resolve(),
 });
 
 // Provider component
 export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
   // Get audio service instance
   const audioService = AudioService.getInstance();
 
@@ -62,6 +61,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Track the audio state
   const [audioState, setAudioState] = useState<AudioPlayerState>({
+    uri: null,
     playbackState: "idle",
     error: null,
     position: 0,
@@ -94,12 +94,19 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
    */
 
   // Toggle play/pause for a track
-  const togglePlayPause = async (uri: string, recording: Recording): Promise<boolean> => {
+  const togglePlayPause = async (recording: Recording): Promise<boolean> => {
     try {
       // If offline and not a downloaded file (file:// URI), don't play
-      if (!isConnected && !uri.startsWith("file://")) {
+      if (!isConnected && !audioState.uri) {
         return false;
       }
+      const uri = await getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
+
+      if (!uri) {
+        console.error("No valid URI found for recording:", recording.id);
+        return false;
+      }
+
       // Use the simplified playTrack method which handles all the logic
       const result = await audioService.playTrack(uri, recording);
 
@@ -126,17 +133,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const skipForward = (seconds = 10) => audioService.skipForward(seconds);
   const skipBackward = (seconds = 10) => audioService.skipBackward(seconds);
 
-  // Preload helper
-  const loadTrack = async (uri: string, recording: Recording): Promise<boolean> => {
-    try {
-      if (!isConnected && !uri.startsWith("file://")) return false;
-      return await audioService.loadTrack(uri, recording);
-    } catch (e) {
-      console.error("Error loading track:", e);
-      return false;
-    }
-  };
-
   // Context value
   const contextValue: AudioContextType = {
     isPlaying: audioState.playbackState === "playing",
@@ -148,7 +144,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     seekTo,
     skipForward,
     skipBackward,
-    loadTrack,
     togglePlayPause,
     stopPlayback,
   };

@@ -1,19 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useNavigationState, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Animated,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
+import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
@@ -27,7 +30,11 @@ const iconHitSlop = { top: 8, bottom: 8, left: 8, right: 8 };
  */
 const GlobalAudioBar: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute();
   const { theme } = useThemedStyles();
+  const insets = useSafeAreaInsets();
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const [hasTabBar, setHasTabBar] = useState(false);
 
   const {
     isPlaying,
@@ -43,19 +50,104 @@ const GlobalAudioBar: React.FC = () => {
 
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
   const { isConnected } = useContext(NetworkContext);
+  const { isVisible } = useGlobalAudioBar();
 
-  const audioUri = useMemo(() => {
-    return currentRecording
-      ? getBestAudioUri(currentRecording, isDownloaded, getDownloadPath, isConnected)
-      : null;
+  // Safe navigation state getter with error handling
+  const navigationState = useNavigationState((state) => state);
+
+  // Check if current screen has tab bar with safe error handling
+  useEffect(() => {
+    try {
+      if (!navigationState) {
+        // Fallback: use route name to determine if we're on a tab screen
+        const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
+        const hasTab = tabScreens.includes(route.name);
+        setHasTabBar(hasTab);
+        return;
+      }
+
+      // Type guard to ensure navigationState has expected properties
+      if (
+        "routes" in navigationState &&
+        "index" in navigationState &&
+        Array.isArray(navigationState.routes) &&
+        typeof navigationState.index === "number"
+      ) {
+        // Get the current route
+        const currentRoute = navigationState.routes[navigationState.index];
+
+        // Check if we're in the MainTabs navigator
+        if (currentRoute?.name === "MainTabs") {
+          setHasTabBar(true);
+          return;
+        }
+
+        // Check if we're on any tab screen specifically
+        const tabScreens = ["Recordings", "Search", "Downloads", "Profile"];
+
+        // For nested navigation, check the nested state
+        if (
+          currentRoute?.state &&
+          "routes" in currentRoute.state &&
+          "index" in currentRoute.state
+        ) {
+          const nestedState = currentRoute.state as {
+            routes: RouteProp<RootStackParamList>[];
+            index: number;
+          };
+          const nestedRoute = nestedState.routes[nestedState.index];
+          const hasTab = tabScreens.includes(nestedRoute?.name || "");
+          setHasTabBar(hasTab);
+          return;
+        }
+
+        const hasTab = tabScreens.includes(currentRoute?.name || "");
+        setHasTabBar(hasTab);
+      } else {
+        // Fallback if navigationState doesn't have expected structure
+        const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
+        const hasTab = tabScreens.includes(route.name);
+        setHasTabBar(hasTab);
+      }
+    } catch (error) {
+      // Fallback: assume no tab bar on error and use route name
+      console.warn("Navigation state error in GlobalAudioBar:", error);
+      const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
+      const hasTab = tabScreens.includes(route.name);
+      setHasTabBar(hasTab);
+    }
+  }, [navigationState, route.name]);
+
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  useEffect(() => {
+    if (!currentRecording) return;
+    getBestAudioUri(currentRecording, isDownloaded, getDownloadPath, isConnected)
+      .then(setAudioUri)
+      .catch(() => {
+        setAudioUri(null);
+      });
   }, [currentRecording, isDownloaded, getDownloadPath, isConnected]);
 
-  // If we still don't have a playable URI, don't render the bar
-  if (!audioUri) return null;
+  // Animate position based on tab bar presence
+  useEffect(() => {
+    const targetValue = hasTabBar ? 0 : 1;
+
+    Animated.spring(slideAnim, {
+      toValue: targetValue,
+      useNativeDriver: false, // We're animating position which requires layout
+      tension: 100,
+      friction: 8,
+      velocity: 0.4,
+      delay: hasTabBar ? 0 : 150, // Small delay when moving down to avoid jarring transition
+    }).start();
+  }, [hasTabBar, slideAnim]);
+
+  // If we don't have a current recording or the bar is hidden, don't render the bar
+  if (!currentRecording || !isVisible) return null;
 
   const handlePlayPause = () => {
     if (!audioUri || !currentRecording) return;
-    togglePlayPause(audioUri, currentRecording).catch(() => {});
+    togglePlayPause(currentRecording).catch(() => {});
   };
 
   const handleNavigateToDetails = () => {
@@ -63,126 +155,219 @@ const GlobalAudioBar: React.FC = () => {
     navigation.navigate("RecordingDetails", { recordingId: currentRecording.id });
   };
 
+  // Calculate dynamic positioning
+  const tabBarHeight = 70; // Should match your tab bar height
+  const safeAreaBottom = Math.max(insets.bottom, 8);
+  const baseBottomMargin = safeAreaBottom > 0 ? 0 : 5;
+
+  // Interpolate the bottom position
+  const bottomPosition = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [
+      safeAreaBottom + tabBarHeight + baseBottomMargin, // Above tab bar
+      safeAreaBottom + baseBottomMargin, // At bottom when no tab bar
+    ],
+  });
+
   const styles = StyleSheet.create({
     container: {
       position: "absolute",
-      left: 0,
-      right: 0,
-      // Place just above the native tab-bar when it is visible (height≈70 on Android,90 on iOS)
-      bottom: Platform.OS === "ios" ? 100 : 80,
-      // In screens without bottom tab, the bar will align to bottom edge.
-      // We'll slightly animate using translateY when tab is hidden, but for now set minimum.
+      left: 16,
+      right: 16,
       zIndex: 999,
       elevation: 30,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
     },
     inner: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3,
-      elevation: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      borderRadius: 20,
+      shadowColor: theme.colors.shadow || "#000000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      // Add subtle blur effect on iOS
+      ...(Platform.OS === "ios" && {
+        backgroundColor: `${theme.colors.surface}F8`,
+      }),
     },
     infoContainer: {
       flex: 1,
       marginHorizontal: 12,
+      minWidth: 0, // Prevent text overflow issues
     },
     title: {
       color: theme.colors.onSurface,
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: "600",
+      lineHeight: 20,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
+      fontSize: 13,
       marginTop: 2,
+      lineHeight: 16,
     },
     controlButton: {
-      padding: 6,
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 18,
+      marginHorizontal: 2,
+      // Add subtle press feedback background
+      backgroundColor: theme.colors.surface,
+    },
+    progressContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 4,
+    },
+    progressBar: {
+      width: 40,
+      height: 2,
+      backgroundColor: theme.colors.outlineVariant,
+      borderRadius: 1,
+      overflow: "hidden",
+    },
+    progressBarFill: {
+      height: "100%",
+      backgroundColor: theme.colors.primary,
+    },
+    // Add a subtle separator between controls and info
+    separator: {
+      width: 1,
+      height: 24,
+      backgroundColor: theme.colors.outlineVariant,
+      marginHorizontal: 8,
+      opacity: 0.5,
     },
     playIcon: {
       marginLeft: 2,
     },
     progressText: {
       color: theme.colors.tertiary,
-      fontSize: 10,
+      fontSize: 11,
+      marginTop: 2,
+      fontVariant: ["tabular-nums"], // Monospace numbers for stable width
     },
   });
 
   const ProgressText = () => (
-    <Text style={styles.progressText}>
-      {formatTime(position)} / {formatTime(duration)}
-    </Text>
+    <View style={styles.progressContainer}>
+      <Text style={styles.progressText}>
+        {formatTime(position)} / {formatTime(duration)}
+      </Text>
+      {/* Optional: Add a small progress indicator */}
+      <View style={styles.progressBar}>
+        <View
+          style={[
+            styles.progressBarFill,
+            {
+              width: `${duration > 0 ? (position / duration) * 100 : 0}%`,
+            },
+          ]}
+        />
+      </View>
+    </View>
   );
 
   return (
-    <Pressable style={styles.container} onPress={handleNavigateToDetails}>
-      <View style={styles.inner}>
-        {/* Play / pause */}
-        <TouchableOpacity
-          hitSlop={iconHitSlop}
-          onPress={handlePlayPause}
-          style={styles.controlButton}
-        >
-          {isLoading ? (
-            <ActivityIndicator size={20} color={theme.colors.primary} />
-          ) : (
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          bottom: bottomPosition,
+        },
+      ]}
+    >
+      <Pressable onPress={handleNavigateToDetails}>
+        <View style={styles.inner}>
+          {/* Play / pause */}
+          <TouchableOpacity
+            hitSlop={iconHitSlop}
+            onPress={handlePlayPause}
+            style={styles.controlButton}
+            disabled={!audioUri}
+            activeOpacity={0.7}
+          >
+            {isLoading ? (
+              <ActivityIndicator size={22} color={theme.colors.primary} />
+            ) : (
+              <Ionicons
+                name={isPlaying ? "pause" : "play"}
+                size={22}
+                color={audioUri ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                style={isPlaying ? undefined : styles.playIcon}
+              />
+            )}
+          </TouchableOpacity>
+
+          {/* Backward 10s */}
+          <TouchableOpacity
+            hitSlop={iconHitSlop}
+            onPress={() => skipBackward(10)}
+            style={styles.controlButton}
+            disabled={!currentRecording}
+            activeOpacity={0.7}
+          >
             <Ionicons
-              name={isPlaying ? "pause" : "play"}
-              size={24}
-              color={theme.colors.primary}
-              style={isPlaying ? undefined : styles.playIcon}
+              name="play-back"
+              size={20}
+              color={currentRecording ? theme.colors.primary : theme.colors.onSurfaceVariant}
             />
-          )}
-        </TouchableOpacity>
+          </TouchableOpacity>
 
-        {/* Backward 10 s */}
-        <TouchableOpacity
-          hitSlop={iconHitSlop}
-          onPress={() => skipBackward(10)}
-          style={styles.controlButton}
-          disabled={!currentRecording}
-        >
-          <Ionicons name="play-back" size={20} color={theme.colors.primary} />
-        </TouchableOpacity>
+          {/* Forward 10s */}
+          <TouchableOpacity
+            hitSlop={iconHitSlop}
+            onPress={() => skipForward(10)}
+            style={styles.controlButton}
+            disabled={!currentRecording}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="play-forward"
+              size={20}
+              color={currentRecording ? theme.colors.primary : theme.colors.onSurfaceVariant}
+            />
+          </TouchableOpacity>
 
-        {/* Forward 10 s */}
-        <TouchableOpacity
-          hitSlop={iconHitSlop}
-          onPress={() => skipForward(10)}
-          style={styles.controlButton}
-          disabled={!currentRecording}
-        >
-          <Ionicons name="play-forward" size={20} color={theme.colors.primary} />
-        </TouchableOpacity>
+          {/* Stop */}
+          <TouchableOpacity
+            hitSlop={iconHitSlop}
+            onPress={stopPlayback}
+            style={styles.controlButton}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="stop" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
 
-        {/* Stop */}
-        <TouchableOpacity hitSlop={iconHitSlop} onPress={stopPlayback} style={styles.controlButton}>
-          <Ionicons name="stop" size={20} color={theme.colors.primary} />
-        </TouchableOpacity>
+          {/* Visual separator */}
+          <View style={styles.separator} />
 
-        {/* Info */}
-        <View style={styles.infoContainer} pointerEvents="none">
-          <Text style={styles.title} numberOfLines={1}>
-            {currentRecording?.title ?? ""}
-          </Text>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {currentRecording?.species?.common_name}
-            {currentRecording?.species?.scientific_name
-              ? ` – ${currentRecording.species.scientific_name}`
-              : ""}
-          </Text>
-          <ProgressText />
+          {/* Info */}
+          <View style={styles.infoContainer} pointerEvents="none">
+            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+              {currentRecording?.title ?? "Unknown Recording"}
+            </Text>
+            <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
+              {currentRecording?.species?.common_name}
+              {currentRecording?.species?.scientific_name
+                ? ` – ${currentRecording.species.scientific_name}`
+                : ""}
+            </Text>
+            <ProgressText />
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 };
 

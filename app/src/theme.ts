@@ -78,7 +78,7 @@ const Colors = {
   // Dark theme colors (completely separate) - Modern, polished dark theme
   dark: {
     // Primary system
-    primary: "rgb(238, 124, 17)", // Lighter for dark theme
+    primary: "rgb(255, 123, 0)", // Lighter for dark theme
     onPrimary: "rgb(73, 31, 1)",
     primaryContainer: "rgb(150, 66, 3)",
     onPrimaryContainer: "rgb(255, 224, 178)",

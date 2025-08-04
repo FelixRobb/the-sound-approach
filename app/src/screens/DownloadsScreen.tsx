@@ -144,7 +144,6 @@ const DownloadsScreen = () => {
     },
     backButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
       borderRadius: 20,
       height: 40,
       justifyContent: "center",

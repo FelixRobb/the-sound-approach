@@ -23,9 +23,7 @@ import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getBestAudioUri } from "../lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
@@ -49,8 +47,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 
 const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isConnected } = useContext(NetworkContext);
-  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
+  const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useThemedStyles();
 
   const [activeTab, setActiveTab] = useState("book");
@@ -581,7 +578,6 @@ const RecordingsListScreen = () => {
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     const isItemDownloaded = isDownloaded(item.id);
-    const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
 
     return (
       <TouchableOpacity
@@ -621,11 +617,9 @@ const RecordingsListScreen = () => {
           </View>
         </View>
 
-        {uri && (
-          <View style={styles.audioPlayerContainer}>
-            <MiniAudioPlayer recording={item} size={40} />
-          </View>
-        )}
+        <View style={styles.audioPlayerContainer}>
+          <MiniAudioPlayer recording={item} size={40} />
+        </View>
       </TouchableOpacity>
     );
   };

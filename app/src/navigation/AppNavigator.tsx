@@ -13,10 +13,12 @@ import {
   Pressable,
   GestureResponderEvent,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import GlobalAudioBar from "../components/GlobalAudioBar";
 import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
+import { GlobalAudioBarProvider } from "../context/GlobalAudioBarContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { useThemedStyles } from "../hooks/useThemedStyles";
 import OfflineNavigator from "../navigation/OfflineNavigator";
@@ -34,19 +36,44 @@ import SpeciesDetailsScreen from "../screens/SpeciesDetailsScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { navigationDarkTheme, navigationLightTheme } from "../theme";
 
+// Higher-order component that wraps screens with GlobalAudioBar
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const withGlobalAudioBar = (WrappedComponent: React.ComponentType<any>) => {
+  return (props: React.ComponentProps<typeof WrappedComponent>) => (
+    <View style={styles.container}>
+      <WrappedComponent {...props} />
+      <GlobalAudioBar />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+
 type AnimatedTabButtonProps = React.PropsWithChildren<{
   onPress?: (event: GestureResponderEvent) => void;
   accessibilityState?: { selected?: boolean };
+  isLargeScreen?: boolean;
 }>;
 
 const animatedTabButtonStyles = StyleSheet.create({
   animatedView: {
     alignItems: "center",
-    borderRadius: 16,
+    borderRadius: 20,
     flex: 1,
     justifyContent: "center",
-    marginHorizontal: 4,
-    paddingVertical: 8,
+    marginHorizontal: 6,
+    paddingVertical: 10,
+    minHeight: 48, // Ensure minimum touch target
+  },
+  animatedViewLarge: {
+    borderRadius: 24,
+    marginHorizontal: 8,
+    paddingVertical: 12,
+    minHeight: 56,
   },
   button: {
     flex: 1,
@@ -55,7 +82,7 @@ const animatedTabButtonStyles = StyleSheet.create({
     opacity: 1,
   },
   opacityUnselected: {
-    opacity: 0.7,
+    opacity: 0.75,
   },
 });
 
@@ -63,16 +90,17 @@ const AnimatedTabButton: React.FC<AnimatedTabButtonProps> = ({
   children,
   onPress,
   accessibilityState,
+  isLargeScreen = false,
 }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const isSelected = accessibilityState?.selected;
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.9,
+      toValue: 0.92,
       useNativeDriver: true,
-      tension: 200,
-      friction: 7,
+      tension: 300,
+      friction: 8,
     }).start();
   };
 
@@ -80,8 +108,8 @@ const AnimatedTabButton: React.FC<AnimatedTabButtonProps> = ({
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
-      tension: 200,
-      friction: 7,
+      tension: 300,
+      friction: 8,
     }).start();
   };
 
@@ -91,11 +119,19 @@ const AnimatedTabButton: React.FC<AnimatedTabButtonProps> = ({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={animatedTabButtonStyles.button}
-      android_ripple={{ color: "transparent" }}
+      android_ripple={{
+        color: "rgba(0,0,0,0.1)",
+        borderless: true,
+        radius: isLargeScreen ? 32 : 28,
+      }}
+      // Improve accessibility
+      accessibilityRole="tab"
+      accessibilityState={accessibilityState}
     >
       <Animated.View
         style={[
           animatedTabButtonStyles.animatedView,
+          isLargeScreen && animatedTabButtonStyles.animatedViewLarge,
           isSelected
             ? animatedTabButtonStyles.opacitySelected
             : animatedTabButtonStyles.opacityUnselected,
@@ -112,50 +148,70 @@ type AnimatedTabIconProps = {
   focused: boolean;
   iconName: keyof typeof Ionicons.glyphMap;
   color: string;
-  theme: {
-    colors: {
-      primary: string;
-      onSurfaceVariant: string;
-      surface: string;
-      shadow: string;
-    };
-  };
+  size?: number;
 };
 
 const animatedTabIconStyles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
+    marginBottom: 4,
+  },
+  iconWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
-const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({ focused, iconName, color }) => {
+const AnimatedTabIcon: React.FC<AnimatedTabIconProps> = ({
+  focused,
+  iconName,
+  color,
+  size = 24,
+}) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Icon scale animation
     Animated.timing(scaleAnim, {
-      toValue: focused ? 1.1 : 1,
+      toValue: focused ? 1.15 : 1,
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [focused, scaleAnim]);
+
+    // Subtle glow effect for focused state
+    Animated.timing(glowAnim, {
+      toValue: focused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [focused, scaleAnim, glowAnim]);
 
   return (
     <View style={animatedTabIconStyles.container}>
       <Animated.View
-        style={{
-          transform: [{ scale: scaleAnim }],
-        }}
+        style={[
+          animatedTabIconStyles.iconWrapper,
+          {
+            transform: [{ scale: scaleAnim }],
+            opacity: glowAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [1, 0.9],
+            }),
+          },
+        ]}
       >
-        <Ionicons name={iconName} size={24} color={color} />
+        <Ionicons name={iconName} size={size} color={color} />
       </Animated.View>
     </View>
   );
 };
 
+// Updated AnimatedTabLabel with responsive text sizing
 type AnimatedTabLabelProps = React.PropsWithChildren<{
   focused: boolean;
+  isLargeScreen?: boolean;
   theme: {
     colors: {
       primary: string;
@@ -168,38 +224,72 @@ type AnimatedTabLabelProps = React.PropsWithChildren<{
 const animatedTabLabelStyles = StyleSheet.create({
   label: {
     textAlign: "center",
+    marginTop: 2,
   },
   labelFocused: {
     fontSize: 13,
+    fontWeight: "600",
+  },
+  labelFocusedLarge: {
+    fontSize: 14,
     fontWeight: "600",
   },
   labelUnfocused: {
     fontSize: 12,
     fontWeight: "500",
   },
+  labelUnfocusedLarge: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
 });
 
-const AnimatedTabLabel: React.FC<AnimatedTabLabelProps> = ({ focused, children, theme }) => {
+const AnimatedTabLabel: React.FC<AnimatedTabLabelProps> = ({
+  focused,
+  children,
+  theme,
+  isLargeScreen = false,
+}) => {
   const opacityAnim = useRef(new Animated.Value(0.7)).current;
+  const translateYAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(opacityAnim, {
-      toValue: focused ? 1 : 0.7,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [focused, opacityAnim]);
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: focused ? 1 : 0.75,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateYAnim, {
+        toValue: focused ? -1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [focused, opacityAnim, translateYAnim]);
+
+  const labelStyle = focused
+    ? isLargeScreen
+      ? animatedTabLabelStyles.labelFocusedLarge
+      : animatedTabLabelStyles.labelFocused
+    : isLargeScreen
+      ? animatedTabLabelStyles.labelUnfocusedLarge
+      : animatedTabLabelStyles.labelUnfocused;
 
   return (
     <Animated.Text
       style={[
         animatedTabLabelStyles.label,
-        focused ? animatedTabLabelStyles.labelFocused : animatedTabLabelStyles.labelUnfocused,
+        labelStyle,
         {
           color: focused ? theme.colors.primary : theme.colors.onSurfaceVariant,
           opacity: opacityAnim,
+          transform: [{ translateY: translateYAnim }],
         },
       ]}
+      numberOfLines={1}
+      adjustsFontSizeToFit={true}
+      minimumFontScale={0.8}
     >
       {children}
     </Animated.Text>
@@ -250,31 +340,43 @@ const OnboardingNavigator: React.FC = () => {
 // Simple Main tab navigator with custom animations
 const MainTabNavigator: React.FC = () => {
   const { theme } = useThemedStyles();
+  const insets = useSafeAreaInsets();
+
+  const baseTabBarHeight = 60;
+  const totalTabBarHeight = baseTabBarHeight + insets.bottom;
+  const isLargeScreen = totalTabBarHeight > 85;
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     tabBar: {
       backgroundColor: theme.colors.surface,
-      borderTopLeftRadius: 25,
-      borderTopRightRadius: 25,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
       borderTopWidth: 0,
-      elevation: 18,
-      height: Platform.OS === "ios" ? 90 : 70,
-      paddingBottom: Platform.OS === "ios" ? 26 : 10,
-      paddingHorizontal: 8,
-      paddingTop: 10,
-      shadowColor: "000",
+      elevation: 20,
+      shadowColor: theme.colors.shadow || "#000000",
       shadowOffset: {
         width: 0,
-        height: -2,
+        height: -4,
       },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      paddingHorizontal: Math.max(12, insets.left, insets.right),
+      paddingBottom: Math.max(insets.bottom, 8),
+      paddingTop: isLargeScreen ? 16 : 12,
+      height: totalTabBarHeight,
+      ...(Platform.OS === "ios" && {
+        backgroundColor: `${theme.colors.surface}F0`, // Semi-transparent
+        backdropFilter: "blur(20px)",
+      }),
+    },
+    tabBarSafeArea: {
+      paddingBottom: Math.max(insets.bottom - 4, 0),
     },
   });
+
   return (
     <View style={styles.container}>
       <Tab.Navigator
@@ -298,34 +400,64 @@ const MainTabNavigator: React.FC = () => {
             }
 
             return (
-              <AnimatedTabIcon focused={focused} iconName={iconName} color={color} theme={theme} />
+              <AnimatedTabIcon
+                focused={focused}
+                iconName={iconName}
+                color={color}
+                size={isLargeScreen ? 26 : 24}
+              />
             );
           },
           animation: "shift",
           tabBarLabel: ({ focused, children }) => (
-            <AnimatedTabLabel focused={focused} theme={theme}>
+            <AnimatedTabLabel focused={focused} theme={theme} isLargeScreen={isLargeScreen}>
               {children}
             </AnimatedTabLabel>
           ),
-          tabBarButton: (props) => <AnimatedTabButton {...props} />,
-          animationDuration: 300,
+          tabBarButton: (props) => <AnimatedTabButton {...props} isLargeScreen={isLargeScreen} />,
+          animationDuration: 250,
           headerShown: false,
           tabBarHideOnKeyboard: true,
           tabBarActiveTintColor: theme.colors.primary,
           tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-          tabBarStyle: styles.tabBar,
+          tabBarStyle: [styles.tabBar, insets.bottom > 30 && styles.tabBarSafeArea],
+          tabBarAccessibilityLabel: `${route.name} tab`,
+          tabBarTestID: `${route.name.toLowerCase()}-tab`,
         })}
       >
-        <Tab.Screen name="Recordings" component={RecordingsListScreen} />
-        <Tab.Screen name="Search" component={SearchScreen} />
-        <Tab.Screen name="Downloads" component={DownloadsScreen} />
-        <Tab.Screen name="Profile" component={ProfileSettingsScreen} />
+        <Tab.Screen
+          name="Recordings"
+          component={RecordingsListScreen}
+          options={{
+            tabBarLabel: "Recordings",
+          }}
+        />
+        <Tab.Screen
+          name="Search"
+          component={SearchScreen}
+          options={{
+            tabBarLabel: "Search",
+          }}
+        />
+        <Tab.Screen
+          name="Downloads"
+          component={DownloadsScreen}
+          options={{
+            tabBarLabel: "Downloads",
+          }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={ProfileSettingsScreen}
+          options={{
+            tabBarLabel: "Profile",
+          }}
+        />
       </Tab.Navigator>
     </View>
   );
 };
 
-// Main stack navigator that includes the tab navigator
 const MainNavigator: React.FC = () => {
   const backgroundStyle = StyleSheet.create({
     screen: {
@@ -345,13 +477,19 @@ const MainNavigator: React.FC = () => {
           animationTypeForReplace: "push",
         }}
       >
-        <MainStack.Screen name="MainTabs" component={MainTabNavigator} />
+        <MainStack.Screen name="MainTabs" component={withGlobalAudioBar(MainTabNavigator)} />
         {/* Shared detail screens – mounted once for the whole app */}
-        <MainStack.Screen name="RecordingDetails" component={RecordingDetailsScreen} />
-        <MainStack.Screen name="SpeciesDetails" component={SpeciesDetailsScreen} />
+        <MainStack.Screen
+          name="RecordingDetails"
+          component={withGlobalAudioBar(RecordingDetailsScreen)}
+        />
+        <MainStack.Screen
+          name="SpeciesDetails"
+          component={withGlobalAudioBar(SpeciesDetailsScreen)}
+        />
         <MainStack.Screen
           name="DownloadsManager"
-          component={DownloadsScreen}
+          component={withGlobalAudioBar(DownloadsScreen)}
           options={{
             presentation: "card",
             gestureEnabled: true,
@@ -360,7 +498,7 @@ const MainNavigator: React.FC = () => {
         />
         <MainStack.Screen
           name="DeleteAccount"
-          component={DeleteAccountScreen}
+          component={withGlobalAudioBar(DeleteAccountScreen)}
           options={{
             presentation: "card",
             gestureEnabled: true,
@@ -477,12 +615,11 @@ const AppNavigator: React.FC = () => {
 
   return (
     <AudioProvider>
-      <View style={backgroundStyle.container}>
-        <NavigationContainer theme={navTheme}>
-          {navigatorToShow}
-          <GlobalAudioBar />
-        </NavigationContainer>
-      </View>
+      <GlobalAudioBarProvider>
+        <View style={backgroundStyle.container}>
+          <NavigationContainer theme={navTheme}>{navigatorToShow}</NavigationContainer>
+        </View>
+      </GlobalAudioBarProvider>
     </AudioProvider>
   );
 };
