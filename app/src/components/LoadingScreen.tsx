@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 
 import DetailHeader from "./DetailHeader";
 
@@ -14,7 +14,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   title = "Loading...",
   backgroundPattern,
 }) => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const [showLoader, setShowLoader] = useState(false);
 
   useEffect(() => {

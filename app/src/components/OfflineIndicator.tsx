@@ -3,18 +3,18 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { OfflineStackParamList } from "../types";
 
 const OfflineIndicator = () => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const screenWidth = Dimensions.get("window").width;
 
   const styles = StyleSheet.create({
     button: {
       backgroundColor: theme.colors.error,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       marginBottom: 12,
       marginLeft: 8,
       paddingHorizontal: 10,
@@ -30,8 +30,8 @@ const OfflineIndicator = () => {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderTopColor: theme.colors.error,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      borderTopLeftRadius: theme.borderRadius.lg,
+      borderTopRightRadius: theme.borderRadius.lg,
       elevation: 8,
       flexDirection: "row",
       height: 60,

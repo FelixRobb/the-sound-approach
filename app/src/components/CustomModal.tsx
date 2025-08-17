@@ -12,7 +12,7 @@ import {
   StatusBar,
 } from "react-native";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 
 const { width } = Dimensions.get("window");
 
@@ -44,7 +44,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
   buttons,
   closeOnBackdrop = true,
 }) => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -95,7 +95,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
   const styles = StyleSheet.create({
     button: {
       alignItems: "center",
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       flex: 1,
       justifyContent: "center",
       paddingVertical: 14,
@@ -115,8 +115,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
       opacity: 0.6,
     },
     buttonText: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.labelMedium.fontSize,
+      fontWeight: theme.typography.labelMedium.fontWeight,
     },
     buttonTextCancel: {
       color: theme.colors.onSurface,
@@ -140,7 +140,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
     iconContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 30,
+      borderRadius: theme.borderRadius.full,
       height: 60,
       justifyContent: "center",
       marginBottom: 20,
@@ -151,14 +151,14 @@ const CustomModal: React.FC<CustomModalProps> = ({
     },
     message: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
+      fontSize: theme.typography.labelMedium.fontSize,
       lineHeight: 24,
       marginBottom: 8,
       textAlign: "center",
     },
     modal: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 24,
+      borderRadius: theme.borderRadius.lg,
       elevation: 24,
       maxWidth: width * 0.9,
       padding: 24,
@@ -174,8 +174,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
     },
     title: {
       color: theme.colors.onSurface,
-      fontSize: 20,
-      fontWeight: "700",
+      fontSize: theme.typography.labelLarge.fontSize,
+      fontWeight: theme.typography.labelLarge.fontWeight,
       marginBottom: 12,
       textAlign: "center",
     },

@@ -10,17 +10,17 @@ import {
   FlatList,
   TouchableOpacity,
   ScrollView,
-  TextInput,
+  ActivityIndicator,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
+import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
 import type { Recording, RootStackParamList, Species } from "../types";
 
@@ -53,7 +53,7 @@ type SearchHistoryItem = {
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isDownloaded } = useContext(DownloadContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms debounce delay
@@ -118,7 +118,7 @@ const SearchScreen = () => {
     },
     filterTabIndicator: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 1,
+      borderRadius: theme.borderRadius.xs,
       bottom: -1,
       height: 2,
       left: 0,
@@ -174,7 +174,7 @@ const SearchScreen = () => {
     recentItem: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       elevation: 2,
       flexDirection: "row",
       marginBottom: 12,
@@ -196,7 +196,7 @@ const SearchScreen = () => {
     recentItemIcon: {
       alignItems: "center",
       backgroundColor: theme.colors.onTertiary,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       height: 40,
       justifyContent: "center",
       marginRight: 12,
@@ -222,7 +222,7 @@ const SearchScreen = () => {
     },
     resultCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       marginVertical: 8,
       overflow: "hidden",
@@ -282,27 +282,8 @@ const SearchScreen = () => {
       fontStyle: "italic",
       marginTop: 2,
     },
-    searchContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderRadius: 50,
-      borderWidth: 1,
-      flexDirection: "row",
-      height: 46,
-      marginHorizontal: 4,
-      marginTop: 12,
-      paddingHorizontal: 16,
-    },
     searchInput: {
-      width: "100%",
-      textAlignVertical: "center",
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 16,
-      marginLeft: 10,
-      paddingVertical: 0,
-      overflow: "hidden",
+      borderRadius: theme.borderRadius.full,
     },
     sectionDivider: {
       backgroundColor: theme.colors.surfaceVariant,
@@ -326,13 +307,13 @@ const SearchScreen = () => {
     },
     title: {
       color: theme.colors.primary,
-      fontSize: 28,
+      fontSize: theme.typography.headlineLarge.fontSize,
       fontWeight: "bold",
     },
     typeIndicator: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
       flexDirection: "row",
       paddingHorizontal: 8,
       paddingVertical: 4,
@@ -682,25 +663,20 @@ const SearchScreen = () => {
             </View>
           </View>
 
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={theme.colors.primary} />
-            <TextInput
-              placeholder="Search species and recordings"
-              placeholderTextColor={theme.colors.onSurfaceVariant}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={styles.searchInput}
-              selectionColor={theme.colors.primary}
-              returnKeyType="search"
-              onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
-              textAlignVertical="center"
-            />
-            {searchQuery && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-            )}
-          </View>
+          <Input
+            placeholder="Search species and recordings"
+            placeholderTextColor={theme.colors.onSurfaceVariant}
+            value={searchQuery}
+            leftIcon={{ name: "search", color: theme.colors.tertiary }}
+            clearButton={!!searchQuery}
+            onChangeText={setSearchQuery}
+            innerContainerStyle={styles.searchInput}
+            selectionColor={theme.colors.primary}
+            returnKeyType="search"
+            onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
+            textAlignVertical="center"
+          />
+
           {searchQuery && (
             <>
               <View style={styles.filterContainer}>

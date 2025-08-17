@@ -3,7 +3,7 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { useAudio } from "../context/AudioContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { Recording } from "../types";
 
 interface MiniAudioPlayerProps {
@@ -15,7 +15,7 @@ interface MiniAudioPlayerProps {
 const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
   const { size = 36, recording, onPress } = props;
 
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   // Contexts & hooks
   const { isPlaying, isLoading, currentRecording, togglePlayPause } = useAudio();
@@ -42,7 +42,7 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
     playButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: size / 2,
+      borderRadius: theme.borderRadius.full,
       elevation: 2,
       height: size,
       justifyContent: "center",

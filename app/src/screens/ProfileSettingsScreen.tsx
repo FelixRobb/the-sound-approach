@@ -9,16 +9,14 @@ import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
-import { ThemeContext } from "../context/ThemeContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { RootStackParamList } from "../types";
 
 const ProfileSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { state: authState, signOut, resetOnboarding } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
-  const { theme: themeMode, setTheme } = useContext(ThemeContext);
-  const { theme } = useThemedStyles();
+  const { theme, themeMode, setThemeMode } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   // Modal states
@@ -88,7 +86,7 @@ const ProfileSettingsScreen = () => {
     actionButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 2,
       flexDirection: "row",
       marginBottom: 12,
@@ -118,7 +116,7 @@ const ProfileSettingsScreen = () => {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
       borderColor: theme.colors.outline,
-      borderRadius: 50,
+      borderRadius: theme.borderRadius.full,
       borderWidth: 4,
       elevation: 16,
       height: 100,
@@ -181,7 +179,7 @@ const ProfileSettingsScreen = () => {
     },
     downloadsCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 2,
       marginBottom: 24,
       overflow: "hidden",
@@ -221,7 +219,7 @@ const ProfileSettingsScreen = () => {
     },
     profileCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
       marginBottom: 24,
       marginTop: 50,
@@ -244,7 +242,7 @@ const ProfileSettingsScreen = () => {
     },
     settingsCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 2,
       marginBottom: 16,
       overflow: "hidden",
@@ -259,19 +257,19 @@ const ProfileSettingsScreen = () => {
     },
     storageBar: {
       backgroundColor: theme.colors.outline,
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.sm,
       height: 6,
       marginBottom: 16,
       overflow: "hidden",
     },
     storageBarFill: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.sm,
       height: "100%",
     },
     storageButton: {
       alignItems: "center",
-      borderRadius: 10,
+      borderRadius: theme.borderRadius.md,
       flex: 1,
       paddingVertical: 12,
     },
@@ -299,7 +297,7 @@ const ProfileSettingsScreen = () => {
     storageIconContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       height: 40,
       justifyContent: "center",
       marginRight: 16,
@@ -308,7 +306,7 @@ const ProfileSettingsScreen = () => {
     storageInfo: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
       marginBottom: 16,
       padding: 16,
@@ -339,7 +337,7 @@ const ProfileSettingsScreen = () => {
     },
     themeOption: {
       alignItems: "center",
-      borderRadius: 18,
+      borderRadius: theme.borderRadius.lg,
       justifyContent: "center",
       paddingHorizontal: 12,
       paddingVertical: 6,
@@ -364,13 +362,13 @@ const ProfileSettingsScreen = () => {
     themeSelector: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       flexDirection: "row",
       padding: 2,
     },
     title: {
       color: theme.colors.primary,
-      fontSize: 28,
+      fontSize: theme.typography.headlineLarge.fontSize,
       fontWeight: "bold",
     },
   });
@@ -447,7 +445,7 @@ const ProfileSettingsScreen = () => {
                     styles.themeOption,
                     themeMode === option.mode && styles.themeOptionActive,
                   ]}
-                  onPress={() => setTheme(option.mode as "light" | "dark" | "system")}
+                  onPress={() => setThemeMode(option.mode as "light" | "dark" | "system")}
                   activeOpacity={0.7}
                 >
                   <Text

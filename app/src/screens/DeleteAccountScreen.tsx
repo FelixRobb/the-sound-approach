@@ -14,14 +14,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Input } from "../components/ui";
 import { AuthContext } from "../context/AuthContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { RootStackParamList } from "../types";
+import { createThemedTextStyle } from "../lib/theme/typography";
 
 const DeleteAccountScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { deleteAccount } = useContext(AuthContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
   const confirmTextInputRef = useRef<TextInput>(null);
 
@@ -59,18 +61,18 @@ const DeleteAccountScreen = () => {
     cancelButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       marginTop: 12,
       padding: 16,
     },
     cancelButtonText: {
       color: theme.colors.primary,
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.labelMedium.fontSize,
+      fontWeight: theme.typography.labelMedium.fontWeight,
     },
     confirmText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: theme.typography.labelMedium.fontSize,
       marginTop: 4,
     },
     container: {
@@ -80,7 +82,7 @@ const DeleteAccountScreen = () => {
     deleteButton: {
       alignItems: "center",
       backgroundColor: theme.colors.error,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       marginTop: 20,
       padding: 16,
     },
@@ -89,13 +91,13 @@ const DeleteAccountScreen = () => {
     },
     deleteButtonText: {
       color: theme.colors.onError,
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: theme.typography.labelMedium.fontSize,
+      fontWeight: theme.typography.labelMedium.fontWeight,
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
+      borderBottomLeftRadius: theme.borderRadius.lg,
+      borderBottomRightRadius: theme.borderRadius.lg,
       elevation: 4,
       paddingBottom: 20,
       paddingTop: 16 + insets.top,
@@ -108,22 +110,13 @@ const DeleteAccountScreen = () => {
     headerInner: {
       paddingHorizontal: 20,
     },
-    input: {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderRadius: 12,
-      borderWidth: 1,
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      padding: 12,
-    },
     inputContainer: {
       marginBottom: 20,
     },
     inputLabel: {
       color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "500",
+      fontSize: theme.typography.labelMedium.fontSize,
+      fontWeight: theme.typography.labelMedium.fontWeight,
       marginBottom: 8,
     },
     scrollContent: {
@@ -131,29 +124,27 @@ const DeleteAccountScreen = () => {
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
+      fontSize: theme.typography.labelMedium.fontSize,
       marginTop: 2,
     },
     title: {
-      color: theme.colors.error,
-      fontSize: 28,
-      fontWeight: "bold",
+      ...createThemedTextStyle(theme, { size: "lg", weight: "bold", color: "error" }),
     },
     warningCard: {
       backgroundColor: theme.colors.errorContainer,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       marginBottom: 24,
       padding: 20,
     },
     warningText: {
       color: theme.colors.onErrorContainer,
-      fontSize: 14,
+      fontSize: theme.typography.bodyMedium.fontSize,
       lineHeight: 20,
     },
     warningTitle: {
       color: theme.colors.onErrorContainer,
-      fontSize: 18,
-      fontWeight: "bold",
+      fontSize: theme.typography.titleLarge.fontSize,
+      fontWeight: theme.typography.titleLarge.fontWeight,
       marginBottom: 8,
     },
   });
@@ -189,9 +180,10 @@ const DeleteAccountScreen = () => {
 
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Enter your password</Text>
-          <TextInput
-            style={styles.input}
-            secureTextEntry
+          <Input
+            type="password"
+            showPasswordToggle
+            leftIcon={{ name: "lock-closed-outline" }}
             value={password}
             onChangeText={setPassword}
             placeholder="Enter your password"
@@ -200,15 +192,14 @@ const DeleteAccountScreen = () => {
             autoCorrect={false}
             returnKeyType="next"
             onSubmitEditing={() => confirmTextInputRef.current?.focus()}
-            blurOnSubmit={false}
           />
         </View>
 
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Type &quot;DELETE MY ACCOUNT&quot; to confirm</Text>
-          <TextInput
+          <Input
             ref={confirmTextInputRef}
-            style={styles.input}
+            leftIcon={{ name: "trash-outline" }}
             value={confirmText}
             onChangeText={setConfirmText}
             placeholder="Type DELETE MY ACCOUNT"

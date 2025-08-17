@@ -11,10 +11,9 @@ import {
   SectionList,
   TouchableOpacity,
   RefreshControl,
-  TextInput,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AnimatedTabBar from "../components/AnimatedTabBar";
@@ -22,8 +21,9 @@ import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
+import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
@@ -48,7 +48,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isDownloaded } = useContext(DownloadContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   const [activeTab, setActiveTab] = useState("book");
   const [searchInput, setSearchInput] = useState("");
@@ -65,7 +65,7 @@ const RecordingsListScreen = () => {
   const styles = StyleSheet.create({
     recordingCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       marginHorizontal: 12,
       marginTop: 10,
       paddingHorizontal: 12,
@@ -167,7 +167,7 @@ const RecordingsListScreen = () => {
     filterButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       elevation: 1,
       flexDirection: "row",
       marginRight: 10,
@@ -204,7 +204,7 @@ const RecordingsListScreen = () => {
     filterDivider: {
       alignSelf: "center",
       backgroundColor: theme.colors.outlineVariant,
-      borderRadius: 1,
+      borderRadius: theme.borderRadius.xs,
       height: 24,
       marginHorizontal: 10,
       opacity: 0.4,
@@ -243,7 +243,7 @@ const RecordingsListScreen = () => {
     headerButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 22,
+      borderRadius: theme.borderRadius.lg,
       height: 44,
       justifyContent: "center",
       paddingHorizontal: 0,
@@ -276,23 +276,15 @@ const RecordingsListScreen = () => {
     searchContainer: {
       alignItems: "center",
       alignSelf: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outlineVariant,
-      borderRadius: 24,
-      borderWidth: 1,
-      flexDirection: "row",
-      height: 46,
+      borderRadius: theme.borderRadius.full,
       marginHorizontal: 4,
+      height: 46,
       marginTop: 12,
-      paddingHorizontal: 16,
       width: "94%",
+      marginBottom: 0,
     },
     searchInput: {
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 16,
-      marginLeft: 10,
-      paddingVertical: 10,
+      borderRadius: theme.borderRadius.full,
     },
     speciesAction: {
       marginLeft: 8,
@@ -300,14 +292,14 @@ const RecordingsListScreen = () => {
     speciesActionButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 15,
+      borderRadius: theme.borderRadius.full,
       height: 30,
       justifyContent: "center",
       width: 30,
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       marginHorizontal: 12,
       marginVertical: 4,
       paddingHorizontal: 16,
@@ -336,7 +328,7 @@ const RecordingsListScreen = () => {
     },
     title: {
       color: theme.colors.primary,
-      fontSize: 28,
+      fontSize: theme.typography.headlineLarge.fontSize,
       fontWeight: "bold",
     },
     sectionHeader: {
@@ -697,23 +689,18 @@ const RecordingsListScreen = () => {
           </View>
 
           {showSearch ? (
-            <View style={styles.searchContainer}>
-              <Ionicons name="search" size={20} color={theme.colors.tertiary} />
-              <TextInput
-                placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-                value={searchInput}
-                onChangeText={setSearchInput}
-                style={styles.searchInput}
-                selectionColor={theme.colors.primary}
-                returnKeyType="search"
-              />
-              {searchInput && (
-                <TouchableOpacity onPress={() => setSearchInput("")}>
-                  <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <Input
+              placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
+              placeholderTextColor={theme.colors.onSurfaceVariant}
+              value={searchInput}
+              leftIcon={{ name: "search", color: theme.colors.tertiary }}
+              clearButton={!!searchInput}
+              onChangeText={setSearchInput}
+              innerContainerStyle={styles.searchInput}
+              selectionColor={theme.colors.primary}
+              returnKeyType="search"
+              style={styles.searchContainer}
+            />
           ) : (
             <AnimatedTabBar activeTab={activeTab} onTabChange={setActiveTab} theme={theme} />
           )}

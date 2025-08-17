@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
-import { MD3Theme } from "react-native-paper";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,10 +8,12 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 
+import type { Theme } from "../lib/theme/types";
+
 interface AnimatedTabBarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  theme: MD3Theme;
+  theme: Theme;
   style?: ViewStyle;
 }
 
@@ -67,10 +68,11 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
   const styles = StyleSheet.create({
     activeTabText: {
       color: theme.colors.onTertiary,
-      fontWeight: "600",
+      fontWeight: theme.typography.labelMedium.fontWeight,
     },
     inactiveTabText: {
       color: theme.colors.onSurfaceVariant,
+      fontWeight: theme.typography.labelMedium.fontWeight,
     },
     rowCenter: {
       alignItems: "center",
@@ -78,7 +80,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
     },
     slidingBackground: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 18,
+      borderRadius: theme.borderRadius.full,
       bottom: 4,
       elevation: 3,
       left: 4,
@@ -105,7 +107,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       alignSelf: "center",
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.outline,
-      borderRadius: 24,
+      borderRadius: theme.borderRadius.full,
       borderWidth: 1,
       flexDirection: "row",
       height: 46,
@@ -122,8 +124,8 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       shadowRadius: 4,
     },
     tabText: {
-      fontSize: 14,
-      fontWeight: "500",
+      fontSize: theme.typography.labelMedium.fontSize,
+      fontWeight: theme.typography.labelMedium.fontWeight,
       marginLeft: 6,
     },
   });

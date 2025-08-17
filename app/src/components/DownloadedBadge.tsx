@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 
 interface DownloadedBadgeProps {
   style?: ViewStyle;
@@ -21,7 +21,7 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
   compact = false,
   smallRound = false,
 }) => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const styles = StyleSheet.create({
     badge: {
       alignItems: "center",
@@ -42,8 +42,8 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
     },
     text: {
       color: theme.colors.onTertiary,
-      fontSize: 11,
-      fontWeight: "600",
+      fontSize: theme.typography.labelSmall.fontSize,
+      fontWeight: theme.typography.labelSmall.fontWeight,
       marginLeft: 3,
       lineHeight: 13,
     },

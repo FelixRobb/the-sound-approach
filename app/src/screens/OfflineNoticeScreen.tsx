@@ -2,17 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useContext } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Button } from "react-native-paper";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 import { DownloadContext } from "../context/DownloadContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { OfflineStackParamList } from "../types";
 
 const OfflineNoticeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const { downloadedRecordings } = useContext(DownloadContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   const styles = StyleSheet.create({
     button: {
@@ -28,7 +27,7 @@ const OfflineNoticeScreen = () => {
     content: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 6,
       padding: 24,
       shadowColor: theme.colors.shadow,
@@ -67,9 +66,7 @@ const OfflineNoticeScreen = () => {
             : "You don't have any downloaded recordings to access offline. Please connect to the internet to browse and download recordings for offline use."}
         </Text>
 
-        <Button
-          mode="contained"
-          icon="download"
+        <TouchableOpacity
           onPress={() => {
             try {
               // First try to go back (dismiss the modal)
@@ -85,8 +82,9 @@ const OfflineNoticeScreen = () => {
           }}
           style={styles.button}
         >
+          <Ionicons name="download-outline" size={20} color={theme.colors.onSurface} />
           Return to Offline Content
-        </Button>
+        </TouchableOpacity>
       </View>
     </View>
   );

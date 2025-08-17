@@ -1,9 +1,9 @@
 import { StyleSheet, View } from "react-native";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 
 const BackgroundPattern = () => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   const styles = StyleSheet.create({
     backgroundPattern: {

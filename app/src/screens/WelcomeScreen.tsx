@@ -2,15 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { Button } from "../components/ui";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { RootStackParamList } from "../types";
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme, isDark } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
@@ -36,22 +37,9 @@ const WelcomeScreen = () => {
     backgroundImage: {
       flex: 1,
     },
-    buttonContent: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 12,
-      justifyContent: "center",
-      paddingHorizontal: 32,
-      paddingVertical: 18,
-    },
     buttonSection: {
       paddingBottom: 20,
       paddingHorizontal: 20,
-    },
-    buttonText: {
-      fontSize: 16,
-      fontWeight: "600",
-      letterSpacing: 0.3,
     },
     container: {
       flex: 1,
@@ -75,7 +63,7 @@ const WelcomeScreen = () => {
       alignItems: "center",
       backgroundColor: `${theme.colors.surface}E6`,
       borderColor: `${theme.colors.outline}40`,
-      borderRadius: 60,
+      borderRadius: theme.borderRadius.full,
       borderWidth: 2,
       elevation: 8,
       height: 120,
@@ -92,38 +80,12 @@ const WelcomeScreen = () => {
       marginBottom: 32,
     },
     primaryButton: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      elevation: 8,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.4,
-      shadowRadius: 12,
-    },
-    primaryButtonText: {
-      color: theme.colors.onPrimary,
-      fontWeight: "700",
-    },
-    secondaryButton: {
-      alignSelf: "center",
-      marginTop: 24,
-    },
-    secondaryButtonContent: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 4,
-      justifyContent: "center",
-    },
-    secondaryButtonText: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      fontWeight: "400",
+      borderRadius: theme.borderRadius.full,
     },
     signInLink: {
+      marginTop: 16,
       color: theme.colors.tertiary,
-      fontSize: 15,
-      fontWeight: "500",
-      textDecorationLine: "underline",
+      fontWeight: theme.typography.titleMedium.fontWeight,
     },
   });
 
@@ -135,7 +97,7 @@ const WelcomeScreen = () => {
     >
       <LinearGradient
         colors={
-          isDarkMode
+          isDark
             ? ["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.9)"]
             : ["rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.9)"]
         }
@@ -159,27 +121,24 @@ const WelcomeScreen = () => {
 
             {/* Button Section */}
             <View style={styles.buttonSection}>
-              <TouchableOpacity
-                style={styles.primaryButton}
+              <Button
+                variant="default"
+                size="lg"
                 onPress={() => navigation.navigate("SignUp")}
-                activeOpacity={0.85}
-              >
-                <View style={styles.buttonContent}>
-                  <Ionicons name="person-add-outline" size={20} color={theme.colors.onPrimary} />
-                  <Text style={[styles.buttonText, styles.primaryButtonText]}>Create Account</Text>
-                </View>
-              </TouchableOpacity>
+                title="Create Account"
+                style={styles.primaryButton}
+                icon={{ name: "person-add-outline", color: theme.colors.onPrimary }}
+                fullWidth
+              />
 
-              <TouchableOpacity
-                style={styles.secondaryButton}
+              <Button
+                variant="link"
+                size="lg"
                 onPress={() => navigation.navigate("Login")}
-                activeOpacity={0.6}
-              >
-                <View style={styles.secondaryButtonContent}>
-                  <Text style={styles.secondaryButtonText}>Already have an account? </Text>
-                  <Text style={styles.signInLink}>Sign in</Text>
-                </View>
-              </TouchableOpacity>
+                title="Sign in"
+                fullWidth
+                textStyle={styles.signInLink}
+              />
             </View>
           </View>
         </View>

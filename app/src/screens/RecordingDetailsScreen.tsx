@@ -29,8 +29,8 @@ import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
@@ -38,7 +38,7 @@ import type { RootStackParamList } from "../types";
 const { width } = Dimensions.get("window");
 
 const RecordingDetailsScreen = () => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const { downloadRecording, isDownloaded, downloads, deleteDownload } =
@@ -89,7 +89,7 @@ const RecordingDetailsScreen = () => {
       flexDirection: "row",
       paddingVertical: 8,
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
@@ -108,7 +108,7 @@ const RecordingDetailsScreen = () => {
     controlsContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.backdrop,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.lg,
       bottom: 10,
       flexDirection: "row",
       left: 12,
@@ -130,7 +130,7 @@ const RecordingDetailsScreen = () => {
     },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       marginBottom: 16,
       overflow: "hidden",
@@ -160,7 +160,7 @@ const RecordingDetailsScreen = () => {
     downloadButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
       justifyContent: "center",
       paddingHorizontal: 20,
@@ -169,7 +169,7 @@ const RecordingDetailsScreen = () => {
     },
     downloadButtonSmall: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 50,
+      borderRadius: theme.borderRadius.full,
       padding: 8,
     },
     downloadButtonText: {
@@ -180,7 +180,7 @@ const RecordingDetailsScreen = () => {
     },
     downloadCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       marginBottom: 16,
       overflow: "hidden",
@@ -204,7 +204,7 @@ const RecordingDetailsScreen = () => {
     errorCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
@@ -255,7 +255,7 @@ const RecordingDetailsScreen = () => {
     fullscreenControls: {
       alignItems: "center",
       backgroundColor: "rgba(0, 0, 0, 0.8)",
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       bottom: 40,
       flexDirection: "row",
       left: 20,
@@ -305,7 +305,7 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: 40,
+      borderRadius: theme.borderRadius.full,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
@@ -318,7 +318,7 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: 40,
+      borderRadius: theme.borderRadius.full,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
@@ -352,7 +352,7 @@ const RecordingDetailsScreen = () => {
     retryButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       paddingHorizontal: 24,
       paddingVertical: 12,
     },
@@ -376,7 +376,7 @@ const RecordingDetailsScreen = () => {
     // eslint-disable-next-line react-native/no-color-literals
     sliderThumb: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
       elevation: 2,
       height: 16,
       shadowColor: theme.colors.shadow,
@@ -402,7 +402,7 @@ const RecordingDetailsScreen = () => {
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       marginBottom: 16,
       overflow: "hidden",
@@ -432,7 +432,7 @@ const RecordingDetailsScreen = () => {
     },
     videoContainer: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       marginBottom: 16,
       overflow: "hidden",
@@ -478,7 +478,7 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: 40,
+      borderRadius: theme.borderRadius.full,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",

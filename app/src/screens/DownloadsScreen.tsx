@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
@@ -19,7 +19,8 @@ import CustomModal from "../components/CustomModal";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme/typography";
 import type { DownloadRecord, RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
@@ -29,7 +30,7 @@ const DownloadsScreen = () => {
   const route = useRoute();
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
     useContext(DownloadContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const showBackButton =
@@ -144,7 +145,7 @@ const DownloadsScreen = () => {
     },
     backButton: {
       alignItems: "center",
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       height: 40,
       justifyContent: "center",
       marginRight: 12,
@@ -153,7 +154,7 @@ const DownloadsScreen = () => {
 
     clearAllButton: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
       paddingHorizontal: 12,
       paddingVertical: 6,
     },
@@ -161,9 +162,7 @@ const DownloadsScreen = () => {
       opacity: 0.5,
     },
     clearAllText: {
-      color: theme.colors.onTertiary,
-      fontSize: 14,
-      fontWeight: "bold",
+      ...createThemedTextStyle(theme, { size: "xs", weight: "medium", color: "onTertiary" }),
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -172,7 +171,7 @@ const DownloadsScreen = () => {
     deleteButton: {
       alignItems: "center",
       backgroundColor: theme.colors.error,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.full,
       height: 40,
       justifyContent: "center",
       width: 40,
@@ -183,7 +182,7 @@ const DownloadsScreen = () => {
     },
     downloadCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
@@ -198,8 +197,7 @@ const DownloadsScreen = () => {
       paddingTop: 8,
     },
     downloadDate: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
+      ...createThemedTextStyle(theme, { size: "xs", weight: "normal", color: "onSurfaceVariant" }),
       marginTop: 4,
     },
     downloadHeader: {
@@ -212,14 +210,12 @@ const DownloadsScreen = () => {
       flex: 1,
     },
     downloadTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 17,
-      fontWeight: "bold",
+      ...createThemedTextStyle(theme, { size: "sm", weight: "medium", color: "onSurface" }),
     },
     emptyCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
@@ -237,15 +233,15 @@ const DownloadsScreen = () => {
     },
     emptyText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: theme.typography.labelSmall.fontSize,
       lineHeight: 20,
       marginTop: 8,
       textAlign: "center",
     },
     emptyTitle: {
       color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "bold",
+      fontSize: theme.typography.labelLarge.fontSize,
+      fontWeight: theme.typography.labelLarge.fontWeight,
       marginTop: 16,
       textAlign: "center",
     },
@@ -269,7 +265,7 @@ const DownloadsScreen = () => {
     loadingCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
@@ -285,8 +281,7 @@ const DownloadsScreen = () => {
       padding: 24,
     },
     loadingText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
+      ...createThemedTextStyle(theme, { size: "sm", weight: "medium", color: "onSurface" }),
       marginTop: 16,
       textAlign: "center",
     },
@@ -299,7 +294,7 @@ const DownloadsScreen = () => {
     },
     scientificName: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: theme.typography.labelSmall.fontSize,
       fontStyle: "italic",
       marginTop: 2,
     },
@@ -308,7 +303,7 @@ const DownloadsScreen = () => {
     },
     speciesName: {
       color: theme.colors.onSurface,
-      fontSize: 15,
+      fontSize: theme.typography.labelSmall.fontSize,
       marginBottom: 4,
     },
     storageInfo: {
@@ -322,18 +317,13 @@ const DownloadsScreen = () => {
     },
     storageText: {
       color: theme.colors.tertiary,
-      fontSize: 14,
-      fontWeight: "500",
+      fontSize: theme.typography.labelSmall.fontSize,
+      fontWeight: theme.typography.labelSmall.fontWeight,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
+      fontSize: theme.typography.labelSmall.fontSize,
       marginTop: 2,
-    },
-    title: {
-      color: theme.colors.primary,
-      fontSize: 28,
-      fontWeight: "bold",
     },
   });
 
@@ -349,7 +339,15 @@ const DownloadsScreen = () => {
               </TouchableOpacity>
             )}
             <View>
-              <Text style={styles.title}>Downloads</Text>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "xl",
+                  weight: "bold",
+                  color: "primary",
+                })}
+              >
+                Downloads
+              </Text>
               <Text style={styles.subtitle}>Manage your offline recordings</Text>
             </View>
           </View>

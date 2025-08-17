@@ -18,9 +18,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import GlobalAudioBar from "../components/GlobalAudioBar";
 import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { GlobalAudioBarProvider } from "../context/GlobalAudioBarContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { navigationDarkTheme, navigationLightTheme, borderRadius } from "../lib/theme";
 import OfflineNavigator from "../navigation/OfflineNavigator";
 import DeleteAccountScreen from "../screens/DeleteAccountScreen";
 import DownloadsScreen from "../screens/DownloadsScreen";
@@ -34,7 +35,6 @@ import SearchScreen from "../screens/SearchScreen";
 import SignUpScreen from "../screens/SignUpScreen";
 import SpeciesDetailsScreen from "../screens/SpeciesDetailsScreen";
 import WelcomeScreen from "../screens/WelcomeScreen";
-import { navigationDarkTheme, navigationLightTheme } from "../theme";
 
 // Higher-order component that wraps screens with GlobalAudioBar
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,7 +62,7 @@ type AnimatedTabButtonProps = React.PropsWithChildren<{
 const animatedTabButtonStyles = StyleSheet.create({
   animatedView: {
     alignItems: "center",
-    borderRadius: 20,
+    borderRadius: borderRadius.lg,
     flex: 1,
     justifyContent: "center",
     marginHorizontal: 6,
@@ -70,7 +70,7 @@ const animatedTabButtonStyles = StyleSheet.create({
     minHeight: 48, // Ensure minimum touch target
   },
   animatedViewLarge: {
-    borderRadius: 24,
+    borderRadius: borderRadius.xl,
     marginHorizontal: 8,
     paddingVertical: 12,
     minHeight: 56,
@@ -339,7 +339,7 @@ const OnboardingNavigator: React.FC = () => {
 
 // Simple Main tab navigator with custom animations
 const MainTabNavigator: React.FC = () => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const baseTabBarHeight = 60;
@@ -529,8 +529,8 @@ const OfflineAuthNavigator: React.FC = () => {
 const AppNavigator: React.FC = () => {
   const { state: authState } = useContext(AuthContext);
   const { isConnected } = useContext(NetworkContext);
-  const { theme, isDarkMode } = useThemedStyles();
-  const navTheme = isDarkMode ? navigationDarkTheme : navigationLightTheme;
+  const { theme, isDark } = useEnhancedTheme();
+  const navTheme = isDark ? navigationDarkTheme : navigationLightTheme;
 
   const backgroundStyle = StyleSheet.create({
     container: {
@@ -543,7 +543,7 @@ const AppNavigator: React.FC = () => {
       if (Platform.OS === "android") {
         try {
           await NavigationBar.setBackgroundColorAsync(theme.colors.surface);
-          if (isDarkMode) {
+          if (isDark) {
             await NavigationBar.setButtonStyleAsync("light");
           } else {
             await NavigationBar.setButtonStyleAsync("dark");
@@ -555,7 +555,7 @@ const AppNavigator: React.FC = () => {
     };
 
     setNavigationBarColor();
-  }, [theme.colors.surface, isDarkMode]);
+  }, [theme.colors.surface, isDark]);
 
   useEffect(() => {
     const hideSplash = async () => {

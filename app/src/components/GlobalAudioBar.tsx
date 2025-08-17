@@ -16,9 +16,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
 import { NetworkContext } from "../context/NetworkContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
 import { getBestAudioUri } from "../lib/mediaUtils";
 import type { RootStackParamList } from "../types";
 
@@ -31,7 +31,7 @@ const iconHitSlop = { top: 8, bottom: 8, left: 8, right: 8 };
 const GlobalAudioBar: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
   const [hasTabBar, setHasTabBar] = useState(false);
@@ -183,7 +183,7 @@ const GlobalAudioBar: React.FC = () => {
       backgroundColor: theme.colors.surface,
       borderWidth: 1,
       borderColor: theme.colors.outline,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       shadowColor: theme.colors.shadow || "#000000",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -203,13 +203,13 @@ const GlobalAudioBar: React.FC = () => {
     },
     title: {
       color: theme.colors.onSurface,
-      fontSize: 15,
-      fontWeight: "600",
+      fontSize: theme.typography.labelSmall.fontSize,
+      fontWeight: theme.typography.labelSmall.fontWeight,
       lineHeight: 20,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
+      fontSize: theme.typography.labelSmall.fontSize,
       marginTop: 2,
       lineHeight: 16,
     },
@@ -218,7 +218,7 @@ const GlobalAudioBar: React.FC = () => {
       height: 36,
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: 18,
+      borderRadius: theme.borderRadius.md,
       marginHorizontal: 2,
       // Add subtle press feedback background
       backgroundColor: theme.colors.surface,
@@ -253,7 +253,7 @@ const GlobalAudioBar: React.FC = () => {
     },
     progressText: {
       color: theme.colors.tertiary,
-      fontSize: 11,
+      fontSize: theme.typography.labelSmall.fontSize,
       marginTop: 2,
       fontVariant: ["tabular-nums"], // Monospace numbers for stable width
     },

@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import GlobalAudioBar from "../components/GlobalAudioBar";
 import OfflineIndicator from "../components/OfflineIndicator";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import OfflineNoticeScreen from "../screens/OfflineNoticeScreen";
 import OfflineScreen from "../screens/OfflineScreen";
 import { OfflineStackParamList } from "../types";
@@ -30,7 +30,7 @@ const OfflineStack = createNativeStackNavigator<OfflineStackParamList>();
 
 // Offline mode navigator that only shows downloads and offline notice
 const OfflineNavigator = () => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   const backgroundStyle = StyleSheet.create({
     screen: {

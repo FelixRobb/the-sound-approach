@@ -3,9 +3,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 const OfflineWelcomeScreen = () => {
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme, isDark } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
@@ -53,7 +53,7 @@ const OfflineWelcomeScreen = () => {
       alignItems: "center",
       backgroundColor: `${theme.colors.surface}E6`,
       borderColor: `${theme.colors.outline}40`,
-      borderRadius: 60,
+      borderRadius: theme.borderRadius.full,
       borderWidth: 2,
       elevation: 8,
       height: 120,
@@ -71,7 +71,7 @@ const OfflineWelcomeScreen = () => {
     },
     offlineMessage: {
       backgroundColor: theme.colors.errorContainer,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       marginBottom: 24,
       opacity: 0.8,
       padding: 16,
@@ -96,7 +96,7 @@ const OfflineWelcomeScreen = () => {
     >
       <LinearGradient
         colors={
-          isDarkMode
+          isDark
             ? ["rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.5)", "rgba(0, 0, 0, 0.9)"]
             : ["rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.5)", "rgba(255, 255, 255, 0.9)"]
         }

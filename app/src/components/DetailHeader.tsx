@@ -5,7 +5,7 @@ import React, { ReactNode } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { RootStackParamList } from "../types";
 
 interface DetailHeaderProps {
@@ -16,7 +16,7 @@ interface DetailHeaderProps {
 
 const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
@@ -37,14 +37,14 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
+      fontSize: theme.typography.labelSmall.fontSize,
       fontStyle: "italic",
       marginTop: 2,
     },
     title: {
       color: theme.colors.primary,
-      fontSize: 22,
-      fontWeight: "bold",
+      fontSize: theme.typography.labelLarge.fontSize,
+      fontWeight: theme.typography.labelLarge.fontWeight,
     },
     titleContainer: {
       flex: 1,

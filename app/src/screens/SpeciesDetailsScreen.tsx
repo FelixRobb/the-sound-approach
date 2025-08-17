@@ -12,7 +12,7 @@ import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
 import type { RootStackParamList } from "../types";
 
@@ -22,7 +22,7 @@ const SpeciesDetailsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
   const { isDownloaded } = useContext(DownloadContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   const { speciesId } = route.params;
   // Fetch recordings for this species
@@ -50,7 +50,7 @@ const SpeciesDetailsScreen = () => {
     },
     card: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       marginBottom: 16,
       overflow: "hidden",
@@ -86,7 +86,7 @@ const SpeciesDetailsScreen = () => {
     errorCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
@@ -130,7 +130,7 @@ const SpeciesDetailsScreen = () => {
     },
     recordingCountBadge: {
       backgroundColor: theme.colors.onPrimary,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       paddingHorizontal: 12,
       paddingVertical: 4,
     },
@@ -156,13 +156,13 @@ const SpeciesDetailsScreen = () => {
       marginBottom: 6,
     },
     recordingsList: {
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       overflow: "hidden",
     },
     retryButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.full,
       flexDirection: "row",
       justifyContent: "center",
       marginBottom: 12,

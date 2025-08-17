@@ -9,8 +9,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
@@ -18,14 +18,14 @@ import CustomModal from "../components/CustomModal";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { DownloadRecord } from "../types";
 
 const { width } = Dimensions.get("window");
 
 const OfflineScreen = () => {
   const { totalStorageUsed, getDownloadedRecordings } = useContext(DownloadContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
@@ -99,7 +99,7 @@ const OfflineScreen = () => {
     },
     downloadCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
@@ -135,7 +135,7 @@ const OfflineScreen = () => {
     emptyCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
@@ -167,8 +167,8 @@ const OfflineScreen = () => {
     },
     header: {
       backgroundColor: theme.colors.surface,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
+      borderBottomLeftRadius: theme.borderRadius.lg,
+      borderBottomRightRadius: theme.borderRadius.lg,
       elevation: 4,
       paddingTop: 16 + insets.top,
       shadowColor: theme.colors.shadow,
@@ -193,7 +193,7 @@ const OfflineScreen = () => {
     loadingCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
       padding: 24,
       shadowColor: theme.colors.shadow,
@@ -217,7 +217,7 @@ const OfflineScreen = () => {
     offlineBanner: {
       alignItems: "center",
       backgroundColor: theme.colors.errorContainer,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
       marginHorizontal: 20,
       marginVertical: 12,
@@ -259,7 +259,7 @@ const OfflineScreen = () => {
     storageInfo: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
       marginHorizontal: 20,
       marginVertical: 8,
@@ -268,7 +268,7 @@ const OfflineScreen = () => {
     storageInfoIcon: {
       alignItems: "center",
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       height: 40,
       justifyContent: "center",
       marginRight: 12,

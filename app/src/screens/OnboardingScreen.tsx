@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AuthContext } from "../context/AuthContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 
 type OnboardingStep = {
   id: number;
@@ -53,7 +53,7 @@ const onboardingSteps: OnboardingStep[] = [
 
 const OnboardingScreen = () => {
   const { completeOnboarding } = useContext(AuthContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -100,7 +100,7 @@ const OnboardingScreen = () => {
     },
     button: {
       alignItems: "center",
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       elevation: 2,
       flex: 1,
       justifyContent: "center",
@@ -160,7 +160,7 @@ const OnboardingScreen = () => {
       marginBottom: 32,
     },
     progressDot: {
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.sm,
       height: 8,
       marginHorizontal: 4,
       width: 8,
@@ -195,7 +195,7 @@ const OnboardingScreen = () => {
     },
     stepIconContainer: {
       alignItems: "center",
-      borderRadius: 60,
+      borderRadius: theme.borderRadius.full,
       elevation: 8,
       height: 120,
       justifyContent: "center",
