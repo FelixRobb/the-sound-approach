@@ -10,25 +10,23 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
   TextInput as RNTextInput,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { TextInput, HelperText } from "react-native-paper";
 
 import DetailHeader from "../components/DetailHeader";
 import ErrorAlert from "../components/ErrorAlert";
+import { Input, Button, Card } from "../components/ui";
 import { AuthContext } from "../context/AuthContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 import type { RootStackParamList } from "../types";
-
-const { width } = Dimensions.get("window");
 
 const SignUpScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signUp, state: authState, clearError } = useContext(AuthContext);
-  const { theme, isDarkMode } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,8 +35,6 @@ const SignUpScreen = () => {
   const [passwordError, setPasswordError] = useState("");
   const [bookCodeError, setBookCodeError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const passwordInputRef = useRef<RNTextInput>(null);
@@ -62,166 +58,83 @@ const SignUpScreen = () => {
       right: 0,
       top: 0,
     },
-    button: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      elevation: 8,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.4,
-      shadowRadius: 12,
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 12,
-      justifyContent: "center",
-      paddingHorizontal: 32,
-      paddingVertical: 16,
-    },
-    buttonIcon: {
-      marginLeft: 8,
-    },
-    buttonText: {
-      fontSize: 18,
-      color: theme.colors.onPrimary,
-      fontWeight: "700",
-    },
-    card: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 6,
-      marginHorizontal: 4,
-      padding: 28,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isDarkMode ? 0.4 : 0.15,
-      shadowRadius: 12,
-    },
+
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
-    errorText: {
-      color: theme.colors.error,
-      marginBottom: 16,
-      marginTop: -12,
-    },
     form: {
-      marginTop: 8,
+      marginTop: theme.spacing.sm,
     },
     headerIcon: {
       alignSelf: "center",
       backgroundColor: theme.colors.tertiaryContainer,
-      borderRadius: 32,
-      marginBottom: 16,
-      padding: 16,
-    },
-    input: {
-      backgroundColor: theme.colors.surface,
-      flex: 1,
-      paddingLeft: 40,
-    },
-    inputContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginBottom: 16,
-      position: "relative",
-    },
-    inputIconContainer: {
-      height: "100%",
-      justifyContent: "center",
-      left: 12,
-      paddingTop: 8,
-      position: "absolute",
-      zIndex: 1,
-    },
-    inputOutline: {
-      borderRadius: 12,
-      borderWidth: 1.5,
+      borderRadius: theme.borderRadius.full,
+      marginBottom: theme.spacing.md,
+      padding: theme.spacing.md,
     },
     loginContainer: {
       borderTopColor: theme.colors.surfaceVariant,
       borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "center",
-      marginTop: 24,
-      paddingTop: 16,
+      marginTop: theme.spacing.md,
+      paddingTop: theme.spacing.md,
     },
     loginLink: {
-      color: theme.colors.primary,
-      fontWeight: "700",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "bold",
+        color: "primary",
+      }),
     },
     loginText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     scrollContent: {
       flexGrow: 1,
       justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 24,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
     },
     subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 22,
-      marginBottom: 24,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     title: {
-      color: theme.colors.onSurface,
-      fontSize: 28,
-      fontWeight: "700",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
-    tooltip: {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderRadius: 12,
-      borderWidth: 1,
-      elevation: 8,
-      padding: 16,
-      position: "absolute",
-      right: 0,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
-      top: 40,
-      width: width * 0.8,
-      zIndex: 20,
+    input: {
+      marginBottom: theme.spacing.md,
     },
-    // eslint-disable-next-line react-native/no-color-literals
-    tooltipArrow: {
-      borderBottomColor: theme.colors.surface,
-      borderBottomWidth: 12,
-      borderLeftColor: "transparent",
-      borderLeftWidth: 12,
-      borderRightColor: "transparent",
-      borderRightWidth: 12,
-      height: 0,
-      position: "absolute",
-      right: 12,
-      top: -12,
-      width: 0,
+    bookCodeText: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: -theme.spacing.sm,
     },
-    tooltipContainer: {
-      padding: 8,
-      position: "absolute",
-      right: 12,
-      top: 12,
-      zIndex: 10,
-    },
-    tooltipText: {
-      color: theme.colors.onSurface,
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    tooltipTitle: {
-      color: theme.colors.primary,
-      fontSize: 16,
-      fontWeight: "600",
-      marginBottom: 8,
+    bookCodeContainer: {
+      marginTop: theme.spacing.sm,
+      marginBottom: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      textAlign: "center",
     },
   });
 
@@ -310,7 +223,7 @@ const SignUpScreen = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.card}>
+        <Card variant="elevated" size="lg" padding={theme.spacing.md}>
           <View style={styles.headerIcon}>
             <Ionicons name="person-add-outline" size={32} color={theme.colors.tertiary} />
           </View>
@@ -321,125 +234,78 @@ const SignUpScreen = () => {
           <ErrorAlert error={localError} onDismiss={handleDismissError} />
 
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Ionicons name="mail-outline" size={20} color={theme.colors.tertiary} />
-              </View>
-              <TextInput
-                label="Email"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setEmailError("");
-                }}
-                mode="outlined"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                error={!!emailError}
-                style={styles.input}
-                outlineStyle={styles.inputOutline}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordInputRef.current?.focus()}
-              />
-            </View>
-            {emailError ? (
-              <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} /> {emailError}
-              </HelperText>
-            ) : null}
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color={theme.colors.tertiary} />
-              </View>
-              <TextInput
-                label="Password"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setPasswordError("");
-                }}
-                mode="outlined"
-                secureTextEntry={!showPassword}
-                error={!!passwordError}
-                style={styles.input}
-                outlineStyle={styles.inputOutline}
-                returnKeyType="next"
-                onSubmitEditing={() => bookCodeInputRef.current?.focus()}
-                ref={passwordInputRef}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? "eye-off" : "eye"}
-                    onPress={() => setShowPassword(!showPassword)}
-                    color={theme.colors.tertiary}
-                  />
-                }
-              />
-            </View>
-            {passwordError ? (
-              <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} /> {passwordError}
-              </HelperText>
-            ) : null}
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIconContainer}>
-                <Ionicons name="key-outline" size={20} color={theme.colors.tertiary} />
-              </View>
-              <TextInput
-                label="Book Code"
-                value={bookCode}
-                onChangeText={(text) => {
-                  setBookCode(text.toUpperCase());
-                  setBookCodeError("");
-                }}
-                mode="outlined"
-                autoCapitalize="characters"
-                error={!!bookCodeError}
-                style={styles.input}
-                outlineStyle={styles.inputOutline}
-                returnKeyType="done"
-                onSubmitEditing={handleSubmit}
-                ref={bookCodeInputRef}
-              />
-              <TouchableOpacity
-                style={styles.tooltipContainer}
-                onPress={() => setShowTooltip(!showTooltip)}
-              >
-                <Ionicons
-                  name="information-circle-outline"
-                  size={22}
-                  color={theme.colors.tertiary}
-                />
-                {showTooltip && (
-                  <View style={styles.tooltip}>
-                    <View style={styles.tooltipArrow} />
-                    <Text style={styles.tooltipTitle}>Book Code Help</Text>
-                    <Text style={styles.tooltipText}>
-                      The book code is an 8-character code found on the inside cover of &quot;The
-                      Sound Approach to Birding&quot; book. It consists of letters and numbers.
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-            {bookCodeError ? (
-              <HelperText type="error" style={styles.errorText}>
-                <Ionicons name="alert-circle-outline" size={14} /> {bookCodeError}
-              </HelperText>
-            ) : null}
-
-            <TouchableOpacity onPress={handleSubmit} disabled={isLoading} style={styles.button}>
-              <Text style={styles.buttonText}>
-                {isLoading ? "Creating Account..." : "Create Account"}
+            <Input
+              placeholder="Email"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                setEmailError("");
+              }}
+              error={emailError}
+              leftIcon={{
+                name: "mail-outline",
+                color: theme.colors.tertiary,
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
+              style={styles.input}
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setPasswordError("");
+              }}
+              error={passwordError}
+              leftIcon={{
+                name: "lock-closed-outline",
+                color: theme.colors.tertiary,
+              }}
+              showPasswordToggle
+              returnKeyType="next"
+              onSubmitEditing={() => bookCodeInputRef.current?.focus()}
+              ref={passwordInputRef}
+              style={styles.input}
+            />
+            <Input
+              placeholder="Book Code"
+              value={bookCode}
+              onChangeText={(text) => {
+                setBookCode(text.toUpperCase());
+                setBookCodeError("");
+              }}
+              error={bookCodeError}
+              leftIcon={{
+                name: "book-outline",
+                color: theme.colors.tertiary,
+              }}
+              autoCapitalize="characters"
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit}
+              ref={bookCodeInputRef}
+              style={styles.input}
+            />
+            <View style={styles.bookCodeContainer}>
+              <Text style={styles.bookCodeText}>
+                Enter the 8-character code from your &quot;The Sound Approach to Birding&quot; book
+                to verify your access.
               </Text>
-              <Ionicons
-                name="person-add-outline"
-                size={20}
-                color={theme.colors.onPrimary}
-                style={styles.buttonIcon}
-              />
-            </TouchableOpacity>
+            </View>
+
+            <Button
+              onPress={handleSubmit}
+              disabled={isLoading}
+              loading={isLoading}
+              title={isLoading ? "Creating Account..." : "Create Account"}
+              rightIcon={{ name: "person-add-outline" }}
+              size="lg"
+              variant="primary"
+              fullWidth
+            />
 
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
@@ -453,7 +319,7 @@ const SignUpScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </Card>
       </ScrollView>
     </KeyboardAvoidingView>
   );

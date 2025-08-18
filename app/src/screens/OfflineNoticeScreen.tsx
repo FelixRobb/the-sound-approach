@@ -2,21 +2,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useContext } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Button } from "react-native-paper";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import { DownloadContext } from "../context/DownloadContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 import type { OfflineStackParamList } from "../types";
 
 const OfflineNoticeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const { downloadedRecordings } = useContext(DownloadContext);
-  const { theme } = useThemedStyles();
-
+  const { theme } = useEnhancedTheme();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
   const styles = StyleSheet.create({
     button: {
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       width: "100%",
     },
     container: {
@@ -24,13 +25,14 @@ const OfflineNoticeScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
       justifyContent: "center",
+      paddingBottom: globalAudioBarHeight,
     },
     content: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 6,
-      padding: 24,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
@@ -38,17 +40,22 @@ const OfflineNoticeScreen = () => {
       width: "80%",
     },
     description: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      marginBottom: 24,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     title: {
-      color: theme.colors.onSurface,
-      fontSize: 24,
-      fontWeight: "bold",
-      marginBottom: 8,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.md,
     },
   });
 
@@ -67,9 +74,7 @@ const OfflineNoticeScreen = () => {
             : "You don't have any downloaded recordings to access offline. Please connect to the internet to browse and download recordings for offline use."}
         </Text>
 
-        <Button
-          mode="contained"
-          icon="download"
+        <TouchableOpacity
           onPress={() => {
             try {
               // First try to go back (dismiss the modal)
@@ -85,8 +90,9 @@ const OfflineNoticeScreen = () => {
           }}
           style={styles.button}
         >
+          <Ionicons name="download-outline" size={20} color={theme.colors.onSurface} />
           Return to Offline Content
-        </Button>
+        </TouchableOpacity>
       </View>
     </View>
   );

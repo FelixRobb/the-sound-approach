@@ -5,27 +5,32 @@ import {
   InterruptionModeIOS,
 } from "expo-av";
 
+import { Recording } from "../types";
+
 export type PlaybackState = "idle" | "loading" | "playing" | "paused";
 
 export type AudioListenerCallback = (state: AudioPlayerState) => void;
 
 export interface AudioPlayerState {
-  trackId: string | null;
+  uri: string | null;
   playbackState: PlaybackState;
   error: string | null;
   /** current playback position in seconds */
   position: number;
   /** total duration of the loaded track in seconds */
   duration: number;
+  /** the recording that is currently playing */
+  recording: Recording | null;
 }
 
 // Initial state
 const initialState: AudioPlayerState = {
-  trackId: null,
+  uri: null,
   playbackState: "idle",
   error: null,
   position: 0,
   duration: 0,
+  recording: null,
 };
 
 class AudioService {
@@ -64,15 +69,15 @@ class AudioService {
   }
 
   // Load and play an audio track
-  public async playTrack(uri: string, trackId: string): Promise<boolean> {
+  public async playTrack(uri: string, recording: Recording): Promise<boolean> {
     try {
       // If same track is already playing, just pause it
-      if (this.state.trackId === trackId && this.state.playbackState === "playing") {
+      if (this.state.recording?.id === recording.id && this.state.playbackState === "playing") {
         return this.pause();
       }
 
       // If same track is paused, resume from beginning
-      if (this.state.trackId === trackId && this.state.playbackState === "paused") {
+      if (this.state.recording?.id === recording.id && this.state.playbackState === "paused") {
         return this.play();
       }
 
@@ -81,7 +86,8 @@ class AudioService {
 
       // Update state to loading
       this.updateState({
-        trackId,
+        recording,
+        uri,
         playbackState: "loading",
         error: null,
       });
@@ -110,8 +116,9 @@ class AudioService {
       }
     } catch (error) {
       this.updateState({
+        uri: null,
         playbackState: "idle",
-        trackId: null,
+        recording: null,
         error: error instanceof Error ? error.message : "Unknown error",
       });
       return false;
@@ -130,6 +137,7 @@ class AudioService {
       return true;
     } catch (error) {
       this.updateState({
+        uri: null,
         playbackState: "idle",
         error: error instanceof Error ? error.message : "Unknown error playing audio",
       });
@@ -178,52 +186,6 @@ class AudioService {
     }
   }
 
-  // Load a track without starting playback (preload)
-  public async loadTrack(uri: string, trackId: string): Promise<boolean> {
-    try {
-      // If the requested track is already loaded, do nothing
-      if (this.state.trackId === trackId) {
-        return true;
-      }
-
-      // Stop any current track
-      await this.stop();
-
-      // Update state to loading
-      this.updateState({ trackId, playbackState: "loading", error: null });
-
-      // Create the sound without auto-play
-      const { sound, status } = await Audio.Sound.createAsync(
-        { uri },
-        { shouldPlay: false },
-        this.onPlaybackStatusUpdate
-      );
-
-      this.sound = sound;
-
-      if (status.isLoaded) {
-        const durationSec =
-          "durationMillis" in status && typeof status.durationMillis === "number"
-            ? status.durationMillis / 1000
-            : 0;
-
-        this.updateState({ playbackState: "paused", duration: durationSec, position: 0 });
-        return true;
-      }
-
-      // Failed to load
-      this.updateState({ playbackState: "idle", error: "Failed to load audio" });
-      return false;
-    } catch (error) {
-      this.updateState({
-        playbackState: "idle",
-        trackId: null,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      return false;
-    }
-  }
-
   // Get current state
   public getState(): AudioPlayerState {
     return { ...this.state };
@@ -256,9 +218,13 @@ class AudioService {
     if (!status.isLoaded) {
       if (status.error) {
         this.updateState({
+          uri: null,
           playbackState: "idle",
           error: `Playback error: ${status.error}`,
         });
+      } else {
+        // Still loading, keep the loading state
+        this.updateState({ playbackState: "loading" });
       }
       return;
     }
@@ -276,10 +242,11 @@ class AudioService {
     this.updateState({ position: positionSeconds, duration: durationSeconds });
 
     // Check if playback finished
-    if (status.didJustFinish) {
+    if ("didJustFinish" in status && status.didJustFinish) {
       this.updateState({
+        uri: null,
         playbackState: "idle",
-        trackId: null,
+        recording: null,
         position: 0,
       });
     }

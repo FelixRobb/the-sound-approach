@@ -10,21 +10,20 @@ import {
   FlatList,
   TouchableOpacity,
   ScrollView,
-  TextInput,
+  ActivityIndicator,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
+import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
-import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getBestAudioUri } from "../lib/mediaUtils";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
+import { createThemedTextStyle } from "../lib/theme";
 import type { Recording, RootStackParamList, Species } from "../types";
 
 // Custom debounce hook
@@ -55,9 +54,9 @@ type SearchHistoryItem = {
 
 const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { isConnected } = useContext(NetworkContext);
-  const { theme } = useThemedStyles();
+  const { isDownloaded } = useContext(DownloadContext);
+  const { theme } = useEnhancedTheme();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms debounce delay
@@ -72,10 +71,6 @@ const SearchScreen = () => {
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
-    clearText: {
-      color: theme.colors.tertiary,
-      fontWeight: "600",
-    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -94,35 +89,40 @@ const SearchScreen = () => {
       paddingVertical: 48,
     },
     emptyText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      marginBottom: 24,
-      marginHorizontal: 24,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.sm,
+      marginHorizontal: theme.spacing.sm,
       textAlign: "center",
     },
     emptyTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "700",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
     filterContainer: {
       flexDirection: "row",
       justifyContent: "space-around",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
     },
     filterTab: {
       alignItems: "center",
       justifyContent: "center",
       minWidth: 80,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
     },
     filterTabIndicator: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 1,
+      borderRadius: theme.borderRadius.xs,
       bottom: -1,
       height: 2,
       left: 0,
@@ -130,59 +130,64 @@ const SearchScreen = () => {
       right: 0,
     },
     filterTabText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
       textAlign: "center",
     },
     filterTabTextActive: {
-      color: theme.colors.primary,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     header: {
-      paddingBottom: 20,
-      paddingTop: 8 + insets.top,
+      paddingBottom: theme.spacing.md,
+      paddingTop: theme.spacing.sm + insets.top,
       zIndex: 1,
     },
     headerInner: {
-      paddingHorizontal: 20,
-    },
-    headerRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 16,
+      paddingHorizontal: theme.spacing.xl,
     },
     listContent: {
-      padding: 16,
+      padding: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
     loadingContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      paddingTop: 40,
+      paddingTop: theme.spacing.sm,
     },
     loadingText: {
-      color: theme.colors.onBackground,
-      fontSize: 16,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onBackground",
+      }),
+      marginTop: theme.spacing.sm,
     },
     recentContainer: {
-      padding: 16,
+      padding: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
     recentHeader: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 16,
+      marginBottom: theme.spacing.sm,
     },
     recentItem: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       elevation: 2,
       flexDirection: "row",
       marginBottom: 12,
-      padding: 16,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
@@ -192,41 +197,42 @@ const SearchScreen = () => {
       alignItems: "center",
       flex: 1,
       flexDirection: "row",
-      marginRight: 12,
+      marginRight: theme.spacing.sm,
     },
     recentItemAction: {
-      padding: 4,
+      padding: theme.spacing.xs,
     },
     recentItemIcon: {
       alignItems: "center",
       backgroundColor: theme.colors.onTertiary,
-      borderRadius: 20,
-      height: 40,
+      borderRadius: theme.borderRadius.lg,
+      height: theme.spacing.lg,
       justifyContent: "center",
-      marginRight: 12,
-      width: 40,
+      marginRight: theme.spacing.sm,
+      width: theme.spacing.lg,
     },
     recentItemTextContainer: {
       flex: 1,
     },
     recentItemTimestamp: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      marginTop: 4,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
     recentQueryText: {
-      color: theme.colors.onSurface,
       flex: 1,
-      fontSize: 16,
-    },
-    recentTitle: {
-      color: theme.colors.primary,
-      fontSize: 18,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurface",
+      }),
     },
     resultCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
       marginVertical: 8,
       overflow: "hidden",
@@ -238,14 +244,14 @@ const SearchScreen = () => {
     resultCardContent: {
       flexDirection: "row",
       justifyContent: "space-between",
-      padding: 16,
-      paddingTop: 12,
+      padding: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
     },
     resultCardHeader: {
       borderBottomColor: theme.colors.surfaceVariant,
       borderBottomWidth: 1,
-      padding: 16,
-      paddingBottom: 12,
+      padding: theme.spacing.md,
+      paddingBottom: theme.spacing.md,
     },
     resultCardLeft: {
       flex: 1,
@@ -253,12 +259,15 @@ const SearchScreen = () => {
     resultCardRight: {
       alignItems: "center",
       justifyContent: "center",
-      marginLeft: 12,
+      marginLeft: theme.spacing.sm,
     },
     resultCount: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginTop: 8,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "primary",
+      }),
+      marginTop: theme.spacing.sm,
     },
     resultMeta: {
       alignItems: "flex-start",
@@ -268,84 +277,71 @@ const SearchScreen = () => {
       marginTop: 8,
     },
     resultTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 17,
-      fontWeight: "bold",
-      marginBottom: 4,
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "primary",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     resultsHeader: {
       color: theme.colors.primary,
-      fontSize: 18,
-      fontWeight: "600",
-      marginBottom: 12,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.sm,
     },
     scientificName: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
       fontStyle: "italic",
-      marginTop: 2,
+      marginTop: theme.spacing.xs,
     },
-    searchContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderRadius: 50,
-      borderWidth: 1,
-      flexDirection: "row",
-      height: 46,
-      marginHorizontal: 4,
-      marginTop: 12,
-      paddingHorizontal: 16,
+    searchInputContainer: {
+      marginTop: theme.spacing.sm,
     },
     searchInput: {
-      width: "100%",
-      textAlignVertical: "center",
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 16,
-      marginLeft: 10,
-      paddingVertical: 0,
-      overflow: "hidden",
+      borderRadius: theme.borderRadius.full,
     },
     sectionDivider: {
       backgroundColor: theme.colors.surfaceVariant,
       height: 1,
-      marginVertical: 16,
+      marginVertical: theme.spacing.sm,
       width: "100%",
     },
     separator: {
-      height: 8,
+      height: theme.spacing.sm,
     },
     speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      marginBottom: 4,
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
-      fontStyle: "italic",
-      marginTop: 2,
-    },
-    title: {
-      color: theme.colors.primary,
-      fontSize: 28,
-      fontWeight: "bold",
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     typeIndicator: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
       flexDirection: "row",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
+      minHeight: 20,
     },
     typeIndicatorText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      fontWeight: "500",
-      marginLeft: 4,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.xs,
     },
   });
 
@@ -544,7 +540,6 @@ const SearchScreen = () => {
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     // Determine the best audio URI (downloaded or remote HQ) for the mini player
-    const audioUri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
 
     return (
       <TouchableOpacity
@@ -582,7 +577,7 @@ const SearchScreen = () => {
 
           {/* Mini player shown on the right */}
           <View style={styles.resultCardRight}>
-            {audioUri && <MiniAudioPlayer trackId={item.id} audioUri={audioUri} size={34} />}
+            <MiniAudioPlayer recording={item} size={34} />
           </View>
         </View>
       </TouchableOpacity>
@@ -676,37 +671,44 @@ const SearchScreen = () => {
   return (
     <View style={styles.container}>
       <BackgroundPattern />
-      <NavigationAudioStopper />
 
       {/* Custom Header */}
       <View style={styles.header}>
         <View style={styles.headerInner}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.title}>Search</Text>
-              <Text style={styles.subtitle}>Find recordings and species</Text>
-            </View>
-          </View>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "6xl",
+              weight: "bold",
+              color: "primary",
+            })}
+          >
+            Search
+          </Text>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "lg",
+              weight: "normal",
+              color: "onSurfaceVariant",
+            })}
+          >
+            Find recordings and species
+          </Text>
 
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={theme.colors.primary} />
-            <TextInput
-              placeholder="Search species and recordings"
-              placeholderTextColor={theme.colors.onSurfaceVariant}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={styles.searchInput}
-              selectionColor={theme.colors.primary}
-              returnKeyType="search"
-              onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
-              textAlignVertical="center"
-            />
-            {searchQuery && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-            )}
-          </View>
+          <Input
+            placeholder="Search species and recordings"
+            placeholderTextColor={theme.colors.onSurfaceVariant}
+            value={searchQuery}
+            leftIcon={{ name: "search", color: theme.colors.tertiary }}
+            clearButton={!!searchQuery}
+            onChangeText={setSearchQuery}
+            innerContainerStyle={styles.searchInput}
+            selectionColor={theme.colors.primary}
+            returnKeyType="search"
+            onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
+            textAlignVertical="center"
+            containerStyle={styles.searchInputContainer}
+          />
+
           {searchQuery && (
             <>
               <View style={styles.filterContainer}>
@@ -762,10 +764,26 @@ const SearchScreen = () => {
       ) : (
         <View style={styles.recentContainer}>
           <View style={styles.recentHeader}>
-            <Text style={styles.recentTitle}>Recent Searches</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "lg",
+                weight: "normal",
+                color: "primary",
+              })}
+            >
+              Recent Searches
+            </Text>
             {recentSearches.length > 0 && (
               <TouchableOpacity onPress={clearRecentSearches}>
-                <Text style={styles.clearText}>Clear All</Text>
+                <Text
+                  style={createThemedTextStyle(theme, {
+                    size: "lg",
+                    weight: "normal",
+                    color: "primary",
+                  })}
+                >
+                  Clear All
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -822,6 +840,7 @@ const SearchScreen = () => {
               )}
               keyExtractor={(item) => `recent-${item.name}`}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
+              contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
             />
           ) : (
             <View style={styles.emptyRecentContainer}>

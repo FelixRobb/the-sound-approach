@@ -1,18 +1,17 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useContext } from "react";
+import React from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AuthProvider } from "./src/context/AuthContext";
 import { DownloadProvider } from "./src/context/DownloadContext";
+import { EnhancedThemeProvider, useEnhancedTheme } from "./src/context/EnhancedThemeProvider";
 import { NetworkProvider } from "./src/context/NetworkContext";
-import { ThemeProvider, ThemeContext } from "./src/context/ThemeContext";
 import AppNavigator from "./src/navigation/AppNavigator";
-import { lightTheme, darkTheme } from "./src/theme";
+import "expo-dev-client";
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -21,8 +20,7 @@ SplashScreen.preventAutoHideAsync(); // Prevent native splash screen from hiding
 
 // App content with theme context
 const AppContent = () => {
-  const { isDarkMode } = useContext(ThemeContext);
-  const paperTheme = isDarkMode ? darkTheme : lightTheme;
+  const { isDark } = useEnhancedTheme();
 
   const styles = StyleSheet.create({
     container: {
@@ -32,20 +30,18 @@ const AppContent = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
-      <PaperProvider theme={paperTheme}>
-        <QueryClientProvider client={queryClient}>
-          <NetworkProvider>
-            <AuthProvider>
-              <DownloadProvider>
-                <GestureHandlerRootView style={styles.container}>
-                  <AppNavigator />
-                </GestureHandlerRootView>
-              </DownloadProvider>
-            </AuthProvider>
-          </NetworkProvider>
-        </QueryClientProvider>
-      </PaperProvider>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <QueryClientProvider client={queryClient}>
+        <NetworkProvider>
+          <AuthProvider>
+            <DownloadProvider>
+              <GestureHandlerRootView style={styles.container}>
+                <AppNavigator />
+              </GestureHandlerRootView>
+            </DownloadProvider>
+          </AuthProvider>
+        </NetworkProvider>
+      </QueryClientProvider>
     </View>
   );
 };
@@ -53,9 +49,9 @@ const AppContent = () => {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
+      <EnhancedThemeProvider>
         <AppContent />
-      </ThemeProvider>
+      </EnhancedThemeProvider>
     </SafeAreaProvider>
   );
 }

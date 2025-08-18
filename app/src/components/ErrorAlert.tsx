@@ -1,19 +1,21 @@
 // src/components/ErrorAlert.tsx
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from "react-native";
-import { Style } from "react-native-paper/lib/typescript/components/List/utils";
+import { View, Text, StyleSheet, Animated, ViewStyle } from "react-native";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
+
+import { Button } from "./ui";
 
 interface ErrorAlertProps {
   error: string | null;
   onDismiss: () => void;
-  style?: Style;
+  style?: ViewStyle;
 }
 
 const ErrorAlert: React.FC<ErrorAlertProps> = ({ error, onDismiss, style }) => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -53,46 +55,45 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({ error, onDismiss, style }) => {
 
   const styles = StyleSheet.create({
     container: {
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
     },
     contentContainer: {
       flex: 1,
-      marginRight: 8,
-    },
-    dismissButton: {
-      backgroundColor: theme.colors.onBackground,
-      borderRadius: 12,
-      padding: 4,
+      marginRight: theme.spacing.sm,
     },
     errorAlert: {
-      alignItems: "flex-start",
+      alignItems: "center",
       backgroundColor: theme.colors.errorContainer,
       borderLeftColor: theme.colors.error,
       borderLeftWidth: 4,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.lg,
       elevation: 2,
       flexDirection: "row",
-      padding: 16,
+      padding: theme.spacing.sm,
       shadowColor: theme.colors.error,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
     },
     errorMessage: {
-      color: theme.colors.onErrorContainer,
-      fontSize: 14,
-      lineHeight: 20,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onErrorContainer",
+      }),
     },
     errorTitle: {
-      color: theme.colors.error,
-      fontSize: 16,
-      fontWeight: "600",
-      marginBottom: 4,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onErrorContainer",
+      }),
     },
     iconContainer: {
-      marginRight: 12,
-      marginTop: 2,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: theme.spacing.sm,
     },
   });
 
@@ -112,19 +113,19 @@ const ErrorAlert: React.FC<ErrorAlertProps> = ({ error, onDismiss, style }) => {
         ]}
       >
         <View style={styles.iconContainer}>
-          <Ionicons name="alert-circle" size={24} color={theme.colors.error} />
+          <Ionicons name="alert-circle" size={24} color={theme.colors.onErrorContainer} />
         </View>
         <View style={styles.contentContainer}>
           <Text style={styles.errorTitle}>Error</Text>
           <Text style={styles.errorMessage}>{error}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.dismissButton}
+        <Button
           onPress={onDismiss}
+          variant="ghost"
+          icon={{ name: "close", color: theme.colors.onErrorContainer }}
+          size="icon"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="close" size={20} color={theme.colors.error} />
-        </TouchableOpacity>
+        />
       </Animated.View>
     </View>
   );

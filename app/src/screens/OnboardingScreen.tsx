@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useContext, useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { View, Text, StyleSheet, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Button } from "../components/ui/Button";
 import { AuthContext } from "../context/AuthContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme/typography";
 
 type OnboardingStep = {
   id: number;
@@ -53,7 +55,7 @@ const onboardingSteps: OnboardingStep[] = [
 
 const OnboardingScreen = () => {
   const { completeOnboarding } = useContext(AuthContext);
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -61,7 +63,6 @@ const OnboardingScreen = () => {
 
   // Animation values for button layout
   const nextButtonWidthAnim = useRef(new Animated.Value(1)).current; // 1 = full width, 0.5 = half width
-  const previousButtonOpacityAnim = useRef(new Animated.Value(0)).current;
   const previousButtonTranslateXAnim = useRef(new Animated.Value(-100)).current;
 
   // Animate button layout when step changes
@@ -75,12 +76,6 @@ const OnboardingScreen = () => {
         duration: 300,
         useNativeDriver: false,
       }),
-      // Animate previous button opacity
-      Animated.timing(previousButtonOpacityAnim, {
-        toValue: shouldShowPrevious ? 1 : 0,
-        duration: shouldShowPrevious ? 400 : 200,
-        useNativeDriver: true,
-      }),
       // Animate previous button slide in/out
       Animated.timing(previousButtonTranslateXAnim, {
         toValue: shouldShowPrevious ? 0 : -100,
@@ -88,37 +83,33 @@ const OnboardingScreen = () => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [currentStep, nextButtonWidthAnim, previousButtonOpacityAnim, previousButtonTranslateXAnim]);
+  }, [currentStep, nextButtonWidthAnim, previousButtonTranslateXAnim]);
 
   const styles = StyleSheet.create({
     animatedButtonContainer: {
       flex: 1,
     },
     bottomContainer: {
-      paddingBottom: 20,
-      paddingHorizontal: 20,
+      paddingBottom: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
     },
     button: {
       alignItems: "center",
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       elevation: 2,
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 24,
-      paddingVertical: 16,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.8,
       shadowRadius: 4,
     },
     buttonContainer: {
       flexDirection: "row",
-      gap: 12,
+      gap: theme.spacing.sm,
       height: 56,
-    },
-    buttonText: {
-      fontSize: 16,
-      fontWeight: "600",
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -126,80 +117,76 @@ const OnboardingScreen = () => {
     },
     contentContainer: {
       flex: 1,
-      paddingBottom: Math.max(insets.bottom, 20),
-      paddingHorizontal: 20,
-      paddingTop: insets.top + 40,
+      paddingBottom: Math.max(insets.bottom, theme.spacing.md),
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: insets.top + theme.spacing.sm,
     },
     header: {
+      marginTop: theme.spacing.xl,
       alignItems: "center",
-      marginBottom: 40,
+      marginBottom: theme.spacing.sm,
     },
     headerSubtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 22,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onBackground",
+      }),
       textAlign: "center",
     },
     headerTitle: {
       color: theme.colors.onBackground,
-      fontSize: 28,
-      fontWeight: "800",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "6xl",
+        weight: "bold",
+        color: "onBackground",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
-    },
-    primaryButton: {
-      backgroundColor: theme.colors.primary,
-    },
-    primaryButtonText: {
-      color: theme.colors.onPrimary,
     },
     progressContainer: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "center",
-      marginBottom: 32,
+      marginBottom: theme.spacing.sm,
     },
     progressDot: {
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.sm,
       height: 8,
-      marginHorizontal: 4,
+      marginHorizontal: theme.spacing.xs,
       width: 8,
     },
     progressDotActive: {
       backgroundColor: theme.colors.primary,
-      width: 24,
+      width: 8,
     },
     progressDotInactive: {
       backgroundColor: theme.colors.surfaceVariant,
-    },
-    secondaryButton: {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderWidth: 1,
-    },
-    secondaryButtonText: {
-      color: theme.colors.onSurface,
     },
     stepContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 20,
+      paddingHorizontal: theme.spacing.sm,
     },
     stepDescription: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 24,
-      paddingHorizontal: 20,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      paddingHorizontal: theme.spacing.md,
       textAlign: "center",
     },
     stepIconContainer: {
       alignItems: "center",
-      borderRadius: 60,
+      borderRadius: theme.borderRadius.full,
       elevation: 8,
       height: 120,
       justifyContent: "center",
-      marginBottom: 32,
+      marginBottom: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
@@ -208,9 +195,12 @@ const OnboardingScreen = () => {
     },
     stepTitle: {
       color: theme.colors.onBackground,
-      fontSize: 24,
-      fontWeight: "700",
-      marginBottom: 16,
+      ...createThemedTextStyle(theme, {
+        size: "4xl",
+        weight: "bold",
+        color: "onBackground",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
   });
@@ -308,27 +298,32 @@ const OnboardingScreen = () => {
                 style={[
                   styles.animatedButtonContainer,
                   {
-                    opacity: previousButtonOpacityAnim,
                     transform: [{ translateX: previousButtonTranslateXAnim }],
                   },
                 ]}
               >
-                <TouchableOpacity
-                  style={[styles.button, styles.secondaryButton]}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  style={styles.button}
                   onPress={handlePrevious}
+                  backgroundColor={theme.colors.background}
                 >
-                  <Text style={[styles.buttonText, styles.secondaryButtonText]}>Previous</Text>
-                </TouchableOpacity>
+                  Previous
+                </Button>
               </Animated.View>
             )}
 
             {/* Next Button */}
-            <Animated.View style={styles.animatedButtonContainer}>
-              <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleNext}>
-                <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                  {currentStep === onboardingSteps.length - 1 ? "Get Started" : "Next"}
-                </Text>
-              </TouchableOpacity>
+            <Animated.View
+              style={[
+                styles.animatedButtonContainer,
+                { transform: [{ translateX: nextButtonWidthAnim }] },
+              ]}
+            >
+              <Button variant="primary" size="lg" style={styles.button} onPress={handleNext}>
+                {currentStep === onboardingSteps.length - 1 ? "Get Started" : "Next"}
+              </Button>
             </Animated.View>
           </View>
         </View>

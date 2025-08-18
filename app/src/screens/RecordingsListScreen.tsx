@@ -11,23 +11,23 @@ import {
   SectionList,
   TouchableOpacity,
   RefreshControl,
-  TextInput,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import AnimatedTabBar from "../components/AnimatedTabBar";
 import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
+import { Input } from "../components/ui";
+import { Button } from "../components/ui/Button";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
-import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getBestAudioUri } from "../lib/mediaUtils";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
+import { createThemedTextStyle } from "../lib/theme/typography";
 import type { Recording, Species } from "../types";
 import { RootStackParamList } from "../types";
 
@@ -50,9 +50,9 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 
 const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isConnected } = useContext(NetworkContext);
-  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
-  const { theme } = useThemedStyles();
+  const { isDownloaded } = useContext(DownloadContext);
+  const { theme } = useEnhancedTheme();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [activeTab, setActiveTab] = useState("book");
   const [searchInput, setSearchInput] = useState("");
@@ -69,13 +69,13 @@ const RecordingsListScreen = () => {
   const styles = StyleSheet.create({
     recordingCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      marginHorizontal: 12,
-      marginTop: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
+      borderRadius: theme.borderRadius.lg,
+      marginHorizontal: theme.spacing.md,
+      marginTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       borderWidth: 1,
-      borderColor: theme.colors.outlineVariant,
+      borderColor: theme.colors.outline,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.15,
@@ -85,20 +85,12 @@ const RecordingsListScreen = () => {
       alignItems: "center",
       justifyContent: "space-between",
     },
-    recordingTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 17,
-      fontWeight: "600",
-      lineHeight: 18,
-      flex: 1,
-      marginRight: 8,
-    },
     recordingLeftSection: {
       flex: 1,
       minWidth: 0,
     },
     recordingBadges: {
-      marginTop: 8,
+      marginTop: theme.spacing.sm,
       flexDirection: "row",
       alignItems: "center",
       gap: 4,
@@ -107,26 +99,23 @@ const RecordingsListScreen = () => {
     recordingSpecies: {
       flexDirection: "row",
       alignItems: "center",
-      marginTop: 3,
-    },
-    commonName: {
-      color: theme.colors.primary,
-      fontSize: 13,
-      fontWeight: "500",
-      lineHeight: 16,
+      marginTop: theme.spacing.xs,
     },
     scientificName: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 11,
-      fontStyle: "italic",
-      lineHeight: 14,
-      opacity: 0.8,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      flex: 1,
+      marginRight: theme.spacing.xs,
     },
     audioPlayerContainer: {
       alignItems: "center",
       justifyContent: "center",
       flexShrink: 0,
-      marginLeft: 12,
+      marginLeft: theme.spacing.md,
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -136,49 +125,60 @@ const RecordingsListScreen = () => {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      paddingTop: 40,
+      paddingTop: theme.spacing.xl,
     },
     emptyIcon: {
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     emptyText: {
       color: theme.colors.onSurface,
-      fontSize: 16,
-      marginBottom: 24,
-      marginHorizontal: 24,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xl,
+      marginHorizontal: theme.spacing.xl,
       textAlign: "center",
     },
     emptyTitle: {
       color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "700",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     errorContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      paddingTop: 40,
+      paddingTop: theme.spacing.xl,
     },
     errorText: {
       color: theme.colors.error,
-      fontSize: 16,
-      marginBottom: 24,
-      marginHorizontal: 24,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xl,
+      marginHorizontal: theme.spacing.xl,
       textAlign: "center",
     },
     filterButton: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       elevation: 1,
       flexDirection: "row",
-      marginRight: 10,
-      marginVertical: 2,
-      minHeight: 32,
-      paddingHorizontal: 14,
-      paddingVertical: 7,
+      marginRight: theme.spacing.sm,
+      marginVertical: theme.spacing.xs,
+      minHeight: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.1,
@@ -190,69 +190,66 @@ const RecordingsListScreen = () => {
       shadowOpacity: 0.15,
     },
     filterButtonIcon: {
-      marginRight: 6,
+      marginRight: theme.spacing.xs,
     },
     filterButtonText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
-      fontWeight: "500",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     filterButtonTextActive: {
       color: theme.colors.onPrimary,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onPrimary",
+      }),
     },
     filterButtonsContainer: {
-      marginHorizontal: 8,
-      marginTop: 8,
+      marginHorizontal: theme.spacing.sm,
+      marginTop: theme.spacing.sm,
     },
     filterDivider: {
       alignSelf: "center",
       backgroundColor: theme.colors.outlineVariant,
-      borderRadius: 1,
+      borderRadius: theme.borderRadius.xs,
       height: 24,
-      marginHorizontal: 10,
+      marginHorizontal: theme.spacing.sm,
       opacity: 0.4,
-      width: 1.5,
+      width: theme.spacing.sm,
     },
     filterRow: {
       alignItems: "center",
       flexDirection: "row",
-      paddingHorizontal: 8,
+      paddingHorizontal: theme.spacing.sm,
     },
     filterSectionTitle: {
       alignSelf: "center",
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 10,
-      fontWeight: "600",
-      letterSpacing: 0.5,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
       marginLeft: 0,
-      marginRight: 8,
-      opacity: 0.7,
+      marginRight: theme.spacing.sm,
       textTransform: "uppercase",
     },
     header: {
-      paddingBottom: 8,
-      paddingTop: 8 + insets.top,
+      paddingBottom: theme.spacing.sm,
+      paddingTop: theme.spacing.sm + insets.top,
       zIndex: 1,
     },
     headerActions: {
       alignItems: "center",
       flexDirection: "row",
       flexShrink: 1,
-      gap: 8,
+      gap: theme.spacing.sm,
     },
     headerInner: {
-      paddingHorizontal: 20,
-    },
-    headerButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 22,
-      height: 44,
-      justifyContent: "center",
-      paddingHorizontal: 0,
-      position: "relative",
-      width: 44,
+      paddingHorizontal: theme.spacing.md,
     },
     headerRow: {
       alignItems: "center",
@@ -260,43 +257,41 @@ const RecordingsListScreen = () => {
       justifyContent: "space-between",
     },
     listContainer: {
-      paddingTop: 0,
       flex: 1,
       paddingHorizontal: 0,
+      paddingTop: 0,
     },
     loadingContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      paddingTop: 40,
+      paddingTop: theme.spacing.xl,
     },
     loadingText: {
       color: theme.colors.onSurface,
     },
     scrollViewFilters: {
       alignItems: "center",
-      paddingRight: 8,
+      paddingRight: theme.spacing.sm,
     },
     searchContainer: {
-      alignItems: "center",
+      marginBottom: 0,
+      marginHorizontal: theme.spacing.xs,
+      marginTop: theme.spacing.sm,
       alignSelf: "center",
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outlineVariant,
-      borderRadius: 24,
-      borderWidth: 1,
-      flexDirection: "row",
-      height: 46,
-      marginHorizontal: 4,
-      marginTop: 12,
-      paddingHorizontal: 16,
       width: "94%",
     },
     searchInput: {
-      color: theme.colors.onSurface,
-      flex: 1,
-      fontSize: 16,
-      marginLeft: 10,
-      paddingVertical: 10,
+      alignItems: "center",
+      height: 46,
+      flexDirection: "row",
+      overflow: "hidden",
+      paddingHorizontal: theme.spacing.xs,
+      position: "relative",
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      backgroundColor: theme.colors.surface,
     },
     speciesAction: {
       marginLeft: 8,
@@ -304,23 +299,27 @@ const RecordingsListScreen = () => {
     speciesActionButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 15,
+      borderRadius: theme.borderRadius.full,
       height: 30,
       justifyContent: "center",
       width: 30,
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
-      marginHorizontal: 12,
-      marginVertical: 4,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
+      borderRadius: theme.borderRadius.md,
+      marginHorizontal: theme.spacing.md,
+      marginVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 0.5 },
       shadowOpacity: 0.4,
       shadowRadius: 1,
       elevation: 2,
+    },
+    headerTextContainer: {
+      marginLeft: theme.spacing.lg,
+      marginBottom: theme.spacing.sm,
     },
     speciesContent: {
       alignItems: "center",
@@ -328,47 +327,40 @@ const RecordingsListScreen = () => {
       justifyContent: "space-between",
     },
     speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "700",
-      marginBottom: 4,
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
-      marginTop: 2,
-    },
-    title: {
-      color: theme.colors.primary,
-      fontSize: 28,
-      fontWeight: "bold",
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "primary",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     sectionHeader: {
       backgroundColor: theme.colors.background,
-      paddingLeft: 20,
-      paddingRight: 20,
-      paddingTop: 20,
-      paddingBottom: 8,
-    },
-    sectionHeaderText: {
-      color: theme.colors.primary,
-      fontSize: 16,
-      fontWeight: "bold",
+      paddingLeft: theme.spacing.xl,
+      paddingRight: theme.spacing.xl,
+      paddingTop: theme.spacing.xl,
+      paddingBottom: theme.spacing.sm,
     },
     sectionSubHeaderText: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
-      fontStyle: "italic",
-      marginTop: 2,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
     recordingCardIndented: {
-      marginLeft: 32,
+      marginLeft: theme.spacing.xl,
     },
     caption: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      fontStyle: "italic",
-      marginTop: 2,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
   });
 
@@ -582,7 +574,6 @@ const RecordingsListScreen = () => {
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     const isItemDownloaded = isDownloaded(item.id);
-    const uri = getBestAudioUri(item, isDownloaded, getDownloadPath, isConnected);
 
     return (
       <TouchableOpacity
@@ -593,13 +584,27 @@ const RecordingsListScreen = () => {
         activeOpacity={0.72}
       >
         <View style={styles.recordingLeftSection}>
-          <Text style={styles.recordingTitle} numberOfLines={2}>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "xl",
+              weight: "bold",
+              color: "primary",
+            })}
+            numberOfLines={2}
+          >
             {item.title}
           </Text>
 
           {sortBy !== "species" && (
             <View style={styles.recordingSpecies}>
-              <Text style={styles.commonName} numberOfLines={1}>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "base",
+                  weight: "normal",
+                  color: "onSurfaceVariant",
+                })}
+                numberOfLines={1}
+              >
                 {item.species?.common_name}
               </Text>
               <Text style={styles.scientificName} numberOfLines={1}>
@@ -622,11 +627,9 @@ const RecordingsListScreen = () => {
           </View>
         </View>
 
-        {uri && (
-          <View style={styles.audioPlayerContainer}>
-            <MiniAudioPlayer trackId={item.id} audioUri={uri} size={40} />
-          </View>
-        )}
+        <View style={styles.audioPlayerContainer}>
+          <MiniAudioPlayer recording={item} size={40} />
+        </View>
       </TouchableOpacity>
     );
   };
@@ -643,7 +646,15 @@ const RecordingsListScreen = () => {
         <View style={styles.speciesContent}>
           <View>
             <Text style={styles.speciesName}>{item.common_name}</Text>
-            <Text style={styles.scientificName}>{item.scientific_name}</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "base",
+                weight: "normal",
+                color: "onSurfaceVariant",
+              })}
+            >
+              {item.scientific_name}
+            </Text>
           </View>
 
           <View style={styles.speciesAction}>
@@ -662,7 +673,7 @@ const RecordingsListScreen = () => {
       <Ionicons
         name={type === "recordings" ? "disc-outline" : "leaf-outline"}
         size={60}
-        color={theme.colors.surface}
+        color={theme.colors.error}
         style={styles.emptyIcon}
       />
       <Text style={styles.emptyTitle}>
@@ -678,51 +689,56 @@ const RecordingsListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationAudioStopper />
-
       <BackgroundPattern />
       <View style={styles.header}>
         <View style={styles.headerInner}>
           <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.title}>Library</Text>
-              <Text style={styles.subtitle}>Explore bird recordings and species</Text>
+            <View style={styles.headerTextContainer}>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "6xl",
+                  weight: "bold",
+                  color: "primary",
+                })}
+              >
+                Library
+              </Text>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "lg",
+                  weight: "normal",
+                  color: "onSurfaceVariant",
+                })}
+              >
+                Explore bird recordings and species
+              </Text>
             </View>
             <View style={styles.headerActions}>
-              <TouchableOpacity
-                style={styles.headerButton}
+              <Button
+                variant="outline"
+                size="icon"
+                icon={{ name: showSearch ? "close" : "search" }}
                 onPress={() => {
                   setShowSearch((prev) => !prev);
                   setSearchInput("");
                 }}
-              >
-                <Ionicons
-                  name={showSearch ? "close" : "search"}
-                  size={20}
-                  color={theme.colors.onSurfaceVariant}
-                />
-              </TouchableOpacity>
+              />
             </View>
           </View>
 
           {showSearch ? (
-            <View style={styles.searchContainer}>
-              <Ionicons name="search" size={20} color={theme.colors.tertiary} />
-              <TextInput
-                placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-                value={searchInput}
-                onChangeText={setSearchInput}
-                style={styles.searchInput}
-                selectionColor={theme.colors.primary}
-                returnKeyType="search"
-              />
-              {searchInput && (
-                <TouchableOpacity onPress={() => setSearchInput("")}>
-                  <Ionicons name="close-circle" size={20} color={theme.colors.primary} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <Input
+              placeholder={activeTab === "book" ? "Search recordings..." : "Search species..."}
+              placeholderTextColor={theme.colors.onSurfaceVariant}
+              value={searchInput}
+              leftIcon={{ name: "search", color: theme.colors.tertiary }}
+              clearButton={!!searchInput}
+              onChangeText={setSearchInput}
+              innerContainerStyle={styles.searchInput}
+              selectionColor={theme.colors.primary}
+              returnKeyType="search"
+              style={styles.searchContainer}
+            />
           ) : (
             <AnimatedTabBar activeTab={activeTab} onTabChange={setActiveTab} theme={theme} />
           )}
@@ -750,8 +766,17 @@ const RecordingsListScreen = () => {
                     />
                     <Text
                       style={[
-                        styles.filterButtonText,
-                        sortBy === "page" && styles.filterButtonTextActive,
+                        createThemedTextStyle(theme, {
+                          size: "base",
+                          weight: "normal",
+                          color: "onSurfaceVariant",
+                        }),
+                        sortBy === "page" &&
+                          createThemedTextStyle(theme, {
+                            size: "base",
+                            weight: "normal",
+                            color: "onPrimary",
+                          }),
                       ]}
                     >
                       Page
@@ -772,8 +797,17 @@ const RecordingsListScreen = () => {
                     />
                     <Text
                       style={[
-                        styles.filterButtonText,
-                        sortBy === "title" && styles.filterButtonTextActive,
+                        createThemedTextStyle(theme, {
+                          size: "base",
+                          weight: "normal",
+                          color: "onSurfaceVariant",
+                        }),
+                        sortBy === "title" &&
+                          createThemedTextStyle(theme, {
+                            size: "base",
+                            weight: "normal",
+                            color: "onPrimary",
+                          }),
                       ]}
                     >
                       Title
@@ -820,8 +854,17 @@ const RecordingsListScreen = () => {
                     />
                     <Text
                       style={[
-                        styles.filterButtonText,
-                        sortOrder === "desc" && styles.filterButtonTextActive,
+                        createThemedTextStyle(theme, {
+                          size: "base",
+                          weight: "normal",
+                          color: "onSurfaceVariant",
+                        }),
+                        sortOrder === "desc" &&
+                          createThemedTextStyle(theme, {
+                            size: "base",
+                            weight: "normal",
+                            color: "onPrimary",
+                          }),
                       ]}
                     >
                       {sortOrder === "asc"
@@ -863,8 +906,17 @@ const RecordingsListScreen = () => {
                     />
                     <Text
                       style={[
-                        styles.filterButtonText,
-                        downloadedFilter === "all" && styles.filterButtonTextActive,
+                        createThemedTextStyle(theme, {
+                          size: "base",
+                          weight: "normal",
+                          color: "onSurfaceVariant",
+                        }),
+                        downloadedFilter === "all" &&
+                          createThemedTextStyle(theme, {
+                            size: "base",
+                            weight: "normal",
+                            color: "onPrimary",
+                          }),
                       ]}
                     >
                       All
@@ -953,13 +1005,22 @@ const RecordingsListScreen = () => {
               (sortBy === "species" ? (
                 <SectionList
                   sections={recordingsSections}
+                  contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                   keyExtractor={(item) => item.id}
                   renderItem={renderRecordingItem}
                   renderSectionHeader={({ section: { title } }) => {
                     const [commonName, scientificName] = title.split(" • ");
                     return (
                       <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionHeaderText}>{commonName}</Text>
+                        <Text
+                          style={createThemedTextStyle(theme, {
+                            size: "lg",
+                            weight: "bold",
+                            color: "primary",
+                          })}
+                        >
+                          {commonName}
+                        </Text>
                         {scientificName && (
                           <Text style={styles.sectionSubHeaderText}>{scientificName}</Text>
                         )}
@@ -980,6 +1041,7 @@ const RecordingsListScreen = () => {
               ) : (
                 <FlatList
                   data={filteredAndSortedRecordings}
+                  contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                   renderItem={renderRecordingItem}
                   keyExtractor={(item) => item.id}
                   showsVerticalScrollIndicator={false}
@@ -998,6 +1060,7 @@ const RecordingsListScreen = () => {
             {activeTab === "species" && (
               <FlatList
                 data={filteredAndSortedSpecies}
+                contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                 renderItem={renderSpeciesItem}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}

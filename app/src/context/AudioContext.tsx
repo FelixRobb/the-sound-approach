@@ -4,7 +4,10 @@ import "react-native-get-random-values";
 import { v4 as uuidv4 } from "uuid";
 
 import AudioService, { type AudioPlayerState } from "../lib/AudioService";
+import { getBestAudioUri } from "../lib/mediaUtils";
+import { Recording } from "../types";
 
+import { DownloadContext } from "./DownloadContext";
 import { NetworkContext } from "./NetworkContext";
 
 // Context type definition
@@ -12,7 +15,7 @@ type AudioContextType = {
   // Current audio state
   isPlaying: boolean;
   isLoading: boolean;
-  currentTrackId: string | null;
+  currentRecording: Recording | null;
   error: string | null;
 
   // Position state
@@ -24,11 +27,8 @@ type AudioContextType = {
   skipForward: (seconds?: number) => Promise<boolean>;
   skipBackward: (seconds?: number) => Promise<boolean>;
 
-  // Preload
-  loadTrack: (uri: string, trackId: string) => Promise<boolean>;
-
   // Actions
-  togglePlayPause: (uri: string, trackId: string) => Promise<boolean>;
+  togglePlayPause: (recording: Recording) => Promise<boolean>;
   stopPlayback: () => Promise<void>;
 };
 
@@ -36,20 +36,20 @@ type AudioContextType = {
 const AudioContext = createContext<AudioContextType>({
   isPlaying: false,
   isLoading: false,
-  currentTrackId: null,
+  currentRecording: null,
   error: null,
   position: 0,
   duration: 0,
   seekTo: () => Promise.resolve(false),
   skipForward: () => Promise.resolve(false),
   skipBackward: () => Promise.resolve(false),
-  loadTrack: () => Promise.resolve(false),
   togglePlayPause: () => Promise.resolve(false),
   stopPlayback: () => Promise.resolve(),
 });
 
 // Provider component
 export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
   // Get audio service instance
   const audioService = AudioService.getInstance();
 
@@ -61,11 +61,12 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Track the audio state
   const [audioState, setAudioState] = useState<AudioPlayerState>({
-    trackId: null,
+    uri: null,
     playbackState: "idle",
     error: null,
     position: 0,
     duration: 0,
+    recording: null,
   });
 
   // Track the currently loaded/playing sound by its URI (no longer needed after offline-stop removal)
@@ -93,14 +94,21 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
    */
 
   // Toggle play/pause for a track
-  const togglePlayPause = async (uri: string, trackId: string): Promise<boolean> => {
+  const togglePlayPause = async (recording: Recording): Promise<boolean> => {
     try {
       // If offline and not a downloaded file (file:// URI), don't play
-      if (!isConnected && !uri.startsWith("file://")) {
+      if (!isConnected && !audioState.uri) {
         return false;
       }
+      const uri = await getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
+
+      if (!uri) {
+        console.error("No valid URI found for recording:", recording.id);
+        return false;
+      }
+
       // Use the simplified playTrack method which handles all the logic
-      const result = await audioService.playTrack(uri, trackId);
+      const result = await audioService.playTrack(uri, recording);
 
       // Nothing else to clear – AudioService handles its own state
 
@@ -125,29 +133,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const skipForward = (seconds = 10) => audioService.skipForward(seconds);
   const skipBackward = (seconds = 10) => audioService.skipBackward(seconds);
 
-  // Preload helper
-  const loadTrack = async (uri: string, trackId: string): Promise<boolean> => {
-    try {
-      if (!isConnected && !uri.startsWith("file://")) return false;
-      return await audioService.loadTrack(uri, trackId);
-    } catch (e) {
-      console.error("Error loading track:", e);
-      return false;
-    }
-  };
-
   // Context value
   const contextValue: AudioContextType = {
     isPlaying: audioState.playbackState === "playing",
     isLoading: audioState.playbackState === "loading",
-    currentTrackId: audioState.trackId,
+    currentRecording: audioState.recording,
     error: audioState.error,
     position: audioState.position ?? 0,
     duration: audioState.duration ?? 0,
     seekTo,
     skipForward,
     skipBackward,
-    loadTrack,
     togglePlayPause,
     stopPlayback,
   };

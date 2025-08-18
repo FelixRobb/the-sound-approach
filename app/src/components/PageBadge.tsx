@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
 
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 
 interface PageBadgeProps {
   page: number | string;
@@ -21,23 +22,24 @@ const PageBadge: React.FC<PageBadgeProps> = ({
   labelPrefix = "Page ",
   compact = false,
 }) => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const styles = StyleSheet.create({
     badge: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 6,
       flexDirection: "row",
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
       minHeight: 20,
     },
     text: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 11,
-      fontWeight: "600",
-      marginLeft: 3,
-      lineHeight: 13,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.xs,
     },
   });
   return (

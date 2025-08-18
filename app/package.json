@@ -28,6 +28,7 @@
     "expo-asset": "~11.0.5",
     "expo-av": "~15.0.2",
     "expo-constants": "~17.0.8",
+    "expo-dev-client": "~5.0.20",
     "expo-file-system": "~18.0.12",
     "expo-font": "~13.0.4",
     "expo-linear-gradient": "~14.0.2",
@@ -84,5 +85,8 @@
         "listUnknownPackages": false
       }
     }
+  },
+  "overrides": {
+    "@expo/config-plugins": "9.0.17"
   }
 }

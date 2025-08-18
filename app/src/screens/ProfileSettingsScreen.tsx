@@ -7,19 +7,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
+import { Button } from "../components/ui";
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
-import { ThemeContext } from "../context/ThemeContext";
-import { useThemedStyles } from "../hooks/useThemedStyles";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme/typography";
 import type { RootStackParamList } from "../types";
 
 const ProfileSettingsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { state: authState, signOut, resetOnboarding } = useContext(AuthContext);
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
-  const { theme: themeMode, setTheme } = useContext(ThemeContext);
-  const { theme } = useThemedStyles();
+  const { theme, themeMode, setThemeMode } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   // Modal states
   const [showSignOutModal, setShowSignOutModal] = useState(false);
@@ -81,44 +83,18 @@ const ProfileSettingsScreen = () => {
 
   const styles = StyleSheet.create({
     accountDetails: {
-      paddingBottom: 20,
-      paddingHorizontal: 24,
-      paddingTop: 60,
+      paddingBottom: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.xl,
+      paddingTop: theme.spacing.xl,
     },
     actionButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 2,
-      flexDirection: "row",
-      marginBottom: 12,
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    actionButtonDanger: {
-      backgroundColor: theme.colors.errorContainer,
-    },
-    actionButtonIcon: {
-      marginRight: 16,
-    },
-    actionButtonText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "500",
-    },
-    actionButtonTextDanger: {
-      color: theme.colors.onErrorContainer,
-      fontWeight: "600",
+      marginBottom: theme.spacing.sm,
     },
     avatarContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
       borderColor: theme.colors.outline,
-      borderRadius: 50,
+      borderRadius: theme.borderRadius.full,
       borderWidth: 4,
       elevation: 16,
       height: 100,
@@ -132,22 +108,24 @@ const ProfileSettingsScreen = () => {
     },
 
     cardContent: {
-      paddingBottom: 20,
-      paddingHorizontal: 20,
+      paddingBottom: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.xl,
     },
     cardHeader: {
       alignItems: "center",
       flexDirection: "row",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.md,
     },
     cardIcon: {
-      marginRight: 12,
+      marginRight: theme.spacing.sm,
     },
     cardTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurface",
+      }),
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -157,33 +135,22 @@ const ProfileSettingsScreen = () => {
       flex: 1,
     },
     detailIcon: {
-      marginRight: 16,
-      width: 20,
-    },
-    detailLabel: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
-      fontWeight: "500",
-      marginBottom: 2,
+      marginRight: theme.spacing.md,
+      width: theme.spacing.lg,
     },
     detailRow: {
       alignItems: "center",
       flexDirection: "row",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     detailRowLast: {
       marginBottom: 0,
     },
-    detailValue: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      fontWeight: "600",
-    },
     downloadsCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 2,
-      marginBottom: 24,
+      marginBottom: theme.spacing.xl,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -191,40 +158,34 @@ const ProfileSettingsScreen = () => {
       shadowRadius: 6,
     },
     downloadsContent: {
-      paddingBottom: 20,
-      paddingHorizontal: 20,
+      paddingBottom: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.xl,
     },
     downloadsHeader: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.md,
     },
     downloadsTitle: {
       alignItems: "center",
       flexDirection: "row",
     },
-    downloadsTitleText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "600",
-      marginLeft: 12,
-    },
     header: {
-      paddingBottom: 20,
-      paddingTop: 8 + insets.top,
+      paddingBottom: theme.spacing.xl,
+      paddingTop: theme.spacing.sm + insets.top,
       zIndex: 1,
     },
     headerInner: {
-      paddingHorizontal: 20,
+      paddingHorizontal: theme.spacing.xl,
     },
     profileCard: {
+      marginTop: theme.spacing.xxl,
       backgroundColor: theme.colors.surface,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      marginBottom: 24,
-      marginTop: 50,
+      marginBottom: theme.spacing.xl,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -235,18 +196,18 @@ const ProfileSettingsScreen = () => {
       left: 0,
       position: "absolute",
       right: 0,
-      top: -50,
+      top: -60,
       zIndex: 400,
     },
     scrollContent: {
-      padding: 16,
-      paddingBottom: 100,
+      padding: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
     settingsCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 2,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -255,43 +216,23 @@ const ProfileSettingsScreen = () => {
     },
     storageActions: {
       flexDirection: "row",
-      gap: 12,
+      justifyContent: "space-between",
+      gap: theme.spacing.sm,
+    },
+    storageButton: {
+      flex: 1,
     },
     storageBar: {
       backgroundColor: theme.colors.outline,
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.sm,
       height: 6,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
     },
     storageBarFill: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 4,
+      borderRadius: theme.borderRadius.sm,
       height: "100%",
-    },
-    storageButton: {
-      alignItems: "center",
-      borderRadius: 10,
-      flex: 1,
-      paddingVertical: 12,
-    },
-    storageButtonPrimary: {
-      backgroundColor: theme.colors.tertiary,
-    },
-    storageButtonSecondary: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderColor: theme.colors.outline,
-      borderWidth: 1,
-    },
-    storageButtonText: {
-      fontSize: 14,
-      fontWeight: "600",
-    },
-    storageButtonTextPrimary: {
-      color: theme.colors.onTertiary,
-    },
-    storageButtonTextSecondary: {
-      color: theme.colors.onSurfaceVariant,
     },
     storageDetails: {
       flex: 1,
@@ -299,62 +240,43 @@ const ProfileSettingsScreen = () => {
     storageIconContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       height: 40,
       justifyContent: "center",
-      marginRight: 16,
+      marginRight: theme.spacing.md,
       width: 40,
     },
     storageInfo: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 12,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
-      marginBottom: 16,
-      padding: 16,
-    },
-    storageMainText: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      fontWeight: "600",
-      marginBottom: 2,
-    },
-    storageSubText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
-    },
-    storageUsed: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: "600",
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
-      marginTop: 2,
-    },
-    themeLabel: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      marginBottom: theme.spacing.md,
+      padding: theme.spacing.md,
     },
     themeOption: {
       alignItems: "center",
-      borderRadius: 18,
+      borderRadius: theme.borderRadius.lg,
       justifyContent: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
     },
     themeOptionActive: {
       backgroundColor: theme.colors.tertiary,
     },
     themeOptionText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      fontWeight: "500",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     themeOptionTextActive: {
-      color: theme.colors.onTertiary,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onTertiary",
+      }),
     },
     themeRow: {
       alignItems: "center",
@@ -364,14 +286,9 @@ const ProfileSettingsScreen = () => {
     themeSelector: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.lg,
       flexDirection: "row",
-      padding: 2,
-    },
-    title: {
-      color: theme.colors.primary,
-      fontSize: 28,
-      fontWeight: "bold",
+      padding: theme.spacing.sm,
     },
   });
 
@@ -379,8 +296,24 @@ const ProfileSettingsScreen = () => {
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.headerInner}>
-        <Text style={styles.title}>Profile & Settings</Text>
-        <Text style={styles.subtitle}>Manage your account and preferences</Text>
+        <Text
+          style={createThemedTextStyle(theme, {
+            size: "6xl",
+            weight: "bold",
+            color: "primary",
+          })}
+        >
+          Profile & Settings
+        </Text>
+        <Text
+          style={createThemedTextStyle(theme, {
+            size: "lg",
+            weight: "normal",
+            color: "onSurfaceVariant",
+          })}
+        >
+          Manage your account and preferences
+        </Text>
       </View>
     </View>
   );
@@ -399,8 +332,24 @@ const ProfileSettingsScreen = () => {
             <Ionicons name="mail-outline" size={18} color={theme.colors.primary} />
           </View>
           <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Email Address</Text>
-            <Text style={styles.detailValue}>{authState.user?.email || "Not available"}</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "base",
+                weight: "normal",
+                color: "onSurfaceVariant",
+              })}
+            >
+              Email Address
+            </Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "base",
+                weight: "normal",
+                color: "onSurface",
+              })}
+            >
+              {authState.user?.email || "Not available"}
+            </Text>
           </View>
         </View>
 
@@ -409,8 +358,24 @@ const ProfileSettingsScreen = () => {
             <Ionicons name="key-outline" size={18} color={theme.colors.primary} />
           </View>
           <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Book Access Code</Text>
-            <Text style={styles.detailValue}>{authState.user?.bookCode ?? "Not available"}</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "base",
+                weight: "normal",
+                color: "onSurfaceVariant",
+              })}
+            >
+              Book Access Code
+            </Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "base",
+                weight: "normal",
+                color: "onSurface",
+              })}
+            >
+              {authState.user?.bookCode ?? "Not available"}
+            </Text>
           </View>
         </View>
       </View>
@@ -434,11 +399,27 @@ const ProfileSettingsScreen = () => {
             color={theme.colors.primary}
             style={styles.cardIcon}
           />
-          <Text style={styles.cardTitle}>Appearance</Text>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "base",
+              weight: "normal",
+              color: "onSurface",
+            })}
+          >
+            Appearance
+          </Text>
         </View>
         <View style={styles.cardContent}>
           <View style={styles.themeRow}>
-            <Text style={styles.themeLabel}>Theme</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "base",
+                weight: "normal",
+                color: "onSurfaceVariant",
+              })}
+            >
+              Theme
+            </Text>
             <View style={styles.themeSelector}>
               {themeOptions.map((option) => (
                 <TouchableOpacity
@@ -447,7 +428,7 @@ const ProfileSettingsScreen = () => {
                     styles.themeOption,
                     themeMode === option.mode && styles.themeOptionActive,
                   ]}
-                  onPress={() => setTheme(option.mode as "light" | "dark" | "system")}
+                  onPress={() => setThemeMode(option.mode as "light" | "dark" | "system")}
                   activeOpacity={0.7}
                 >
                   <Text
@@ -475,10 +456,23 @@ const ProfileSettingsScreen = () => {
       <View style={styles.downloadsCard}>
         <View style={styles.downloadsHeader}>
           <View style={styles.downloadsTitle}>
-            <Ionicons name="cloud-download-outline" size={20} color={theme.colors.primary} />
-            <Text style={styles.downloadsTitleText}>Downloads & Storage</Text>
+            <Ionicons
+              name="cloud-download-outline"
+              size={20}
+              color={theme.colors.primary}
+              style={styles.cardIcon}
+            />
+            <Text style={styles.cardTitle}>Downloads & Storage</Text>
           </View>
-          <Text style={styles.storageUsed}>{formatBytes(totalStorageUsed)}</Text>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "base",
+              weight: "normal",
+              color: "primary",
+            })}
+          >
+            {formatBytes(totalStorageUsed)}
+          </Text>
         </View>
 
         <View style={styles.downloadsContent}>
@@ -487,8 +481,24 @@ const ProfileSettingsScreen = () => {
               <Ionicons name="folder" size={20} color={theme.colors.onTertiary} />
             </View>
             <View style={styles.storageDetails}>
-              <Text style={styles.storageMainText}>{formatBytes(totalStorageUsed)} used</Text>
-              <Text style={styles.storageSubText}>of 500 MB available</Text>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "base",
+                  weight: "normal",
+                  color: "onSurface",
+                })}
+              >
+                {formatBytes(totalStorageUsed)} used
+              </Text>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "base",
+                  weight: "normal",
+                  color: "onSurfaceVariant",
+                })}
+              >
+                of 500 MB available
+              </Text>
             </View>
           </View>
 
@@ -497,27 +507,27 @@ const ProfileSettingsScreen = () => {
           </View>
 
           <View style={styles.storageActions}>
-            <TouchableOpacity
-              style={[styles.storageButton, styles.storageButtonSecondary]}
+            <Button
+              size="md"
+              style={styles.storageButton}
+              variant="outline"
               onPress={() =>
                 navigation.navigate("MainTabs", {
                   screen: "Downloads",
                 })
               }
             >
-              <Text style={[styles.storageButtonText, styles.storageButtonTextSecondary]}>
-                Manage Files
-              </Text>
-            </TouchableOpacity>
+              Manage Files
+            </Button>
 
-            <TouchableOpacity
-              style={[styles.storageButton, styles.storageButtonPrimary]}
+            <Button
+              size="md"
+              style={styles.storageButton}
+              variant="destructive"
               onPress={handleClearAllDownloads}
             >
-              <Text style={[styles.storageButtonText, styles.storageButtonTextPrimary]}>
-                Clear All
-              </Text>
-            </TouchableOpacity>
+              Clear All
+            </Button>
           </View>
         </View>
       </View>
@@ -533,31 +543,35 @@ const ProfileSettingsScreen = () => {
         <ProfileCard />
         <ThemeCard />
         <DownloadsCard />
-        <TouchableOpacity style={styles.actionButton} onPress={resetOnboarding}>
-          <View style={styles.actionButtonIcon}>
-            <Ionicons name="refresh-outline" size={22} color={theme.colors.primary} />
-          </View>
-          <Text style={styles.actionButtonText}>Reset Onboarding</Text>
-        </TouchableOpacity>
-        {/* Action Buttons */}
-        <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
-          <View style={styles.actionButtonIcon}>
-            <Ionicons name="log-out-outline" size={22} color={theme.colors.primary} />
-          </View>
-          <Text style={styles.actionButtonText}>Sign Out</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.actionButtonDanger]}
-          onPress={handleDeleteAccount}
+        <Button
+          leftIcon={{ name: "refresh-outline", color: theme.colors.primary }}
+          onPress={resetOnboarding}
+          variant="default"
+          size="lg"
+          style={styles.actionButton}
         >
-          <View style={styles.actionButtonIcon}>
-            <Ionicons name="trash-outline" size={22} color={theme.colors.onErrorContainer} />
-          </View>
-          <Text style={[styles.actionButtonText, styles.actionButtonTextDanger]}>
-            Delete Account
-          </Text>
-        </TouchableOpacity>
+          Reset Onboarding
+        </Button>
+        {/* Action Buttons */}
+        <Button
+          leftIcon={{ name: "log-out-outline", color: theme.colors.primary }}
+          onPress={handleSignOut}
+          variant="default"
+          size="lg"
+          style={styles.actionButton}
+        >
+          Sign Out
+        </Button>
+
+        <Button
+          leftIcon={{ name: "trash-outline", color: theme.colors.onError }}
+          onPress={handleDeleteAccount}
+          variant="destructive"
+          size="lg"
+          style={styles.actionButton}
+        >
+          Delete Account
+        </Button>
       </ScrollView>
 
       {/* Sign Out Modal */}

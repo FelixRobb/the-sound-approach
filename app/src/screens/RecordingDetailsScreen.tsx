@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEventListener } from "expo";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useVideoPlayer, VideoView } from "expo-video";
-import React, { useState, useContext, useMemo, useRef, useEffect, useCallback } from "react";
+import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -24,46 +24,35 @@ import { useSharedValue } from "react-native-reanimated";
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import LoadingScreen from "../components/LoadingScreen";
-import MediaTabSwitcher from "../components/MediaTabSwitcher";
+import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
+import { Button } from "../components/ui";
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
-import { NetworkContext } from "../context/NetworkContext";
-import NavigationAudioStopper from "../hooks/NavigationAudioStopper";
-import { useThemedStyles } from "../hooks/useThemedStyles";
-import { getSonogramVideoUri, getBestAudioUri } from "../lib/mediaUtils";
+import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
+import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
+import { createThemedTextStyle } from "../lib/theme/typography";
 import type { RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
 
 const RecordingDetailsScreen = () => {
-  const { theme } = useThemedStyles();
+  const { theme } = useEnhancedTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
-  const { downloadRecording, isDownloaded, downloads, deleteDownload, getDownloadPath } =
+  const { downloadRecording, isDownloaded, downloads, deleteDownload } =
     useContext(DownloadContext);
-
-  const { isConnected } = useContext(NetworkContext);
-
-  // Audio context
-  const {
-    isPlaying: isAudioPlaying,
-    isLoading: isAudioLoading,
-    currentTrackId,
-    position: audioPosition,
-    duration: audioDuration,
-    togglePlayPause: toggleAudioPlayPause,
-    seekTo: seekAudioTo,
-    skipForward: skipAudioForward,
-    skipBackward: skipAudioBackward,
-    loadTrack,
-  } = useAudio();
-
-  const [activeTab, setActiveTab] = useState<"video" | "audio">("video");
+  const { stopPlayback } = useAudio();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
+
+  // Hide GlobalAudioBar when in fullscreen mode
+  const { hide: hideGlobalAudioBar, show: showGlobalAudioBar } = useGlobalAudioBar();
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoDuration, setVideoDuration] = useState(0);
   const [videoPosition, setVideoPosition] = useState(0);
@@ -97,30 +86,41 @@ const RecordingDetailsScreen = () => {
   const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
 
   const styles = StyleSheet.create({
+    audioPlayerContainer: {
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: theme.spacing.md,
+      flexDirection: "row",
+      paddingVertical: theme.spacing.sm,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 3,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
     content: {
-      padding: 16,
+      padding: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
-    audioSliderContainer: {
-      width: "100%",
-      marginBottom: 16,
-      paddingHorizontal: 8,
-    },
-    // eslint-disable-next-line react-native/no-color-literals
+
     controlsContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.backdrop,
-      borderRadius: 12,
-      bottom: 10,
+      borderRadius: theme.borderRadius.lg,
+      bottom: theme.spacing.sm,
       flexDirection: "row",
-      left: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      left: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       position: "absolute",
-      right: 12,
+      right: theme.spacing.md,
       zIndex: 10,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -135,83 +135,62 @@ const RecordingDetailsScreen = () => {
     },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
-      padding: 20,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
     },
     descriptionText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 24,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     descriptionTextError: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 24,
-      marginTop: 12,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.sm,
     },
     descriptionTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "bold",
-      marginBottom: 12,
-    },
-    downloadButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      width: "100%",
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
     },
     downloadButtonSmall: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 50,
+      borderRadius: theme.borderRadius.full,
       padding: 8,
-    },
-    downloadButtonText: {
-      color: theme.colors.onPrimary,
-      fontSize: 16,
-      fontWeight: "600",
-      marginLeft: 8,
     },
     downloadCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
-      padding: 20,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
     },
-    downloadedContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-    },
-    downloadedText: {
-      color: theme.colors.primary,
-      fontSize: 16,
-      fontWeight: "600",
-      marginLeft: 12,
-    },
     errorCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      padding: 24,
+      padding: theme.spacing.lg,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
@@ -222,23 +201,28 @@ const RecordingDetailsScreen = () => {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      padding: 20,
+      padding: theme.spacing.md,
     },
     errorIcon: {
       color: theme.colors.error,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     errorText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      marginBottom: 24,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     errorTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 20,
-      fontWeight: "600",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
     fullScreenVideoOverlay: {
@@ -247,7 +231,7 @@ const RecordingDetailsScreen = () => {
       justifyContent: "center",
     },
     fullscreenButton: {
-      marginLeft: 12,
+      marginLeft: theme.spacing.sm,
     },
     fullscreenContainer: {
       backgroundColor: theme.colors.background,
@@ -256,18 +240,17 @@ const RecordingDetailsScreen = () => {
       width: "100%",
       zIndex: 999,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     fullscreenControls: {
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.8)",
-      borderRadius: 12,
-      bottom: 40,
+      backgroundColor: theme.colors.backdrop,
+      borderRadius: theme.borderRadius.md,
+      bottom: theme.spacing.md,
       flexDirection: "row",
-      left: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      left: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       position: "absolute",
-      right: 20,
+      right: theme.spacing.md,
       zIndex: 1000,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -279,28 +262,33 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.background,
       borderBottomColor: theme.colors.backdrop,
       borderBottomWidth: 1,
-      padding: 20,
+      padding: theme.spacing.md,
       position: "absolute",
       top: 0,
       width: "100%",
       zIndex: 1000,
     },
     fullscreenSubtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginTop: 4,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
     fullscreenTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
     },
     fullscreenVideo: {
       flex: 1,
     },
     pageBadgeWrapper: {
       alignSelf: "flex-start",
-      marginVertical: 2,
+      marginVertical: theme.spacing.xs,
     },
     // Updated play button styles
     playButton: {
@@ -310,7 +298,6 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: 40,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
@@ -323,13 +310,12 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: 40,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
     },
     buttonIcon: {
-      marginLeft: isPlaying ? 0 : 4, // Slight adjustment for play icon centering
+      marginLeft: isPlaying ? 0 : theme.spacing.xs, // Slight adjustment for play icon centering
     },
     fullButtonTouchable: {
       width: "100%",
@@ -357,138 +343,41 @@ const RecordingDetailsScreen = () => {
     retryButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
     retryText: {
-      color: theme.colors.onPrimary,
-      fontSize: 16,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onPrimary",
+      }),
     },
     scientificName: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      fontStyle: "italic",
-      marginBottom: 4,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     slider: {
       flex: 1,
-      height: 40,
-      marginHorizontal: 12,
+      height: theme.spacing.xl,
+      marginHorizontal: theme.spacing.sm,
       backgroundColor: theme.colors.tertiary,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     sliderThumb: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 8,
+      borderRadius: theme.borderRadius.sm,
       elevation: 2,
-      height: 16,
+      height: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2,
-      width: 16,
-    },
-
-    /* Audio specific styles */
-    audioContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 16,
-      elevation: 3,
-      marginBottom: 16,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    audioHeader: {
-      padding: 20,
-      paddingBottom: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.backdrop,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.5,
-      shadowRadius: 6,
-    },
-    /* Beautiful audio player styles */
-    audioPlayerContainer: {
-      alignItems: "center",
-      paddingHorizontal: 16,
-      flexDirection: "column",
-      paddingVertical: 8,
-    },
-    audioWaveformContainer: {
-      width: "100%",
-      height: 60,
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 30,
-      marginBottom: 24,
-      justifyContent: "center",
-      paddingHorizontal: 16,
-    },
-    audioControlsRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 20,
-      gap: 32,
-    },
-    audioSkipButton: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: theme.colors.surfaceVariant,
-      alignItems: "center",
-      justifyContent: "center",
-      elevation: 2,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-    },
-    audioPlayButton: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
-      backgroundColor: theme.colors.primary,
-      alignItems: "center",
-      justifyContent: "center",
-      elevation: 4,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-    },
-    audioTimeContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      width: "100%",
-      paddingHorizontal: 8,
-    },
-    audioTimeText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontWeight: "500",
-      fontVariant: ["tabular-nums"],
-    },
-    audioWaveformRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 2,
-    },
-    audioWaveformBar: {
-      backgroundColor: theme.colors.tertiary,
-      width: 3,
-      borderRadius: 1.5,
-      opacity: 0.6,
-    },
-    audioPlayButtonIcon: {
-      marginLeft: 2,
+      width: theme.spacing.md,
     },
     speciesButton: {
       alignItems: "center",
@@ -497,19 +386,21 @@ const RecordingDetailsScreen = () => {
       borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "center",
-      padding: 16,
+      padding: theme.spacing.md,
     },
     speciesButtonText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "600",
-      marginRight: 8,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginRight: theme.spacing.sm,
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
@@ -517,29 +408,32 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 2.22,
     },
     speciesHeader: {
-      padding: 20,
+      padding: theme.spacing.md,
     },
     speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: 22,
-      fontWeight: "bold",
-      marginBottom: 4,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     timeText: {
-      color: theme.colors.tertiary,
-      fontSize: 14,
-      marginLeft: 8,
-      fontWeight: "500",
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.sm,
     },
     video: {
       flex: 1,
     },
     videoContainer: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
@@ -547,24 +441,25 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 2.22,
     },
     videoHeader: {
-      padding: 20,
-      paddingBottom: 12,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.5, // Increased for more visible shadow
       shadowRadius: 6, // Increased for a softer, larger shadow
       borderBottomWidth: 1, // Added for extra separation
       borderBottomColor: theme.colors.backdrop, // Subtle border color
+      paddingHorizontal: theme.spacing.md,
     },
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: "center",
       justifyContent: "center",
     },
-    videoTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "bold",
+    audioPlayerContainerInner: {
+      marginLeft: theme.spacing.md,
     },
     replayButton: {
       position: "absolute",
@@ -573,7 +468,7 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: 40,
+      borderRadius: theme.borderRadius.full,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
@@ -591,40 +486,38 @@ const RecordingDetailsScreen = () => {
     queryFn: () => fetchRecordingById(route.params.recordingId),
   });
 
-  const sonogramVideoUri = useMemo(() => {
-    if (!recording) return null;
-    return getSonogramVideoUri(recording);
-  }, [recording]);
+  const [sonogramVideoUri, setSonogramVideoUri] = useState<string | null>(null);
+  const [isVideoUriLoading, setIsVideoUriLoading] = useState(false);
 
-  // Determine best audio source (downloaded file takes precedence)
-  const audioUri = useMemo(() => {
-    if (!recording) return null;
-    return getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
-  }, [recording, isDownloaded, getDownloadPath, isConnected]);
-
-  // Pre-load the audio as soon as we have the URI – mirrors video behaviour
+  // Fetch sonogram video URI
   useEffect(() => {
-    if (!audioUri || !recording) return;
-    // If this track is already loaded, `loadTrack` is a no-op
-    loadTrack(audioUri, recording.id).catch(() => {
-      // Ignore preload errors – the normal play action will surface any problems
-    });
-  }, [audioUri, recording, loadTrack]);
-
-  // Shared values for audio slider
-  const audioSliderProgress = useSharedValue(0);
-  const audioSliderMin = useSharedValue(0);
-  const audioSliderMax = useSharedValue(1);
-
-  // Keep slider values in sync with playback position
-  const isCurrentAudioTrack = currentTrackId === recording?.id;
-
-  React.useEffect(() => {
-    if (isCurrentAudioTrack) {
-      audioSliderProgress.value = audioPosition;
-      audioSliderMax.value = audioDuration || 1;
+    if (!recording) {
+      setSonogramVideoUri(null);
+      setIsVideoUriLoading(false);
+      setShowInitialLoading(false);
+      return;
     }
-  }, [audioPosition, audioDuration, isCurrentAudioTrack, audioSliderProgress, audioSliderMax]);
+
+    // Start loading immediately when we have a recording
+    setIsVideoUriLoading(true);
+    setShowInitialLoading(false); // Hide initial loading while fetching URI
+    setVideoError(false); // Reset any previous errors
+
+    getSonogramVideoUri(recording)
+      .then((uri) => {
+        setSonogramVideoUri(uri);
+        setIsVideoUriLoading(false);
+        // Show initial loading if we got a valid URI
+        if (uri) {
+          setShowInitialLoading(true);
+        }
+      })
+      .catch(() => {
+        setSonogramVideoUri(null);
+        setIsVideoUriLoading(false);
+        setShowInitialLoading(false);
+      });
+  }, [recording]);
 
   // Initialize the video player
   const videoPlayer = useVideoPlayer(sonogramVideoUri, (player) => {
@@ -651,79 +544,13 @@ const RecordingDetailsScreen = () => {
     setIsVideoLoaded(false);
     setVideoDuration(0);
     setVideoPosition(0);
-    setShowInitialLoading(!!sonogramVideoUri);
+    // Only show initial loading if we have a URI and we're not currently loading the URI
+    setShowInitialLoading(!!sonogramVideoUri && !isVideoUriLoading);
     setIsPlaying(false);
     setIsSeeking(false);
     setWasPlayingBeforeSeek(false);
     setIsVideoEnded(false);
-  }, [sonogramVideoUri]);
-
-  // Handle tab switching between video and audio
-  const handleSelectTab = (tab: "video" | "audio") => {
-    setActiveTab(tab);
-
-    if (!recording) return;
-
-    if (tab === "audio") {
-      // Pause the video when focusing the audio tab
-      if (videoPlayer) {
-        try {
-          videoPlayer.pause();
-        } catch {
-          /* silent */
-        }
-      }
-
-      // Ensure the track is at least pre-loaded (will be a no-op if already)
-      if (audioUri && currentTrackId !== recording.id) {
-        loadTrack(audioUri, recording.id).catch(() => {});
-      }
-    } else {
-      // Just pause the audio instead of fully stopping/unloading it so the
-      // user can seamlessly switch back without re-loading.
-      if (currentTrackId === recording.id && isAudioPlaying && audioUri) {
-        toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
-      }
-    }
-  };
-
-  // Audio controls helpers
-  const handleAudioPlayPause = () => {
-    if (!audioUri || !recording) return;
-    toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
-  };
-
-  const handleSkipBackward = () => {
-    if (!isCurrentAudioTrack) return;
-    skipAudioBackward(10).catch(() => {});
-  };
-
-  const handleSkipForward = () => {
-    if (!isCurrentAudioTrack) return;
-    skipAudioForward(10).catch(() => {});
-  };
-
-  const [audioWasPlayingBeforeSeek, setAudioWasPlayingBeforeSeek] = useState(false);
-
-  const onAudioSeekStart = () => {
-    if (!recording) return;
-    setAudioWasPlayingBeforeSeek(isAudioPlaying && isCurrentAudioTrack);
-
-    if (isAudioPlaying && isCurrentAudioTrack && audioUri) {
-      toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
-    }
-  };
-
-  const onAudioSeekComplete = (value: number) => {
-    if (!recording) return;
-
-    seekAudioTo(value).finally(() => {
-      if (audioWasPlayingBeforeSeek && audioUri) {
-        toggleAudioPlayPause(audioUri, recording.id).catch(() => {});
-      }
-      // seek complete
-    });
-  };
+  }, [sonogramVideoUri, isVideoUriLoading]);
 
   // Listen for video ready/loaded events
   useEventListener(videoPlayer, "statusChange", (payload) => {
@@ -777,6 +604,7 @@ const RecordingDetailsScreen = () => {
       if (isVideoFullscreen) {
         StatusBar.setHidden(true);
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+        hideGlobalAudioBar(); // Hide GlobalAudioBar in fullscreen
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 0,
@@ -791,6 +619,7 @@ const RecordingDetailsScreen = () => {
       } else {
         StatusBar.setHidden(false);
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        showGlobalAudioBar(); // Show GlobalAudioBar when exiting fullscreen
         Animated.parallel([
           Animated.timing(fadeAnim, {
             toValue: 1,
@@ -810,8 +639,9 @@ const RecordingDetailsScreen = () => {
     return () => {
       StatusBar.setHidden(false);
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      showGlobalAudioBar(); // Ensure GlobalAudioBar is shown when component unmounts
     };
-  }, [isVideoFullscreen, fadeAnim, scaleAnim]);
+  }, [isVideoFullscreen, fadeAnim, scaleAnim, hideGlobalAudioBar, showGlobalAudioBar]);
 
   // Handle back button
   useEffect(() => {
@@ -961,8 +791,10 @@ const RecordingDetailsScreen = () => {
         setIsVideoEnded(false);
         videoPlayer.play();
       } else if (isPlaying) {
+        stopPlayback();
         videoPlayer.pause();
       } else {
+        stopPlayback();
         videoPlayer.play();
       }
       showVideoControls(); // Show controls when play/pause is triggered
@@ -1069,13 +901,22 @@ const RecordingDetailsScreen = () => {
   };
 
   const renderVideoPlayer = () => {
-    if (!sonogramVideoUri || videoError) {
+    // Show error only if we're not loading and there's actually an error or no URI
+    if (!isVideoUriLoading && !sonogramVideoUri && !videoError) {
       return (
         <View style={styles.playerContainerError}>
           <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
-          <Text style={styles.descriptionTextError}>
-            {videoError ? "Error loading video" : "Video source not available"}
-          </Text>
+          <Text style={styles.descriptionTextError}>Video source not available</Text>
+        </View>
+      );
+    }
+
+    // Show error if there's a video error
+    if (videoError) {
+      return (
+        <View style={styles.playerContainerError}>
+          <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
+          <Text style={styles.descriptionTextError}>Error loading video</Text>
         </View>
       );
     }
@@ -1107,7 +948,7 @@ const RecordingDetailsScreen = () => {
           />
         )}
 
-        {showInitialLoading && (
+        {(showInitialLoading || isVideoUriLoading) && (
           <View style={[styles.videoOverlay, { backgroundColor: theme.colors.backdrop }]}>
             <ActivityIndicator size={36} color={theme.colors.primary} />
           </View>
@@ -1164,98 +1005,6 @@ const RecordingDetailsScreen = () => {
 
         {/* Bottom controls */}
         {showControls && renderVideoControls(false)}
-      </View>
-    );
-  };
-
-  // Render audio player controls
-  const renderAudioPlayer = () => {
-    if (!audioUri) {
-      return (
-        <View style={styles.playerContainerError}>
-          <Ionicons name="alert-circle" size={40} color={theme.colors.error} />
-          <Text style={styles.descriptionTextError}>Audio source not available</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View>
-        <View style={styles.audioPlayerContainer}>
-          <View style={styles.audioWaveformContainer}>
-            {/* Audio waveform visualization placeholder */}
-            <View style={styles.audioWaveformRow}>
-              {Array.from({ length: 50 }).map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.audioWaveformBar,
-                    {
-                      height: Math.random() * 30 + 10,
-                    },
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.audioControlsRow}>
-            <TouchableOpacity style={styles.audioSkipButton} onPress={handleSkipBackward}>
-              <Ionicons name="play-back" size={24} color={theme.colors.tertiary} />
-            </TouchableOpacity>
-
-            {isAudioLoading && isCurrentAudioTrack ? (
-              <View style={styles.audioPlayButton}>
-                <ActivityIndicator size={36} color="white" />
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.audioPlayButton} onPress={handleAudioPlayPause}>
-                <Ionicons
-                  name={isAudioPlaying && isCurrentAudioTrack ? "pause" : "play"}
-                  size={36}
-                  color="white"
-                  style={styles.audioPlayButtonIcon}
-                />
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity style={styles.audioSkipButton} onPress={handleSkipForward}>
-              <Ionicons name="play-forward" size={24} color={theme.colors.tertiary} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Audio progress slider with proper container */}
-          <View style={styles.audioSliderContainer}>
-            <Slider
-              progress={audioSliderProgress}
-              minimumValue={audioSliderMin}
-              maximumValue={audioSliderMax}
-              onSlidingStart={onAudioSeekStart}
-              onSlidingComplete={onAudioSeekComplete}
-              thumbWidth={16}
-              theme={{
-                minimumTrackTintColor: theme.colors.tertiary,
-                maximumTrackTintColor: theme.colors.tertiary,
-              }}
-              containerStyle={styles.slider} // Override container style for proper width
-              disable={!isCurrentAudioTrack || isAudioLoading}
-              disableTapEvent
-              bubble={(value) => formatTime(value)}
-              bubbleTextStyle={{ color: theme.colors.tertiary }}
-              renderThumb={() => <View style={styles.sliderThumb} />}
-            />
-          </View>
-
-          <View style={styles.audioTimeContainer}>
-            <Text style={styles.audioTimeText}>
-              {formatTime(isCurrentAudioTrack ? audioPosition : 0)}
-            </Text>
-            <Text style={styles.audioTimeText}>
-              {getDownloadStatus() === "completed" ? "Playing from Download" : "Playing from Cloud"}
-            </Text>
-            <Text style={styles.audioTimeText}>{formatTime(audioDuration)}</Text>
-          </View>
-        </View>
       </View>
     );
   };
@@ -1383,7 +1132,6 @@ const RecordingDetailsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <NavigationAudioStopper />
       <BackgroundPattern />
       <DetailHeader
         title={recording.title}
@@ -1422,48 +1170,64 @@ const RecordingDetailsScreen = () => {
             <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
           </TouchableOpacity>
         </View>
-        {/* Media selector tabs */}
-        <MediaTabSwitcher activeTab={activeTab} onTabChange={handleSelectTab} theme={theme} />
-        {/* Keep both media players mounted to avoid re-mount flashes; toggle visibility only */}
+
         {/* eslint-disable-next-line react-native/no-inline-styles */}
-        <View style={[styles.videoContainer, { display: activeTab === "video" ? "flex" : "none" }]}>
+        <View style={styles.videoContainer}>
           <View style={styles.videoHeader}>
-            <Text style={styles.videoTitle}>Sonogram</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "2xl",
+                weight: "bold",
+                color: "onSurface",
+              })}
+            >
+              Sonogram
+            </Text>
+            <View style={styles.audioPlayerContainer}>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "lg",
+                  weight: "bold",
+                  color: "onSurface",
+                })}
+              >
+                Audio
+              </Text>
+              <View style={styles.audioPlayerContainerInner}>
+                <MiniAudioPlayer recording={recording} size={30} onPress={togglePlayPause} />
+              </View>
+            </View>
           </View>
           {renderVideoPlayer()}
         </View>
-        {/* eslint-disable-next-line react-native/no-inline-styles */}
-        <View style={[styles.audioContainer, { display: activeTab === "audio" ? "flex" : "none" }]}>
-          <View style={styles.audioHeader}>
-            <Text style={styles.videoTitle}>Audio</Text>
-          </View>
-          {renderAudioPlayer()}
-        </View>
+
         <View style={styles.descriptionCard}>
           <Text style={styles.descriptionTitle}>Description</Text>
           <Text style={styles.descriptionText}>{recording.caption}</Text>
         </View>
         <View style={styles.downloadCard}>
-          {getDownloadStatus() === "completed" ? (
-            <View style={styles.downloadedContainer}>
-              <TouchableOpacity style={styles.downloadButton} onPress={handleDeleteDownload}>
-                <Ionicons name="trash-outline" size={24} color={theme.colors.onPrimary} />
-                <Text style={styles.downloadButtonText}>Remove Download</Text>
-              </TouchableOpacity>
-            </View>
-          ) : getDownloadStatus() === "downloading" ? (
-            <View style={styles.downloadedContainer}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text style={styles.downloadedText}>Downloading...</Text>
-            </View>
-          ) : (
-            <>
-              <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
-                <Ionicons name="cloud-download" size={24} color={theme.colors.onPrimary} />
-                <Text style={styles.downloadButtonText}>Download for Offline Use</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          <Button
+            leftIcon={
+              getDownloadStatus() === "completed"
+                ? { name: "trash-outline", color: theme.colors.onPrimary }
+                : { name: "cloud-download", color: theme.colors.onPrimary }
+            }
+            onPress={
+              getDownloadStatus() === "completed"
+                ? handleDeleteDownload
+                : getDownloadStatus() === "downloading"
+                  ? undefined
+                  : handleDownload
+            }
+            variant="primary"
+            size="lg"
+          >
+            {getDownloadStatus() === "completed"
+              ? "Remove Download"
+              : getDownloadStatus() === "downloading"
+                ? "Downloading..."
+                : "Download for Offline Use"}
+          </Button>
         </View>
       </ScrollView>
 

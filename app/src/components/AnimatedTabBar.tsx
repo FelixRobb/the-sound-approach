@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
-import { MD3Theme } from "react-native-paper";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,10 +8,13 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 
+import type { Theme } from "../lib/theme/types";
+import { createThemedTextStyle } from "../lib/theme/typography";
+
 interface AnimatedTabBarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  theme: MD3Theme;
+  theme: Theme;
   style?: ViewStyle;
 }
 
@@ -65,20 +67,13 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
   });
 
   const styles = StyleSheet.create({
-    activeTabText: {
-      color: theme.colors.onTertiary,
-      fontWeight: "600",
-    },
-    inactiveTabText: {
-      color: theme.colors.onSurfaceVariant,
-    },
     rowCenter: {
       alignItems: "center",
       flexDirection: "row",
     },
     slidingBackground: {
       backgroundColor: theme.colors.tertiary,
-      borderRadius: 18,
+      borderRadius: theme.borderRadius.full,
       bottom: 4,
       elevation: 3,
       left: 4,
@@ -96,8 +91,8 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       flexDirection: "row",
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
       zIndex: 1,
     },
     tabBar: {
@@ -105,14 +100,13 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       alignSelf: "center",
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.outline,
-      borderRadius: 24,
+      borderRadius: theme.borderRadius.full,
       borderWidth: 1,
       flexDirection: "row",
       height: 46,
-      marginHorizontal: 4,
-      marginTop: 12,
+      marginTop: theme.spacing.sm,
       overflow: "hidden",
-      paddingHorizontal: 6,
+      paddingHorizontal: theme.spacing.xs,
       position: "relative",
       width: "94%",
       elevation: 3,
@@ -122,9 +116,12 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       shadowRadius: 4,
     },
     tabText: {
-      fontSize: 14,
-      fontWeight: "500",
-      marginLeft: 6,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.sm,
     },
   });
 
@@ -147,7 +144,17 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
           <Text
             style={[
               styles.tabText,
-              activeTab === "book" ? styles.activeTabText : styles.inactiveTabText,
+              activeTab === "book"
+                ? createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onTertiary",
+                  })
+                : createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onSurfaceVariant",
+                  }),
             ]}
           >
             By Book Order
@@ -172,7 +179,17 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
           <Text
             style={[
               styles.tabText,
-              activeTab === "species" ? styles.activeTabText : styles.inactiveTabText,
+              activeTab === "species"
+                ? createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onTertiary",
+                  })
+                : createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onSurfaceVariant",
+                  }),
             ]}
           >
             By Species
