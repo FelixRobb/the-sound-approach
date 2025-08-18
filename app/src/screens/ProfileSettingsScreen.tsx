@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import { Button } from "../components/ui";
 import { AuthContext } from "../context/AuthContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -20,6 +21,7 @@ const ProfileSettingsScreen = () => {
   const { totalStorageUsed, clearAllDownloads } = useContext(DownloadContext);
   const { theme, themeMode, setThemeMode } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   // Modal states
   const [showSignOutModal, setShowSignOutModal] = useState(false);
@@ -199,7 +201,7 @@ const ProfileSettingsScreen = () => {
     },
     scrollContent: {
       padding: theme.spacing.md,
-      paddingBottom: theme.spacing.xl,
+      paddingBottom: globalAudioBarHeight,
     },
     settingsCard: {
       backgroundColor: theme.colors.surface,

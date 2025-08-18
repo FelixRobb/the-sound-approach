@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { Input } from "../components/ui";
@@ -55,6 +56,7 @@ const SearchScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useEnhancedTheme();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms debounce delay
@@ -152,6 +154,7 @@ const SearchScreen = () => {
     },
     listContent: {
       padding: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
     loadingContainer: {
       alignItems: "center",
@@ -169,6 +172,7 @@ const SearchScreen = () => {
     },
     recentContainer: {
       padding: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
     recentHeader: {
       alignItems: "center",
@@ -836,6 +840,7 @@ const SearchScreen = () => {
               )}
               keyExtractor={(item) => `recent-${item.name}`}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
+              contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
             />
           ) : (
             <View style={styles.emptyRecentContainer}>

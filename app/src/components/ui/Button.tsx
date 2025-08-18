@@ -44,6 +44,7 @@ export interface ButtonProps extends Omit<TouchableOpacityProps, "style"> {
   size?: ButtonSize;
   fullWidth?: boolean;
   backgroundColor?: string;
+  textColor?: string;
 
   // State
   loading?: boolean;
@@ -77,6 +78,7 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
       leftIcon,
       rightIcon,
       backgroundColor,
+      textColor,
       style,
       textStyle,
       accessibilityLabel,
@@ -269,6 +271,7 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
     };
 
     const getTextVariantStyles = (): TextStyle => {
+      if (textColor) return { color: textColor };
       if (isDisabled) return styles.disabledText;
 
       switch (variant) {

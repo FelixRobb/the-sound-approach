@@ -8,6 +8,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from
 import BackgroundPattern from "../components/BackgroundPattern";
 import DetailHeader from "../components/DetailHeader";
 import DownloadedBadge from "../components/DownloadedBadge";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
@@ -24,6 +25,7 @@ const SpeciesDetailsScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, "SpeciesDetails">>();
   const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useEnhancedTheme();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const { speciesId } = route.params;
   // Fetch recordings for this species
@@ -176,6 +178,7 @@ const SpeciesDetailsScreen = () => {
     recordingsList: {
       borderRadius: theme.borderRadius.md,
       overflow: "hidden",
+      paddingBottom: globalAudioBarHeight,
     },
     retryButton: {
       alignItems: "center",

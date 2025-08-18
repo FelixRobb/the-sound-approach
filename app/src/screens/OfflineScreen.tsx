@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import RecordingCard from "../components/RecordingCard";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
@@ -26,6 +27,7 @@ const OfflineScreen = () => {
   const { totalStorageUsed, getDownloadedRecordings } = useContext(DownloadContext);
   const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -152,7 +154,7 @@ const OfflineScreen = () => {
     },
     listContent: {
       padding: theme.spacing.md,
-      paddingBottom: theme.spacing.lg,
+      paddingBottom: globalAudioBarHeight,
     },
     loadingCard: {
       alignItems: "center",

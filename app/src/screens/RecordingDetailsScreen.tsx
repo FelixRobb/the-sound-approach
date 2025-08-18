@@ -24,6 +24,7 @@ import { useSharedValue } from "react-native-reanimated";
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
 import DetailHeader from "../components/DetailHeader";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
@@ -46,6 +47,7 @@ const RecordingDetailsScreen = () => {
   const { downloadRecording, isDownloaded, downloads, deleteDownload } =
     useContext(DownloadContext);
   const { stopPlayback } = useAudio();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
 
@@ -105,6 +107,7 @@ const RecordingDetailsScreen = () => {
     },
     content: {
       padding: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
 
     controlsContainer: {

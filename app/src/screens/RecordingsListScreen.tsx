@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AnimatedTabBar from "../components/AnimatedTabBar";
 import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
 import { Input } from "../components/ui";
@@ -51,6 +52,7 @@ const RecordingsListScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useEnhancedTheme();
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [activeTab, setActiveTab] = useState("book");
   const [searchInput, setSearchInput] = useState("");
@@ -314,6 +316,10 @@ const RecordingsListScreen = () => {
       shadowOpacity: 0.4,
       shadowRadius: 1,
       elevation: 2,
+    },
+    headerTextContainer: {
+      marginLeft: theme.spacing.lg,
+      marginBottom: theme.spacing.sm,
     },
     speciesContent: {
       alignItems: "center",
@@ -687,7 +693,7 @@ const RecordingsListScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerInner}>
           <View style={styles.headerRow}>
-            <View>
+            <View style={styles.headerTextContainer}>
               <Text
                 style={createThemedTextStyle(theme, {
                   size: "6xl",
@@ -999,6 +1005,7 @@ const RecordingsListScreen = () => {
               (sortBy === "species" ? (
                 <SectionList
                   sections={recordingsSections}
+                  contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                   keyExtractor={(item) => item.id}
                   renderItem={renderRecordingItem}
                   renderSectionHeader={({ section: { title } }) => {
@@ -1034,6 +1041,7 @@ const RecordingsListScreen = () => {
               ) : (
                 <FlatList
                   data={filteredAndSortedRecordings}
+                  contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                   renderItem={renderRecordingItem}
                   keyExtractor={(item) => item.id}
                   showsVerticalScrollIndicator={false}
@@ -1052,6 +1060,7 @@ const RecordingsListScreen = () => {
             {activeTab === "species" && (
               <FlatList
                 data={filteredAndSortedSpecies}
+                contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                 renderItem={renderSpeciesItem}
                 keyExtractor={(item) => item.id}
                 showsVerticalScrollIndicator={false}

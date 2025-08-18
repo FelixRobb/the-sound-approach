@@ -3,6 +3,7 @@ import React from "react";
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 
 interface DownloadedBadgeProps {
   style?: ViewStyle;
@@ -28,8 +29,8 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
       backgroundColor: theme.colors.tertiary,
       borderRadius: smallRound ? 10 : 6,
       flexDirection: "row",
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
       minHeight: 20,
     },
     compactBadge: {
@@ -42,10 +43,12 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
     },
     text: {
       color: theme.colors.onTertiary,
-      fontSize: theme.typography.labelSmall.fontSize,
-      fontWeight: theme.typography.labelSmall.fontWeight,
-      marginLeft: 3,
-      lineHeight: 13,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onTertiary",
+      }),
+      marginLeft: theme.spacing.xs,
     },
   });
 
@@ -54,7 +57,7 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
       <View style={[styles.compactBadge, style]}>
         <Ionicons
           name="cloud-done-outline"
-          size={smallRound ? 10 : 12}
+          size={smallRound ? 10 : 14}
           color={theme.colors.onTertiary}
         />
       </View>

@@ -20,6 +20,7 @@ import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { getBestAudioUri } from "../lib/mediaUtils";
+import { createThemedTextStyle } from "../lib/theme";
 import type { RootStackParamList } from "../types";
 
 const iconHitSlop = { top: 8, bottom: 8, left: 8, right: 8 };
@@ -184,13 +185,13 @@ const GlobalAudioBar: React.FC = () => {
       borderWidth: 1,
       borderColor: theme.colors.outline,
       borderRadius: theme.borderRadius.lg,
-      shadowColor: theme.colors.shadow || "#000000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
       shadowRadius: 12,
       elevation: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       // Add subtle blur effect on iOS
       ...(Platform.OS === "ios" && {
         backgroundColor: `${theme.colors.surface}F8`,
@@ -198,20 +199,24 @@ const GlobalAudioBar: React.FC = () => {
     },
     infoContainer: {
       flex: 1,
-      marginHorizontal: 12,
+      marginHorizontal: theme.spacing.sm,
       minWidth: 0, // Prevent text overflow issues
     },
     title: {
       color: theme.colors.onSurface,
-      fontSize: theme.typography.labelSmall.fontSize,
-      fontWeight: theme.typography.labelSmall.fontWeight,
-      lineHeight: 20,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelSmall.fontSize,
-      marginTop: 2,
-      lineHeight: 16,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     controlButton: {
       width: 36,
@@ -219,19 +224,17 @@ const GlobalAudioBar: React.FC = () => {
       alignItems: "center",
       justifyContent: "center",
       borderRadius: theme.borderRadius.md,
-      marginHorizontal: 2,
-      // Add subtle press feedback background
       backgroundColor: theme.colors.surface,
     },
     progressContainer: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginTop: 4,
+      marginTop: theme.spacing.sm,
     },
     progressBar: {
-      width: 40,
-      height: 2,
+      width: 80,
+      height: theme.spacing.xs,
       backgroundColor: theme.colors.outlineVariant,
       borderRadius: 1,
       overflow: "hidden",
@@ -240,21 +243,23 @@ const GlobalAudioBar: React.FC = () => {
       height: "100%",
       backgroundColor: theme.colors.primary,
     },
-    // Add a subtle separator between controls and info
     separator: {
       width: 1,
       height: 24,
       backgroundColor: theme.colors.outlineVariant,
-      marginHorizontal: 8,
+      marginHorizontal: theme.spacing.sm,
       opacity: 0.5,
     },
     playIcon: {
-      marginLeft: 2,
+      marginLeft: theme.spacing.xs,
     },
     progressText: {
-      color: theme.colors.tertiary,
-      fontSize: theme.typography.labelSmall.fontSize,
-      marginTop: 2,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "tertiary",
+      }),
+      marginTop: theme.spacing.xs,
       fontVariant: ["tabular-nums"], // Monospace numbers for stable width
     },
   });
@@ -375,6 +380,34 @@ const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+};
+/**
+ * A hook that returns the height of the GlobalAudioBar.
+ * This can be used to add margin to the bottom of screens to prevent content from being hidden behind the audio bar.
+ */
+export const useGlobalAudioBarHeight = (): number => {
+  const insets = useSafeAreaInsets();
+  const { isVisible } = useGlobalAudioBar();
+  const barHeight = 64; // Base height of the audio bar
+  const bottomInset = insets.bottom;
+  const totalHeight = isVisible ? barHeight + bottomInset : 0;
+
+  return totalHeight;
+};
+
+/**
+ * @deprecated Use useGlobalAudioBarHeight hook instead for better React compliance
+ * A component that returns the height of the GlobalAudioBar.
+ * This can be used to add margin to the bottom of screens to prevent content from being hidden behind the audio bar.
+ */
+export const GlobalAudioBarHeight = (): number => {
+  const insets = useSafeAreaInsets();
+  const { isVisible } = useGlobalAudioBar();
+  const barHeight = 64; // Base height of the audio bar
+  const bottomInset = insets.bottom;
+  const totalHeight = isVisible ? barHeight + bottomInset : 0;
+
+  return totalHeight;
 };
 
 export default GlobalAudioBar;

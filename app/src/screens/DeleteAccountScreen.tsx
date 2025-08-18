@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import { Button, Input } from "../components/ui";
 import { AuthContext } from "../context/AuthContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
@@ -25,6 +26,7 @@ const DeleteAccountScreen = () => {
   const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
   const confirmTextInputRef = useRef<TextInput>(null);
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
 
   const [password, setPassword] = useState("");
   const [confirmText, setConfirmText] = useState("");
@@ -94,6 +96,7 @@ const DeleteAccountScreen = () => {
     scrollContent: {
       paddingHorizontal: theme.spacing.xl,
       paddingVertical: theme.spacing.md,
+      paddingBottom: globalAudioBarHeight,
     },
     warningCard: {
       backgroundColor: theme.colors.errorContainer,
