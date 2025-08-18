@@ -386,11 +386,9 @@ const formatTime = (seconds: number) => {
  * This can be used to add margin to the bottom of screens to prevent content from being hidden behind the audio bar.
  */
 export const useGlobalAudioBarHeight = (): number => {
-  const insets = useSafeAreaInsets();
   const { isVisible } = useGlobalAudioBar();
-  const barHeight = 64; // Base height of the audio bar
-  const bottomInset = insets.bottom;
-  const totalHeight = isVisible ? barHeight + bottomInset : 0;
+  const barHeight = 70; // Base height of the audio bar
+  const totalHeight = isVisible ? barHeight + 40 : 0;
 
   return totalHeight;
 };
@@ -401,11 +399,9 @@ export const useGlobalAudioBarHeight = (): number => {
  * This can be used to add margin to the bottom of screens to prevent content from being hidden behind the audio bar.
  */
 export const GlobalAudioBarHeight = (): number => {
-  const insets = useSafeAreaInsets();
   const { isVisible } = useGlobalAudioBar();
-  const barHeight = 64; // Base height of the audio bar
-  const bottomInset = insets.bottom;
-  const totalHeight = isVisible ? barHeight + bottomInset : 0;
+  const barHeight = 64;
+  const totalHeight = isVisible ? barHeight : 0;
 
   return totalHeight;
 };

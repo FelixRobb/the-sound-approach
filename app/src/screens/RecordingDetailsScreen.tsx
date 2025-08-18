@@ -779,6 +779,11 @@ const RecordingDetailsScreen = () => {
     }
   }, [showControls, hideVideoControls, showVideoControls]);
 
+  const stopVideoPlayback = async () => {
+    if (!videoPlayer) return;
+    videoPlayer.pause();
+  };
+
   const togglePlayPause = async () => {
     if (!isVideoLoaded || !videoPlayer) return;
 
@@ -789,13 +794,17 @@ const RecordingDetailsScreen = () => {
         sliderProgress.value = 0;
         setVideoPosition(0);
         setIsVideoEnded(false);
-        videoPlayer.play();
+        stopPlayback(); // Stop audio before starting video
+        setTimeout(() => {
+          videoPlayer.play();
+        }, 100);
       } else if (isPlaying) {
-        stopPlayback();
         videoPlayer.pause();
       } else {
-        stopPlayback();
-        videoPlayer.play();
+        stopPlayback(); // Stop audio before starting video
+        setTimeout(() => {
+          videoPlayer.play();
+        }, 100);
       }
       showVideoControls(); // Show controls when play/pause is triggered
     } catch (error) {
@@ -1194,7 +1203,7 @@ const RecordingDetailsScreen = () => {
                 Audio
               </Text>
               <View style={styles.audioPlayerContainerInner}>
-                <MiniAudioPlayer recording={recording} size={30} onPress={togglePlayPause} />
+                <MiniAudioPlayer recording={recording} size={30} onPress={stopVideoPlayback} />
               </View>
             </View>
           </View>

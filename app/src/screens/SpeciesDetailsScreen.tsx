@@ -146,7 +146,7 @@ const SpeciesDetailsScreen = () => {
     },
     recordingCountBadge: {
       backgroundColor: theme.colors.onPrimary,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.full,
       paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.xs,
     },
@@ -199,6 +199,7 @@ const SpeciesDetailsScreen = () => {
       marginLeft: theme.spacing.sm,
     },
     sectionHeader: {
+      gap: theme.spacing.sm,
       alignItems: "center",
       flexDirection: "row",
       marginBottom: theme.spacing.md,
