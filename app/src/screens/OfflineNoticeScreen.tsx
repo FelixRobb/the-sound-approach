@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { createThemedTextStyle } from "../lib/theme";
@@ -13,7 +14,7 @@ const OfflineNoticeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const { downloadedRecordings } = useContext(DownloadContext);
   const { theme } = useEnhancedTheme();
-
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
   const styles = StyleSheet.create({
     button: {
       marginBottom: theme.spacing.md,
@@ -24,6 +25,7 @@ const OfflineNoticeScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
       justifyContent: "center",
+      paddingBottom: globalAudioBarHeight,
     },
     content: {
       alignItems: "center",

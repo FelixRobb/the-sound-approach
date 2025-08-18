@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 import type { OfflineStackParamList } from "../types";
 
 const OfflineIndicator = () => {
@@ -15,17 +16,18 @@ const OfflineIndicator = () => {
     button: {
       backgroundColor: theme.colors.error,
       borderRadius: theme.borderRadius.md,
-      marginBottom: 12,
-      marginLeft: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 3,
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
     },
     buttonText: {
-      color: theme.colors.onError,
-      fontSize: 12,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onError",
+      }),
     },
-    // eslint-disable-next-line react-native/no-color-literals
     container: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -39,7 +41,7 @@ const OfflineIndicator = () => {
       paddingHorizontal: 16,
       paddingLeft: 24,
       paddingVertical: 10,
-      shadowColor: "000",
+      shadowColor: theme.colors.shadow,
       shadowOffset: {
         width: 0,
         height: -2,
@@ -52,14 +54,16 @@ const OfflineIndicator = () => {
       alignItems: "center",
       flexDirection: "row",
       flex: 1,
-      marginBottom: 12,
+      marginBottom: theme.spacing.sm,
     },
     text: {
-      color: theme.colors.error,
       flexShrink: 1,
-      fontSize: 14,
-      fontWeight: "600",
-      marginLeft: 8,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "error",
+      }),
+      marginLeft: theme.spacing.sm,
     },
   });
 

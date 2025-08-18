@@ -39,7 +39,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      padding: 20,
+      padding: theme.spacing.md,
     },
   });
 
