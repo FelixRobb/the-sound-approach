@@ -123,14 +123,14 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       // Download low-quality audio file (MP3) only
       const audioPath = `${downloadsDir}audio_${recording.audiolqid}.mp3`;
-      const { data: audioUrlData } = supabase.storage
+      const { data: audioUrlData } = await supabase.storage
         .from(ENV.AUDIO_LQ_BUCKET) // Use environment variable for bucket name
-        .getPublicUrl(`${recording.audiolqid}.mp3`);
+        .createSignedUrl(`${recording.audiolqid}.mp3`, 60 * 60 * 24 * 30);
 
-      if (!audioUrlData?.publicUrl) throw new Error("Failed to get audio URL");
+      if (!audioUrlData?.signedUrl) throw new Error("Failed to get audio URL");
 
       // Actually download the audio file
-      await FileSystem.downloadAsync(audioUrlData.publicUrl, audioPath);
+      await FileSystem.downloadAsync(audioUrlData.signedUrl, audioPath);
 
       // Get species info if available
       let speciesName = "";

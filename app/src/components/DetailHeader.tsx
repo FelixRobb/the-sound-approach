@@ -32,7 +32,7 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
       alignItems: "center",
       flexDirection: "row",
       paddingBottom: theme.spacing.md,
-      paddingHorizontal: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.sm,
       paddingTop: theme.spacing.sm + insets.top,
       zIndex: 1,
     },
@@ -42,11 +42,10 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
         weight: "normal",
         color: "onSurfaceVariant",
       }),
-      marginTop: theme.spacing.xs,
     },
     title: {
       ...createThemedTextStyle(theme, {
-        size: "3xl",
+        size: "4xl",
         weight: "bold",
         color: "primary",
       }),
