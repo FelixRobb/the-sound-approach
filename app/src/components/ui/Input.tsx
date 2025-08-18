@@ -146,10 +146,10 @@ const Input = forwardRef<RNTextInput, InputProps>(
               : theme.typography.bodyLarge.fontSize,
         color: theme.colors.onSurface,
         paddingVertical:
-          size === "sm" ? theme.spacing.sm : size === "lg" ? theme.spacing.lg : theme.spacing.md,
-        paddingHorizontal: theme.spacing.md,
+          size === "sm" ? theme.spacing.sm : size === "lg" ? theme.spacing.lg : theme.spacing.md-4,
+        paddingHorizontal: theme.spacing.xs,
         // Add left padding if there's a left icon
-        paddingLeft: leftIcon ? 40 : theme.spacing.md,
+        paddingLeft: leftIcon ? 50 : theme.spacing.md,
         // Add right padding if there's a right icon or password toggle
         paddingRight: rightIcon || isPassword ? 40 : theme.spacing.md,
       },

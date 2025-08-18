@@ -119,8 +119,8 @@ export const darkColors: ThemeColors = {
   warningContainer: "rgb(146, 64, 14)",
   onWarningContainer: "rgb(254, 243, 199)",
 
-  error: "rgb(248, 113, 113)", // Brighter red for dark
-  onError: "rgb(153, 27, 27)",
+  error: "rgb(184, 40, 40)", // Brighter red for dark
+  onError: "hsl(0, 100%, 89%)",
   errorContainer: "rgb(153, 27, 27)",
   onErrorContainer: "rgb(254, 226, 226)",
 

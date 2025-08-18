@@ -14,6 +14,7 @@ import PageBadge from "../components/PageBadge";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
+import { createThemedTextStyle } from "../lib/theme";
 import type { RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
@@ -41,20 +42,22 @@ const SpeciesDetailsScreen = () => {
     badgeRow: {
       alignItems: "center",
       flexDirection: "row",
-      gap: 6,
+      gap: theme.spacing.sm,
     },
     caption: {
-      color: theme.colors.onSurface,
-      fontSize: 14,
-      lineHeight: 20,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
     },
     card: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
-      padding: 16,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
@@ -65,22 +68,26 @@ const SpeciesDetailsScreen = () => {
       flex: 1,
     },
     content: {
-      padding: 16,
-      paddingBottom: 32,
+      padding: theme.spacing.md,
+      paddingBottom: theme.spacing.lg,
     },
     divider: {
       backgroundColor: theme.colors.surface,
-      height: 1,
+      height: theme.spacing.xs,
     },
     emptyContainer: {
       alignItems: "center",
       justifyContent: "center",
-      padding: 32,
+      padding: theme.spacing.lg,
     },
     emptyText: {
       color: theme.colors.onSurface,
-      fontSize: 16,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginTop: theme.spacing.md,
       textAlign: "center",
     },
     errorCard: {
@@ -88,7 +95,7 @@ const SpeciesDetailsScreen = () => {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      padding: 24,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
@@ -99,61 +106,72 @@ const SpeciesDetailsScreen = () => {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      padding: 24,
+      padding: theme.spacing.md,
     },
     errorText: {
       color: theme.colors.onSurface,
-      fontSize: 16,
-      lineHeight: 22,
-      marginBottom: 24,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     errorTitle: {
-      color: theme.colors.error,
-      fontSize: 18,
-      fontWeight: "bold",
-      marginBottom: 8,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "error",
+      }),
+      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.md,
     },
     goBackButton: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
     goBackText: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: "500",
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
     },
     recordingContent: {
       flex: 1,
-      paddingRight: 12,
+      paddingRight: theme.spacing.sm,
     },
     recordingCountBadge: {
       backgroundColor: theme.colors.onPrimary,
       borderRadius: theme.borderRadius.md,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
     },
     recordingCountText: {
-      color: theme.colors.primary,
-      fontSize: 14,
-      fontWeight: "bold",
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "bold",
+        color: "onSurface",
+      }),
     },
     recordingItem: {
       alignItems: "center",
       flexDirection: "row",
-      paddingVertical: 16,
+      paddingVertical: theme.spacing.md,
     },
     recordingMeta: {
       alignItems: "center",
       flexDirection: "row",
-      marginBottom: 8,
+      marginBottom: theme.spacing.sm,
     },
     recordingTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "bold",
-      marginBottom: 6,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "primary",
+      }),
+      marginBottom: theme.spacing.sm,
     },
     recordingsList: {
       borderRadius: theme.borderRadius.md,
@@ -165,25 +183,22 @@ const SpeciesDetailsScreen = () => {
       borderRadius: theme.borderRadius.full,
       flexDirection: "row",
       justifyContent: "center",
-      marginBottom: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      marginBottom: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
     retryText: {
-      color: theme.colors.onSurface,
-      fontSize: 14,
-      marginLeft: 8,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginLeft: theme.spacing.sm,
     },
     sectionHeader: {
       alignItems: "center",
       flexDirection: "row",
-      marginBottom: 16,
-    },
-    sectionTitle: {
-      color: theme.colors.primary,
-      flex: 1,
-      fontSize: 18,
-      fontWeight: "600",
+      marginBottom: theme.spacing.md,
     },
   });
 
@@ -243,7 +258,15 @@ const SpeciesDetailsScreen = () => {
         {/* Recordings Card */}
         <View style={styles.card}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recordings</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "xl",
+                weight: "bold",
+                color: "onSurface",
+              })}
+            >
+              Recordings
+            </Text>
             <View style={styles.recordingCountBadge}>
               <Text style={styles.recordingCountText}>{recordings.length}</Text>
             </View>

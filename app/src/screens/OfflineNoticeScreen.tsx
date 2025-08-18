@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 import type { OfflineStackParamList } from "../types";
 
 const OfflineNoticeScreen = () => {
@@ -15,7 +16,7 @@ const OfflineNoticeScreen = () => {
 
   const styles = StyleSheet.create({
     button: {
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       width: "100%",
     },
     container: {
@@ -29,7 +30,7 @@ const OfflineNoticeScreen = () => {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 6,
-      padding: 24,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
@@ -37,17 +38,22 @@ const OfflineNoticeScreen = () => {
       width: "80%",
     },
     description: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      marginBottom: 24,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     title: {
-      color: theme.colors.onSurface,
-      fontSize: 24,
-      fontWeight: "bold",
-      marginBottom: 8,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.md,
     },
   });
 

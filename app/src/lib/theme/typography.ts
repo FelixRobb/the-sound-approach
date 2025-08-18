@@ -257,8 +257,8 @@ export const createResponsiveTextStyle = (
 };
 
 // Theme-aware text style creator - uses theme colors automatically
-  export const createThemedTextStyle = (
-    theme: Theme,
+export const createThemedTextStyle = (
+  theme: Theme,
   options: {
     size?: keyof typeof fontSizes;
     weight?: keyof typeof fontWeights;

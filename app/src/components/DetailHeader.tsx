@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme/typography";
 import type { RootStackParamList } from "../types";
 
 interface DetailHeaderProps {
@@ -24,27 +25,31 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
       alignItems: "center",
       height: 40,
       justifyContent: "center",
-      marginRight: 12,
+      marginRight: theme.spacing.xs,
       width: 40,
     },
     header: {
       alignItems: "center",
       flexDirection: "row",
-      paddingBottom: 16,
-      paddingHorizontal: 16,
-      paddingTop: 8 + insets.top,
+      paddingBottom: theme.spacing.md,
+      paddingHorizontal: theme.spacing.xl,
+      paddingTop: theme.spacing.sm + insets.top,
       zIndex: 1,
     },
     subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelSmall.fontSize,
-      fontStyle: "italic",
-      marginTop: 2,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
     title: {
-      color: theme.colors.primary,
-      fontSize: theme.typography.labelLarge.fontSize,
-      fontWeight: theme.typography.labelLarge.fontWeight,
+      ...createThemedTextStyle(theme, {
+        size: "3xl",
+        weight: "bold",
+        color: "primary",
+      }),
     },
     titleContainer: {
       flex: 1,

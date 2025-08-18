@@ -122,7 +122,7 @@ const WelcomeScreen = () => {
             {/* Button Section */}
             <View style={styles.buttonSection}>
               <Button
-                variant="default"
+                variant="primary"
                 size="lg"
                 onPress={() => navigation.navigate("SignUp")}
                 title="Create Account"

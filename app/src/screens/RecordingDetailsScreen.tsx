@@ -27,12 +27,14 @@ import DetailHeader from "../components/DetailHeader";
 import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
 import PageBadge from "../components/PageBadge";
+import { Button } from "../components/ui";
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
 import { getSonogramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
+import { createThemedTextStyle } from "../lib/theme/typography";
 import type { RootStackParamList } from "../types";
 
 const { width } = Dimensions.get("window");
@@ -85,9 +87,9 @@ const RecordingDetailsScreen = () => {
     audioPlayerContainer: {
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
+      paddingHorizontal: theme.spacing.md,
       flexDirection: "row",
-      paddingVertical: 8,
+      paddingVertical: theme.spacing.sm,
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
@@ -102,20 +104,20 @@ const RecordingDetailsScreen = () => {
       flex: 1,
     },
     content: {
-      padding: 16,
+      padding: theme.spacing.md,
     },
 
     controlsContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.backdrop,
       borderRadius: theme.borderRadius.lg,
-      bottom: 10,
+      bottom: theme.spacing.sm,
       flexDirection: "row",
-      left: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      left: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       position: "absolute",
-      right: 12,
+      right: theme.spacing.md,
       zIndex: 10,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -132,81 +134,60 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
-      padding: 20,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
     },
     descriptionText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 24,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     descriptionTextError: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 24,
-      marginTop: 12,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.sm,
     },
     descriptionTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "bold",
-      marginBottom: 12,
-    },
-    downloadButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.md,
-      flexDirection: "row",
-      justifyContent: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      width: "100%",
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
     },
     downloadButtonSmall: {
       backgroundColor: theme.colors.tertiary,
       borderRadius: theme.borderRadius.full,
       padding: 8,
     },
-    downloadButtonText: {
-      color: theme.colors.onPrimary,
-      fontSize: 16,
-      fontWeight: "600",
-      marginLeft: 8,
-    },
     downloadCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
-      padding: 20,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
-    },
-    downloadedContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "center",
-    },
-    downloadedText: {
-      color: theme.colors.primary,
-      fontSize: 16,
-      fontWeight: "600",
-      marginLeft: 12,
     },
     errorCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      padding: 24,
+      padding: theme.spacing.lg,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
@@ -217,23 +198,28 @@ const RecordingDetailsScreen = () => {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      padding: 20,
+      padding: theme.spacing.md,
     },
     errorIcon: {
       color: theme.colors.error,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     errorText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      marginBottom: 24,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     errorTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 20,
-      fontWeight: "600",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
     fullScreenVideoOverlay: {
@@ -242,7 +228,7 @@ const RecordingDetailsScreen = () => {
       justifyContent: "center",
     },
     fullscreenButton: {
-      marginLeft: 12,
+      marginLeft: theme.spacing.sm,
     },
     fullscreenContainer: {
       backgroundColor: theme.colors.background,
@@ -251,18 +237,17 @@ const RecordingDetailsScreen = () => {
       width: "100%",
       zIndex: 999,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     fullscreenControls: {
       alignItems: "center",
-      backgroundColor: "rgba(0, 0, 0, 0.8)",
+      backgroundColor: theme.colors.backdrop,
       borderRadius: theme.borderRadius.md,
-      bottom: 40,
+      bottom: theme.spacing.md,
       flexDirection: "row",
-      left: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      left: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       position: "absolute",
-      right: 20,
+      right: theme.spacing.md,
       zIndex: 1000,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -274,28 +259,33 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.background,
       borderBottomColor: theme.colors.backdrop,
       borderBottomWidth: 1,
-      padding: 20,
+      padding: theme.spacing.md,
       position: "absolute",
       top: 0,
       width: "100%",
       zIndex: 1000,
     },
     fullscreenSubtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginTop: 4,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
     fullscreenTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
     },
     fullscreenVideo: {
       flex: 1,
     },
     pageBadgeWrapper: {
       alignSelf: "flex-start",
-      marginVertical: 2,
+      marginVertical: theme.spacing.xs,
     },
     // Updated play button styles
     playButton: {
@@ -305,7 +295,6 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: theme.borderRadius.full,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
@@ -318,13 +307,12 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      borderRadius: theme.borderRadius.full,
       zIndex: 8,
       alignItems: "center",
       justifyContent: "center",
     },
     buttonIcon: {
-      marginLeft: isPlaying ? 0 : 4, // Slight adjustment for play icon centering
+      marginLeft: isPlaying ? 0 : theme.spacing.xs, // Slight adjustment for play icon centering
     },
     fullButtonTouchable: {
       width: "100%",
@@ -353,37 +341,40 @@ const RecordingDetailsScreen = () => {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
       borderRadius: theme.borderRadius.md,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
     retryText: {
-      color: theme.colors.onPrimary,
-      fontSize: 16,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onPrimary",
+      }),
     },
     scientificName: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      fontStyle: "italic",
-      marginBottom: 4,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     slider: {
       flex: 1,
-      height: 40,
-      marginHorizontal: 12,
+      height: theme.spacing.xl,
+      marginHorizontal: theme.spacing.sm,
       backgroundColor: theme.colors.tertiary,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     sliderThumb: {
       backgroundColor: theme.colors.tertiary,
       borderRadius: theme.borderRadius.sm,
       elevation: 2,
-      height: 16,
+      height: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2,
-      width: 16,
+      width: theme.spacing.md,
     },
     speciesButton: {
       alignItems: "center",
@@ -392,19 +383,21 @@ const RecordingDetailsScreen = () => {
       borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "center",
-      padding: 16,
+      padding: theme.spacing.md,
     },
     speciesButtonText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      fontWeight: "600",
-      marginRight: 8,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginRight: theme.spacing.sm,
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
@@ -412,20 +405,23 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 2.22,
     },
     speciesHeader: {
-      padding: 20,
+      padding: theme.spacing.md,
     },
     speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: 22,
-      fontWeight: "bold",
-      marginBottom: 4,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
     },
-    // eslint-disable-next-line react-native/no-color-literals
     timeText: {
-      color: theme.colors.tertiary,
-      fontSize: 14,
-      marginLeft: 8,
-      fontWeight: "500",
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.sm,
     },
     video: {
       flex: 1,
@@ -434,7 +430,7 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
       overflow: "hidden",
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
@@ -445,31 +441,22 @@ const RecordingDetailsScreen = () => {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      padding: 12,
+      paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.5, // Increased for more visible shadow
       shadowRadius: 6, // Increased for a softer, larger shadow
       borderBottomWidth: 1, // Added for extra separation
       borderBottomColor: theme.colors.backdrop, // Subtle border color
+      paddingHorizontal: theme.spacing.md,
     },
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: "center",
       justifyContent: "center",
     },
-    videoTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "bold",
-    },
-    audioTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "bold",
-    },
     audioPlayerContainerInner: {
-      marginLeft: 16,
+      marginLeft: theme.spacing.md,
     },
     replayButton: {
       position: "absolute",
@@ -1184,9 +1171,25 @@ const RecordingDetailsScreen = () => {
         {/* eslint-disable-next-line react-native/no-inline-styles */}
         <View style={styles.videoContainer}>
           <View style={styles.videoHeader}>
-            <Text style={styles.videoTitle}>Sonogram</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "2xl",
+                weight: "bold",
+                color: "onSurface",
+              })}
+            >
+              Sonogram
+            </Text>
             <View style={styles.audioPlayerContainer}>
-              <Text style={styles.audioTitle}>Audio</Text>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "lg",
+                  weight: "bold",
+                  color: "onSurface",
+                })}
+              >
+                Audio
+              </Text>
               <View style={styles.audioPlayerContainerInner}>
                 <MiniAudioPlayer recording={recording} size={30} onPress={togglePlayPause} />
               </View>
@@ -1200,26 +1203,28 @@ const RecordingDetailsScreen = () => {
           <Text style={styles.descriptionText}>{recording.caption}</Text>
         </View>
         <View style={styles.downloadCard}>
-          {getDownloadStatus() === "completed" ? (
-            <View style={styles.downloadedContainer}>
-              <TouchableOpacity style={styles.downloadButton} onPress={handleDeleteDownload}>
-                <Ionicons name="trash-outline" size={24} color={theme.colors.onPrimary} />
-                <Text style={styles.downloadButtonText}>Remove Download</Text>
-              </TouchableOpacity>
-            </View>
-          ) : getDownloadStatus() === "downloading" ? (
-            <View style={styles.downloadedContainer}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text style={styles.downloadedText}>Downloading...</Text>
-            </View>
-          ) : (
-            <>
-              <TouchableOpacity style={styles.downloadButton} onPress={handleDownload}>
-                <Ionicons name="cloud-download" size={24} color={theme.colors.onPrimary} />
-                <Text style={styles.downloadButtonText}>Download for Offline Use</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          <Button
+            leftIcon={
+              getDownloadStatus() === "completed"
+                ? { name: "trash-outline", color: theme.colors.onPrimary }
+                : { name: "cloud-download", color: theme.colors.onPrimary }
+            }
+            onPress={
+              getDownloadStatus() === "completed"
+                ? handleDeleteDownload
+                : getDownloadStatus() === "downloading"
+                  ? undefined
+                  : handleDownload
+            }
+            variant="primary"
+            size="lg"
+          >
+            {getDownloadStatus() === "completed"
+              ? "Remove Download"
+              : getDownloadStatus() === "downloading"
+                ? "Downloading..."
+                : "Download for Offline Use"}
+          </Button>
         </View>
       </ScrollView>
 

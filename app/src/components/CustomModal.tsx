@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   Modal,
-  TouchableOpacity,
   Animated,
   Dimensions,
   TouchableWithoutFeedback,
@@ -13,6 +12,9 @@ import {
 } from "react-native";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme/typography";
+
+import { Button } from "./ui";
 
 const { width } = Dimensions.get("window");
 
@@ -47,7 +49,6 @@ const CustomModal: React.FC<CustomModalProps> = ({
   const { theme } = useEnhancedTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
     if (visible) {
@@ -64,96 +65,55 @@ const CustomModal: React.FC<CustomModalProps> = ({
           friction: 8,
           useNativeDriver: true,
         }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
       ]).start();
     } else {
       // Hide animation
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 200,
+          duration: 300,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
           toValue: 0.8,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 50,
-          duration: 200,
+          duration: 300,
           useNativeDriver: true,
         }),
       ]).start();
     }
-  }, [visible, fadeAnim, scaleAnim, slideAnim]);
+  }, [visible, fadeAnim, scaleAnim]);
 
   const styles = StyleSheet.create({
     button: {
       alignItems: "center",
-      borderRadius: theme.borderRadius.md,
       flex: 1,
-      justifyContent: "center",
-      paddingVertical: 14,
-    },
-    buttonCancel: {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderWidth: 1,
-    },
-    buttonDefault: {
-      backgroundColor: theme.colors.primary,
-    },
-    buttonDestructive: {
-      backgroundColor: theme.colors.error,
-    },
-    buttonDisabled: {
-      opacity: 0.6,
-    },
-    buttonText: {
-      fontSize: theme.typography.labelMedium.fontSize,
-      fontWeight: theme.typography.labelMedium.fontWeight,
-    },
-    buttonTextCancel: {
-      color: theme.colors.onSurface,
-    },
-    buttonTextDefault: {
-      color: theme.colors.onPrimary,
-    },
-    buttonTextDestructive: {
-      color: theme.colors.onError,
     },
     buttonsContainer: {
       flexDirection: "row",
-      gap: 12,
-      marginTop: 24,
+      gap: theme.spacing.md,
+      marginTop: theme.spacing.xl,
     },
     container: {
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 20,
+      paddingHorizontal: theme.spacing.xl,
     },
     iconContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.borderRadius.full,
-      height: 60,
+      height: 40,
       justifyContent: "center",
-      marginBottom: 20,
-      width: 60,
-    },
-    loadingIndicator: {
-      marginRight: 8,
+      marginBottom: theme.spacing.xl,
+      width: 40,
     },
     message: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelMedium.fontSize,
-      lineHeight: 24,
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
     modal: {
@@ -161,7 +121,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
       borderRadius: theme.borderRadius.lg,
       elevation: 24,
       maxWidth: width * 0.9,
-      padding: 24,
+      padding: theme.spacing.xl,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 12 },
       shadowOpacity: 0.3,
@@ -173,10 +133,12 @@ const CustomModal: React.FC<CustomModalProps> = ({
       flex: 1,
     },
     title: {
-      color: theme.colors.onSurface,
-      fontSize: theme.typography.labelLarge.fontSize,
-      fontWeight: theme.typography.labelLarge.fontWeight,
-      marginBottom: 12,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
   });
@@ -184,28 +146,6 @@ const CustomModal: React.FC<CustomModalProps> = ({
   const handleBackdropPress = () => {
     if (closeOnBackdrop) {
       onClose();
-    }
-  };
-
-  const getButtonStyle = (style: CustomModalButton["style"]) => {
-    switch (style) {
-      case "destructive":
-        return styles.buttonDestructive;
-      case "cancel":
-        return styles.buttonCancel;
-      default:
-        return styles.buttonDefault;
-    }
-  };
-
-  const getButtonTextStyle = (style: CustomModalButton["style"]) => {
-    switch (style) {
-      case "destructive":
-        return styles.buttonTextDestructive;
-      case "cancel":
-        return styles.buttonTextCancel;
-      default:
-        return styles.buttonTextDefault;
     }
   };
 
@@ -226,7 +166,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
                 style={[
                   styles.modal,
                   {
-                    transform: [{ scale: scaleAnim }, { translateY: slideAnim }],
+                    transform: [{ scale: scaleAnim }],
                   },
                 ]}
               >
@@ -241,44 +181,23 @@ const CustomModal: React.FC<CustomModalProps> = ({
 
                 <View style={styles.buttonsContainer}>
                   {buttons.map((button, index) => (
-                    <TouchableOpacity
+                    <Button
                       key={index}
-                      style={[
-                        styles.button,
-                        getButtonStyle(button.style),
-                        button.loading && styles.buttonDisabled,
-                      ]}
+                      variant={
+                        button.style === "destructive"
+                          ? "destructive"
+                          : button.style === "cancel"
+                            ? "outline"
+                            : "default"
+                      }
                       onPress={button.onPress}
                       disabled={button.loading}
                       activeOpacity={0.8}
+                      size="md"
+                      style={styles.button}
                     >
-                      {button.loading && (
-                        <Animated.View
-                          style={[
-                            styles.loadingIndicator,
-                            {
-                              transform: [
-                                {
-                                  rotate: fadeAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: ["0deg", "360deg"],
-                                  }),
-                                },
-                              ],
-                            },
-                          ]}
-                        >
-                          <Ionicons
-                            name="refresh"
-                            size={16}
-                            color={getButtonTextStyle(button.style).color}
-                          />
-                        </Animated.View>
-                      )}
-                      <Text style={[styles.buttonText, getButtonTextStyle(button.style)]}>
-                        {button.text}
-                      </Text>
-                    </TouchableOpacity>
+                      {button.text}
+                    </Button>
                   ))}
                 </View>
               </Animated.View>

@@ -9,16 +9,15 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Input } from "../components/ui";
+import { Button, Input } from "../components/ui";
 import { AuthContext } from "../context/AuthContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import type { RootStackParamList } from "../types";
 import { createThemedTextStyle } from "../lib/theme/typography";
+import type { RootStackParamList } from "../types";
 
 const DeleteAccountScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -58,49 +57,20 @@ const DeleteAccountScreen = () => {
   };
 
   const styles = StyleSheet.create({
-    cancelButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.md,
-      marginTop: 12,
-      padding: 16,
-    },
-    cancelButtonText: {
-      color: theme.colors.primary,
-      fontSize: theme.typography.labelMedium.fontSize,
-      fontWeight: theme.typography.labelMedium.fontWeight,
-    },
-    confirmText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelMedium.fontSize,
-      marginTop: 4,
-    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
     deleteButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.error,
-      borderRadius: theme.borderRadius.md,
-      marginTop: 20,
-      padding: 16,
-    },
-    deleteButtonDisabled: {
-      opacity: 0.5,
-    },
-    deleteButtonText: {
-      color: theme.colors.onError,
-      fontSize: theme.typography.labelMedium.fontSize,
-      fontWeight: theme.typography.labelMedium.fontWeight,
+      marginVertical: theme.spacing.md,
     },
     header: {
       backgroundColor: theme.colors.surface,
       borderBottomLeftRadius: theme.borderRadius.lg,
       borderBottomRightRadius: theme.borderRadius.lg,
       elevation: 4,
-      paddingBottom: 20,
-      paddingTop: 16 + insets.top,
+      paddingBottom: theme.spacing.xl,
+      paddingTop: theme.spacing.sm + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -108,44 +78,36 @@ const DeleteAccountScreen = () => {
       zIndex: 1,
     },
     headerInner: {
-      paddingHorizontal: 20,
+      paddingHorizontal: theme.spacing.xl,
     },
     inputContainer: {
-      marginBottom: 20,
+      marginBottom: theme.spacing.md,
     },
     inputLabel: {
-      color: theme.colors.onSurface,
-      fontSize: theme.typography.labelMedium.fontSize,
-      fontWeight: theme.typography.labelMedium.fontWeight,
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
     },
     scrollContent: {
-      padding: 20,
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelMedium.fontSize,
-      marginTop: 2,
-    },
-    title: {
-      ...createThemedTextStyle(theme, { size: "lg", weight: "bold", color: "error" }),
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.md,
     },
     warningCard: {
       backgroundColor: theme.colors.errorContainer,
       borderRadius: theme.borderRadius.lg,
-      marginBottom: 24,
-      padding: 20,
-    },
-    warningText: {
-      color: theme.colors.onErrorContainer,
-      fontSize: theme.typography.bodyMedium.fontSize,
-      lineHeight: 20,
+      marginBottom: theme.spacing.xl,
+      padding: theme.spacing.xl,
     },
     warningTitle: {
-      color: theme.colors.onErrorContainer,
-      fontSize: theme.typography.titleLarge.fontSize,
-      fontWeight: theme.typography.titleLarge.fontWeight,
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "6xl",
+        weight: "bold",
+        color: "onErrorContainer",
+      }),
+      marginBottom: theme.spacing.sm,
     },
   });
 
@@ -156,8 +118,24 @@ const DeleteAccountScreen = () => {
     >
       <View style={styles.header}>
         <View style={styles.headerInner}>
-          <Text style={styles.title}>Delete Account</Text>
-          <Text style={styles.subtitle}>This action cannot be undone</Text>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "6xl",
+              weight: "bold",
+              color: "error",
+            })}
+          >
+            Delete Account
+          </Text>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "base",
+              weight: "normal",
+              color: "onSurfaceVariant",
+            })}
+          >
+            This action cannot be undone
+          </Text>
         </View>
       </View>
 
@@ -168,7 +146,13 @@ const DeleteAccountScreen = () => {
       >
         <View style={styles.warningCard}>
           <Text style={styles.warningTitle}>⚠️ Warning</Text>
-          <Text style={styles.warningText}>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "base",
+              weight: "normal",
+              color: "onErrorContainer",
+            })}
+          >
             Deleting your account will permanently remove all your data, including:
             {"\n\n"}• All downloaded recordings
             {"\n"}• Your account information
@@ -201,33 +185,38 @@ const DeleteAccountScreen = () => {
             ref={confirmTextInputRef}
             leftIcon={{ name: "trash-outline" }}
             value={confirmText}
-            onChangeText={setConfirmText}
+            onChangeText={(text) => setConfirmText(text.toUpperCase())}
             placeholder="Type DELETE MY ACCOUNT"
             placeholderTextColor={theme.colors.onSurfaceVariant}
             autoCapitalize="characters"
             autoCorrect={false}
             returnKeyType="done"
           />
-          <Text style={styles.confirmText}>This helps prevent accidental deletions</Text>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "base",
+              weight: "normal",
+              color: "onSurfaceVariant",
+            })}
+          >
+            This helps prevent accidental deletions
+          </Text>
         </View>
 
-        <TouchableOpacity
-          style={[
-            styles.deleteButton,
-            (isLoading || confirmText !== "DELETE MY ACCOUNT" || !password) &&
-              styles.deleteButtonDisabled,
-          ]}
+        <Button
+          variant="destructive"
+          fullWidth
+          size="lg"
           onPress={handleDeleteAccount}
           disabled={isLoading || confirmText !== "DELETE MY ACCOUNT" || !password}
+          style={styles.deleteButton}
         >
-          <Text style={styles.deleteButtonText}>
-            {isLoading ? "Deleting Account..." : "Delete My Account"}
-          </Text>
-        </TouchableOpacity>
+          {isLoading ? "Deleting Account..." : "Delete My Account"}
+        </Button>
 
-        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
+        <Button variant="outline" fullWidth size="lg" onPress={() => navigation.goBack()}>
+          Cancel
+        </Button>
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   RefreshControl,
   Dimensions,
   ActivityIndicator,
@@ -15,10 +14,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
-import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import PageBadge from "../components/PageBadge";
+import RecordingCard from "../components/RecordingCard";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 import type { DownloadRecord } from "../types";
 
 const { width } = Dimensions.get("window");
@@ -93,51 +92,12 @@ const OfflineScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
-    downloadActions: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    downloadCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    downloadContent: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      padding: 16,
-      paddingTop: 8,
-    },
-    downloadDate: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      marginTop: 4,
-    },
-    downloadHeader: {
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomWidth: 1,
-      padding: 16,
-      paddingBottom: 8,
-    },
-    downloadInfo: {
-      flex: 1,
-    },
-    downloadTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 17,
-      fontWeight: "bold",
-    },
     emptyCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      padding: 24,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
@@ -148,21 +108,25 @@ const OfflineScreen = () => {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      marginTop: 48,
-      padding: 24,
+      marginTop: theme.spacing.lg,
+      padding: theme.spacing.md,
     },
     emptyText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      lineHeight: 20,
-      marginTop: 8,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.sm,
       textAlign: "center",
     },
     emptyTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "bold",
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginTop: theme.spacing.md,
       textAlign: "center",
     },
     header: {
@@ -170,7 +134,7 @@ const OfflineScreen = () => {
       borderBottomLeftRadius: theme.borderRadius.lg,
       borderBottomRightRadius: theme.borderRadius.lg,
       elevation: 4,
-      paddingTop: 16 + insets.top,
+      paddingTop: theme.spacing.md + insets.top,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -178,24 +142,24 @@ const OfflineScreen = () => {
       zIndex: 1,
     },
     headerInner: {
-      paddingHorizontal: 20,
+      paddingHorizontal: theme.spacing.md,
     },
     headerRow: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md,
     },
     listContent: {
-      padding: 16,
-      paddingBottom: 80,
+      padding: theme.spacing.md,
+      paddingBottom: theme.spacing.lg,
     },
     loadingCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      padding: 24,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
@@ -206,148 +170,58 @@ const OfflineScreen = () => {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      padding: 24,
+      padding: theme.spacing.md,
     },
     loadingText: {
       color: theme.colors.onSurface,
-      fontSize: 16,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginTop: theme.spacing.md,
       textAlign: "center",
     },
-    offlineBanner: {
-      alignItems: "center",
-      backgroundColor: theme.colors.errorContainer,
-      borderRadius: theme.borderRadius.md,
-      flexDirection: "row",
-      marginHorizontal: 20,
-      marginVertical: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      shadowColor: theme.colors.error,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-    },
-    offlineBannerText: {
-      color: theme.colors.onErrorContainer,
-      flex: 1,
-      fontSize: 15,
-      fontWeight: "600",
-      marginLeft: 12,
-    },
-    pageBadgeWrapper: {
-      alignSelf: "flex-start",
-      marginVertical: 2,
-    },
-    playButton: {
-      marginRight: 16,
-    },
-    scientificName: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      fontStyle: "italic",
-      marginTop: 2,
-    },
+
     separator: {
-      height: 16,
-    },
-    speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      marginBottom: 4,
+      height: theme.spacing.md,
     },
     storageInfo: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.borderRadius.md,
       flexDirection: "row",
-      marginHorizontal: 20,
-      marginVertical: 8,
-      padding: 16,
+      marginHorizontal: theme.spacing.md,
+      marginVertical: theme.spacing.sm,
+      padding: theme.spacing.md,
     },
     storageInfoIcon: {
       alignItems: "center",
       backgroundColor: theme.colors.tertiary,
-      borderRadius: theme.borderRadius.lg,
+      borderRadius: theme.borderRadius.full,
       height: 40,
       justifyContent: "center",
-      marginRight: 12,
+      marginRight: theme.spacing.md,
       width: 40,
     },
     storageInfoText: {
       flex: 1,
     },
-    storageMainText: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      fontWeight: "600",
-    },
-    storageSubText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 13,
-      marginTop: 2,
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
-      marginTop: 2,
-    },
-    title: {
-      color: theme.colors.primary,
-      fontSize: 28,
-      fontWeight: "bold",
-    },
   });
-
-  // Ensure the audioUri has the file:// prefix and is well-formed
-  const ensureFileUri = (path: string) => {
-    if (!path) return null;
-    if (path.startsWith("file://")) return path;
-    // Remove any accidental double slashes after file://
-    return "file://" + path.replace(/^\/+/, "");
-  };
 
   // Render download item
   const renderDownloadItem = ({ item }: { item: DownloadRecord }) => {
-    const audioUri = ensureFileUri(item.audio_path);
-
     const handleItemPress = () => {
       setShowOfflineModal(true);
     };
 
     return (
-      <View>
-        <TouchableOpacity style={styles.downloadCard} onPress={handleItemPress}>
-          <View style={styles.downloadHeader}>
-            <Text style={styles.downloadTitle}>{item.title || "Unknown Recording"}</Text>
-            <Text style={styles.scientificName}>{item.scientific_name || ""}</Text>
-          </View>
-
-          <View style={styles.downloadContent}>
-            <View style={styles.downloadInfo}>
-              <Text style={styles.speciesName}>{item.species_name || "Unknown Species"}</Text>
-
-              {item.book_page_number && (
-                <View style={styles.pageBadgeWrapper}>
-                  <PageBadge page={item.book_page_number} />
-                </View>
-              )}
-
-              <Text style={styles.downloadDate}>
-                Downloaded: {new Date(item.downloaded_at).toLocaleDateString()}
-              </Text>
-            </View>
-
-            <View style={styles.downloadActions}>
-              {audioUri && (
-                <View style={styles.playButton}>
-                  <MiniAudioPlayer recording={item.recording} size={40} />
-                </View>
-              )}
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <RecordingCard
+        item={item}
+        onPress={handleItemPress}
+        showPlayButton={true}
+        showDeleteButton={false}
+      />
     );
   };
 
@@ -371,17 +245,26 @@ const OfflineScreen = () => {
       <View style={styles.headerInner}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.title}>Offline Mode</Text>
-            <Text style={styles.subtitle}>Your downloaded recordings</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "6xl",
+                weight: "bold",
+                color: "primary",
+              })}
+            >
+              Offline Mode
+            </Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "lg",
+                weight: "normal",
+                color: "onSurfaceVariant",
+              })}
+            >
+              Your downloaded recordings
+            </Text>
           </View>
         </View>
-      </View>
-
-      <View style={styles.offlineBanner}>
-        <Ionicons name="cloud-offline-outline" size={22} color={theme.colors.onErrorContainer} />
-        <Text style={styles.offlineBannerText}>
-          You&apos;re offline - Only downloaded content is available
-        </Text>
       </View>
 
       {downloads.length > 0 && (
@@ -390,10 +273,22 @@ const OfflineScreen = () => {
             <Ionicons name="folder" size={20} color={theme.colors.onTertiary} />
           </View>
           <View style={styles.storageInfoText}>
-            <Text style={styles.storageMainText}>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "lg",
+                weight: "bold",
+                color: "onSurface",
+              })}
+            >
               {downloads.length} recording{downloads.length !== 1 ? "s" : ""} available
             </Text>
-            <Text style={styles.storageSubText}>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "sm",
+                weight: "normal",
+                color: "onSurfaceVariant",
+              })}
+            >
               Using {formatBytes(totalStorageUsed)} of storage
             </Text>
           </View>

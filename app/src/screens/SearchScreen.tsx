@@ -22,6 +22,7 @@ import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
+import { createThemedTextStyle } from "../lib/theme";
 import type { Recording, RootStackParamList, Species } from "../types";
 
 // Custom debounce hook
@@ -68,10 +69,6 @@ const SearchScreen = () => {
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
-    clearText: {
-      color: theme.colors.tertiary,
-      fontWeight: "600",
-    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -90,31 +87,36 @@ const SearchScreen = () => {
       paddingVertical: 48,
     },
     emptyText: {
-      color: theme.colors.onSurface,
-      fontSize: 16,
-      marginBottom: 24,
-      marginHorizontal: 24,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.sm,
+      marginHorizontal: theme.spacing.sm,
       textAlign: "center",
     },
     emptyTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 18,
-      fontWeight: "700",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
     filterContainer: {
       flexDirection: "row",
       justifyContent: "space-around",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
     },
     filterTab: {
       alignItems: "center",
       justifyContent: "center",
       minWidth: 80,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.sm,
     },
     filterTabIndicator: {
       backgroundColor: theme.colors.primary,
@@ -126,50 +128,53 @@ const SearchScreen = () => {
       right: 0,
     },
     filterTabText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
       textAlign: "center",
     },
     filterTabTextActive: {
-      color: theme.colors.primary,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     header: {
-      paddingBottom: 20,
-      paddingTop: 8 + insets.top,
+      paddingBottom: theme.spacing.md,
+      paddingTop: theme.spacing.sm + insets.top,
       zIndex: 1,
     },
     headerInner: {
-      paddingHorizontal: 20,
-    },
-    headerRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 16,
+      paddingHorizontal: theme.spacing.xl,
     },
     listContent: {
-      padding: 16,
+      padding: theme.spacing.md,
     },
     loadingContainer: {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      paddingTop: 40,
+      paddingTop: theme.spacing.sm,
     },
     loadingText: {
-      color: theme.colors.onBackground,
-      fontSize: 16,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onBackground",
+      }),
+      marginTop: theme.spacing.sm,
     },
     recentContainer: {
-      padding: 16,
+      padding: theme.spacing.md,
     },
     recentHeader: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 16,
+      marginBottom: theme.spacing.sm,
     },
     recentItem: {
       alignItems: "center",
@@ -178,7 +183,7 @@ const SearchScreen = () => {
       elevation: 2,
       flexDirection: "row",
       marginBottom: 12,
-      padding: 16,
+      padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
@@ -188,37 +193,38 @@ const SearchScreen = () => {
       alignItems: "center",
       flex: 1,
       flexDirection: "row",
-      marginRight: 12,
+      marginRight: theme.spacing.sm,
     },
     recentItemAction: {
-      padding: 4,
+      padding: theme.spacing.xs,
     },
     recentItemIcon: {
       alignItems: "center",
       backgroundColor: theme.colors.onTertiary,
       borderRadius: theme.borderRadius.lg,
-      height: 40,
+      height: theme.spacing.lg,
       justifyContent: "center",
-      marginRight: 12,
-      width: 40,
+      marginRight: theme.spacing.sm,
+      width: theme.spacing.lg,
     },
     recentItemTextContainer: {
       flex: 1,
     },
     recentItemTimestamp: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      marginTop: 4,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
     recentQueryText: {
-      color: theme.colors.onSurface,
       flex: 1,
-      fontSize: 16,
-    },
-    recentTitle: {
-      color: theme.colors.primary,
-      fontSize: 18,
-      fontWeight: "600",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurface",
+      }),
     },
     resultCard: {
       backgroundColor: theme.colors.surface,
@@ -234,14 +240,14 @@ const SearchScreen = () => {
     resultCardContent: {
       flexDirection: "row",
       justifyContent: "space-between",
-      padding: 16,
-      paddingTop: 12,
+      padding: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
     },
     resultCardHeader: {
       borderBottomColor: theme.colors.surfaceVariant,
       borderBottomWidth: 1,
-      padding: 16,
-      paddingBottom: 12,
+      padding: theme.spacing.md,
+      paddingBottom: theme.spacing.md,
     },
     resultCardLeft: {
       flex: 1,
@@ -249,12 +255,15 @@ const SearchScreen = () => {
     resultCardRight: {
       alignItems: "center",
       justifyContent: "center",
-      marginLeft: 12,
+      marginLeft: theme.spacing.sm,
     },
     resultCount: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      marginTop: 8,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "primary",
+      }),
+      marginTop: theme.spacing.sm,
     },
     resultMeta: {
       alignItems: "flex-start",
@@ -264,23 +273,34 @@ const SearchScreen = () => {
       marginTop: 8,
     },
     resultTitle: {
-      color: theme.colors.onSurface,
-      fontSize: 17,
-      fontWeight: "bold",
-      marginBottom: 4,
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "primary",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     resultsHeader: {
       color: theme.colors.primary,
-      fontSize: 18,
-      fontWeight: "600",
-      marginBottom: 12,
-      marginTop: 16,
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.sm,
     },
     scientificName: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
       fontStyle: "italic",
-      marginTop: 2,
+      marginTop: theme.spacing.xs,
+    },
+    searchInputContainer: {
+      marginTop: theme.spacing.sm,
     },
     searchInput: {
       borderRadius: theme.borderRadius.full,
@@ -288,41 +308,36 @@ const SearchScreen = () => {
     sectionDivider: {
       backgroundColor: theme.colors.surfaceVariant,
       height: 1,
-      marginVertical: 16,
+      marginVertical: theme.spacing.sm,
       width: "100%",
     },
     separator: {
-      height: 8,
+      height: theme.spacing.sm,
     },
     speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: 15,
-      marginBottom: 4,
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
-      fontStyle: "italic",
-      marginTop: 2,
-    },
-    title: {
-      color: theme.colors.primary,
-      fontSize: theme.typography.headlineLarge.fontSize,
-      fontWeight: "bold",
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     typeIndicator: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.borderRadius.sm,
       flexDirection: "row",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
+      minHeight: 20,
     },
     typeIndicatorText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 12,
-      fontWeight: "500",
-      marginLeft: 4,
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.xs,
     },
   });
 
@@ -656,12 +671,24 @@ const SearchScreen = () => {
       {/* Custom Header */}
       <View style={styles.header}>
         <View style={styles.headerInner}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.title}>Search</Text>
-              <Text style={styles.subtitle}>Find recordings and species</Text>
-            </View>
-          </View>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "6xl",
+              weight: "bold",
+              color: "primary",
+            })}
+          >
+            Search
+          </Text>
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "lg",
+              weight: "normal",
+              color: "onSurfaceVariant",
+            })}
+          >
+            Find recordings and species
+          </Text>
 
           <Input
             placeholder="Search species and recordings"
@@ -675,6 +702,7 @@ const SearchScreen = () => {
             returnKeyType="search"
             onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
             textAlignVertical="center"
+            containerStyle={styles.searchInputContainer}
           />
 
           {searchQuery && (
@@ -732,10 +760,26 @@ const SearchScreen = () => {
       ) : (
         <View style={styles.recentContainer}>
           <View style={styles.recentHeader}>
-            <Text style={styles.recentTitle}>Recent Searches</Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "lg",
+                weight: "normal",
+                color: "primary",
+              })}
+            >
+              Recent Searches
+            </Text>
             {recentSearches.length > 0 && (
               <TouchableOpacity onPress={clearRecentSearches}>
-                <Text style={styles.clearText}>Clear All</Text>
+                <Text
+                  style={createThemedTextStyle(theme, {
+                    size: "lg",
+                    weight: "normal",
+                    color: "primary",
+                  })}
+                >
+                  Clear All
+                </Text>
               </TouchableOpacity>
             )}
           </View>

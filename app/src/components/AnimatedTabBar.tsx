@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import type { Theme } from "../lib/theme/types";
+import { createThemedTextStyle } from "../lib/theme/typography";
 
 interface AnimatedTabBarProps {
   activeTab: string;
@@ -66,14 +67,6 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
   });
 
   const styles = StyleSheet.create({
-    activeTabText: {
-      color: theme.colors.onTertiary,
-      fontWeight: theme.typography.labelMedium.fontWeight,
-    },
-    inactiveTabText: {
-      color: theme.colors.onSurfaceVariant,
-      fontWeight: theme.typography.labelMedium.fontWeight,
-    },
     rowCenter: {
       alignItems: "center",
       flexDirection: "row",
@@ -98,8 +91,8 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       flexDirection: "row",
       flex: 1,
       justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
       zIndex: 1,
     },
     tabBar: {
@@ -111,10 +104,9 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       borderWidth: 1,
       flexDirection: "row",
       height: 46,
-      marginHorizontal: 4,
-      marginTop: 12,
+      marginTop: theme.spacing.sm,
       overflow: "hidden",
-      paddingHorizontal: 6,
+      paddingHorizontal: theme.spacing.xs,
       position: "relative",
       width: "94%",
       elevation: 3,
@@ -124,9 +116,12 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       shadowRadius: 4,
     },
     tabText: {
-      fontSize: theme.typography.labelMedium.fontSize,
-      fontWeight: theme.typography.labelMedium.fontWeight,
-      marginLeft: 6,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.sm,
     },
   });
 
@@ -149,7 +144,17 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
           <Text
             style={[
               styles.tabText,
-              activeTab === "book" ? styles.activeTabText : styles.inactiveTabText,
+              activeTab === "book"
+                ? createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onTertiary",
+                  })
+                : createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onSurfaceVariant",
+                  }),
             ]}
           >
             By Book Order
@@ -174,7 +179,17 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
           <Text
             style={[
               styles.tabText,
-              activeTab === "species" ? styles.activeTabText : styles.inactiveTabText,
+              activeTab === "species"
+                ? createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onTertiary",
+                  })
+                : createThemedTextStyle(theme, {
+                    size: "base",
+                    weight: "normal",
+                    color: "onSurfaceVariant",
+                  }),
             ]}
           >
             By Species

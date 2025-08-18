@@ -2,6 +2,7 @@ import { useMemo } from "react";
 
 import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
 
+import { ThemeColors } from "./types";
 import {
   createTextStyle,
   createThemedTextStyle,
@@ -13,7 +14,6 @@ import {
   scaleTextStyle,
   responsiveScale,
 } from "./typography";
-import { ThemeColors } from "./types";
 
 // Hook to easily create text styles with theme colors
 export const useTextStyle = (options: {

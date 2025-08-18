@@ -20,6 +20,7 @@ import ErrorAlert from "../components/ErrorAlert";
 import { Input, Button, Card } from "../components/ui";
 import { AuthContext } from "../context/AuthContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../lib/theme";
 import type { RootStackParamList } from "../types";
 
 const SignUpScreen = () => {
@@ -63,59 +64,71 @@ const SignUpScreen = () => {
       flex: 1,
     },
     form: {
-      marginTop: 8,
+      marginTop: theme.spacing.sm,
     },
     headerIcon: {
       alignSelf: "center",
       backgroundColor: theme.colors.tertiaryContainer,
       borderRadius: theme.borderRadius.full,
-      marginBottom: 16,
-      padding: 16,
+      marginBottom: theme.spacing.md,
+      padding: theme.spacing.md,
     },
     loginContainer: {
       borderTopColor: theme.colors.surfaceVariant,
       borderTopWidth: 1,
       flexDirection: "row",
       justifyContent: "center",
-      marginTop: 24,
-      paddingTop: 16,
+      marginTop: theme.spacing.md,
+      paddingTop: theme.spacing.md,
     },
     loginLink: {
-      color: theme.colors.primary,
-      fontWeight: "700",
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "bold",
+        color: "primary",
+      }),
     },
     loginText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 15,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
     },
     scrollContent: {
       flexGrow: 1,
       justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 24,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
     },
     subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 16,
-      lineHeight: 22,
-      marginBottom: 24,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
       textAlign: "center",
     },
     title: {
-      color: theme.colors.onSurface,
-      fontSize: 28,
-      fontWeight: "700",
-      marginBottom: 8,
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
     input: {
       marginBottom: theme.spacing.md,
     },
     bookCodeText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: 14,
-      lineHeight: 20,
-      marginTop: -12,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: -theme.spacing.sm,
     },
     bookCodeContainer: {
       marginTop: theme.spacing.sm,
@@ -210,7 +223,7 @@ const SignUpScreen = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Card variant="elevated" size="lg">
+        <Card variant="elevated" size="lg" padding={theme.spacing.md}>
           <View style={styles.headerIcon}>
             <Ionicons name="person-add-outline" size={32} color={theme.colors.tertiary} />
           </View>
@@ -290,6 +303,7 @@ const SignUpScreen = () => {
               title={isLoading ? "Creating Account..." : "Create Account"}
               rightIcon={{ name: "person-add-outline" }}
               size="lg"
+              variant="primary"
               fullWidth
             />
 

@@ -14,9 +14,16 @@ import {
 import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
 
 // Button variant types
-export type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+export type ButtonVariant =
+  | "default"
+  | "primary"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link";
 
-export type ButtonSize = "sm" | "md" | "lg" | "icon";
+export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "icon";
 
 // Icon configuration
 export interface ButtonIcon {
@@ -36,6 +43,7 @@ export interface ButtonProps extends Omit<TouchableOpacityProps, "style"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
+  backgroundColor?: string;
 
   // State
   loading?: boolean;
@@ -68,6 +76,7 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
       icon,
       leftIcon,
       rightIcon,
+      backgroundColor,
       style,
       textStyle,
       accessibilityLabel,
@@ -97,17 +106,25 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
             ? theme.spacing.sm
             : size === "lg"
               ? theme.spacing.xl
-              : size === "icon"
-                ? 0
-                : theme.spacing.lg,
+              : size === "xs"
+                ? theme.spacing.xs
+                : size === "xl"
+                  ? theme.spacing.xl
+                  : size === "icon"
+                    ? 0
+                    : theme.spacing.lg,
         paddingVertical:
           size === "sm"
             ? theme.spacing.xs
             : size === "lg"
               ? theme.spacing.md
-              : size === "icon"
-                ? theme.spacing.sm
-                : theme.spacing.sm,
+              : size === "xs"
+                ? theme.spacing.xs
+                : size === "xl"
+                  ? theme.spacing.xl
+                  : size === "icon"
+                    ? theme.spacing.sm
+                    : theme.spacing.sm,
         // Icon-only button dimensions
         ...(size === "icon" && {
           width: 40,
@@ -120,7 +137,8 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
 
       // Text styles
       text: {
-        fontSize: size === "sm" ? 14 : size === "lg" ? 18 : 16,
+        fontSize:
+          size === "xs" ? 12 : size === "sm" ? 14 : size === "lg" ? 18 : size === "xl" ? 20 : 16,
         fontWeight: "600",
         textAlign: "center",
       },
@@ -141,6 +159,18 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
 
       // Variant styles
       default: {
+        backgroundColor: theme.colors.surface,
+        shadowColor: theme.colors.shadow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+      },
+      defaultText: {
+        color: theme.colors.onSurface,
+      },
+
+      primary: {
         backgroundColor: theme.colors.primary,
         shadowColor: theme.colors.primary,
         shadowOffset: { width: 0, height: 4 },
@@ -148,7 +178,7 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
         shadowRadius: 8,
         elevation: 6,
       },
-      defaultText: {
+      primaryText: {
         color: theme.colors.onPrimary,
       },
 
@@ -212,10 +242,6 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
       disabledText: {
         color: theme.colors.onSurfaceVariant,
       },
-
-      iconContainer: {
-        margin: theme.spacing.xs,
-      },
     });
 
     // Get variant-specific styles
@@ -225,6 +251,8 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
       switch (variant) {
         case "default":
           return styles.default;
+        case "primary":
+          return styles.primary;
         case "destructive":
           return styles.destructive;
         case "outline":
@@ -246,6 +274,8 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
       switch (variant) {
         case "default":
           return styles.defaultText;
+        case "primary":
+          return styles.primaryText;
         case "destructive":
           return styles.destructiveText;
         case "outline":
@@ -280,6 +310,8 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
       switch (variant) {
         case "default":
           return theme.colors.onPrimary;
+        case "primary":
+          return theme.colors.onPrimary;
         case "destructive":
           return theme.colors.onError;
         case "secondary":
@@ -298,12 +330,7 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
       if (!iconConfig) return null;
 
       return (
-        <View
-          style={[
-            position === "left" ? styles.leftIconContainer : styles.rightIconContainer,
-            size === "icon" && styles.iconContainer,
-          ]}
-        >
+        <View style={[position === "left" ? styles.leftIconContainer : styles.rightIconContainer]}>
           <Ionicons
             name={iconConfig.name}
             size={getIconSize(iconConfig)}
@@ -343,7 +370,7 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
     return (
       <TouchableOpacity
         ref={ref}
-        style={[styles.button, getVariantStyles(), style]}
+        style={[styles.button, getVariantStyles(), backgroundColor && { backgroundColor }, style]}
         onPress={onPress}
         disabled={isDisabled}
         activeOpacity={0.8}

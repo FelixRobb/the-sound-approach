@@ -17,7 +17,7 @@ export type CardVariant = "default" | "outlined" | "filled" | "elevated";
 export type CardSize = "sm" | "md" | "lg";
 
 // Card header/footer configuration
-export interface CardHeader {
+export interface CardHeaderType {
   title?: string;
   subtitle?: string;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -29,7 +29,7 @@ export interface CardHeader {
   subtitleStyle?: TextStyle;
 }
 
-export interface CardFooter {
+export interface CardFooterType {
   content?: React.ReactNode;
   style?: ViewStyle;
 }
@@ -40,8 +40,8 @@ export interface CardProps extends TouchableOpacityProps {
   children?: React.ReactNode;
 
   // Header and Footer
-  header?: CardHeader;
-  footer?: CardFooter;
+  header?: CardHeaderType;
+  footer?: CardFooterType;
 
   // Styling
   variant?: CardVariant;
@@ -256,7 +256,14 @@ export const Card: React.FC<CardProps> = ({
   // Render footer if provided
   const renderFooter = () => {
     if (!footer) return null;
-
+    const styles = StyleSheet.create({
+      footer: {
+        borderTopWidth: 1,
+        borderTopColor: theme.colors.outline,
+        paddingTop: theme.spacing.sm,
+        marginTop: theme.spacing.md,
+      },
+    });
     const { content, style: footerStyle } = footer;
 
     return <View style={[styles.footer, footerStyle]}>{content}</View>;
@@ -295,7 +302,7 @@ export const Card: React.FC<CardProps> = ({
     <View
       style={[styles.card, getVariantStyles(), style]}
       accessibilityLabel={accessibilityLabel}
-      {...(props as any)} // Cast to any to avoid TouchableOpacity props conflict
+      {...props}
     >
       {renderContent()}
     </View>
@@ -309,21 +316,16 @@ export const CardHeader: React.FC<{
 }> = ({ children, style }) => {
   const { theme } = useEnhancedTheme();
 
-  return (
-    <View
-      style={[
-        {
-          borderBottomWidth: 1,
-          borderBottomColor: theme.colors.outline,
-          paddingBottom: theme.spacing.sm,
-          marginBottom: theme.spacing.md,
-        },
-        style,
-      ]}
-    >
-      {children}
-    </View>
-  );
+  const styles = StyleSheet.create({
+    header: {
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+      paddingBottom: theme.spacing.sm,
+      marginBottom: theme.spacing.md,
+    },
+  });
+
+  return <View style={[styles.header, style]}>{children}</View>;
 };
 
 export const CardContent: React.FC<{
@@ -339,64 +341,51 @@ export const CardFooter: React.FC<{
 }> = ({ children, style }) => {
   const { theme } = useEnhancedTheme();
 
-  return (
-    <View
-      style={[
-        {
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.outline,
-          paddingTop: theme.spacing.sm,
-          marginTop: theme.spacing.md,
-        },
-        style,
-      ]}
-    >
-      {children}
-    </View>
-  );
+  const styles = StyleSheet.create({
+    footer: {
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outline,
+      paddingTop: theme.spacing.sm,
+      marginTop: theme.spacing.md,
+    },
+  });
+
+  return <View style={[styles.footer, style]}>{children}</View>;
 };
 
 export const CardTitle: React.FC<{
   children: React.ReactNode;
   style?: TextStyle;
-}> = ({ children, style }) => {
+  size?: CardSize;
+}> = ({ children, style, size }) => {
   const { theme } = useEnhancedTheme();
 
-  return (
-    <Text
-      style={[
-        {
-          fontSize: 18,
-          fontWeight: "600",
-          color: theme.colors.onSurface,
-          marginBottom: 4,
-        },
-        style,
-      ]}
-    >
-      {children}
-    </Text>
-  );
+  const styles = StyleSheet.create({
+    headerTitle: {
+      fontSize: size === "sm" ? 16 : size === "lg" ? 20 : 18,
+      fontWeight: "600",
+      color: theme.colors.onSurface,
+      marginBottom: 2,
+    },
+  });
+
+  return <Text style={[styles.headerTitle, style]}>{children}</Text>;
 };
 
 export const CardDescription: React.FC<{
   children: React.ReactNode;
   style?: TextStyle;
-}> = ({ children, style }) => {
+  size?: CardSize;
+}> = ({ children, style, size }) => {
   const { theme } = useEnhancedTheme();
 
-  return (
-    <Text
-      style={[
-        {
-          fontSize: 14,
-          color: theme.colors.onSurfaceVariant,
-          lineHeight: 20,
-        },
-        style,
-      ]}
-    >
-      {children}
-    </Text>
-  );
+  const styles = StyleSheet.create({
+    headerSubtitle: {
+      fontSize: size === "sm" ? 12 : size === "lg" ? 16 : 14,
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: size === "sm" ? 16 : size === "lg" ? 22 : 20,
+    },
+  });
+
+  return <Text style={[styles.headerSubtitle, style]}>{children}</Text>;
 };

@@ -16,8 +16,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
-import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import PageBadge from "../components/PageBadge";
+import RecordingCard from "../components/RecordingCard";
+import { Button } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { createThemedTextStyle } from "../lib/theme/typography";
@@ -148,76 +148,19 @@ const DownloadsScreen = () => {
       borderRadius: theme.borderRadius.lg,
       height: 40,
       justifyContent: "center",
-      marginRight: 12,
+      marginRight: theme.spacing.md,
       width: 40,
-    },
-
-    clearAllButton: {
-      backgroundColor: theme.colors.tertiary,
-      borderRadius: theme.borderRadius.sm,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-    },
-    clearAllButtonDisabled: {
-      opacity: 0.5,
-    },
-    clearAllText: {
-      ...createThemedTextStyle(theme, { size: "xs", weight: "medium", color: "onTertiary" }),
     },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
-    },
-    deleteButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.error,
-      borderRadius: theme.borderRadius.full,
-      height: 40,
-      justifyContent: "center",
-      width: 40,
-    },
-    downloadActions: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    downloadCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    downloadContent: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      padding: 16,
-      paddingTop: 8,
-    },
-    downloadDate: {
-      ...createThemedTextStyle(theme, { size: "xs", weight: "normal", color: "onSurfaceVariant" }),
-      marginTop: 4,
-    },
-    downloadHeader: {
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomWidth: 1,
-      padding: 16,
-      paddingBottom: 8,
-    },
-    downloadInfo: {
-      flex: 1,
-    },
-    downloadTitle: {
-      ...createThemedTextStyle(theme, { size: "sm", weight: "medium", color: "onSurface" }),
     },
     emptyCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      padding: 24,
+      padding: theme.spacing.xl,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
@@ -229,37 +172,42 @@ const DownloadsScreen = () => {
       flex: 1,
       justifyContent: "center",
       marginTop: 48,
-      padding: 24,
+      padding: theme.spacing.xl,
     },
     emptyText: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelSmall.fontSize,
-      lineHeight: 20,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
       marginTop: 8,
       textAlign: "center",
     },
     emptyTitle: {
-      color: theme.colors.onSurface,
-      fontSize: theme.typography.labelLarge.fontSize,
-      fontWeight: theme.typography.labelLarge.fontWeight,
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "normal",
+        color: "onSurface",
+      }),
       marginTop: 16,
       textAlign: "center",
     },
     header: {
-      paddingTop: 8 + insets.top,
+      paddingBottom: theme.spacing.sm,
+      paddingTop: theme.spacing.sm + insets.top,
       zIndex: 1,
     },
     headerInner: {
-      paddingHorizontal: 20,
+      paddingHorizontal: theme.spacing.xl,
     },
     headerRow: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: 16,
+      marginBottom: theme.spacing.lg,
     },
     listContent: {
-      padding: 16,
+      padding: theme.spacing.md,
       paddingBottom: 80,
     },
     loadingCard: {
@@ -267,7 +215,7 @@ const DownloadsScreen = () => {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 4,
-      padding: 24,
+      padding: theme.spacing.xl,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
@@ -278,33 +226,16 @@ const DownloadsScreen = () => {
       alignItems: "center",
       flex: 1,
       justifyContent: "center",
-      padding: 24,
+      padding: theme.spacing.xl,
     },
     loadingText: {
       ...createThemedTextStyle(theme, { size: "sm", weight: "medium", color: "onSurface" }),
-      marginTop: 16,
+      marginTop: theme.spacing.md,
       textAlign: "center",
     },
-    pageBadgeWrapper: {
-      alignSelf: "flex-start",
-      marginVertical: 2,
-    },
-    playButton: {
-      marginRight: 16,
-    },
-    scientificName: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelSmall.fontSize,
-      fontStyle: "italic",
-      marginTop: 2,
-    },
+
     separator: {
-      height: 16,
-    },
-    speciesName: {
-      color: theme.colors.onSurface,
-      fontSize: theme.typography.labelSmall.fontSize,
-      marginBottom: 4,
+      height: theme.spacing.md,
     },
     storageInfo: {
       alignItems: "center",
@@ -312,18 +243,9 @@ const DownloadsScreen = () => {
       justifyContent: "space-between",
     },
     storageInfoContainer: {
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-    },
-    storageText: {
-      color: theme.colors.tertiary,
-      fontSize: theme.typography.labelSmall.fontSize,
-      fontWeight: theme.typography.labelSmall.fontWeight,
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      fontSize: theme.typography.labelSmall.fontSize,
-      marginTop: 2,
+      marginLeft: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
   });
 
@@ -341,14 +263,22 @@ const DownloadsScreen = () => {
             <View>
               <Text
                 style={createThemedTextStyle(theme, {
-                  size: "xl",
+                  size: "6xl",
                   weight: "bold",
                   color: "primary",
                 })}
               >
                 Downloads
               </Text>
-              <Text style={styles.subtitle}>Manage your offline recordings</Text>
+              <Text
+                style={createThemedTextStyle(theme, {
+                  size: "lg",
+                  weight: "normal",
+                  color: "onSurfaceVariant",
+                })}
+              >
+                Manage your offline recordings
+              </Text>
             </View>
           </View>
         </View>
@@ -356,14 +286,25 @@ const DownloadsScreen = () => {
 
       <View style={styles.storageInfoContainer}>
         <View style={styles.storageInfo}>
-          <Text style={styles.storageText}>Storage used: {formatBytes(totalStorageUsed)}</Text>
-          <TouchableOpacity
-            style={[styles.clearAllButton, downloads.length === 0 && styles.clearAllButtonDisabled]}
-            disabled={downloads.length === 0}
-            onPress={handleClearAllDownloads}
+          <Text
+            style={createThemedTextStyle(theme, {
+              size: "lg",
+              weight: "normal",
+              color: "onSurfaceVariant",
+            })}
           >
-            <Text style={styles.clearAllText}>Clear All</Text>
-          </TouchableOpacity>
+            Storage used: {formatBytes(totalStorageUsed)}
+          </Text>
+          <Button
+            onPress={handleClearAllDownloads}
+            disabled={downloads.length === 0}
+            variant="default"
+            size="md"
+            backgroundColor={theme.colors.tertiary}
+            textColor={theme.colors.onTertiary}
+          >
+            Clear All
+          </Button>
         </View>
       </View>
     </View>
@@ -375,44 +316,18 @@ const DownloadsScreen = () => {
       navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
     };
 
+    const handleDeletePress = () => {
+      handleDeleteDownload(item);
+    };
+
     return (
-      <View>
-        <TouchableOpacity style={styles.downloadCard} onPress={handleItemPress}>
-          <View style={styles.downloadHeader}>
-            <Text style={styles.downloadTitle}>{item.title || "Unknown Recording"}</Text>
-            <Text style={styles.scientificName}>{item.scientific_name || ""}</Text>
-          </View>
-
-          <View style={styles.downloadContent}>
-            <View style={styles.downloadInfo}>
-              <Text style={styles.speciesName}>{item.species_name || "Unknown Species"}</Text>
-
-              {item.book_page_number && (
-                <View style={styles.pageBadgeWrapper}>
-                  <PageBadge page={item.book_page_number} />
-                </View>
-              )}
-
-              <Text style={styles.downloadDate}>
-                Downloaded: {new Date(item.downloaded_at).toLocaleDateString()}
-              </Text>
-            </View>
-
-            <View style={styles.downloadActions}>
-              <View style={styles.playButton}>
-                <MiniAudioPlayer recording={item.recording} size={40} />
-              </View>
-
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDeleteDownload(item)}
-              >
-                <Ionicons name="trash-outline" size={22} color={theme.colors.onError} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <RecordingCard
+        item={item}
+        onPress={handleItemPress}
+        showPlayButton={true}
+        showDeleteButton={true}
+        onDeletePress={handleDeletePress}
+      />
     );
   };
 
