@@ -251,7 +251,7 @@ const OfflineScreen = () => {
               style={createThemedTextStyle(theme, {
                 size: "6xl",
                 weight: "bold",
-                color: "primary",
+                color: "secondary",
               })}
             >
               Offline Mode

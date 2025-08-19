@@ -59,6 +59,9 @@ const DeleteAccountScreen = () => {
   };
 
   const styles = StyleSheet.create({
+    cancelButton: {
+      marginBottom: theme.spacing.md,
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -94,9 +97,9 @@ const DeleteAccountScreen = () => {
       marginBottom: theme.spacing.sm,
     },
     scrollContent: {
+      paddingBottom: globalAudioBarHeight,
       paddingHorizontal: theme.spacing.xl,
       paddingVertical: theme.spacing.md,
-      paddingBottom: globalAudioBarHeight,
     },
     warningCard: {
       backgroundColor: theme.colors.errorContainer,
@@ -217,7 +220,13 @@ const DeleteAccountScreen = () => {
           {isLoading ? "Deleting Account..." : "Delete My Account"}
         </Button>
 
-        <Button variant="outline" fullWidth size="lg" onPress={() => navigation.goBack()}>
+        <Button
+          variant="outline"
+          fullWidth
+          size="lg"
+          onPress={() => navigation.goBack()}
+          style={styles.cancelButton}
+        >
           Cancel
         </Button>
       </ScrollView>

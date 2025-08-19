@@ -181,11 +181,11 @@ const ProfileSettingsScreen = () => {
       paddingHorizontal: theme.spacing.xl,
     },
     profileCard: {
-      marginTop: theme.spacing.xxl,
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 4,
       marginBottom: theme.spacing.xl,
+      marginTop: theme.spacing.xxl,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -216,11 +216,8 @@ const ProfileSettingsScreen = () => {
     },
     storageActions: {
       flexDirection: "row",
-      justifyContent: "space-between",
       gap: theme.spacing.sm,
-    },
-    storageButton: {
-      flex: 1,
+      justifyContent: "space-between",
     },
     storageBar: {
       backgroundColor: theme.colors.outline,
@@ -233,6 +230,9 @@ const ProfileSettingsScreen = () => {
       backgroundColor: theme.colors.tertiary,
       borderRadius: theme.borderRadius.sm,
       height: "100%",
+    },
+    storageButton: {
+      flex: 1,
     },
     storageDetails: {
       flex: 1,
@@ -300,7 +300,7 @@ const ProfileSettingsScreen = () => {
           style={createThemedTextStyle(theme, {
             size: "6xl",
             weight: "bold",
-            color: "primary",
+            color: "secondary",
           })}
         >
           Profile & Settings

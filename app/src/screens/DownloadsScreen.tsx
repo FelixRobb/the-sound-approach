@@ -139,11 +139,6 @@ const DownloadsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    headerRowInner: {
-      flexDirection: "row",
-      alignItems: "center",
-      flex: 1,
-    },
     backButton: {
       alignItems: "center",
       borderRadius: theme.borderRadius.lg,
@@ -207,6 +202,11 @@ const DownloadsScreen = () => {
       justifyContent: "space-between",
       marginBottom: theme.spacing.lg,
     },
+    headerRowInner: {
+      alignItems: "center",
+      flexDirection: "row",
+      flex: 1,
+    },
     listContent: {
       padding: theme.spacing.md,
       paddingBottom: globalAudioBarHeight,
@@ -266,7 +266,7 @@ const DownloadsScreen = () => {
                 style={createThemedTextStyle(theme, {
                   size: "6xl",
                   weight: "bold",
-                  color: "primary",
+                  color: "secondary",
                 })}
               >
                 Downloads

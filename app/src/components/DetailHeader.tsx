@@ -43,13 +43,6 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
         color: "onSurfaceVariant",
       }),
     },
-    title: {
-      ...createThemedTextStyle(theme, {
-        size: "4xl",
-        weight: "bold",
-        color: "primary",
-      }),
-    },
     titleContainer: {
       flex: 1,
     },
@@ -61,7 +54,15 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
         <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>{title}</Text>
+        <Text
+          style={createThemedTextStyle(theme, {
+            size: "4xl",
+            weight: "bold",
+            color: "secondary",
+          })}
+        >
+          {title}
+        </Text>
         {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       </View>
       {rightElement}

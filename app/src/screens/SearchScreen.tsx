@@ -193,14 +193,14 @@ const SearchScreen = () => {
       shadowOpacity: 0.3,
       shadowRadius: 3,
     },
+    recentItemAction: {
+      padding: theme.spacing.xs,
+    },
     recentItemContent: {
       alignItems: "center",
       flex: 1,
       flexDirection: "row",
       marginRight: theme.spacing.sm,
-    },
-    recentItemAction: {
-      padding: theme.spacing.xs,
     },
     recentItemIcon: {
       alignItems: "center",
@@ -303,11 +303,11 @@ const SearchScreen = () => {
       fontStyle: "italic",
       marginTop: theme.spacing.xs,
     },
-    searchInputContainer: {
-      marginTop: theme.spacing.sm,
-    },
     searchInput: {
       borderRadius: theme.borderRadius.full,
+    },
+    searchInputContainer: {
+      marginTop: theme.spacing.sm,
     },
     sectionDivider: {
       backgroundColor: theme.colors.surfaceVariant,
@@ -331,9 +331,9 @@ const SearchScreen = () => {
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: theme.borderRadius.sm,
       flexDirection: "row",
+      minHeight: 20,
       paddingHorizontal: theme.spacing.xs,
       paddingVertical: theme.spacing.xs,
-      minHeight: 20,
     },
     typeIndicatorText: {
       ...createThemedTextStyle(theme, {
@@ -679,7 +679,7 @@ const SearchScreen = () => {
             style={createThemedTextStyle(theme, {
               size: "6xl",
               weight: "bold",
-              color: "primary",
+              color: "secondary",
             })}
           >
             Search
