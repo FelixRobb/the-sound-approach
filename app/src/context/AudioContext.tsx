@@ -100,15 +100,21 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Toggle play/pause for a track
   const togglePlayPause = async (recording: Recording): Promise<boolean> => {
     try {
-      // If offline and not a downloaded file (file:// URI), don't play
-      if (!isConnected && !audioState.uri) {
-        return false;
-      }
+      // Get the best audio URI first
       const uri = await getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
 
       if (!uri) {
         console.error("No valid URI found for recording:", recording.id);
         return false;
+      }
+
+      // If offline and not a downloaded file, don't play
+      if (!isConnected) {
+        // Check if this is a downloaded file (file:// URI)
+        const isLocalFile = uri.startsWith("file://");
+        if (!isLocalFile) {
+          return false;
+        }
       }
 
       // Use the simplified playTrack method which handles all the logic

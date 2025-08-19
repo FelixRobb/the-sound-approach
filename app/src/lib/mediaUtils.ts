@@ -10,7 +10,6 @@ export const getBestAudioUri = async (
   isConnected: boolean
 ): Promise<string | null> => {
   if (!recording) return null;
-
   // First try to use downloaded audio if available
   if (recording.audiolqid && isDownloaded(recording.id)) {
     const localPath = getDownloadPath(recording.audiolqid, true);
