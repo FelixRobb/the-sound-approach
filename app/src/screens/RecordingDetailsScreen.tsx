@@ -74,8 +74,6 @@ const RecordingDetailsScreen = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
   const videoViewRef = useRef(null);
   const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isComponentMountedRef = useRef(true);
@@ -605,32 +603,10 @@ const RecordingDetailsScreen = () => {
         StatusBar.setHidden(true);
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
         hideGlobalAudioBar(); // Hide GlobalAudioBar in fullscreen
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.spring(scaleAnim, {
-            toValue: 1.1,
-            useNativeDriver: true,
-          }),
-        ]).start();
       } else {
         StatusBar.setHidden(false);
         await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
         showGlobalAudioBar(); // Show GlobalAudioBar when exiting fullscreen
-        Animated.parallel([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-          }),
-        ]).start();
       }
     };
 

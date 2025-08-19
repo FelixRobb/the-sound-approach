@@ -131,22 +131,6 @@ export interface Elevation {
   level5: number;
 }
 
-// Animation configuration
-export interface Animation {
-  scale: number;
-  duration: {
-    fast: number;
-    normal: number;
-    slow: number;
-  };
-  easing: {
-    ease: string;
-    easeIn: string;
-    easeOut: string;
-    easeInOut: string;
-  };
-}
-
 // Border radius
 export interface BorderRadius {
   none: number;
@@ -186,7 +170,6 @@ export interface Theme {
   spacing: Spacing;
   typography: Typography;
   elevation: Elevation;
-  animation: Animation;
   borderRadius: BorderRadius;
   zIndex: ZIndex;
   isDark: boolean;

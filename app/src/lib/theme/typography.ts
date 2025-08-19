@@ -1,6 +1,6 @@
 import { TextStyle } from "react-native";
 
-import { Theme, ThemeColors, Typography, TypographyScale } from "./types";
+import { Theme, ThemeColors, Typography } from "./types";
 
 // Font size scale - easy to use and remember
 export const fontSizes = {
@@ -146,11 +146,6 @@ export const typography: Typography = {
   },
 };
 
-// Typography utility functions
-export const getTypography = (variant: keyof Typography): TypographyScale => {
-  return typography[variant];
-};
-
 // Easy-to-use text style creator
 export const createTextStyle = (options: {
   size?: keyof typeof fontSizes;
@@ -186,73 +181,6 @@ export const createTextStyle = (options: {
     ...(color && { color }),
     ...(textAlign && { textAlign }),
     ...(textDecoration && { textDecorationLine: textDecoration }),
-  };
-};
-
-// Quick text style presets - most commonly used combinations
-export const textStyles = {
-  // Headers
-  h1: createTextStyle({ size: "6xl", weight: "bold", lineHeight: "tight" }),
-  h2: createTextStyle({ size: "5xl", weight: "bold", lineHeight: "tight" }),
-  h3: createTextStyle({ size: "4xl", weight: "semiBold", lineHeight: "snug" }),
-  h4: createTextStyle({ size: "3xl", weight: "semiBold", lineHeight: "snug" }),
-  h5: createTextStyle({ size: "2xl", weight: "medium", lineHeight: "snug" }),
-  h6: createTextStyle({ size: "xl", weight: "medium", lineHeight: "normal" }),
-
-  // Body text
-  body: createTextStyle({ size: "base", weight: "normal" }),
-  bodyLarge: createTextStyle({ size: "lg", weight: "normal" }),
-  bodySmall: createTextStyle({ size: "sm", weight: "normal" }),
-
-  // Labels and UI text
-  label: createTextStyle({ size: "sm", weight: "medium" }),
-  labelLarge: createTextStyle({ size: "base", weight: "medium" }),
-  labelSmall: createTextStyle({ size: "xs", weight: "medium" }),
-
-  // Button text
-  button: createTextStyle({ size: "base", weight: "medium", letterSpacing: "wide" }),
-  buttonLarge: createTextStyle({ size: "lg", weight: "medium", letterSpacing: "wide" }),
-  buttonSmall: createTextStyle({ size: "sm", weight: "medium", letterSpacing: "wide" }),
-
-  // Caption and helper text
-  caption: createTextStyle({ size: "xs", weight: "normal", lineHeight: "snug" }),
-  overline: createTextStyle({ size: "xs", weight: "medium", letterSpacing: "widest" }),
-
-  // Links
-  link: createTextStyle({ size: "base", weight: "normal", textDecoration: "underline" }),
-  linkSmall: createTextStyle({ size: "sm", weight: "normal", textDecoration: "underline" }),
-};
-
-// Responsive text helper - automatically scales based on screen size
-export const createResponsiveTextStyle = (
-  baseSize: keyof typeof fontSizes,
-  options?: {
-    weight?: keyof typeof fontWeights;
-    lineHeight?: keyof typeof lineHeights;
-    letterSpacing?: keyof typeof letterSpacings;
-  }
-) => {
-  const { weight = "normal", lineHeight = "normal", letterSpacing = "normal" } = options || {};
-
-  return {
-    small: createTextStyle({
-      size: "sm", // Use a known size instead of calculated
-      weight,
-      lineHeight,
-      letterSpacing,
-    }),
-    base: createTextStyle({
-      size: baseSize,
-      weight,
-      lineHeight,
-      letterSpacing,
-    }),
-    large: createTextStyle({
-      size: "lg", // Use a known size instead of calculated
-      weight,
-      lineHeight,
-      letterSpacing,
-    }),
   };
 };
 
@@ -294,57 +222,6 @@ export const createThemedTextStyle = (
     color: resolvedColor,
   });
 };
-
-// Common typography combinations - now using the new system
-export const commonTypography = {
-  // Button text
-  button: {
-    primary: textStyles.button,
-    secondary: textStyles.button,
-    small: textStyles.buttonSmall,
-    large: textStyles.buttonLarge,
-  },
-  // Input text
-  input: {
-    default: textStyles.body,
-    placeholder: textStyles.bodySmall,
-    label: textStyles.labelSmall,
-  },
-  // Navigation text
-  navigation: {
-    header: textStyles.h4,
-    tab: textStyles.labelSmall,
-    breadcrumb: textStyles.bodySmall,
-  },
-  // Content text
-  content: {
-    heading: textStyles.h2,
-    subheading: textStyles.h5,
-    body: textStyles.body,
-    caption: textStyles.caption,
-  },
-  // Status text
-  status: {
-    success: textStyles.labelSmall,
-    warning: textStyles.labelSmall,
-    error: textStyles.labelSmall,
-    info: textStyles.labelSmall,
-  },
-};
-
-// Simplified responsive scaling - multiply any text style by these factors
-export const responsiveScale = {
-  small: 0.875, // 87.5% of base size
-  base: 1, // 100% - default
-  large: 1.125, // 112.5% of base size
-};
-
-// Helper to scale any text style responsively
-export const scaleTextStyle = (baseStyle: TextStyle, scale: number): TextStyle => ({
-  ...baseStyle,
-  fontSize: Math.round((baseStyle.fontSize || fontSizes.base) * scale),
-  lineHeight: baseStyle.lineHeight ? Math.round(baseStyle.lineHeight * scale) : undefined,
-});
 
 // Text alignment utilities
 export const textAlign = {

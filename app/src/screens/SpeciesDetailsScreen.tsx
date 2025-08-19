@@ -57,13 +57,13 @@ const SpeciesDetailsScreen = () => {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: theme.spacing.md,
       overflow: "hidden",
       padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
+      marginBottom: globalAudioBarHeight,
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -178,7 +178,6 @@ const SpeciesDetailsScreen = () => {
     recordingsList: {
       borderRadius: theme.borderRadius.md,
       overflow: "hidden",
-      paddingBottom: globalAudioBarHeight,
     },
     retryButton: {
       alignItems: "center",
