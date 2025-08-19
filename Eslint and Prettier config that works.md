@@ -59,55 +59,37 @@ This approach provides:
 
 **Purpose**: Fallback configuration for the Prettier extension when it can't find project-specific configs.
 
-#### `the-sound-approach-app and web.code-workspace`
 
-**Key Settings**:
-
-```json
-{
-  "settings": {
-    // ESLint Configuration
-    "eslint.enable": true,
-    "eslint.workingDirectories": [
-      {
-        "directory": "./app",
-        "changeProcessCWD": true
-      },
-      {
-        "directory": "./web",
-        "changeProcessCWD": true
-      }
-    ],
-    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-    "eslint.format.enable": false,
-    "eslint.useFlatConfig": true,
-
-    // Editor Actions on Save
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
-    },
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-
-    // Prettier Configuration
-    "prettier.requireConfig": false,
-    "prettier.useEditorConfig": false,
-    "prettier.enable": true
-  }
-}
-```
-
-**Key Decisions**:
-
-- `eslint.workingDirectories` with `changeProcessCWD: true`: Ensures each project uses its own ESLint installation and configuration
-- `eslint.useFlatConfig: true`: Uses modern flat config format (`eslint.config.mjs`)
-- `eslint.format.enable: false`: Disables ESLint formatting to prevent conflicts with Prettier
-- `prettier.requireConfig: false`: Allows Prettier to work without strict config requirements
 
 #### `.vscode/settings.json`
 
 ```json
 {
+  // ESLint Configuration
+  "eslint.enable": true,
+  "eslint.workingDirectories": [
+    {
+      "directory": "./app",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "./web",
+      "changeProcessCWD": true
+    }
+  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.useFlatConfig": true,
+
+  // Editor Actions on Save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Prettier Configuration
+  "prettier.requireConfig": false,
+  "prettier.useEditorConfig": false,
+  "prettier.enable": true,
+
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -127,9 +109,15 @@ This approach provides:
   "editor.formatOnSave": true,
   "eslint.format.enable": false
 }
+
 ```
 
 **Purpose**: File-type specific formatter assignments, ensuring Prettier handles all code formatting.
+
+- `eslint.workingDirectories` with `changeProcessCWD: true`: Ensures each project uses its own ESLint installation and configuration
+- `eslint.useFlatConfig: true`: Uses modern flat config format (`eslint.config.mjs`)
+- `eslint.format.enable: false`: Disables ESLint formatting to prevent conflicts with Prettier
+- `prettier.requireConfig: false`: Allows Prettier to work without strict config requirements
 
 ### **2. Project-Specific Configuration**
 
