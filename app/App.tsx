@@ -31,7 +31,7 @@ const AppContent = () => {
 
   return (
     <View style={styles.container}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={styles.container}>
         <StatusBar style={isDark ? "light" : "dark"} />
         <QueryClientProvider client={queryClient}>
           <NetworkProvider>
