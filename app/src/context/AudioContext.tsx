@@ -8,6 +8,7 @@ import { getBestAudioUri } from "../lib/mediaUtils";
 import { Recording } from "../types";
 
 import { DownloadContext } from "./DownloadContext";
+import { useGlobalAudioBar } from "./GlobalAudioBarContext"; // Import useGlobalAudioBar
 import { NetworkContext } from "./NetworkContext";
 
 // Context type definition
@@ -55,6 +56,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Get network status
   const { isConnected } = useContext(NetworkContext);
+
+  // Get global audio bar context
+  const { show: showAudioBar } = useGlobalAudioBar(); // Destructure and rename show to avoid conflict
 
   // Create a unique ID for this component instance
   const listenerId = useRef(uuidv4()).current;
@@ -110,7 +114,10 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Use the simplified playTrack method which handles all the logic
       const result = await audioService.playTrack(uri, recording);
 
-      // Nothing else to clear – AudioService handles its own state
+      // Show the audio bar when a track starts playing
+      if (result) {
+        showAudioBar();
+      }
 
       return result;
     } catch (error) {

@@ -162,6 +162,8 @@ export interface ZIndex {
   popover: number;
   tooltip: number;
   toast: number;
+  globalAudioBar: number;
+  appBar: number;
 }
 
 // Main theme interface

@@ -19,7 +19,6 @@ import GlobalAudioBar from "../components/GlobalAudioBar";
 import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { GlobalAudioBarProvider } from "../context/GlobalAudioBarContext";
 import { NetworkContext } from "../context/NetworkContext";
 import { navigationDarkTheme, navigationLightTheme, borderRadius } from "../lib/theme";
 import OfflineNavigator from "../navigation/OfflineNavigator";
@@ -342,7 +341,7 @@ const MainTabNavigator: React.FC = () => {
   const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
 
-  const baseTabBarHeight = 60;
+  const baseTabBarHeight = 70;
   const totalTabBarHeight = baseTabBarHeight + insets.bottom;
   const isLargeScreen = totalTabBarHeight > 85;
 
@@ -351,24 +350,26 @@ const MainTabNavigator: React.FC = () => {
       flex: 1,
     },
     tabBar: {
+      zIndex: theme.zIndex.appBar,
       backgroundColor: theme.colors.surface,
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
       borderTopWidth: 0,
-      elevation: 20,
-      shadowColor: theme.colors.shadow || "#000000",
+      elevation: 40,
+      filter: "drop-shadow(0 0 10px rgba(0, 0, 0, 0.10))",
+      shadowColor: theme.colors.shadow,
       shadowOffset: {
         width: 0,
         height: -4,
       },
-      shadowOpacity: 0.15,
+      shadowOpacity: 0.7,
       shadowRadius: 12,
       paddingHorizontal: Math.max(12, insets.left, insets.right),
       paddingBottom: Math.max(insets.bottom, 8),
       paddingTop: isLargeScreen ? 16 : 12,
       height: totalTabBarHeight,
       ...(Platform.OS === "ios" && {
-        backgroundColor: `${theme.colors.surface}F0`, // Semi-transparent
+        backgroundColor: theme.colors.surface,
         backdropFilter: "blur(20px)",
       }),
     },
@@ -542,7 +543,6 @@ const AppNavigator: React.FC = () => {
     const setNavigationBarColor = async () => {
       if (Platform.OS === "android") {
         try {
-          await NavigationBar.setBackgroundColorAsync(theme.colors.surface);
           if (isDark) {
             await NavigationBar.setButtonStyleAsync("light");
           } else {
@@ -615,11 +615,9 @@ const AppNavigator: React.FC = () => {
 
   return (
     <AudioProvider>
-      <GlobalAudioBarProvider>
-        <View style={backgroundStyle.container}>
-          <NavigationContainer theme={navTheme}>{navigatorToShow}</NavigationContainer>
-        </View>
-      </GlobalAudioBarProvider>
+      <View style={backgroundStyle.container}>
+        <NavigationContainer theme={navTheme}>{navigatorToShow}</NavigationContainer>
+      </View>
     </AudioProvider>
   );
 };

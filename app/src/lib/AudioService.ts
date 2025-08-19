@@ -168,7 +168,6 @@ class AudioService {
       };
 
       this.player.addListener("playbackStatusUpdate", this.statusUpdateListener);
-
       // Start playing immediately
       this.player.play();
 
@@ -211,7 +210,6 @@ class AudioService {
       console.error("Cannot play: AudioService has been destroyed");
       return false;
     }
-
     if (!this.player) {
       console.error("No player loaded to play");
       return false;
@@ -318,7 +316,6 @@ class AudioService {
       this.updateState({
         ...initialState,
       });
-
       return true;
     } catch (error) {
       console.error("Error in stop method:", error);

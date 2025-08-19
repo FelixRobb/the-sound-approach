@@ -9,6 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "./src/context/AuthContext";
 import { DownloadProvider } from "./src/context/DownloadContext";
 import { EnhancedThemeProvider, useEnhancedTheme } from "./src/context/EnhancedThemeProvider";
+import { GlobalAudioBarProvider } from "./src/context/GlobalAudioBarContext";
 import { NetworkProvider } from "./src/context/NetworkContext";
 import AppNavigator from "./src/navigation/AppNavigator";
 import "expo-dev-client";
@@ -30,18 +31,20 @@ const AppContent = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      <QueryClientProvider client={queryClient}>
-        <NetworkProvider>
-          <AuthProvider>
-            <DownloadProvider>
-              <GestureHandlerRootView style={styles.container}>
-                <AppNavigator />
-              </GestureHandlerRootView>
-            </DownloadProvider>
-          </AuthProvider>
-        </NetworkProvider>
-      </QueryClientProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <QueryClientProvider client={queryClient}>
+          <NetworkProvider>
+            <GlobalAudioBarProvider>
+              <AuthProvider>
+                <DownloadProvider>
+                  <AppNavigator />
+                </DownloadProvider>
+              </AuthProvider>
+            </GlobalAudioBarProvider>
+          </NetworkProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
     </View>
   );
 };

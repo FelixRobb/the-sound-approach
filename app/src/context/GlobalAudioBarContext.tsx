@@ -5,6 +5,7 @@ type GlobalAudioBarContextType = {
   setVisible: (visible: boolean) => void;
   hide: () => void;
   show: () => void;
+  hideBar: () => void; // Add hideBar to the type
 };
 
 const GlobalAudioBarContext = createContext<GlobalAudioBarContextType | undefined>(undefined);
@@ -29,6 +30,7 @@ export const GlobalAudioBarProvider: React.FC<{ children: ReactNode }> = ({ chil
     setVisible,
     hide,
     show,
+    hideBar: hide, // Map hideBar to the existing hide function
   };
 
   return <GlobalAudioBarContext.Provider value={value}>{children}</GlobalAudioBarContext.Provider>;

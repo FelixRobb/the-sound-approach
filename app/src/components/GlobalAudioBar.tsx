@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useNavigationState, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,9 +9,20 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Animated,
   Platform,
+  LayoutChangeEvent,
 } from "react-native";
+import { Slider } from "react-native-awesome-slider";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  interpolate,
+  Extrapolation,
+  withTiming,
+  runOnJS,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAudio } from "../context/AudioContext";
@@ -23,7 +34,27 @@ import { getBestAudioUri } from "../lib/mediaUtils";
 import { createThemedTextStyle } from "../lib/theme";
 import type { RootStackParamList } from "../types";
 
-const iconHitSlop = { top: 8, bottom: 8, left: 8, right: 8 };
+const iconHitSlop = { top: 12, bottom: 12, left: 12, right: 12 };
+
+// Shared height value for the GlobalAudioBar
+let globalAudioBarHeight = 0;
+let globalAudioBarHeightCallbacks: Array<(height: number) => void> = [];
+
+const updateGlobalAudioBarHeight = (height: number) => {
+  globalAudioBarHeight = height;
+  globalAudioBarHeightCallbacks.forEach((callback) => callback(height));
+};
+
+const subscribeToHeightChanges = (callback: (height: number) => void) => {
+  globalAudioBarHeightCallbacks.push(callback);
+  // Immediately call with current height
+  callback(globalAudioBarHeight);
+
+  // Return unsubscribe function
+  return () => {
+    globalAudioBarHeightCallbacks = globalAudioBarHeightCallbacks.filter((cb) => cb !== callback);
+  };
+};
 
 /**
  * A global, sticky audio control bar that sits just above the bottom navigation bar (when present)
@@ -34,8 +65,14 @@ const GlobalAudioBar: React.FC = () => {
   const route = useRoute();
   const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useSharedValue(0);
   const [hasTabBar, setHasTabBar] = useState(false);
+
+  // Slider state management following the same pattern as RecordingDetailsScreen
+  const sliderProgress = useSharedValue(0);
+  const sliderMin = useSharedValue(0);
+  const sliderMax = useSharedValue(1);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   const {
     isPlaying,
@@ -44,49 +81,127 @@ const GlobalAudioBar: React.FC = () => {
     position,
     duration,
     togglePlayPause,
-    skipForward,
-    skipBackward,
     stopPlayback,
+    seekTo,
   } = useAudio();
 
   const { isDownloaded, getDownloadPath } = useContext(DownloadContext);
   const { isConnected } = useContext(NetworkContext);
-  const { isVisible } = useGlobalAudioBar();
-
-  // Safe navigation state getter with error handling
+  const { isVisible, hideBar } = useGlobalAudioBar();
+  const [audioUri, setAudioUri] = useState<string | null>(null);
   const navigationState = useNavigationState((state) => state);
+
+  // Simplified animation values
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  // Handle layout measurement
+  const handleLayout = useCallback((event: LayoutChangeEvent) => {
+    const { height } = event.nativeEvent.layout;
+    updateGlobalAudioBarHeight(height);
+  }, []);
+
+  // Stable callbacks to avoid recreating functions
+  const handleDismiss = useCallback(() => {
+    try {
+      stopPlayback();
+      hideBar();
+    } catch (error) {
+      console.error("Error during dismissal:", error);
+    }
+  }, [stopPlayback, hideBar]);
+
+  // Much simpler gesture handler
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      // Only allow downward movement
+      const newTranslateY = Math.max(0, event.translationY);
+      translateY.value = newTranslateY;
+
+      // Simple opacity fade
+      opacity.value = interpolate(newTranslateY, [0, 100], [1, 0.3], Extrapolation.CLAMP);
+    })
+    .onEnd((event) => {
+      if (event.translationY > 50) {
+        // Dismiss gesture - continue from current position for smooth animation
+        const currentY = Math.max(0, event.translationY);
+        translateY.value = withTiming(200, {
+          duration: Math.max(150, 300 * (1 - currentY / 200)), // Shorter duration if already partway down
+        });
+        opacity.value = withTiming(
+          0,
+          {
+            duration: Math.max(150, 300 * (1 - currentY / 200)),
+          },
+          (finished) => {
+            if (finished) {
+              runOnJS(handleDismiss)();
+            }
+          }
+        );
+      } else {
+        // Snap back
+        translateY.value = withSpring(0, {
+          damping: 15,
+          stiffness: 200,
+        });
+        opacity.value = withSpring(1, {
+          damping: 15,
+          stiffness: 200,
+        });
+      }
+    });
+
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+      opacity: opacity.value,
+    };
+  });
+
+  // Calculate dynamic positioning
+  const baseTabBarHeight = 70;
+  const tabBarHeight = baseTabBarHeight + insets.bottom;
+  const safeAreaBottom = Math.max(insets.bottom, 8);
+  const baseBottomMargin = safeAreaBottom > 0 ? 0 : 5;
+
+  const bottomPosition = useAnimatedStyle(() => {
+    const interpolatedBottom = interpolate(
+      slideAnim.value,
+      [0, 1],
+      [safeAreaBottom + tabBarHeight + baseBottomMargin, safeAreaBottom + baseBottomMargin],
+      Extrapolation.CLAMP
+    );
+    return {
+      bottom: interpolatedBottom,
+    };
+  });
 
   // Check if current screen has tab bar with safe error handling
   useEffect(() => {
     try {
       if (!navigationState) {
-        // Fallback: use route name to determine if we're on a tab screen
         const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
         const hasTab = tabScreens.includes(route.name);
         setHasTabBar(hasTab);
         return;
       }
 
-      // Type guard to ensure navigationState has expected properties
       if (
         "routes" in navigationState &&
         "index" in navigationState &&
         Array.isArray(navigationState.routes) &&
         typeof navigationState.index === "number"
       ) {
-        // Get the current route
         const currentRoute = navigationState.routes[navigationState.index];
 
-        // Check if we're in the MainTabs navigator
         if (currentRoute?.name === "MainTabs") {
           setHasTabBar(true);
           return;
         }
 
-        // Check if we're on any tab screen specifically
         const tabScreens = ["Recordings", "Search", "Downloads", "Profile"];
 
-        // For nested navigation, check the nested state
         if (
           currentRoute?.state &&
           "routes" in currentRoute.state &&
@@ -105,13 +220,11 @@ const GlobalAudioBar: React.FC = () => {
         const hasTab = tabScreens.includes(currentRoute?.name || "");
         setHasTabBar(hasTab);
       } else {
-        // Fallback if navigationState doesn't have expected structure
         const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
         const hasTab = tabScreens.includes(route.name);
         setHasTabBar(hasTab);
       }
     } catch (error) {
-      // Fallback: assume no tab bar on error and use route name
       console.warn("Navigation state error in GlobalAudioBar:", error);
       const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
       const hasTab = tabScreens.includes(route.name);
@@ -119,7 +232,6 @@ const GlobalAudioBar: React.FC = () => {
     }
   }, [navigationState, route.name]);
 
-  const [audioUri, setAudioUri] = useState<string | null>(null);
   useEffect(() => {
     if (!currentRecording) return;
     getBestAudioUri(currentRecording, isDownloaded, getDownloadPath, isConnected)
@@ -129,22 +241,22 @@ const GlobalAudioBar: React.FC = () => {
       });
   }, [currentRecording, isDownloaded, getDownloadPath, isConnected]);
 
-  // Animate position based on tab bar presence
+  // Update slider values when duration changes
   useEffect(() => {
-    const targetValue = hasTabBar ? 0 : 1;
+    if (duration > 0) {
+      sliderMax.value = duration;
+    }
+  }, [duration, sliderMax]);
 
-    Animated.spring(slideAnim, {
-      toValue: targetValue,
-      useNativeDriver: false, // We're animating position which requires layout
-      tension: 100,
-      friction: 8,
-      velocity: 0.4,
-      delay: hasTabBar ? 0 : 150, // Small delay when moving down to avoid jarring transition
-    }).start();
-  }, [hasTabBar, slideAnim]);
-
-  // If we don't have a current recording or the bar is hidden, don't render the bar
-  if (!currentRecording || !isVisible) return null;
+  // Update slider position when not seeking
+  useEffect(() => {
+    if (!isSeeking && duration > 0) {
+      sliderProgress.value = position;
+    }
+    if (isLoading) {
+      sliderProgress.value = 0;
+    }
+  }, [position, duration, isSeeking, sliderProgress, isLoading]);
 
   const handlePlayPause = () => {
     if (!audioUri || !currentRecording) return;
@@ -156,59 +268,94 @@ const GlobalAudioBar: React.FC = () => {
     navigation.navigate("RecordingDetails", { recordingId: currentRecording.id });
   };
 
-  // Calculate dynamic positioning
-  const tabBarHeight = 70; // Should match your tab bar height
-  const safeAreaBottom = Math.max(insets.bottom, 8);
-  const baseBottomMargin = safeAreaBottom > 0 ? 0 : 5;
+  // Slider seeking logic
+  const onSeekStart = () => {
+    setIsSeeking(true);
+  };
 
-  // Interpolate the bottom position
-  const bottomPosition = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [
-      safeAreaBottom + tabBarHeight + baseBottomMargin, // Above tab bar
-      safeAreaBottom + baseBottomMargin, // At bottom when no tab bar
-    ],
-  });
+  const onSeekComplete = (value: number) => {
+    if (!currentRecording || duration <= 0) return;
+
+    try {
+      seekTo(value);
+      sliderProgress.value = value;
+    } catch (error) {
+      console.error("Error seeking audio:", error);
+    } finally {
+      const delay = 100;
+      setTimeout(() => setIsSeeking(false), delay);
+    }
+  };
+
+  const onValueChange = (value: number) => {
+    if (isSeeking) {
+      sliderProgress.value = value;
+    }
+  };
+
+  // Animate position based on tab bar presence
+  useEffect(() => {
+    const targetValue = hasTabBar ? 0 : 1;
+    slideAnim.value = withSpring(targetValue, {
+      damping: 1000,
+      stiffness: 1000,
+    });
+  }, [hasTabBar, slideAnim]);
+
+  // Reset animation values when component becomes visible
+  useEffect(() => {
+    if (isVisible) {
+      translateY.value = 0;
+      opacity.value = 1;
+    }
+  }, [isVisible, translateY, opacity]);
+
+  // If we don't have a current recording or the bar is hidden, don't render
+  if (!currentRecording || !isVisible) return null;
 
   const styles = StyleSheet.create({
     container: {
       position: "absolute",
-      left: 16,
-      right: 16,
-      zIndex: theme.zIndex.fixed,
+      left: 12,
+      right: 12,
+      zIndex: theme.zIndex.globalAudioBar,
       elevation: 30,
     },
     inner: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection: "column",
       backgroundColor: theme.colors.surface,
       borderWidth: 1,
       borderColor: theme.colors.outline,
       borderRadius: theme.borderRadius.lg,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.2,
+      shadowRadius: 16,
+      elevation: 12,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
-      // Add subtle blur effect on iOS
       ...(Platform.OS === "ios" && {
         backgroundColor: `${theme.colors.surface}F8`,
       }),
     },
-    infoContainer: {
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: theme.spacing.sm,
+      gap: theme.spacing.md,
+    },
+    titleContainer: {
       flex: 1,
-      marginHorizontal: theme.spacing.sm,
-      minWidth: 0, // Prevent text overflow issues
+      minWidth: 0,
     },
     title: {
       color: theme.colors.onSurface,
       ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
+        size: "base",
+        weight: "medium",
         color: "onSurface",
       }),
+      marginBottom: theme.spacing.xs,
     },
     subtitle: {
       color: theme.colors.onSurfaceVariant,
@@ -218,161 +365,141 @@ const GlobalAudioBar: React.FC = () => {
         color: "onSurfaceVariant",
       }),
     },
-    controlButton: {
-      width: 36,
-      height: 36,
+    mainPlayButton: {
       alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.full,
+      elevation: 2,
+      height: 36,
       justifyContent: "center",
-      borderRadius: theme.borderRadius.md,
-      backgroundColor: theme.colors.surface,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      width: 36,
     },
-    progressContainer: {
+    slider: {
+      width: "100%",
+      height: 4,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 2,
+      overflow: "hidden",
+    },
+    sliderThumb: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
+      elevation: 3,
+      height: 16,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.4,
+      shadowRadius: 4,
+      width: 16,
+    },
+    progressRow: {
+      marginTop: theme.spacing.xs,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginTop: theme.spacing.sm,
-    },
-    progressBar: {
-      width: 80,
-      height: theme.spacing.xs,
-      backgroundColor: theme.colors.outlineVariant,
-      borderRadius: 1,
-      overflow: "hidden",
-    },
-    progressBarFill: {
-      height: "100%",
-      backgroundColor: theme.colors.primary,
-    },
-    separator: {
-      width: 1,
-      height: 24,
-      backgroundColor: theme.colors.outlineVariant,
-      marginHorizontal: theme.spacing.sm,
-      opacity: 0.5,
-    },
-    playIcon: {
-      marginLeft: theme.spacing.xs,
     },
     progressText: {
       ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "tertiary",
+        size: "xs",
+        weight: "medium",
+        color: "onSurfaceVariant",
       }),
-      marginTop: theme.spacing.xs,
-      fontVariant: ["tabular-nums"], // Monospace numbers for stable width
+      fontVariant: ["tabular-nums"],
+    },
+    playIcon: {
+      marginLeft: 2,
     },
   });
 
-  const ProgressText = () => (
-    <View style={styles.progressContainer}>
-      <Text style={styles.progressText}>
-        {formatTime(position)} / {formatTime(duration)}
-      </Text>
-      {/* Optional: Add a small progress indicator */}
-      <View style={styles.progressBar}>
-        <View
-          style={[
-            styles.progressBarFill,
-            {
-              width: `${duration > 0 ? (position / duration) * 100 : 0}%`,
-            },
-          ]}
-        />
-      </View>
-    </View>
-  );
-
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          bottom: bottomPosition,
-        },
-      ]}
-    >
-      <Pressable onPress={handleNavigateToDetails}>
+    <GestureDetector gesture={panGesture}>
+      <Animated.View
+        style={[styles.container, bottomPosition, animatedContainerStyle]}
+        onLayout={handleLayout}
+      >
         <View style={styles.inner}>
-          {/* Play / pause */}
-          <TouchableOpacity
-            hitSlop={iconHitSlop}
-            onPress={handlePlayPause}
-            style={styles.controlButton}
-            disabled={!audioUri}
-            activeOpacity={0.7}
-          >
-            {isLoading ? (
-              <ActivityIndicator size={22} color={theme.colors.primary} />
-            ) : (
-              <Ionicons
-                name={isPlaying ? "pause" : "play"}
-                size={22}
-                color={audioUri ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                style={isPlaying ? undefined : styles.playIcon}
-              />
-            )}
-          </TouchableOpacity>
+          {/* Header Row with Title and Main Play Button */}
+          <View style={styles.headerRow}>
+            <Pressable
+              style={styles.titleContainer}
+              onPress={handleNavigateToDetails}
+              hitSlop={{ top: 8, bottom: 8, left: 0, right: 0 }}
+            >
+              <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+                {currentRecording?.title ?? "Unknown Recording"}
+              </Text>
+              {currentRecording?.species && (
+                <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
+                  {currentRecording.species.common_name}
+                  {currentRecording.species.scientific_name
+                    ? ` • ${currentRecording.species.scientific_name}`
+                    : ""}
+                </Text>
+              )}
+            </Pressable>
 
-          {/* Backward 10s */}
-          <TouchableOpacity
-            hitSlop={iconHitSlop}
-            onPress={() => skipBackward(10)}
-            style={styles.controlButton}
-            disabled={!currentRecording}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="play-back"
-              size={20}
-              color={currentRecording ? theme.colors.primary : theme.colors.onSurfaceVariant}
-            />
-          </TouchableOpacity>
+            <TouchableOpacity
+              hitSlop={iconHitSlop}
+              onPress={handlePlayPause}
+              style={styles.mainPlayButton}
+              disabled={!audioUri}
+              activeOpacity={0.8}
+            >
+              {isLoading ? (
+                <ActivityIndicator size={20} color={theme.colors.onPrimary} />
+              ) : (
+                <Ionicons
+                  name={isPlaying ? "pause" : "play"}
+                  size={20}
+                  color={theme.colors.onPrimary}
+                  style={isPlaying ? undefined : styles.playIcon}
+                />
+              )}
+            </TouchableOpacity>
+          </View>
 
-          {/* Forward 10s */}
-          <TouchableOpacity
-            hitSlop={iconHitSlop}
-            onPress={() => skipForward(10)}
-            style={styles.controlButton}
-            disabled={!currentRecording}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="play-forward"
-              size={20}
-              color={currentRecording ? theme.colors.primary : theme.colors.onSurfaceVariant}
-            />
-          </TouchableOpacity>
+          {/* Progress Section */}
+          <Slider
+            minimumValue={sliderMin}
+            maximumValue={sliderMax}
+            progress={sliderProgress}
+            onSlidingStart={onSeekStart}
+            onSlidingComplete={onSeekComplete}
+            onValueChange={onValueChange}
+            disableTapEvent
+            thumbWidth={16}
+            theme={{
+              minimumTrackTintColor: theme.colors.primary,
+              maximumTrackTintColor: theme.colors.surfaceVariant,
+              bubbleBackgroundColor: theme.colors.tertiary,
+              bubbleTextColor: theme.colors.onTertiary,
+            }}
+            containerStyle={styles.slider}
+            disable={!currentRecording || duration <= 0}
+            bubble={(value) => formatTime(value)}
+            bubbleTextStyle={{
+              ...createThemedTextStyle(theme, {
+                size: "xs",
+                weight: "medium",
+                color: "onTertiary",
+                lineHeight: "snug",
+              }),
+              fontVariant: ["tabular-nums"],
+            }}
+            renderThumb={() => <View style={styles.sliderThumb} />}
+          />
 
-          {/* Stop */}
-          <TouchableOpacity
-            hitSlop={iconHitSlop}
-            onPress={stopPlayback}
-            style={styles.controlButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="stop" size={20} color={theme.colors.primary} />
-          </TouchableOpacity>
-
-          {/* Visual separator */}
-          <View style={styles.separator} />
-
-          {/* Info */}
-          <View style={styles.infoContainer} pointerEvents="none">
-            <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-              {currentRecording?.title ?? "Unknown Recording"}
-            </Text>
-            <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
-              {currentRecording?.species?.common_name}
-              {currentRecording?.species?.scientific_name
-                ? ` – ${currentRecording.species.scientific_name}`
-                : ""}
-            </Text>
-            <ProgressText />
+          <View style={styles.progressRow}>
+            <Text style={styles.progressText}>{formatTime(position)}</Text>
+            <Text style={styles.progressText}>{formatTime(duration)}</Text>
           </View>
         </View>
-      </Pressable>
-    </Animated.View>
+      </Animated.View>
+    </GestureDetector>
   );
 };
 
@@ -381,27 +508,92 @@ const formatTime = (seconds: number) => {
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 };
+
 /**
- * A hook that returns the height of the GlobalAudioBar.
+ * A hook that returns the height of the GlobalAudioBar with proper safe area and tab bar considerations.
  * This can be used to add margin to the bottom of screens to prevent content from being hidden behind the audio bar.
  */
 export const useGlobalAudioBarHeight = (): number => {
   const { isVisible } = useGlobalAudioBar();
-  const barHeight = 70; // Base height of the audio bar
-  const totalHeight = isVisible ? barHeight + 40 : 0;
+  const insets = useSafeAreaInsets();
+  const [measuredHeight, setMeasuredHeight] = useState(globalAudioBarHeight);
+  const route = useRoute();
+  const navigationState = useNavigationState((state) => state);
 
-  return totalHeight;
-};
+  // Subscribe to height changes
+  useEffect(() => {
+    const unsubscribe = subscribeToHeightChanges(setMeasuredHeight);
+    return unsubscribe;
+  }, []);
 
-/**
- * @deprecated Use useGlobalAudioBarHeight hook instead for better React compliance
- * A component that returns the height of the GlobalAudioBar.
- * This can be used to add margin to the bottom of screens to prevent content from being hidden behind the audio bar.
- */
-export const GlobalAudioBarHeight = (): number => {
-  const { isVisible } = useGlobalAudioBar();
-  const barHeight = 64;
-  const totalHeight = isVisible ? barHeight : 0;
+  // Determine if current screen has tab bar (same logic as in GlobalAudioBar)
+  const hasTabBar = useMemo(() => {
+    try {
+      if (!navigationState) {
+        const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
+        return tabScreens.includes(route.name);
+      }
+
+      if (
+        "routes" in navigationState &&
+        "index" in navigationState &&
+        Array.isArray(navigationState.routes) &&
+        typeof navigationState.index === "number"
+      ) {
+        const currentRoute = navigationState.routes[navigationState.index];
+
+        if (currentRoute?.name === "MainTabs") {
+          return true;
+        }
+
+        const tabScreens = ["Recordings", "Search", "Downloads", "Profile"];
+
+        if (
+          currentRoute?.state &&
+          "routes" in currentRoute.state &&
+          "index" in currentRoute.state
+        ) {
+          const nestedState = currentRoute.state as {
+            routes: RouteProp<RootStackParamList>[];
+            index: number;
+          };
+          const nestedRoute = nestedState.routes[nestedState.index];
+          return tabScreens.includes(nestedRoute?.name || "");
+        }
+
+        return tabScreens.includes(currentRoute?.name || "");
+      } else {
+        const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
+        return tabScreens.includes(route.name);
+      }
+    } catch (error) {
+      console.warn("Navigation state error in useGlobalAudioBarHeight:", error);
+      const tabScreens = ["Recordings", "Search", "Downloads", "Profile", "MainTabs"];
+      return tabScreens.includes(route.name);
+    }
+  }, [navigationState, route.name]);
+
+  // Calculate total height needed for proper spacing
+  const totalHeight = useMemo(() => {
+    if (!isVisible || measuredHeight === 0) return 0;
+
+    // Base measured height of the audio bar
+    let height = measuredHeight;
+
+    // Add safe area considerations
+    const safeAreaBottom = Math.max(insets.bottom, 8);
+
+    if (hasTabBar) {
+      // When tab bar is present, the audio bar sits above it
+      // We need the audio bar height plus some spacing
+      height = height + 12; // Add small gap between audio bar and tab bar
+    } else {
+      // When no tab bar, audio bar sits at bottom with safe area
+      height = height + safeAreaBottom;
+    }
+
+    return height;
+  }, [isVisible, measuredHeight, insets.bottom, hasTabBar]);
 
   return totalHeight;
 };

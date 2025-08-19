@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
+import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import RecordingCard from "../components/RecordingCard";
 import { Button } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
@@ -32,7 +33,7 @@ const DownloadsScreen = () => {
     useContext(DownloadContext);
   const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
-
+  const globalAudioBarHeight = useGlobalAudioBarHeight();
   const showBackButton =
     route.name === "DownloadsManager" ||
     (!!route.params && (route.params as { showBackButton?: boolean }).showBackButton === true);
@@ -208,7 +209,7 @@ const DownloadsScreen = () => {
     },
     listContent: {
       padding: theme.spacing.md,
-      paddingBottom: 80,
+      paddingBottom: globalAudioBarHeight,
     },
     loadingCard: {
       alignItems: "center",

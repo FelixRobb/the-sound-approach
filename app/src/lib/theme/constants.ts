@@ -31,6 +31,8 @@ export const zIndex: ZIndex = {
   popover: 1060,
   tooltip: 1070,
   toast: 1080,
+  globalAudioBar: 1085,
+  appBar: 1090,
 };
 
 // Export all constants
