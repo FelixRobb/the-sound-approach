@@ -67,55 +67,20 @@ const RecordingsListScreen = () => {
   );
 
   const styles = StyleSheet.create({
-    recordingCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      marginHorizontal: theme.spacing.md,
-      marginTop: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
-      elevation: 2,
-      flexDirection: "row",
+    audioPlayerContainer: {
       alignItems: "center",
-      justifyContent: "space-between",
-    },
-    recordingLeftSection: {
-      flex: 1,
-      minWidth: 0,
-    },
-    recordingBadges: {
-      marginTop: theme.spacing.sm,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
       flexShrink: 0,
+      justifyContent: "center",
+      marginLeft: theme.spacing.md,
     },
-    recordingSpecies: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: theme.spacing.xs,
-    },
-    scientificName: {
+    caption: {
       color: theme.colors.onSurfaceVariant,
       ...createThemedTextStyle(theme, {
         size: "base",
         weight: "normal",
         color: "onSurfaceVariant",
       }),
-      flex: 1,
-      marginRight: theme.spacing.xs,
-    },
-    audioPlayerContainer: {
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-      marginLeft: theme.spacing.md,
+      marginTop: theme.spacing.xs,
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -185,7 +150,7 @@ const RecordingsListScreen = () => {
       shadowRadius: 2,
     },
     filterButtonActive: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: theme.colors.secondary,
       elevation: 2,
       shadowOpacity: 0.15,
     },
@@ -201,11 +166,10 @@ const RecordingsListScreen = () => {
       }),
     },
     filterButtonTextActive: {
-      color: theme.colors.onPrimary,
       ...createThemedTextStyle(theme, {
         size: "base",
         weight: "normal",
-        color: "onPrimary",
+        color: "onSecondary",
       }),
     },
     filterButtonsContainer: {
@@ -256,6 +220,10 @@ const RecordingsListScreen = () => {
       flexDirection: "row",
       justifyContent: "space-between",
     },
+    headerTextContainer: {
+      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.lg,
+    },
     listContainer: {
       flex: 1,
       paddingHorizontal: 0,
@@ -270,28 +238,91 @@ const RecordingsListScreen = () => {
     loadingText: {
       color: theme.colors.onSurface,
     },
+    recordingBadges: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexShrink: 0,
+      gap: 4,
+      marginTop: theme.spacing.sm,
+    },
+    recordingCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outline,
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      elevation: 2,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginHorizontal: theme.spacing.md,
+      marginTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+    },
+    recordingCardIndented: {
+      marginLeft: theme.spacing.xl,
+    },
+    recordingLeftSection: {
+      flex: 1,
+      minWidth: 0,
+    },
+    recordingSpecies: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginTop: theme.spacing.xs,
+    },
+    scientificName: {
+      color: theme.colors.onSurfaceVariant,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      flex: 1,
+      marginRight: theme.spacing.xs,
+    },
     scrollViewFilters: {
       alignItems: "center",
       paddingRight: theme.spacing.sm,
     },
     searchContainer: {
+      alignSelf: "center",
       marginBottom: 0,
       marginHorizontal: theme.spacing.xs,
       marginTop: theme.spacing.sm,
-      alignSelf: "center",
       width: "94%",
     },
     searchInput: {
       alignItems: "center",
-      height: 46,
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outline,
+      borderRadius: theme.borderRadius.full,
+      borderWidth: 1,
       flexDirection: "row",
+      height: 46,
       overflow: "hidden",
       paddingHorizontal: theme.spacing.xs,
       position: "relative",
-      borderRadius: theme.borderRadius.full,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
-      backgroundColor: theme.colors.surface,
+    },
+    sectionHeader: {
+      backgroundColor: theme.colors.background,
+      paddingBottom: theme.spacing.sm,
+      paddingLeft: theme.spacing.xl,
+      paddingRight: theme.spacing.xl,
+      paddingTop: theme.spacing.xl,
+    },
+    sectionSubHeaderText: {
+      color: theme.colors.onSurfaceVariant,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
     },
     speciesAction: {
       marginLeft: 8,
@@ -307,6 +338,7 @@ const RecordingsListScreen = () => {
     speciesCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.md,
+      elevation: 2,
       marginHorizontal: theme.spacing.md,
       marginVertical: theme.spacing.xs,
       paddingHorizontal: theme.spacing.md,
@@ -315,11 +347,6 @@ const RecordingsListScreen = () => {
       shadowOffset: { width: 0, height: 0.5 },
       shadowOpacity: 0.4,
       shadowRadius: 1,
-      elevation: 2,
-    },
-    headerTextContainer: {
-      marginLeft: theme.spacing.lg,
-      marginBottom: theme.spacing.sm,
     },
     speciesContent: {
       alignItems: "center",
@@ -333,34 +360,6 @@ const RecordingsListScreen = () => {
         color: "primary",
       }),
       marginBottom: theme.spacing.xs,
-    },
-    sectionHeader: {
-      backgroundColor: theme.colors.background,
-      paddingLeft: theme.spacing.xl,
-      paddingRight: theme.spacing.xl,
-      paddingTop: theme.spacing.xl,
-      paddingBottom: theme.spacing.sm,
-    },
-    sectionSubHeaderText: {
-      color: theme.colors.onSurfaceVariant,
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginTop: theme.spacing.xs,
-    },
-    recordingCardIndented: {
-      marginLeft: theme.spacing.xl,
-    },
-    caption: {
-      color: theme.colors.onSurfaceVariant,
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginTop: theme.spacing.xs,
     },
   });
 
@@ -698,7 +697,7 @@ const RecordingsListScreen = () => {
                 style={createThemedTextStyle(theme, {
                   size: "6xl",
                   weight: "bold",
-                  color: "primary",
+                  color: "secondary",
                 })}
               >
                 Library
@@ -863,7 +862,7 @@ const RecordingsListScreen = () => {
                           createThemedTextStyle(theme, {
                             size: "base",
                             weight: "normal",
-                            color: "onPrimary",
+                            color: "onSecondary",
                           }),
                       ]}
                     >
@@ -899,7 +898,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "all"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onSecondary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -915,7 +914,7 @@ const RecordingsListScreen = () => {
                           createThemedTextStyle(theme, {
                             size: "base",
                             weight: "normal",
-                            color: "onPrimary",
+                            color: "onSecondary",
                           }),
                       ]}
                     >
@@ -935,7 +934,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "downloaded"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onSecondary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}
@@ -962,7 +961,7 @@ const RecordingsListScreen = () => {
                       size={14}
                       color={
                         downloadedFilter === "not_downloaded"
-                          ? theme.colors.onPrimary
+                          ? theme.colors.onSecondary
                           : theme.colors.onSurfaceVariant
                       }
                       style={styles.filterButtonIcon}

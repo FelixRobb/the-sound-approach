@@ -2,6 +2,7 @@ import { Spacing } from "./types";
 
 // MD3 inspired spacing system
 export const spacing: Spacing = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 16,
@@ -19,6 +20,7 @@ export const getSpacing = (size: keyof Spacing): number => {
 export const createSpacingVariants = () => {
   return {
     padding: {
+      xxs: { padding: spacing.xxs },
       xs: { padding: spacing.xs },
       sm: { padding: spacing.sm },
       md: { padding: spacing.md },
@@ -28,6 +30,7 @@ export const createSpacingVariants = () => {
       xxxl: { padding: spacing.xxxl },
     },
     paddingHorizontal: {
+      xxs: { paddingHorizontal: spacing.xxs },
       xs: { paddingHorizontal: spacing.xs },
       sm: { paddingHorizontal: spacing.sm },
       md: { paddingHorizontal: spacing.md },
@@ -37,6 +40,7 @@ export const createSpacingVariants = () => {
       xxxl: { paddingHorizontal: spacing.xxxl },
     },
     paddingVertical: {
+      xxs: { paddingVertical: spacing.xxs },
       xs: { paddingVertical: spacing.xs },
       sm: { paddingVertical: spacing.sm },
       md: { paddingVertical: spacing.md },
@@ -46,6 +50,7 @@ export const createSpacingVariants = () => {
       xxxl: { paddingVertical: spacing.xxxl },
     },
     margin: {
+      xxs: { margin: spacing.xxs },
       xs: { margin: spacing.xs },
       sm: { margin: spacing.sm },
       md: { margin: spacing.md },
@@ -55,6 +60,7 @@ export const createSpacingVariants = () => {
       xxxl: { margin: spacing.xxxl },
     },
     marginHorizontal: {
+      xxs: { marginHorizontal: spacing.xxs },
       xs: { marginHorizontal: spacing.xs },
       sm: { marginHorizontal: spacing.sm },
       md: { marginHorizontal: spacing.md },
@@ -64,6 +70,7 @@ export const createSpacingVariants = () => {
       xxxl: { marginHorizontal: spacing.xxxl },
     },
     marginVertical: {
+      xxs: { marginVertical: spacing.xxs },
       xs: { marginVertical: spacing.xs },
       sm: { marginVertical: spacing.sm },
       md: { marginVertical: spacing.md },
@@ -73,6 +80,7 @@ export const createSpacingVariants = () => {
       xxxl: { marginVertical: spacing.xxxl },
     },
     gap: {
+      xxs: { gap: spacing.xxs },
       xs: { gap: spacing.xs },
       sm: { gap: spacing.sm },
       md: { gap: spacing.md },
@@ -82,66 +90,4 @@ export const createSpacingVariants = () => {
       xxxl: { gap: spacing.xxxl },
     },
   };
-};
-
-// Common spacing combinations
-export const commonSpacing = {
-  // Component spacing
-  button: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  input: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  card: {
-    padding: spacing.md,
-    marginVertical: spacing.xs,
-  },
-  section: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  // Layout spacing
-  screen: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  list: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  // Navigation spacing
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  tab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-};
-
-// Responsive spacing (for different screen sizes)
-export const responsiveSpacing = {
-  small: {
-    xs: spacing.xs,
-    sm: spacing.sm,
-    md: spacing.sm,
-    lg: spacing.md,
-    xl: spacing.lg,
-    xxl: spacing.xl,
-    xxxl: spacing.xxl,
-  },
-  medium: spacing, // Default spacing
-  large: {
-    xs: spacing.sm,
-    sm: spacing.md,
-    md: spacing.lg,
-    lg: spacing.xl,
-    xl: spacing.xxl,
-    xxl: spacing.xxxl,
-    xxxl: spacing.xxxl * 1.5,
-  },
 };

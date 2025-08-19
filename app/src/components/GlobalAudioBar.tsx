@@ -9,7 +9,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Platform,
   LayoutChangeEvent,
 } from "react-native";
 import { Slider } from "react-native-awesome-slider";
@@ -93,8 +92,6 @@ const GlobalAudioBar: React.FC = () => {
 
   // Simplified animation values
   const translateY = useSharedValue(0);
-  const opacity = useSharedValue(1);
-
   // Handle layout measurement
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
     const { height } = event.nativeEvent.layout;
@@ -117,9 +114,6 @@ const GlobalAudioBar: React.FC = () => {
       // Only allow downward movement
       const newTranslateY = Math.max(0, event.translationY);
       translateY.value = newTranslateY;
-
-      // Simple opacity fade
-      opacity.value = interpolate(newTranslateY, [0, 100], [1, 0.3], Extrapolation.CLAMP);
     })
     .onEnd((event) => {
       if (event.translationY > 50) {
@@ -128,24 +122,10 @@ const GlobalAudioBar: React.FC = () => {
         translateY.value = withTiming(200, {
           duration: Math.max(150, 300 * (1 - currentY / 200)), // Shorter duration if already partway down
         });
-        opacity.value = withTiming(
-          0,
-          {
-            duration: Math.max(150, 300 * (1 - currentY / 200)),
-          },
-          (finished) => {
-            if (finished) {
-              runOnJS(handleDismiss)();
-            }
-          }
-        );
+        runOnJS(handleDismiss)();
       } else {
         // Snap back
         translateY.value = withSpring(0, {
-          damping: 15,
-          stiffness: 200,
-        });
-        opacity.value = withSpring(1, {
           damping: 15,
           stiffness: 200,
         });
@@ -155,7 +135,6 @@ const GlobalAudioBar: React.FC = () => {
   const animatedContainerStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateY: translateY.value }],
-      opacity: opacity.value,
     };
   });
 
@@ -306,9 +285,8 @@ const GlobalAudioBar: React.FC = () => {
   useEffect(() => {
     if (isVisible) {
       translateY.value = 0;
-      opacity.value = 1;
     }
-  }, [isVisible, translateY, opacity]);
+  }, [isVisible, translateY]);
 
   // If we don't have a current recording or the bar is hidden, don't render
   if (!currentRecording || !isVisible) return null;
@@ -323,20 +301,18 @@ const GlobalAudioBar: React.FC = () => {
     },
     inner: {
       flexDirection: "column",
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.colors.globalAudioBar,
       borderWidth: 1,
+      filter: "drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))",
       borderColor: theme.colors.outline,
       borderRadius: theme.borderRadius.lg,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.2,
+      shadowOpacity: 0.7,
       shadowRadius: 16,
       elevation: 12,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
-      ...(Platform.OS === "ios" && {
-        backgroundColor: `${theme.colors.surface}F8`,
-      }),
     },
     headerRow: {
       flexDirection: "row",

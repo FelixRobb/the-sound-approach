@@ -14,7 +14,7 @@ export const lightColors: ThemeColors = {
   onPrimaryContainer: "rgb(92, 38, 0)",
 
   // Secondary system
-  secondary: "rgb(100, 116, 139)",
+  secondary: "rgb(132, 132, 132)",
   onSecondary: "rgb(255, 255, 255)",
   secondaryContainer: "rgb(241, 245, 249)",
   onSecondaryContainer: "rgb(30, 41, 59)",
@@ -74,13 +74,14 @@ export const lightColors: ThemeColors = {
   scrim: "rgba(17, 24, 39, 0.5)",
   surfaceTint: "rgb(255, 123, 0)",
   textDisabled: "rgb(209, 213, 219)",
+  globalAudioBar: "rgb(249, 241, 236)",
   transparent: "transparent",
 };
 
 // Dark theme colors (MD3 inspired with enhancements)
 export const darkColors: ThemeColors = {
   // Primary system
-  primary: "rgb(255, 123, 0)", // Lighter for dark theme
+  primary: "rgb(212, 126, 27)", // Lighter for dark theme
   onPrimary: "rgb(73, 31, 1)",
   primaryContainer: "rgb(150, 66, 3)",
   onPrimaryContainer: "rgb(255, 224, 178)",
@@ -146,6 +147,7 @@ export const darkColors: ThemeColors = {
   scrim: "rgba(17, 24, 39, 0.5)",
   surfaceTint: "rgb(255, 123, 0)",
   textDisabled: "rgb(209, 213, 219)",
+  globalAudioBar: "rgb(25, 20, 16)",
   transparent: "transparent",
 };
 

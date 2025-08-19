@@ -51,6 +51,7 @@ export interface BaseColors {
   divider: string;
   disabled: string;
   transparent: string;
+  globalAudioBar: string;
 }
 
 //text colors
@@ -86,6 +87,7 @@ export interface ThemeColors extends BaseColors, SemanticColors, TextColors {}
 
 // Spacing system
 export interface Spacing {
+  xxs: number;
   xs: number;
   sm: number;
   md: number;

@@ -39,6 +39,9 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
       justifyContent: "center",
       width: size + 4,
     },
+    iconOffsetPlay: {
+      marginLeft: 1,
+    },
     playButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
@@ -51,9 +54,6 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
       shadowOpacity: 0.2,
       shadowRadius: 2,
       width: size,
-    },
-    iconOffsetPlay: {
-      marginLeft: 1,
     },
   });
 
