@@ -195,7 +195,7 @@ const DownloadsScreen = () => {
     header: {
       paddingBottom: theme.spacing.sm,
       paddingTop: theme.spacing.sm + insets.top,
-      zIndex: 1,
+      zIndex: theme.zIndex.base,
     },
     headerInner: {
       paddingHorizontal: theme.spacing.xl,

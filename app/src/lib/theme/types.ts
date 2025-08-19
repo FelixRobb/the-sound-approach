@@ -158,6 +158,28 @@ export interface BorderRadius {
   full: number;
 }
 
+// Z-index
+export interface ZIndex {
+  base: number;
+  base2: number;
+  base3: number;
+  base4: number;
+  base5: number;
+  base6: number;
+  base7: number;
+  base8: number;
+  base9: number;
+  base10: number;
+  dropdown: number;
+  sticky: number;
+  fixed: number;
+  modalBackdrop: number;
+  modal: number;
+  popover: number;
+  tooltip: number;
+  toast: number;
+}
+
 // Main theme interface
 export interface Theme {
   colors: ThemeColors;
@@ -166,22 +188,17 @@ export interface Theme {
   elevation: Elevation;
   animation: Animation;
   borderRadius: BorderRadius;
+  zIndex: ZIndex;
   isDark: boolean;
-  roundness: number;
 }
 
 // Theme context interface
 export interface ThemeContextType {
   theme: Theme;
   isDark: boolean;
-  toggleTheme: () => void;
   setTheme: (isDark: boolean) => void;
-  setCustomTheme: (customTheme: Partial<Theme>) => void;
-  // Additional enhanced features
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
-  resetTheme: () => void;
-  hasCustomTheme: boolean;
 }
 
 // Style utilities

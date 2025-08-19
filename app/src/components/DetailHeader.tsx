@@ -34,7 +34,7 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
       paddingBottom: theme.spacing.md,
       paddingHorizontal: theme.spacing.sm,
       paddingTop: theme.spacing.sm + insets.top,
-      zIndex: 1,
+      zIndex: theme.zIndex.base,
     },
     subtitle: {
       ...createThemedTextStyle(theme, {

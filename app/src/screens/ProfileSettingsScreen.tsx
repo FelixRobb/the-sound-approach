@@ -104,7 +104,7 @@ const ProfileSettingsScreen = () => {
       shadowOpacity: 0.8,
       shadowRadius: 8,
       width: 100,
-      zIndex: 300,
+      zIndex: theme.zIndex.base,
     },
 
     cardContent: {
@@ -175,7 +175,7 @@ const ProfileSettingsScreen = () => {
     header: {
       paddingBottom: theme.spacing.xl,
       paddingTop: theme.spacing.sm + insets.top,
-      zIndex: 1,
+      zIndex: theme.zIndex.base,
     },
     headerInner: {
       paddingHorizontal: theme.spacing.xl,
@@ -197,7 +197,7 @@ const ProfileSettingsScreen = () => {
       position: "absolute",
       right: 0,
       top: -60,
-      zIndex: 400,
+      zIndex: theme.zIndex.base,
     },
     scrollContent: {
       padding: theme.spacing.md,

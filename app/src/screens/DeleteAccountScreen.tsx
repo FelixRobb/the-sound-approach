@@ -77,7 +77,7 @@ const DeleteAccountScreen = () => {
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
-      zIndex: 1,
+      zIndex: theme.zIndex.base,
     },
     headerInner: {
       paddingHorizontal: theme.spacing.xl,

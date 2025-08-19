@@ -175,7 +175,7 @@ const GlobalAudioBar: React.FC = () => {
       position: "absolute",
       left: 16,
       right: 16,
-      zIndex: 999,
+      zIndex: theme.zIndex.fixed,
       elevation: 30,
     },
     inner: {

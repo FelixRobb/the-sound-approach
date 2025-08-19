@@ -240,7 +240,7 @@ const RecordingsListScreen = () => {
     header: {
       paddingBottom: theme.spacing.sm,
       paddingTop: theme.spacing.sm + insets.top,
-      zIndex: 1,
+      zIndex: theme.zIndex.base,
     },
     headerActions: {
       alignItems: "center",

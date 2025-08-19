@@ -121,7 +121,7 @@ const RecordingDetailsScreen = () => {
       paddingVertical: theme.spacing.sm,
       position: "absolute",
       right: theme.spacing.md,
-      zIndex: 10,
+      zIndex: theme.zIndex.base5,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
@@ -131,7 +131,7 @@ const RecordingDetailsScreen = () => {
     controlsBackdrop: {
       ...StyleSheet.absoluteFillObject,
       backgroundColor: theme.colors.backdrop,
-      zIndex: 2,
+      zIndex: theme.zIndex.base2,
     },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
@@ -238,7 +238,7 @@ const RecordingDetailsScreen = () => {
       height: "100%",
       position: "absolute",
       width: "100%",
-      zIndex: 999,
+      zIndex: theme.zIndex.base7,
     },
     fullscreenControls: {
       alignItems: "center",
@@ -251,7 +251,7 @@ const RecordingDetailsScreen = () => {
       paddingVertical: theme.spacing.sm,
       position: "absolute",
       right: theme.spacing.md,
-      zIndex: 1000,
+      zIndex: theme.zIndex.base10,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
@@ -266,7 +266,7 @@ const RecordingDetailsScreen = () => {
       position: "absolute",
       top: 0,
       width: "100%",
-      zIndex: 1000,
+      zIndex: theme.zIndex.base10,
     },
     fullscreenSubtitle: {
       ...createThemedTextStyle(theme, {
@@ -298,7 +298,7 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      zIndex: 8,
+      zIndex: theme.zIndex.base4,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -310,7 +310,7 @@ const RecordingDetailsScreen = () => {
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
       height: 80,
-      zIndex: 8,
+      zIndex: theme.zIndex.base4,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -325,7 +325,7 @@ const RecordingDetailsScreen = () => {
     },
     videoTouchOverlay: {
       ...StyleSheet.absoluteFillObject,
-      zIndex: 3,
+      zIndex: theme.zIndex.base3,
     },
     playerContainer: {
       aspectRatio: 16 / 9,
@@ -469,7 +469,7 @@ const RecordingDetailsScreen = () => {
       width: 80,
       height: 80,
       borderRadius: theme.borderRadius.full,
-      zIndex: 8,
+      zIndex: theme.zIndex.base4,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -635,13 +635,16 @@ const RecordingDetailsScreen = () => {
     };
 
     handleFullscreenChange();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVideoFullscreen]);
 
+  // Cleanup effect
+  useEffect(() => {
     return () => {
       StatusBar.setHidden(false);
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      showGlobalAudioBar(); // Ensure GlobalAudioBar is shown when component unmounts
     };
-  }, [isVideoFullscreen, fadeAnim, scaleAnim, hideGlobalAudioBar, showGlobalAudioBar]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle back button
   useEffect(() => {

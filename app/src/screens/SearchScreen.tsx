@@ -147,7 +147,7 @@ const SearchScreen = () => {
     header: {
       paddingBottom: theme.spacing.md,
       paddingTop: theme.spacing.sm + insets.top,
-      zIndex: 1,
+      zIndex: theme.zIndex.base,
     },
     headerInner: {
       paddingHorizontal: theme.spacing.xl,

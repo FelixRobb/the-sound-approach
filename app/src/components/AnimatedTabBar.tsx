@@ -93,7 +93,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       justifyContent: "center",
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.xs,
-      zIndex: 1,
+      zIndex: theme.zIndex.base,
     },
     tabBar: {
       alignItems: "center",
