@@ -17,7 +17,7 @@ interface DownloadedBadgeProps {
 const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
   style,
   textStyle,
-  iconSize = 14,
+  iconSize = 12,
   label = "Downloaded",
   compact = false,
   smallRound = false,
@@ -29,17 +29,20 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
       backgroundColor: theme.colors.tertiary,
       borderRadius: smallRound ? 10 : 6,
       flexDirection: "row",
+      minHeight: 16,
       paddingHorizontal: theme.spacing.xs,
-      paddingVertical: theme.spacing.xs,
-      minHeight: 20,
+      paddingVertical: theme.spacing.xxs,
     },
     compactBadge: {
       alignItems: "center",
       backgroundColor: theme.colors.tertiary,
+      borderColor: theme.colors.onTertiary,
       borderRadius: smallRound ? 10 : 6,
-      height: smallRound ? 16 : 20,
+      borderWidth: 0.5,
+      height: smallRound ? 18 : 20,
       justifyContent: "center",
-      width: smallRound ? 16 : 20,
+      opacity: 0.9,
+      width: smallRound ? 18 : 20,
     },
     text: {
       color: theme.colors.onTertiary,
@@ -57,7 +60,7 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
       <View style={[styles.compactBadge, style]}>
         <Ionicons
           name="cloud-done-outline"
-          size={smallRound ? 10 : 14}
+          size={smallRound ? 11 : 12}
           color={theme.colors.onTertiary}
         />
       </View>

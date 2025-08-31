@@ -65,14 +65,14 @@ const animatedTabButtonStyles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     marginHorizontal: 6,
-    paddingVertical: 10,
-    minHeight: 48, // Ensure minimum touch target
+    minHeight: 48,
+    paddingVertical: 10, // Ensure minimum touch target
   },
   animatedViewLarge: {
     borderRadius: borderRadius.xl,
     marginHorizontal: 8,
-    paddingVertical: 12,
     minHeight: 56,
+    paddingVertical: 12,
   },
   button: {
     flex: 1,
@@ -222,8 +222,8 @@ type AnimatedTabLabelProps = React.PropsWithChildren<{
 
 const animatedTabLabelStyles = StyleSheet.create({
   label: {
-    textAlign: "center",
     marginTop: 2,
+    textAlign: "center",
   },
   labelFocused: {
     fontSize: 13,
@@ -340,7 +340,6 @@ const OnboardingNavigator: React.FC = () => {
 const MainTabNavigator: React.FC = () => {
   const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
-
   const baseTabBarHeight = 70;
   const totalTabBarHeight = baseTabBarHeight + insets.bottom;
   const isLargeScreen = totalTabBarHeight > 85;
@@ -350,13 +349,16 @@ const MainTabNavigator: React.FC = () => {
       flex: 1,
     },
     tabBar: {
-      zIndex: theme.zIndex.appBar,
       backgroundColor: theme.colors.surface,
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
       borderTopWidth: 0,
       elevation: 40,
       filter: "drop-shadow(0 0 10px rgba(0, 0, 0, 0.10))",
+      height: totalTabBarHeight,
+      paddingBottom: Math.max(insets.bottom, 8),
+      paddingHorizontal: Math.max(12, insets.left, insets.right),
+      paddingTop: isLargeScreen ? 16 : 12,
       shadowColor: theme.colors.shadow,
       shadowOffset: {
         width: 0,
@@ -364,10 +366,7 @@ const MainTabNavigator: React.FC = () => {
       },
       shadowOpacity: 0.7,
       shadowRadius: 12,
-      paddingHorizontal: Math.max(12, insets.left, insets.right),
-      paddingBottom: Math.max(insets.bottom, 8),
-      paddingTop: isLargeScreen ? 16 : 12,
-      height: totalTabBarHeight,
+      zIndex: theme.zIndex.appBar,
       ...(Platform.OS === "ios" && {
         backgroundColor: theme.colors.surface,
         backdropFilter: "blur(20px)",

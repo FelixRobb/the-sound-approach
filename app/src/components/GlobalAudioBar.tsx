@@ -140,15 +140,22 @@ const GlobalAudioBar: React.FC = () => {
 
   // Calculate dynamic positioning
   const baseTabBarHeight = 70;
-  const tabBarHeight = baseTabBarHeight + insets.bottom;
   const safeAreaBottom = Math.max(insets.bottom, 8);
+
+  // Small gap between audio bar and tab bar - consistent across platforms
+  const gapBetweenAudioBarAndTabBar = 12;
   const baseBottomMargin = safeAreaBottom > 0 ? 0 : 5;
 
   const bottomPosition = useAnimatedStyle(() => {
     const interpolatedBottom = interpolate(
       slideAnim.value,
       [0, 1],
-      [safeAreaBottom + tabBarHeight + baseBottomMargin, safeAreaBottom + baseBottomMargin],
+      [
+        // When tab bar is present: base tab bar height + safe area + small gap
+        baseTabBarHeight + safeAreaBottom + gapBetweenAudioBarAndTabBar,
+        // When no tab bar: just safe area + base margin
+        safeAreaBottom + baseBottomMargin,
+      ],
       Extrapolation.CLAMP
     );
     return {
@@ -275,10 +282,12 @@ const GlobalAudioBar: React.FC = () => {
   // Animate position based on tab bar presence
   useEffect(() => {
     const targetValue = hasTabBar ? 0 : 1;
-    slideAnim.value = withSpring(targetValue, {
-      damping: 1000,
-      stiffness: 1000,
-    });
+    setTimeout(() => {
+      slideAnim.value = withSpring(targetValue, {
+        damping: 20,
+        stiffness: 300,
+      });
+    }, 100);
   }, [hasTabBar, slideAnim]);
 
   // Reset animation values when component becomes visible
@@ -293,53 +302,32 @@ const GlobalAudioBar: React.FC = () => {
 
   const styles = StyleSheet.create({
     container: {
-      position: "absolute",
+      elevation: 30,
       left: 12,
+      position: "absolute",
       right: 12,
       zIndex: theme.zIndex.globalAudioBar,
-      elevation: 30,
+    },
+    headerRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
     },
     inner: {
-      flexDirection: "column",
       backgroundColor: theme.colors.globalAudioBar,
-      borderWidth: 1,
-      filter: "drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))",
       borderColor: theme.colors.outline,
       borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      elevation: 12,
+      filter: "drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))",
+      flexDirection: "column",
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.7,
       shadowRadius: 16,
-      elevation: 12,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-    },
-    headerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: theme.spacing.sm,
-      gap: theme.spacing.md,
-    },
-    titleContainer: {
-      flex: 1,
-      minWidth: 0,
-    },
-    title: {
-      color: theme.colors.onSurface,
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "medium",
-        color: "onSurface",
-      }),
-      marginBottom: theme.spacing.xs,
-    },
-    subtitle: {
-      color: theme.colors.onSurfaceVariant,
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
     },
     mainPlayButton: {
       alignItems: "center",
@@ -354,12 +342,29 @@ const GlobalAudioBar: React.FC = () => {
       shadowRadius: 2,
       width: 36,
     },
+    playIcon: {
+      marginLeft: 2,
+    },
+    progressRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: theme.spacing.xs,
+    },
+    progressText: {
+      ...createThemedTextStyle(theme, {
+        size: "xs",
+        weight: "medium",
+        color: "onSurfaceVariant",
+      }),
+      fontVariant: ["tabular-nums"],
+    },
     slider: {
-      width: "100%",
-      height: 4,
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 2,
+      height: 4,
       overflow: "hidden",
+      width: "100%",
     },
     sliderThumb: {
       backgroundColor: theme.colors.primary,
@@ -372,22 +377,26 @@ const GlobalAudioBar: React.FC = () => {
       shadowRadius: 4,
       width: 16,
     },
-    progressRow: {
-      marginTop: theme.spacing.xs,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    progressText: {
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
       ...createThemedTextStyle(theme, {
-        size: "xs",
-        weight: "medium",
+        size: "sm",
+        weight: "normal",
         color: "onSurfaceVariant",
       }),
-      fontVariant: ["tabular-nums"],
     },
-    playIcon: {
-      marginLeft: 2,
+    title: {
+      color: theme.colors.onSurface,
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "medium",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
+    },
+    titleContainer: {
+      flex: 1,
+      minWidth: 0,
     },
   });
 
@@ -562,7 +571,8 @@ export const useGlobalAudioBarHeight = (): number => {
     if (hasTabBar) {
       // When tab bar is present, the audio bar sits above it
       // We need the audio bar height plus some spacing
-      height = height + 12; // Add small gap between audio bar and tab bar
+      const gapBetweenAudioBarAndTabBar = 6;
+      height = height + gapBetweenAudioBarAndTabBar;
     } else {
       // When no tab bar, audio bar sits at bottom with safe area
       height = height + safeAreaBottom;

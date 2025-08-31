@@ -7,11 +7,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import DetailHeader from "../components/DetailHeader";
-import DownloadedBadge from "../components/DownloadedBadge";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import LoadingScreen from "../components/LoadingScreen";
-import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import PageBadge from "../components/PageBadge";
+import RecordingCard from "../components/RecordingCard";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { fetchRecordingsBySpecies } from "../lib/supabase";
@@ -41,29 +39,17 @@ const SpeciesDetailsScreen = () => {
 
   // Create styles with theme support
   const styles = StyleSheet.create({
-    badgeRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: theme.spacing.sm,
-    },
-    caption: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onSurface",
-      }),
-    },
     card: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
+      marginBottom: globalAudioBarHeight,
       overflow: "hidden",
       padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
-      marginBottom: globalAudioBarHeight,
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -72,10 +58,6 @@ const SpeciesDetailsScreen = () => {
     content: {
       padding: theme.spacing.md,
       paddingBottom: theme.spacing.lg,
-    },
-    divider: {
-      backgroundColor: theme.colors.surface,
-      height: theme.spacing.xs,
     },
     emptyContainer: {
       alignItems: "center",
@@ -140,10 +122,6 @@ const SpeciesDetailsScreen = () => {
         color: "onSurface",
       }),
     },
-    recordingContent: {
-      flex: 1,
-      paddingRight: theme.spacing.sm,
-    },
     recordingCountBadge: {
       backgroundColor: theme.colors.onPrimary,
       borderRadius: theme.borderRadius.full,
@@ -156,24 +134,6 @@ const SpeciesDetailsScreen = () => {
         weight: "bold",
         color: "onSurface",
       }),
-    },
-    recordingItem: {
-      alignItems: "center",
-      flexDirection: "row",
-      paddingVertical: theme.spacing.md,
-    },
-    recordingMeta: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginBottom: theme.spacing.sm,
-    },
-    recordingTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "bold",
-        color: "primary",
-      }),
-      marginBottom: theme.spacing.sm,
     },
     recordingsList: {
       borderRadius: theme.borderRadius.md,
@@ -198,9 +158,9 @@ const SpeciesDetailsScreen = () => {
       marginLeft: theme.spacing.sm,
     },
     sectionHeader: {
-      gap: theme.spacing.sm,
       alignItems: "center",
       flexDirection: "row",
+      gap: theme.spacing.sm,
       marginBottom: theme.spacing.md,
     },
   });
@@ -282,35 +242,17 @@ const SpeciesDetailsScreen = () => {
             </View>
           ) : (
             <View style={styles.recordingsList}>
-              {recordings.map((item) => {
-                return (
-                  <View key={item.id}>
-                    <TouchableOpacity
-                      style={styles.recordingItem}
-                      onPress={() => {
-                        navigation.navigate("RecordingDetails", { recordingId: item.id });
-                      }}
-                    >
-                      <View style={styles.recordingContent}>
-                        <Text style={styles.recordingTitle}>{item.title}</Text>
-                        <View style={styles.recordingMeta}>
-                          <View style={styles.badgeRow}>
-                            <PageBadge page={item.book_page_number} iconSize={14} />
-                            {isDownloaded(item.id) && <DownloadedBadge iconSize={14} />}
-                          </View>
-                        </View>
-                        <Text style={styles.caption} numberOfLines={2}>
-                          {item.caption}
-                        </Text>
-                      </View>
-                      <MiniAudioPlayer recording={item} size={36} />
-                    </TouchableOpacity>
-                    {recordings.indexOf(item) < recordings.length - 1 && (
-                      <View style={styles.divider} />
-                    )}
-                  </View>
-                );
-              })}
+              {recordings.map((item) => (
+                <RecordingCard
+                  key={item.id}
+                  recording={item}
+                  sortBy="species"
+                  isDownloaded={isDownloaded(item.id)}
+                  showSpeciesInfo={false}
+                  showCaption={true}
+                  indented={false}
+                />
+              ))}
             </View>
           )}
         </View>

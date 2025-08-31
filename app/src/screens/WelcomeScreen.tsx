@@ -83,9 +83,9 @@ const WelcomeScreen = () => {
       borderRadius: theme.borderRadius.full,
     },
     signInLink: {
-      marginTop: 16,
       color: theme.colors.tertiary,
       fontWeight: theme.typography.titleMedium.fontWeight,
+      marginTop: 16,
     },
   });
 

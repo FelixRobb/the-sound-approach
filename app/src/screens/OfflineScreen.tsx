@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
+import DownloadCard from "../components/DownloadCard";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
-import RecordingCard from "../components/RecordingCard";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { createThemedTextStyle } from "../lib/theme";
@@ -218,7 +218,7 @@ const OfflineScreen = () => {
     };
 
     return (
-      <RecordingCard
+      <DownloadCard
         item={item}
         onPress={handleItemPress}
         showPlayButton={true}

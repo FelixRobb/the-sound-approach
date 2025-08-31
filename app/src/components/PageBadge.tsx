@@ -18,7 +18,7 @@ const PageBadge: React.FC<PageBadgeProps> = ({
   page,
   style,
   textStyle,
-  iconSize = 14,
+  iconSize = 12,
   labelPrefix = "Page ",
   compact = false,
 }) => {
@@ -26,25 +26,32 @@ const PageBadge: React.FC<PageBadgeProps> = ({
   const styles = StyleSheet.create({
     badge: {
       alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 6,
+      backgroundColor: compact ? theme.colors.surfaceVariant : theme.colors.surfaceVariant,
+      borderColor: theme.colors.outline,
+      borderRadius: compact ? 4 : 6,
+      borderWidth: 0.5,
       flexDirection: "row",
-      paddingHorizontal: theme.spacing.xs,
-      paddingVertical: theme.spacing.xs,
-      minHeight: 20,
+      minHeight: compact ? 20 : 24,
+      paddingHorizontal: compact ? theme.spacing.xs : theme.spacing.sm,
+      paddingVertical: compact ? 2 : theme.spacing.xxs,
     },
     text: {
       ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
+        size: compact ? "xs" : "sm",
+        weight: "medium",
         color: "onSurfaceVariant",
       }),
+      lineHeight: compact ? 14 : 16,
       marginLeft: theme.spacing.xs,
     },
   });
   return (
     <View style={[styles.badge, style]}>
-      <Ionicons name="book-outline" size={iconSize} color={theme.colors.onSurfaceVariant} />
+      <Ionicons
+        name="book-outline"
+        size={compact ? 10 : iconSize}
+        color={theme.colors.onSurfaceVariant}
+      />
       <Text style={[styles.text, textStyle]}>
         {!compact && labelPrefix}
         {page}

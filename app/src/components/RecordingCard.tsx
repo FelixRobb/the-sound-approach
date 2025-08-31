@@ -1,141 +1,198 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { createThemedTextStyle } from "../lib/theme";
-import type { DownloadRecord } from "../types";
+import { createThemedTextStyle } from "../lib/theme/typography";
+import type { Recording } from "../types";
+import { RootStackParamList } from "../types";
 
+import DownloadedBadge from "./DownloadedBadge";
 import MiniAudioPlayer from "./MiniAudioPlayer";
 import PageBadge from "./PageBadge";
 
 interface RecordingCardProps {
-  item: DownloadRecord;
-  onPress: () => void;
-  showDeleteButton?: boolean;
-  onDeletePress?: () => void;
-  showPlayButton?: boolean;
+  recording: Recording;
+  sortBy?: "title" | "species" | "page";
+  isDownloaded?: boolean;
+  showSpeciesInfo?: boolean;
+  showCaption?: boolean;
+  indented?: boolean;
 }
 
 const RecordingCard: React.FC<RecordingCardProps> = ({
-  item,
-  onPress,
-  showDeleteButton = false,
-  onDeletePress,
-  showPlayButton = true,
+  recording,
+  sortBy = "page",
+  isDownloaded = false,
+  showSpeciesInfo = true,
+  showCaption = false,
+  indented = false,
 }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useEnhancedTheme();
 
   const styles = StyleSheet.create({
-    downloadCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      overflow: "hidden",
+    actionContainer: {
+      alignItems: "center",
+      flexShrink: 0,
+      justifyContent: "center",
+      marginLeft: theme.spacing.sm,
+    },
+    badgeContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing.xs,
+    },
+    caption: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      lineHeight: 18,
+      marginTop: theme.spacing.xxs,
+    },
+    commonName: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      flexShrink: 1,
+    },
+    contentContainer: {
+      flex: 1,
+      justifyContent: "center",
+      minWidth: 0,
+    },
+
+    metadataRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: theme.spacing.xs,
+      marginTop: theme.spacing.xxs,
+    },
+
+    posterContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.borderRadius.md,
+      elevation: 2,
+      flexShrink: 0,
+      height: 56,
+      justifyContent: "center",
+      marginRight: theme.spacing.md,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      width: 56,
     },
-    downloadContent: {
+    posterIcon: {
+      opacity: 0.6,
+    },
+    recordingCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.transparent,
       flexDirection: "row",
-      justifyContent: "space-between",
-      padding: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
+      marginHorizontal: indented ? theme.spacing.xl : 0,
+      minHeight: 72,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
-    downloadDate: {
-      ...createThemedTextStyle(theme, { size: "xs", weight: "normal", color: "onSurfaceVariant" }),
-      marginTop: 4,
+    scientificName: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      flexShrink: 2,
+      fontStyle: "italic",
+      marginLeft: theme.spacing.xs,
     },
-    downloadHeader: {
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomWidth: 1,
-      padding: theme.spacing.md,
-      paddingBottom: theme.spacing.sm,
-    },
-    downloadInfo: {
+    speciesContainer: {
+      alignItems: "center",
+      flexDirection: "row",
       flex: 1,
+      minWidth: 0,
     },
-    downloadActions: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    pageBadgeWrapper: {
-      alignSelf: "flex-start",
-      marginVertical: theme.spacing.xs,
-    },
-    playButton: {
-      marginRight: theme.spacing.md,
-    },
-    deleteButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.error,
-      borderRadius: theme.borderRadius.full,
-      height: 40,
-      justifyContent: "center",
-      width: 40,
+    title: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "medium",
+        color: "onSurface",
+      }),
+      lineHeight: 20,
+      marginBottom: theme.spacing.xxs,
     },
   });
 
+  const handlePress = () => {
+    navigation.navigate("RecordingDetails", { recordingId: recording.id });
+  };
+
   return (
-    <TouchableOpacity style={styles.downloadCard} onPress={onPress}>
-      <View style={styles.downloadHeader}>
-        <Text
-          style={createThemedTextStyle(theme, {
-            size: "xl",
-            weight: "bold",
-            color: "primary",
-          })}
-        >
-          {item.title || "Unknown Recording"}
-        </Text>
-        <Text
-          style={createThemedTextStyle(theme, {
-            size: "base",
-            weight: "normal",
-            color: "onSurfaceVariant",
-          })}
-        >
-          {item.scientific_name || ""}
-        </Text>
+    <TouchableOpacity
+      style={styles.recordingCard}
+      onPress={handlePress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`Play recording: ${recording.title} by ${recording.species?.common_name || "Unknown species"}`}
+      accessibilityHint="Tap to view recording details"
+    >
+      {/* Visual Poster Element - Like Spotify's album art */}
+      <View style={styles.posterContainer}>
+        <Ionicons
+          name="musical-notes"
+          size={24}
+          color={theme.colors.primary}
+          style={styles.posterIcon}
+        />
       </View>
 
-      <View style={styles.downloadContent}>
-        <View style={styles.downloadInfo}>
-          <Text
-            style={createThemedTextStyle(theme, {
-              size: "base",
-              weight: "normal",
-              color: "onSurface",
-            })}
-          >
-            {item.species_name || "Unknown Species"}
+      {/* Content Section */}
+      <View style={styles.contentContainer}>
+        {/* Title */}
+        <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+          {recording.title}
+        </Text>
+
+        {/* Species Information */}
+        {showSpeciesInfo && sortBy !== "species" && recording.species && (
+          <View style={styles.speciesContainer}>
+            <Text style={styles.commonName} numberOfLines={1} ellipsizeMode="tail">
+              {recording.species.common_name}
+            </Text>
+            {recording.species.scientific_name && (
+              <Text style={styles.scientificName} numberOfLines={1} ellipsizeMode="tail">
+                • {recording.species.scientific_name}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Caption for species view */}
+        {showCaption && sortBy === "species" && recording.caption && (
+          <Text style={styles.caption} numberOfLines={2} ellipsizeMode="tail">
+            {recording.caption}
           </Text>
+        )}
 
-          {item.book_page_number && (
-            <View style={styles.pageBadgeWrapper}>
-              <PageBadge page={item.book_page_number} />
-            </View>
-          )}
-
-          <Text style={styles.downloadDate}>
-            Downloaded: {new Date(item.downloaded_at).toLocaleDateString()}
-          </Text>
+        {/* Metadata Row with Badges */}
+        <View style={styles.metadataRow}>
+          <View style={styles.badgeContainer}>
+            <PageBadge page={recording.book_page_number} compact />
+            {isDownloaded && <DownloadedBadge smallRound />}
+          </View>
         </View>
+      </View>
 
-        <View style={styles.downloadActions}>
-          {showPlayButton && (
-            <View style={styles.playButton}>
-              <MiniAudioPlayer recording={item.recording} size={40} />
-            </View>
-          )}
-
-          {showDeleteButton && onDeletePress && (
-            <TouchableOpacity style={styles.deleteButton} onPress={onDeletePress}>
-              <Ionicons name="trash-outline" size={24} color={theme.colors.onError} />
-            </TouchableOpacity>
-          )}
-        </View>
+      {/* Action Area */}
+      <View style={styles.actionContainer}>
+        <MiniAudioPlayer recording={recording} size={44} iconSize={false} />
       </View>
     </TouchableOpacity>
   );

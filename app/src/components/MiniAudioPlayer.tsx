@@ -7,13 +7,14 @@ import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import type { Recording } from "../types";
 
 interface MiniAudioPlayerProps {
+  iconSize?: boolean;
   size?: number;
   recording: Recording;
   onPress?: () => void;
 }
 
 const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
-  const { size = 36, recording, onPress } = props;
+  const { iconSize = false, size = 36, recording, onPress } = props;
 
   const { theme } = useEnhancedTheme();
 
@@ -40,19 +41,34 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
       width: size + 4,
     },
     iconOffsetPlay: {
-      marginLeft: 1,
+      marginLeft: 1.5,
+    },
+    iconSizeButtonContainer: {
+      alignItems: "center",
+      height: size + 4,
+      justifyContent: "center",
+      width: size + 4,
+    },
+    iconSizePlayButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.transparent,
+      borderRadius: theme.borderRadius.full,
+      height: size,
+      justifyContent: "center",
+      width: size,
     },
     playButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.primary,
+      backgroundColor: isCurrentTrack ? theme.colors.primary : theme.colors.surfaceVariant,
       borderRadius: theme.borderRadius.full,
-      elevation: 2,
+      elevation: isCurrentTrack ? 3 : 1,
       height: size,
       justifyContent: "center",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
+      shadowOffset: { width: 0, height: isCurrentTrack ? 2 : 1 },
+      shadowOpacity: isCurrentTrack ? 0.25 : 0.15,
+      shadowRadius: isCurrentTrack ? 3 : 2,
+      transform: isCurrentTrack ? [{ scale: 1.05 }] : [{ scale: 1 }],
       width: size,
     },
   });
@@ -61,19 +77,34 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
 
   return (
     <TouchableOpacity
-      style={styles.buttonContainer}
+      style={iconSize ? styles.iconSizeButtonContainer : styles.buttonContainer}
       onPress={!isCurrentlyLoading && !disabled ? handlePress : undefined}
       activeOpacity={0.7}
       disabled={disabled}
     >
-      <View style={styles.playButton}>
+      <View style={iconSize ? styles.iconSizePlayButton : styles.playButton}>
         {isCurrentlyLoading ? (
-          <ActivityIndicator size={Math.max(16, size * 0.45)} color={theme.colors.onPrimary} />
+          <ActivityIndicator
+            size={Math.max(16, size * 0.45)}
+            color={
+              iconSize
+                ? theme.colors.primary
+                : isCurrentTrack
+                  ? theme.colors.onPrimary
+                  : theme.colors.onSurfaceVariant
+            }
+          />
         ) : (
           <Ionicons
             name={isCurrentlyPlaying ? "pause" : "play"}
-            size={size * 0.5}
-            color={theme.colors.onPrimary}
+            size={iconSize ? size * 0.55 : size * 0.5}
+            color={
+              iconSize
+                ? theme.colors.primary
+                : isCurrentTrack
+                  ? theme.colors.onPrimary
+                  : theme.colors.onSurfaceVariant
+            }
             style={!isCurrentlyPlaying ? styles.iconOffsetPlay : undefined}
           />
         )}
