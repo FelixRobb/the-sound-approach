@@ -122,6 +122,7 @@ const GlobalAudioBar: React.FC = () => {
         translateY.value = withTiming(200, {
           duration: Math.max(150, 300 * (1 - currentY / 200)), // Shorter duration if already partway down
         });
+        sliderProgress.value = 0;
         runOnJS(handleDismiss)();
       } else {
         // Snap back
@@ -294,8 +295,14 @@ const GlobalAudioBar: React.FC = () => {
   useEffect(() => {
     if (isVisible) {
       translateY.value = 0;
+    } else {
+      // When the bar is hidden, ensure slider is reset so it starts from 0 on next show
+      sliderProgress.value = 0;
+      sliderMin.value = 0;
+      sliderMax.value = 1;
+      setIsSeeking(false);
     }
-  }, [isVisible, translateY]);
+  }, [isVisible, translateY, sliderProgress, sliderMin, sliderMax]);
 
   // If we don't have a current recording or the bar is hidden, don't render
   if (!currentRecording || !isVisible) return null;
