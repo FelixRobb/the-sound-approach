@@ -28,7 +28,9 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
 
   // Actions
   const handlePress = async () => {
-    onPress?.();
+    if (onPress) {
+      onPress();
+    }
     await togglePlayPause(recording);
   };
 

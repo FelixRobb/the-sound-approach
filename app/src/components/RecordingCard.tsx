@@ -184,15 +184,15 @@ const RecordingCard: React.FC<RecordingCardProps> = ({
         {/* Metadata Row with Badges */}
         <View style={styles.metadataRow}>
           <View style={styles.badgeContainer}>
-            <PageBadge page={recording.book_page_number} compact />
-            {isDownloaded && <DownloadedBadge smallRound />}
+            <PageBadge page={recording.book_page_number} />
+            {isDownloaded && <DownloadedBadge />}
           </View>
         </View>
       </View>
 
       {/* Action Area */}
       <View style={styles.actionContainer}>
-        <MiniAudioPlayer recording={recording} size={44} iconSize={false} />
+        <MiniAudioPlayer recording={recording} size={44} />
       </View>
     </TouchableOpacity>
   );

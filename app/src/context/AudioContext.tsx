@@ -100,7 +100,21 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Toggle play/pause for a track
   const togglePlayPause = async (recording: Recording): Promise<boolean> => {
     try {
-      // Get the best audio URI first
+      // If the user taps the same recording again, simply toggle play/pause using the
+      // already-loaded URI.  This avoids calling getBestAudioUri (which performs async
+      // network/storage work) when we only need to pause or resume the current track.
+      if (audioState.recording?.id === recording.id) {
+        const result = await audioService.playTrack(audioState.uri ?? "", recording);
+
+        // Show the audio bar when toggling succeeds (e.g. resuming playback)
+        if (result) {
+          showAudioBar();
+        }
+
+        return result;
+      }
+
+      // Fetch the best URI only when switching to a *different* recording.
       const uri = await getBestAudioUri(recording, isDownloaded, getDownloadPath, isConnected);
 
       if (!uri) {

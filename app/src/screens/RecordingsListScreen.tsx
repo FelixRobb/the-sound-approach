@@ -189,41 +189,66 @@ const RecordingsListScreen = () => {
       marginTop: theme.spacing.xs,
     },
     speciesAction: {
-      marginLeft: 8,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: theme.spacing.sm,
     },
     speciesActionButton: {
       alignItems: "center",
       backgroundColor: theme.colors.primary,
       borderRadius: theme.borderRadius.full,
-      height: 30,
+      elevation: 1,
+      height: 32,
       justifyContent: "center",
-      width: 30,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      width: 32,
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.md,
+      borderColor: theme.colors.outlineVariant,
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
       elevation: 2,
       marginHorizontal: theme.spacing.md,
       marginVertical: theme.spacing.xs,
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 0.5 },
-      shadowOpacity: 0.4,
-      shadowRadius: 1,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.15,
+      shadowRadius: 3,
     },
     speciesContent: {
       alignItems: "center",
       flexDirection: "row",
       justifyContent: "space-between",
+      minHeight: 48,
+    },
+    speciesInfo: {
+      flex: 1,
+      marginRight: theme.spacing.sm,
+      minWidth: 0,
     },
     speciesName: {
       ...createThemedTextStyle(theme, {
         size: "lg",
         weight: "bold",
-        color: "primary",
+        color: "onSurface",
       }),
-      marginBottom: theme.spacing.xs,
+      lineHeight: 22,
+      marginBottom: theme.spacing.xxs,
+    },
+    speciesScientificName: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      fontStyle: "italic",
+      lineHeight: 18,
     },
   });
 
@@ -353,135 +378,168 @@ const RecordingsListScreen = () => {
     return score;
   };
 
-  const filteredAndSortedRecordings = recordings
-    ?.map((recording) => ({
-      item: recording,
-      score: getRecordingSearchScore(recording, debouncedSearchQuery),
-    }))
-    .filter(({ item, score }) => {
-      // Search filter
-      if (debouncedSearchQuery && score === 0) return false;
+  const filteredAndSortedRecordings = React.useMemo(() => {
+    if (!recordings) return [];
 
-      // Download status filter
-      if (downloadedFilter === "downloaded" && !isDownloaded(item.id)) return false;
-      if (downloadedFilter === "not_downloaded" && isDownloaded(item.id)) return false;
+    return recordings
+      .map((recording) => ({
+        item: recording,
+        score: getRecordingSearchScore(recording, debouncedSearchQuery),
+      }))
+      .filter(({ item, score }) => {
+        // Search filter
+        if (debouncedSearchQuery && score === 0) return false;
 
-      return true;
-    })
-    .sort((a, b) => {
-      // If there's a search query, prioritize by search score first
-      if (debouncedSearchQuery) {
-        if (a.score !== b.score) {
-          return b.score - a.score;
+        // Download status filter
+        if (downloadedFilter === "downloaded" && !isDownloaded(item.id)) return false;
+        if (downloadedFilter === "not_downloaded" && isDownloaded(item.id)) return false;
+
+        return true;
+      })
+      .sort((a, b) => {
+        // If there's a search query, prioritize by search score first
+        if (debouncedSearchQuery) {
+          if (a.score !== b.score) {
+            return b.score - a.score;
+          }
         }
-      }
 
-      // Then sort by selected criteria
-      let comparison = 0;
+        // Then sort by selected criteria
+        let comparison = 0;
 
-      switch (sortBy) {
-        case "title":
-          comparison = a.item.title.localeCompare(b.item.title);
-          break;
-        case "species":
-          comparison = (a.item.species?.common_name || "").localeCompare(
-            b.item.species?.common_name || ""
-          );
-          break;
-        case "page":
-          comparison = a.item.book_page_number - b.item.book_page_number;
-          break;
-      }
-
-      return sortOrder === "asc" ? comparison : -comparison;
-    })
-    .map(({ item }) => item);
-
-  // Enhanced species filtering and sorting
-  const filteredAndSortedSpecies = species
-    ?.map((species) => ({
-      item: species,
-      score: getSpeciesSearchScore(species, debouncedSearchQuery),
-    }))
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => {
-      // If there's a search query, prioritize by search score first
-      if (debouncedSearchQuery) {
-        if (a.score !== b.score) {
-          return b.score - a.score;
+        switch (sortBy) {
+          case "title":
+            comparison = a.item.title.localeCompare(b.item.title);
+            break;
+          case "species":
+            comparison = (a.item.species?.common_name || "").localeCompare(
+              b.item.species?.common_name || ""
+            );
+            break;
+          case "page":
+            comparison = a.item.book_page_number - b.item.book_page_number;
+            break;
         }
-      }
 
-      // Then sort alphabetically by common name
-      const comparison = a.item.common_name.localeCompare(b.item.common_name);
-      return sortOrder === "asc" ? comparison : -comparison;
-    })
-    .map(({ item }) => item);
+        return sortOrder === "asc" ? comparison : -comparison;
+      })
+      .map(({ item }) => item);
+  }, [recordings, debouncedSearchQuery, downloadedFilter, sortBy, sortOrder, isDownloaded]);
+
+  // Enhanced species filtering and sorting with memoization
+  const filteredAndSortedSpecies = React.useMemo(() => {
+    if (!species) return [];
+
+    return species
+      .map((species) => ({
+        item: species,
+        score: getSpeciesSearchScore(species, debouncedSearchQuery),
+      }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => {
+        // If there's a search query, prioritize by search score first
+        if (debouncedSearchQuery) {
+          if (a.score !== b.score) {
+            return b.score - a.score;
+          }
+        }
+
+        // Then sort alphabetically by common name
+        const comparison = a.item.common_name.localeCompare(b.item.common_name);
+        return sortOrder === "asc" ? comparison : -comparison;
+      })
+      .map(({ item }) => item);
+  }, [species, debouncedSearchQuery, sortOrder]);
 
   // Group recordings by species for SectionList when sorting by species
   const recordingsSections = React.useMemo(() => {
     if (sortBy !== "species" || !filteredAndSortedRecordings) return [];
+
     const map = new Map<string, { title: string; data: Recording[] }>();
+
     filteredAndSortedRecordings.forEach((rec) => {
       const commonName = rec.species?.common_name || "Unknown Species";
       const scientificName = rec.species?.scientific_name || "";
       const title = scientificName ? `${commonName} • ${scientificName}` : commonName;
+
       if (!map.has(commonName)) {
         map.set(commonName, { title, data: [] });
       }
       map.get(commonName)?.data.push(rec);
     });
-    return Array.from(map.values());
+
+    // Sort sections alphabetically by common name
+    return Array.from(map.values()).sort((a, b) => {
+      const aName = a.title.split(" • ")[0];
+      const bName = b.title.split(" • ")[0];
+      return aName.localeCompare(bName);
+    });
   }, [filteredAndSortedRecordings, sortBy]);
 
   // Render recording item
-  const renderRecordingItem = ({ item }: { item: Recording }) => {
-    const isItemDownloaded = isDownloaded(item.id);
+  const renderRecordingItem = React.useCallback(
+    ({ item }: { item: Recording }) => {
+      const isItemDownloaded = isDownloaded(item.id);
 
-    return (
-      <RecordingCard
-        recording={item}
-        sortBy={sortBy}
-        isDownloaded={isItemDownloaded}
-        showSpeciesInfo={sortBy !== "species"}
-        showCaption={sortBy === "species"}
-        indented={sortBy === "species"}
-      />
-    );
-  };
+      return (
+        <RecordingCard
+          recording={item}
+          sortBy={sortBy}
+          isDownloaded={isItemDownloaded}
+          showSpeciesInfo={sortBy !== "species"}
+          showCaption={sortBy === "species"}
+          indented={sortBy === "species"}
+        />
+      );
+    },
+    [sortBy, isDownloaded]
+  );
 
   // Render species item
-  const renderSpeciesItem = ({ item }: { item: Species }) => {
-    return (
-      <TouchableOpacity
-        style={styles.speciesCard}
-        onPress={() => {
-          navigation.navigate("SpeciesDetails", { speciesId: item.id });
-        }}
-      >
-        <View style={styles.speciesContent}>
-          <View>
-            <Text style={styles.speciesName}>{item.common_name}</Text>
-            <Text
-              style={createThemedTextStyle(theme, {
-                size: "base",
-                weight: "normal",
-                color: "onSurfaceVariant",
-              })}
-            >
-              {item.scientific_name}
-            </Text>
-          </View>
+  const renderSpeciesItem = React.useCallback(
+    ({ item }: { item: Species }) => {
+      return (
+        <TouchableOpacity
+          style={styles.speciesCard}
+          onPress={() => {
+            navigation.navigate("SpeciesDetails", { speciesId: item.id });
+          }}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`View details for ${item.common_name} (${item.scientific_name})`}
+          accessibilityHint="Tap to view species details and recordings"
+        >
+          <View style={styles.speciesContent}>
+            <View style={styles.speciesInfo}>
+              <Text style={styles.speciesName} numberOfLines={1} ellipsizeMode="tail">
+                {item.common_name}
+              </Text>
+              <Text style={styles.speciesScientificName} numberOfLines={1} ellipsizeMode="tail">
+                {item.scientific_name}
+              </Text>
+            </View>
 
-          <View style={styles.speciesAction}>
-            <View style={styles.speciesActionButton}>
-              <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+            <View style={styles.speciesAction}>
+              <View style={styles.speciesActionButton}>
+                <Ionicons name="chevron-forward" size={18} color={theme.colors.onPrimary} />
+              </View>
             </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+        </TouchableOpacity>
+      );
+    },
+    [
+      navigation,
+      styles.speciesAction,
+      styles.speciesActionButton,
+      styles.speciesCard,
+      styles.speciesContent,
+      styles.speciesInfo,
+      styles.speciesName,
+      styles.speciesScientificName,
+      theme.colors.onPrimary,
+    ]
+  );
 
   // Empty state component
   const EmptyState = ({ type }: { type: "recordings" | "species" }) => (
@@ -595,7 +653,7 @@ const RecordingsListScreen = () => {
                 <SectionList
                   sections={recordingsSections}
                   contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
-                  keyExtractor={(item) => item.id}
+                  keyExtractor={(item) => `recording-${item.id}`}
                   renderItem={renderRecordingItem}
                   renderSectionHeader={({ section: { title } }) => {
                     const [commonName, scientificName] = title.split(" • ");
@@ -617,6 +675,10 @@ const RecordingsListScreen = () => {
                     );
                   }}
                   showsVerticalScrollIndicator={false}
+                  removeClippedSubviews={true}
+                  maxToRenderPerBatch={10}
+                  windowSize={10}
+                  initialNumToRender={15}
                   refreshControl={
                     <RefreshControl
                       refreshing={recordingsLoading}
@@ -632,8 +694,12 @@ const RecordingsListScreen = () => {
                   data={filteredAndSortedRecordings}
                   contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                   renderItem={renderRecordingItem}
-                  keyExtractor={(item) => item.id}
+                  keyExtractor={(item) => `recording-${item.id}`}
                   showsVerticalScrollIndicator={false}
+                  removeClippedSubviews={true}
+                  maxToRenderPerBatch={10}
+                  windowSize={10}
+                  initialNumToRender={15}
                   refreshControl={
                     <RefreshControl
                       refreshing={recordingsLoading}
@@ -651,8 +717,12 @@ const RecordingsListScreen = () => {
                 data={filteredAndSortedSpecies}
                 contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
                 renderItem={renderSpeciesItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => `species-${item.id}`}
                 showsVerticalScrollIndicator={false}
+                removeClippedSubviews={true}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                initialNumToRender={15}
                 refreshControl={
                   <RefreshControl
                     refreshing={speciesLoading}

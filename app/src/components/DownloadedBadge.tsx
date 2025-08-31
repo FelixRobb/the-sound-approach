@@ -29,7 +29,6 @@ const DownloadedBadge: React.FC<DownloadedBadgeProps> = ({
       backgroundColor: theme.colors.tertiary,
       borderRadius: smallRound ? 10 : 6,
       flexDirection: "row",
-      minHeight: 16,
       paddingHorizontal: theme.spacing.xs,
       paddingVertical: theme.spacing.xxs,
     },

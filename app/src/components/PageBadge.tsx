@@ -31,7 +31,6 @@ const PageBadge: React.FC<PageBadgeProps> = ({
       borderRadius: compact ? 4 : 6,
       borderWidth: 0.5,
       flexDirection: "row",
-      minHeight: compact ? 20 : 24,
       paddingHorizontal: compact ? theme.spacing.xs : theme.spacing.sm,
       paddingVertical: compact ? 2 : theme.spacing.xxs,
     },
@@ -41,7 +40,6 @@ const PageBadge: React.FC<PageBadgeProps> = ({
         weight: "medium",
         color: "onSurfaceVariant",
       }),
-      lineHeight: compact ? 14 : 16,
       marginLeft: theme.spacing.xs,
     },
   });
