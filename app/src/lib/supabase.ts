@@ -1,19 +1,35 @@
+// Polyfill fetch/URL APIs for React Native
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, processLock } from "@supabase/supabase-js";
+import { AppState } from "react-native";
 
 import type { Recording, Species } from "../types";
 // Initialize Supabase client
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "";
 
+// Initialise Supabase client following official React-Native guide
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    // Use AsyncStorage only on native platforms (Android/iOS)
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // Ensure only a single refresh process runs at a time (required in RN)
+    lock: processLock,
   },
+});
+
+// Register one global listener to control automatic token refresh based on
+// the app's foreground/background state. This should only be added once.
+AppState.addEventListener("change", (state) => {
+  if (state === "active") {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
+  }
 });
 
 // Database functions

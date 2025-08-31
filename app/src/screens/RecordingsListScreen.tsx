@@ -195,20 +195,13 @@ const RecordingsListScreen = () => {
     },
     speciesActionButton: {
       alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.full,
-      elevation: 1,
       height: 32,
       justifyContent: "center",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
       width: 32,
     },
     speciesCard: {
       backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outlineVariant,
+      borderColor: theme.colors.outline,
       borderRadius: theme.borderRadius.lg,
       borderWidth: 1,
       elevation: 2,
@@ -521,7 +514,7 @@ const RecordingsListScreen = () => {
 
             <View style={styles.speciesAction}>
               <View style={styles.speciesActionButton}>
-                <Ionicons name="chevron-forward" size={18} color={theme.colors.onPrimary} />
+                <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
               </View>
             </View>
           </View>
@@ -537,7 +530,7 @@ const RecordingsListScreen = () => {
       styles.speciesInfo,
       styles.speciesName,
       styles.speciesScientificName,
-      theme.colors.onPrimary,
+      theme.colors.primary,
     ]
   );
 
@@ -692,7 +685,10 @@ const RecordingsListScreen = () => {
               ) : (
                 <FlatList
                   data={filteredAndSortedRecordings}
-                  contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
+                  contentContainerStyle={{
+                    paddingBottom: globalAudioBarHeight,
+                    paddingTop: theme.spacing.sm,
+                  }}
                   renderItem={renderRecordingItem}
                   keyExtractor={(item) => `recording-${item.id}`}
                   showsVerticalScrollIndicator={false}

@@ -302,6 +302,8 @@ const Tab = createBottomTabNavigator();
 
 // Auth navigator
 const AuthNavigator: React.FC = () => {
+  const { theme } = useEnhancedTheme();
+
   return (
     <AuthStack.Navigator
       screenOptions={{
@@ -311,6 +313,9 @@ const AuthNavigator: React.FC = () => {
         gestureDirection: "horizontal",
         presentation: "card",
         animationTypeForReplace: "push",
+        contentStyle: {
+          backgroundColor: theme.colors.background,
+        },
       }}
     >
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
@@ -322,13 +327,18 @@ const AuthNavigator: React.FC = () => {
 
 // Onboarding navigator - separate from auth flow
 const OnboardingNavigator: React.FC = () => {
+  const { theme } = useEnhancedTheme();
+
   return (
     <AuthStack.Navigator
       screenOptions={{
         headerShown: false,
         animation: "fade",
-        gestureEnabled: false, // Prevent going back during onboarding
+        gestureEnabled: false,
         presentation: "card",
+        contentStyle: {
+          backgroundColor: theme.colors.background,
+        },
       }}
     >
       <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
@@ -423,6 +433,10 @@ const MainTabNavigator: React.FC = () => {
           tabBarStyle: [styles.tabBar, insets.bottom > 30 && styles.tabBarSafeArea],
           tabBarAccessibilityLabel: `${route.name} tab`,
           tabBarTestID: `${route.name.toLowerCase()}-tab`,
+          contentStyle: {
+            backgroundColor: theme.colors.background,
+          },
+          detachPreviousScreen: false,
         })}
       >
         <Tab.Screen
@@ -459,6 +473,8 @@ const MainTabNavigator: React.FC = () => {
 };
 
 const MainNavigator: React.FC = () => {
+  const { theme } = useEnhancedTheme();
+
   const backgroundStyle = StyleSheet.create({
     screen: {
       flex: 1,
@@ -475,6 +491,10 @@ const MainNavigator: React.FC = () => {
           gestureDirection: "horizontal",
           presentation: "card",
           animationTypeForReplace: "push",
+          contentStyle: {
+            backgroundColor: theme.colors.background,
+          },
+          animationDuration: 250,
         }}
       >
         <MainStack.Screen name="MainTabs" component={withGlobalAudioBar(MainTabNavigator)} />
@@ -494,6 +514,9 @@ const MainNavigator: React.FC = () => {
             presentation: "card",
             gestureEnabled: true,
             animation: "slide_from_right",
+            contentStyle: {
+              backgroundColor: theme.colors.background,
+            },
           }}
         />
         <MainStack.Screen
@@ -503,6 +526,9 @@ const MainNavigator: React.FC = () => {
             presentation: "card",
             gestureEnabled: true,
             animation: "slide_from_right",
+            contentStyle: {
+              backgroundColor: theme.colors.background,
+            },
           }}
         />
       </MainStack.Navigator>
@@ -511,13 +537,18 @@ const MainNavigator: React.FC = () => {
 };
 
 const OfflineAuthNavigator: React.FC = () => {
+  const { theme } = useEnhancedTheme();
+
   return (
     <AuthStack.Navigator
       screenOptions={{
         headerShown: false,
         animation: "fade",
-        gestureEnabled: false, // Disable gestures when offline
+        gestureEnabled: false,
         presentation: "card",
+        contentStyle: {
+          backgroundColor: theme.colors.background,
+        },
       }}
     >
       <AuthStack.Screen name="Welcome" component={OfflineWelcomeScreen} />
@@ -569,7 +600,7 @@ const AppNavigator: React.FC = () => {
   const getNavigatorToShow = () => {
     // Ensure we have stable state before making navigation decisions
     if (authState.isLoading) {
-      return null; // This will be handled by the loading check above
+      return null;
     }
 
     if (authState.userToken) {
