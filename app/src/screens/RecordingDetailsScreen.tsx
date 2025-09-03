@@ -86,19 +86,26 @@ const RecordingDetailsScreen = () => {
   const styles = StyleSheet.create({
     audioPlayerContainer: {
       alignItems: "center",
-      justifyContent: "space-between",
-      paddingHorizontal: theme.spacing.md,
-      flexDirection: "row",
-      paddingVertical: theme.spacing.sm,
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
+      flexDirection: "row",
+      justifyContent: "space-between",
       overflow: "hidden",
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
     },
+    audioPlayerContainerInner: {
+      marginLeft: theme.spacing.md,
+    },
+    buttonIcon: {
+      marginLeft: isPlaying ? 0 : theme.spacing.xs, // Slight adjustment for play icon centering
+    },
+
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -107,29 +114,28 @@ const RecordingDetailsScreen = () => {
       padding: theme.spacing.md,
       paddingBottom: globalAudioBarHeight,
     },
-
+    controlsBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.backdrop,
+      zIndex: theme.zIndex.base2,
+    },
     controlsContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.backdrop,
       borderRadius: theme.borderRadius.lg,
       bottom: theme.spacing.sm,
+      elevation: 5,
       flexDirection: "row",
       left: theme.spacing.md,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
       position: "absolute",
       right: theme.spacing.md,
-      zIndex: theme.zIndex.base5,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
-      elevation: 5,
-    },
-    controlsBackdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: theme.colors.backdrop,
-      zIndex: theme.zIndex.base2,
+      zIndex: theme.zIndex.base5,
     },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
@@ -223,6 +229,12 @@ const RecordingDetailsScreen = () => {
       marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
+    fullButtonTouchable: {
+      alignItems: "center",
+      height: "100%",
+      justifyContent: "center",
+      width: "100%",
+    },
     fullScreenVideoOverlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: "center",
@@ -243,18 +255,18 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.backdrop,
       borderRadius: theme.borderRadius.md,
       bottom: theme.spacing.md,
+      elevation: 5,
       flexDirection: "row",
       left: theme.spacing.md,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
       position: "absolute",
       right: theme.spacing.md,
-      zIndex: theme.zIndex.base10,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
-      elevation: 5,
+      zIndex: theme.zIndex.base10,
     },
     fullscreenHeader: {
       backgroundColor: theme.colors.background,
@@ -288,48 +300,33 @@ const RecordingDetailsScreen = () => {
       alignSelf: "flex-start",
       marginVertical: theme.spacing.xs,
     },
-    // Updated play button styles
-    playButton: {
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: [{ translateX: -40 }, { translateY: -40 }],
-      width: 80,
-      height: 80,
-      zIndex: theme.zIndex.base4,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    // Updated pause button styles
     pauseButton: {
+      alignItems: "center",
+      height: 80,
+      justifyContent: "center",
+      left: "50%",
       position: "absolute",
       top: "50%",
-      left: "50%",
       transform: [{ translateX: -40 }, { translateY: -40 }],
       width: 80,
-      height: 80,
       zIndex: theme.zIndex.base4,
+    },
+    playButton: {
       alignItems: "center",
+      height: 80,
       justifyContent: "center",
-    },
-    buttonIcon: {
-      marginLeft: isPlaying ? 0 : theme.spacing.xs, // Slight adjustment for play icon centering
-    },
-    fullButtonTouchable: {
-      width: "100%",
-      height: "100%",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    videoTouchOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      zIndex: theme.zIndex.base3,
+      left: "50%",
+      position: "absolute",
+      top: "50%",
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      zIndex: theme.zIndex.base4,
     },
     playerContainer: {
       aspectRatio: 16 / 9,
       backgroundColor: theme.colors.background,
-      width: "100%",
       position: "relative",
+      width: "100%",
     },
     playerContainerError: {
       alignItems: "center",
@@ -337,6 +334,18 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.surfaceVariant,
       justifyContent: "center",
       width: "100%",
+    },
+    replayButton: {
+      alignItems: "center",
+      borderRadius: theme.borderRadius.full,
+      height: 80,
+      justifyContent: "center",
+      left: "50%",
+      position: "absolute",
+      top: "50%",
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      zIndex: theme.zIndex.base4,
     },
     retryButton: {
       alignItems: "center",
@@ -361,10 +370,10 @@ const RecordingDetailsScreen = () => {
       marginBottom: theme.spacing.xs,
     },
     slider: {
+      backgroundColor: theme.colors.tertiary,
       flex: 1,
       height: theme.spacing.xl,
       marginHorizontal: theme.spacing.sm,
-      backgroundColor: theme.colors.tertiary,
     },
     sliderThumb: {
       backgroundColor: theme.colors.tertiary,
@@ -439,37 +448,26 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 2.22,
     },
     videoHeader: {
+      alignItems: "center",
+      borderBottomColor: theme.colors.backdrop,
+      borderBottomWidth: 1,
       flexDirection: "row",
       justifyContent: "space-between",
-      alignItems: "center",
+      paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.5, // Increased for more visible shadow
-      shadowRadius: 6, // Increased for a softer, larger shadow
-      borderBottomWidth: 1, // Added for extra separation
-      borderBottomColor: theme.colors.backdrop, // Subtle border color
-      paddingHorizontal: theme.spacing.md,
+      shadowOpacity: 0.5,
+      shadowRadius: 6,
     },
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,
       alignItems: "center",
       justifyContent: "center",
     },
-    audioPlayerContainerInner: {
-      marginLeft: theme.spacing.md,
-    },
-    replayButton: {
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: [{ translateX: -40 }, { translateY: -40 }],
-      width: 80,
-      height: 80,
-      borderRadius: theme.borderRadius.full,
-      zIndex: theme.zIndex.base4,
-      alignItems: "center",
-      justifyContent: "center",
+    videoTouchOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: theme.zIndex.base3,
     },
   });
 
@@ -919,6 +917,7 @@ const RecordingDetailsScreen = () => {
           nativeControls={false}
           allowsFullscreen={false}
           allowsPictureInPicture={false}
+          allowsVideoFrameAnalysis={false}
         />
 
         {/* Touch overlay for showing/hiding controls */}
