@@ -142,13 +142,18 @@ const DownloadsScreen = () => {
 
     setIsDeleting(true);
     setShowDeleteModal(false);
+
     // Mark this item as deleting for animation
     setDeletingItems((prev) => new Set(prev).add(selectedDownload.recording_id));
 
     try {
       await deleteDownload(selectedDownload.recording_id);
 
-      // Wait a bit for the fade animation to complete before removing from list
+      // Don't remove from downloads array immediately - let the animation complete
+      // The animation will handle the visual removal
+
+      // Wait for the complete animation sequence to finish
+      // Initial fade (200ms) + delay (150ms) + spring collapse + spring slide-ups + buffer = 900ms
       setTimeout(() => {
         setDownloads((prev) =>
           prev.filter((download) => download.recording_id !== selectedDownload.recording_id)
@@ -158,7 +163,7 @@ const DownloadsScreen = () => {
           newSet.delete(selectedDownload.recording_id);
           return newSet;
         });
-      }, 300); // Match the fade duration
+      }, 900);
     } catch (error) {
       console.error("Delete error:", error);
       // Remove from deleting set on error
@@ -169,7 +174,6 @@ const DownloadsScreen = () => {
       });
     } finally {
       setIsDeleting(false);
-
       setSelectedDownload(null);
     }
   };
@@ -283,10 +287,6 @@ const DownloadsScreen = () => {
       marginTop: theme.spacing.md,
       textAlign: "center",
     },
-
-    separator: {
-      height: theme.spacing.md,
-    },
     storageInfo: {
       alignItems: "center",
       flexDirection: "row",
@@ -360,8 +360,8 @@ const DownloadsScreen = () => {
     </View>
   );
 
-  // Render download item
-  const renderDownloadItem = ({ item }: { item: DownloadRecord }) => {
+  // Render download item with animation delay calculation
+  const renderDownloadItem = ({ item, index }: { item: DownloadRecord; index: number }) => {
     const handleItemPress = () => {
       navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
     };
@@ -369,6 +369,21 @@ const DownloadsScreen = () => {
     const handleDeletePress = () => {
       handleDeleteDownload(item);
     };
+
+    // Calculate if this item should have a slide-up animation
+    // Find if there's a deleting item above this one in the current list
+    const deletingItemIndex = downloads.findIndex((download) =>
+      deletingItems.has(download.recording_id)
+    );
+
+    // Only animate items that are below the deleting item and not deleting themselves
+    const isItemDeleting = deletingItems.has(item.recording_id);
+    const shouldAnimateUp =
+      !isItemDeleting && deletingItemIndex !== -1 && index > deletingItemIndex;
+
+    // Calculate delay: start after the delete item begins collapsing (350ms)
+    // Add staggered delay based on distance from deleted item for smooth cascading effect
+    const animationDelay = shouldAnimateUp ? 350 + (index - deletingItemIndex - 1) * 40 : 0;
 
     return (
       <DownloadCard
@@ -378,7 +393,8 @@ const DownloadsScreen = () => {
         showDeleteButton={true}
         onDeletePress={handleDeletePress}
         shouldResetPosition={resetPositionForItem === item.recording_id}
-        isDeleting={deletingItems.has(item.recording_id)}
+        isDeleting={isItemDeleting}
+        animationDelay={animationDelay}
       />
     );
   };
@@ -423,15 +439,21 @@ const DownloadsScreen = () => {
         renderItem={renderDownloadItem}
         keyExtractor={(item) => item.recording_id}
         contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={<EmptyState />}
         removeClippedSubviews={false}
+        windowSize={10}
+        maxToRenderPerBatch={5}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              setRefreshing(true);
-              void loadDownloads(false);
+              // Only allow refresh if no items are currently being deleted
+              if (deletingItems.size === 0) {
+                setRefreshing(true);
+                void loadDownloads(false);
+              }
             }}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}

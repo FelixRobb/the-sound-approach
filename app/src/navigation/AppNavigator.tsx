@@ -573,6 +573,8 @@ const AppNavigator: React.FC = () => {
     const setNavigationBarColor = async () => {
       if (Platform.OS === "android") {
         try {
+          // Match Android system navigation bar color to the app's tab bar surface
+          await NavigationBar.setBackgroundColorAsync(theme.colors.surface);
           if (isDark) {
             await NavigationBar.setButtonStyleAsync("light");
           } else {

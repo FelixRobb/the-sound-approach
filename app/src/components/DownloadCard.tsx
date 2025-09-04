@@ -8,6 +8,7 @@ import Animated, {
   withSpring,
   withTiming,
   runOnJS,
+  withDelay,
 } from "react-native-reanimated";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
@@ -25,6 +26,7 @@ interface DownloadCardProps {
   showPlayButton?: boolean;
   shouldResetPosition?: boolean;
   isDeleting?: boolean;
+  animationDelay?: number;
 }
 
 const DownloadCard: React.FC<DownloadCardProps> = ({
@@ -35,21 +37,52 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
   showPlayButton = true,
   shouldResetPosition = false,
   isDeleting = false,
+  animationDelay = 0,
 }) => {
   const { theme } = useEnhancedTheme();
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
+  const translateY = useSharedValue(0);
+  const cardHeight = useSharedValue(1);
   const [isRevealed, setIsRevealed] = useState(false);
 
-  const SWIPE_THRESHOLD = -80;
+  const SWIPE_THRESHOLD = -100;
   const DELETE_ZONE_WIDTH = 80;
 
-  // Handle delete animation
+  // Handle delete animation with slide up effect
   useEffect(() => {
     if (isDeleting) {
-      opacity.value = withTiming(0, { duration: 300 });
+      // First fade out the card with smooth timing
+      opacity.value = withTiming(0, { duration: 200 });
+
+      // Then collapse the height with spring for smooth transition
+      cardHeight.value = withDelay(
+        150,
+        withSpring(0, {
+          damping: 20,
+          stiffness: 300,
+          mass: 0.8,
+        })
+      );
     }
-  }, [isDeleting, opacity]);
+  }, [isDeleting, opacity, cardHeight]);
+
+  // Handle slide-up animation for items below deleted item
+  useEffect(() => {
+    if (animationDelay > 0) {
+      // Start with items slightly below their final position
+      translateY.value = 20;
+      // Then animate to final position with smooth spring
+      translateY.value = withDelay(
+        animationDelay,
+        withSpring(0, {
+          damping: 25,
+          stiffness: 400,
+          mass: 0.6,
+        })
+      );
+    }
+  }, [animationDelay, translateY]);
 
   const styles = StyleSheet.create({
     actionContainer: {
@@ -91,9 +124,9 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       alignItems: "center",
       backgroundColor: theme.colors.errorContainer,
       borderRadius: 28,
-      height: 56,
+      height: 44,
       justifyContent: "center",
-      width: 56,
+      width: 44,
     },
     downloadCard: {
       backgroundColor: theme.colors.transparent,
@@ -165,29 +198,25 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       }),
       fontSize: 18,
     },
-    scientificName: {
+    secondaryTitle: {
       ...createThemedTextStyle(theme, {
         size: "lg",
         weight: "normal",
         color: "onSurfaceVariant",
       }),
-      fontStyle: "italic",
-      lineHeight: 18,
-      marginTop: 2,
-    },
-    title: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "semiBold",
-        color: "onSurface",
-      }),
-      lineHeight: 20,
     },
     titleRow: {
       alignItems: "center",
       flexDirection: "row",
       flex: 1,
       minWidth: 0,
+    },
+    titleText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "semiBold",
+        color: "onSurface",
+      }),
     },
   });
 
@@ -203,62 +232,92 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
     return `Downloaded ${date.toLocaleDateString()}`;
   };
 
-  // Modern gesture handler
+  // Modern gesture handler with improved sensitivity
   const panGesture = Gesture.Pan()
+    .minDistance(10) // Require minimum distance before gesture activates
+    .activeOffsetX([-20, 20]) // Only activate for horizontal swipes
+    .failOffsetY([-30, 30]) // Fail if vertical movement is too large
     .onUpdate((event) => {
-      if (isRevealed) {
-        // When revealed, calculate new position based on current position + translation
-        // Allow dragging back to the right (towards 0) but not beyond it
-        const newTranslateX = Math.min(0, SWIPE_THRESHOLD + event.translationX);
-        translateX.value = newTranslateX;
-      } else {
-        // When not revealed, only allow leftward movement (negative translationX)
-        const newTranslateX = Math.min(0, event.translationX);
-        translateX.value = newTranslateX;
+      // Only process if this is primarily a horizontal gesture
+      const absX = Math.abs(event.translationX);
+      const absY = Math.abs(event.translationY);
+
+      if (absX > absY && absX > 10) {
+        if (isRevealed) {
+          // When revealed, calculate new position based on current position + translation
+          // Allow dragging back to the right (towards 0) but not beyond it
+          const newTranslateX = Math.min(0, SWIPE_THRESHOLD + event.translationX);
+          translateX.value = newTranslateX;
+        } else {
+          // When not revealed, only allow leftward movement (negative translationX)
+          const newTranslateX = Math.min(0, event.translationX);
+          translateX.value = newTranslateX;
+        }
       }
     })
     .onEnd((event) => {
-      if (isRevealed) {
-        // If currently revealed, check if dragged back far enough to close
-        const finalPosition = SWIPE_THRESHOLD + event.translationX;
-        if (finalPosition > SWIPE_THRESHOLD / 2) {
-          // Close the delete action
-          translateX.value = withSpring(0, {
-            damping: 15,
-            stiffness: 200,
-          });
-          runOnJS(setIsRevealed)(false);
+      const absX = Math.abs(event.translationX);
+      const absY = Math.abs(event.translationY);
+
+      // Only process if this was primarily a horizontal gesture
+      if (absX > absY && absX > 10) {
+        if (isRevealed) {
+          // If currently revealed, check if dragged back far enough to close
+          const finalPosition = SWIPE_THRESHOLD + event.translationX;
+          if (finalPosition > SWIPE_THRESHOLD / 2) {
+            // Close the delete action
+            translateX.value = withSpring(0, {
+              damping: 15,
+              stiffness: 200,
+            });
+            runOnJS(setIsRevealed)(false);
+          } else {
+            // Keep it revealed
+            translateX.value = withSpring(SWIPE_THRESHOLD, {
+              damping: 15,
+              stiffness: 200,
+            });
+          }
         } else {
-          // Keep it revealed
-          translateX.value = withSpring(SWIPE_THRESHOLD, {
-            damping: 15,
-            stiffness: 200,
-          });
+          // Not revealed, check if should reveal
+          if (event.translationX < SWIPE_THRESHOLD) {
+            // Swipe threshold reached - show delete action
+            translateX.value = withSpring(SWIPE_THRESHOLD, {
+              damping: 15,
+              stiffness: 200,
+            });
+            runOnJS(setIsRevealed)(true);
+          } else {
+            // Snap back to original position
+            translateX.value = withSpring(0, {
+              damping: 15,
+              stiffness: 200,
+            });
+            runOnJS(setIsRevealed)(false);
+          }
         }
       } else {
-        // Not revealed, check if should reveal
-        if (event.translationX < SWIPE_THRESHOLD) {
-          // Swipe threshold reached - show delete action
-          translateX.value = withSpring(SWIPE_THRESHOLD, {
-            damping: 15,
-            stiffness: 200,
-          });
-          runOnJS(setIsRevealed)(true);
-        } else {
-          // Snap back to original position
-          translateX.value = withSpring(0, {
-            damping: 15,
-            stiffness: 200,
-          });
-          runOnJS(setIsRevealed)(false);
-        }
+        // If not a horizontal gesture, reset position
+        translateX.value = withSpring(0, {
+          damping: 15,
+          stiffness: 200,
+        });
+        runOnJS(setIsRevealed)(false);
       }
     });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateX: translateX.value }],
+      transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
       opacity: opacity.value,
+    };
+  });
+
+  const containerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      height: cardHeight.value === 0 ? 0 : undefined,
+      marginVertical: cardHeight.value === 0 ? 0 : undefined,
+      overflow: "hidden",
     };
   });
 
@@ -301,13 +360,13 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
   };
 
   return (
-    <Animated.View style={[styles.downloadCard, { opacity: opacity.value }]}>
+    <Animated.View style={[styles.downloadCard, containerAnimatedStyle]}>
       {/* Delete Action Background */}
       {showDeleteButton && (
         <View style={styles.deleteActionContainer}>
           <Animated.View style={deleteActionAnimatedStyle}>
             <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
-              <Ionicons name="trash-outline" size={28} color={theme.colors.onErrorContainer} />
+              <Ionicons name="trash-outline" size={20} color={theme.colors.onErrorContainer} />
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -343,18 +402,14 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
                   {/* Species Title with Download Indicator */}
                   <View style={styles.titleRow}>
                     {item.species && (
-                      <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-                        {item.species.common_name || "Unknown Recording"}
+                      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.titleText}>
+                        {item.species.common_name || `Recording ${item.rec_number}`} •{" "}
+                        <Text style={styles.secondaryTitle} numberOfLines={1} ellipsizeMode="tail">
+                          {item.species.scientific_name}
+                        </Text>
                       </Text>
                     )}
                   </View>
-
-                  {/* Scientific Name */}
-                  {item.species && (
-                    <Text style={styles.scientificName} numberOfLines={1} ellipsizeMode="tail">
-                      {item.species.scientific_name || "Unknown Scientific Name"}
-                    </Text>
-                  )}
 
                   {/* Caption */}
                   {item.caption && (

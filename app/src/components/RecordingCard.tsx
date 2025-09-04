@@ -16,6 +16,7 @@ interface RecordingCardProps {
   isDownloaded?: boolean;
   indented?: boolean;
   sortBy?: "speciescommon" | "rec_number" | "speciesscientific";
+  onPress?: () => void;
 }
 
 const RecordingCard: React.FC<RecordingCardProps> = ({
@@ -23,6 +24,7 @@ const RecordingCard: React.FC<RecordingCardProps> = ({
   isDownloaded = false,
   indented = false,
   sortBy = "rec_number",
+  onPress,
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useEnhancedTheme();
@@ -136,7 +138,11 @@ const RecordingCard: React.FC<RecordingCardProps> = ({
   });
 
   const handlePress = () => {
-    navigation.navigate("RecordingDetails", { recordingId: recording.id });
+    if (onPress) {
+      onPress();
+    } else {
+      navigation.navigate("RecordingDetails", { recordingId: recording.id });
+    }
   };
 
   const getTitle = (recording: Recording): React.ReactNode => {

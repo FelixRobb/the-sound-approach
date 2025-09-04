@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
@@ -533,12 +533,21 @@ const RecordingsListScreen = () => {
   // Empty state component
   const EmptyState = ({ type }: { type: "recordings" | "species" }) => (
     <View style={styles.emptyContainer}>
-      <Ionicons
-        name={type === "recordings" ? "disc-outline" : "leaf-outline"}
-        size={60}
-        color={theme.colors.error}
-        style={styles.emptyIcon}
-      />
+      {type === "recordings" ? (
+        <MaterialIcons
+          name="audiotrack"
+          size={60}
+          color={theme.colors.error}
+          style={styles.emptyIcon}
+        />
+      ) : (
+        <MaterialCommunityIcons
+          name="bird"
+          size={60}
+          color={theme.colors.error}
+          style={styles.emptyIcon}
+        />
+      )}
       <Text style={styles.emptyTitle}>
         {type === "recordings" ? "No Recordings Found" : "No Species Found"}
       </Text>

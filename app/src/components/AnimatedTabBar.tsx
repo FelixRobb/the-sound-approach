@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
 import Animated, {
@@ -157,7 +157,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
                   }),
             ]}
           >
-            By Book Order
+            Recordings
           </Text>
         </Animated.View>
       </TouchableOpacity>
@@ -169,8 +169,8 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
         activeOpacity={0.7}
       >
         <Animated.View style={[styles.rowCenter, speciesTabStyle]}>
-          <Ionicons
-            name="leaf-outline"
+          <MaterialCommunityIcons
+            name="bird"
             size={18}
             color={
               activeTab === "species" ? theme.colors.onTertiary : theme.colors.onSurfaceVariant
@@ -192,7 +192,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
                   }),
             ]}
           >
-            By Species
+            Species
           </Text>
         </Animated.View>
       </TouchableOpacity>
