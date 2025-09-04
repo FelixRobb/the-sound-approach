@@ -37,15 +37,15 @@ export const EnhancedThemeProvider: React.FC<{
       try {
         const savedPreferences = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (savedPreferences) {
-          const parsed = JSON.parse(savedPreferences);
-          setThemeMode(parsed.mode || "system");
+          const parsed = JSON.parse(savedPreferences) as { mode: ThemeMode };
+          setThemeMode(parsed.mode || ("system" as ThemeMode));
         }
       } catch (error) {
         console.warn("Failed to load theme preferences:", error);
       }
     };
 
-    loadThemePreferences();
+    void loadThemePreferences();
   }, []);
 
   // Save theme preferences
@@ -86,13 +86,13 @@ export const EnhancedThemeProvider: React.FC<{
   const setTheme = useCallback((dark: boolean) => {
     const newMode: ThemeMode = dark ? "dark" : "light";
     setThemeMode(newMode);
-    saveThemePreferences(newMode);
+    void saveThemePreferences(newMode);
   }, []);
 
   // Set theme mode
   const setThemeModeCallback = useCallback((mode: ThemeMode) => {
     setThemeMode(mode);
-    saveThemePreferences(mode);
+    void saveThemePreferences(mode);
   }, []);
 
   // Context value

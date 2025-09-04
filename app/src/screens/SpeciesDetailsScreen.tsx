@@ -167,7 +167,7 @@ const SpeciesDetailsScreen = () => {
 
   // Handle retry
   const handleRetry = () => {
-    refetch();
+    void refetch();
   };
 
   // Render loading state

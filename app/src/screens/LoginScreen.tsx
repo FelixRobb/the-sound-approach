@@ -52,6 +52,9 @@ const LoginScreen = () => {
     form: {
       marginTop: theme.spacing.sm,
     },
+    input: {
+      marginBottom: theme.spacing.md,
+    },
     scrollContent: {
       flexGrow: 1,
       justifyContent: "center",
@@ -97,9 +100,6 @@ const LoginScreen = () => {
       borderRadius: theme.borderRadius.full,
       marginBottom: theme.spacing.md,
       padding: theme.spacing.md,
-    },
-    input: {
-      marginBottom: theme.spacing.md,
     },
   });
 
@@ -207,12 +207,12 @@ const LoginScreen = () => {
               }}
               showPasswordToggle
               returnKeyType="done"
-              onSubmitEditing={handleSubmit}
+              onSubmitEditing={() => void handleSubmit()}
               style={styles.input}
             />
 
             <Button
-              onPress={handleSubmit}
+              onPress={() => void handleSubmit()}
               disabled={isLoading}
               loading={isLoading}
               title={isLoading ? "Signing In..." : "Sign In"}

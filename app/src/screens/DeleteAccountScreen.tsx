@@ -213,7 +213,7 @@ const DeleteAccountScreen = () => {
           variant="destructive"
           fullWidth
           size="lg"
-          onPress={handleDeleteAccount}
+          onPress={() => void handleDeleteAccount()}
           disabled={isLoading || confirmText !== "DELETE MY ACCOUNT" || !password}
           style={styles.deleteButton}
         >

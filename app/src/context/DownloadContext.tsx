@@ -59,8 +59,8 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Initialize downloads from storage
   useEffect(() => {
     if (authState.userToken) {
-      loadDownloadedRecordings();
-      calculateStorageUsed();
+      void loadDownloadedRecordings();
+      void calculateStorageUsed();
     }
   }, [authState.userToken, loadDownloadedRecordings]);
 
@@ -190,7 +190,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }));
 
       // Update storage usage
-      calculateStorageUsed();
+      void calculateStorageUsed();
     } catch (error) {
       console.error("Download error:", error);
       setDownloads((prev) => ({
@@ -242,7 +242,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         });
 
         // Update storage usage
-        calculateStorageUsed();
+        void calculateStorageUsed();
       }
     } catch (error) {
       console.error("Delete download error:", error);

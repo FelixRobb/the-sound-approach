@@ -584,7 +584,7 @@ const AppNavigator: React.FC = () => {
       }
     };
 
-    setNavigationBarColor();
+    void setNavigationBarColor();
   }, [theme.colors.surface, isDark]);
 
   useEffect(() => {
@@ -593,7 +593,7 @@ const AppNavigator: React.FC = () => {
         await SplashScreen.hideAsync();
       }
     };
-    hideSplash();
+    void hideSplash();
   }, [authState.isLoading, authState.userToken]);
 
   // Determine which navigator to show

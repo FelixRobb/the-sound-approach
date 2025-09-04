@@ -87,7 +87,6 @@ export const Card: React.FC<CardProps> = ({
 
   // Create dynamic styles based on theme, variant, and state
   const styles = StyleSheet.create({
-    // Base card styles
     card: {
       borderRadius:
         size === "sm"
@@ -95,7 +94,6 @@ export const Card: React.FC<CardProps> = ({
           : size === "lg"
             ? theme.borderRadius.lg
             : theme.borderRadius.md,
-      overflow: "hidden",
       margin:
         margin !== undefined
           ? margin
@@ -104,9 +102,9 @@ export const Card: React.FC<CardProps> = ({
             : size === "lg"
               ? theme.spacing.md
               : theme.spacing.sm,
+      overflow: "hidden",
     },
 
-    // Content container
     content: {
       padding:
         padding !== undefined
@@ -118,90 +116,82 @@ export const Card: React.FC<CardProps> = ({
               : theme.spacing.lg,
     },
 
-    // Header styles
-    header: {
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outline,
-      paddingBottom: theme.spacing.sm,
-      marginBottom: theme.spacing.md,
-    },
-    headerContent: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    headerLeft: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    headerIcon: {
-      marginRight: theme.spacing.sm,
-    },
-    headerTextContainer: {
-      flex: 1,
-    },
-    headerTitle: {
-      fontSize: size === "sm" ? 16 : size === "lg" ? 20 : 18,
-      fontWeight: "600",
-      color: theme.colors.onSurface,
-      marginBottom: 2,
-    },
-    headerSubtitle: {
-      fontSize: size === "sm" ? 12 : size === "lg" ? 16 : 14,
-      color: theme.colors.onSurfaceVariant,
-      lineHeight: size === "sm" ? 16 : size === "lg" ? 22 : 20,
-    },
-
-    // Footer styles
-    footer: {
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.outline,
-      paddingTop: theme.spacing.sm,
-      marginTop: theme.spacing.md,
-    },
-
-    // Variant styles
     default: {
       backgroundColor: theme.colors.surface,
+      elevation: 2,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDark ? 0.3 : 0.1,
       shadowRadius: 4,
-      elevation: 2,
     },
-
-    outlined: {
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.outline,
+    disabled: {
+      opacity: 0.6,
     },
-
-    filled: {
-      backgroundColor: theme.colors.surfaceVariant,
-    },
-
     elevated: {
       backgroundColor: theme.colors.surface,
+      elevation: 8,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: isDark ? 0.4 : 0.15,
       shadowRadius: 12,
-      elevation: 8,
+    },
+    filled: {
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    footer: {
+      borderTopColor: theme.colors.outline,
+      borderTopWidth: 1,
+      marginTop: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
+    },
+    header: {
+      borderBottomColor: theme.colors.outline,
+      borderBottomWidth: 1,
+      marginBottom: theme.spacing.md,
+      paddingBottom: theme.spacing.sm,
+    },
+    headerContent: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
     },
 
-    // Interactive states
-    interactive: {
-      // Add subtle indication that card is pressable
+    headerIcon: {
+      marginRight: theme.spacing.sm,
+    },
+
+    headerLeft: {
+      alignItems: "center",
+      flex: 1,
+      flexDirection: "row",
+    },
+
+    headerSubtitle: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: size === "sm" ? 12 : size === "lg" ? 16 : 14,
+      lineHeight: size === "sm" ? 16 : size === "lg" ? 22 : 20,
+    },
+
+    headerTextContainer: {
+      flex: 1,
+    },
+
+    headerTitle: {
+      color: theme.colors.onSurface,
+      fontSize: size === "sm" ? 16 : size === "lg" ? 20 : 18,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+
+    outlined: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outline,
+      borderWidth: 1,
     },
 
     pressed: {
       opacity: 0.95,
       transform: [{ scale: 0.98 }],
-    },
-
-    disabled: {
-      opacity: 0.6,
     },
   });
 
@@ -258,10 +248,10 @@ export const Card: React.FC<CardProps> = ({
     if (!footer) return null;
     const styles = StyleSheet.create({
       footer: {
-        borderTopWidth: 1,
         borderTopColor: theme.colors.outline,
-        paddingTop: theme.spacing.sm,
+        borderTopWidth: 1,
         marginTop: theme.spacing.md,
+        paddingTop: theme.spacing.sm,
       },
     });
     const { content, style: footerStyle } = footer;
@@ -282,7 +272,7 @@ export const Card: React.FC<CardProps> = ({
   if (isInteractive) {
     return (
       <TouchableOpacity
-        style={[styles.card, getVariantStyles(), styles.interactive, style]}
+        style={[styles.card, getVariantStyles(), style]}
         onPress={onPress}
         disabled={disabled}
         activeOpacity={0.95}
@@ -309,7 +299,6 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
-// Additional Card sub-components for more flexibility
 export const CardHeader: React.FC<{
   children: React.ReactNode;
   style?: ViewStyle;
@@ -318,10 +307,10 @@ export const CardHeader: React.FC<{
 
   const styles = StyleSheet.create({
     header: {
-      borderBottomWidth: 1,
       borderBottomColor: theme.colors.outline,
-      paddingBottom: theme.spacing.sm,
+      borderBottomWidth: 1,
       marginBottom: theme.spacing.md,
+      paddingBottom: theme.spacing.sm,
     },
   });
 
@@ -343,10 +332,10 @@ export const CardFooter: React.FC<{
 
   const styles = StyleSheet.create({
     footer: {
-      borderTopWidth: 1,
       borderTopColor: theme.colors.outline,
-      paddingTop: theme.spacing.sm,
+      borderTopWidth: 1,
       marginTop: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
     },
   });
 
@@ -362,9 +351,9 @@ export const CardTitle: React.FC<{
 
   const styles = StyleSheet.create({
     headerTitle: {
+      color: theme.colors.onSurface,
       fontSize: size === "sm" ? 16 : size === "lg" ? 20 : 18,
       fontWeight: "600",
-      color: theme.colors.onSurface,
       marginBottom: 2,
     },
   });
@@ -381,8 +370,8 @@ export const CardDescription: React.FC<{
 
   const styles = StyleSheet.create({
     headerSubtitle: {
-      fontSize: size === "sm" ? 12 : size === "lg" ? 16 : 14,
       color: theme.colors.onSurfaceVariant,
+      fontSize: size === "sm" ? 12 : size === "lg" ? 16 : 14,
       lineHeight: size === "sm" ? 16 : size === "lg" ? 22 : 20,
     },
   });

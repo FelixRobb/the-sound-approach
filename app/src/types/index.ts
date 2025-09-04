@@ -17,14 +17,14 @@ export type MediaType = "audio-hq" | "audio_lq" | "sonogram_video";
 
 export type Recording = {
   id: string;
+  catalogueCode: string;
   species_id: string;
-  title: string;
-  audiohqid: string;
-  audiolqid: string;
-  sonogramvideoid: string;
-  book_page_number: number;
+  recNumber: number;
+  siteName: string;
+  audiohqid?: string;
+  audiolqid?: string;
+  sonogramvideoid?: string;
   caption: string;
-  orderInBook: number;
   createdAt: string;
   species?: Species;
 };
@@ -93,7 +93,7 @@ export type AuthContextType = {
   deleteAccount: (password: string) => Promise<void>;
   clearError: () => void;
   completeOnboarding: () => Promise<void>;
-  resetOnboarding: () => Promise<void>;
+  resetOnboarding: () => void;
 };
 
 // ==========================================

@@ -269,8 +269,8 @@ const RecordingsListScreen = () => {
 
   // Effect to refetch data when connection is restored
   useEffect(() => {
-    refetchRecordings();
-    refetchSpecies();
+    void refetchRecordings();
+    void refetchSpecies();
   }, [refetchRecordings, refetchSpecies]);
 
   // Calculate search score for recordings based on match quality
@@ -675,7 +675,7 @@ const RecordingsListScreen = () => {
                   refreshControl={
                     <RefreshControl
                       refreshing={recordingsLoading}
-                      onRefresh={refetchRecordings}
+                      onRefresh={() => void refetchRecordings()}
                       colors={[theme.colors.primary]}
                       tintColor={theme.colors.primary}
                     />
@@ -699,7 +699,7 @@ const RecordingsListScreen = () => {
                   refreshControl={
                     <RefreshControl
                       refreshing={recordingsLoading}
-                      onRefresh={refetchRecordings}
+                      onRefresh={() => void refetchRecordings()}
                       colors={[theme.colors.primary]}
                       tintColor={theme.colors.primary}
                     />
@@ -722,7 +722,7 @@ const RecordingsListScreen = () => {
                 refreshControl={
                   <RefreshControl
                     refreshing={speciesLoading}
-                    onRefresh={refetchSpecies}
+                    onRefresh={() => void refetchSpecies()}
                     colors={[theme.colors.primary]}
                     tintColor={theme.colors.primary}
                   />

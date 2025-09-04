@@ -76,7 +76,7 @@ const OfflineScreen = () => {
   // Check for downloads when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadDownloads();
+      void loadDownloads();
       return () => {
         // Optional cleanup if needed
       };
@@ -85,7 +85,7 @@ const OfflineScreen = () => {
 
   // Initial load when component mounts
   useEffect(() => {
-    loadDownloads();
+    void loadDownloads();
   }, [loadDownloads]);
 
   // Create styles with theme support
@@ -333,7 +333,7 @@ const OfflineScreen = () => {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              loadDownloads();
+              void loadDownloads();
             }}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}

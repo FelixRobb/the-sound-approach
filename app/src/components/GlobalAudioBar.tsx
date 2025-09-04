@@ -101,7 +101,7 @@ const GlobalAudioBar: React.FC = () => {
   // Stable callbacks to avoid recreating functions
   const handleDismiss = useCallback(() => {
     try {
-      stopPlayback();
+      void stopPlayback();
       hideBar();
     } catch (error) {
       console.error("Error during dismissal:", error);
@@ -264,7 +264,7 @@ const GlobalAudioBar: React.FC = () => {
     if (!currentRecording || duration <= 0) return;
 
     try {
-      seekTo(value);
+      void seekTo(value);
       sliderProgress.value = value;
     } catch (error) {
       console.error("Error seeking audio:", error);
@@ -422,7 +422,7 @@ const GlobalAudioBar: React.FC = () => {
               hitSlop={{ top: 8, bottom: 8, left: 0, right: 0 }}
             >
               <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-                {currentRecording?.title ?? "Unknown Recording"}
+                {currentRecording?.title || "Unknown Recording"}
               </Text>
               {currentRecording?.species && (
                 <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">

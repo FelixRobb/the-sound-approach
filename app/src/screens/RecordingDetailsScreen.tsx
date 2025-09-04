@@ -608,7 +608,7 @@ const RecordingDetailsScreen = () => {
       }
     };
 
-    handleFullscreenChange();
+    void handleFullscreenChange();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVideoFullscreen]);
 
@@ -616,7 +616,7 @@ const RecordingDetailsScreen = () => {
   useEffect(() => {
     return () => {
       StatusBar.setHidden(false);
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -679,7 +679,7 @@ const RecordingDetailsScreen = () => {
     }
   };
 
-  const handleDeleteDownload = async () => {
+  const handleDeleteDownload = () => {
     setShowDeleteModal(true);
   };
 
@@ -756,12 +756,12 @@ const RecordingDetailsScreen = () => {
     }
   }, [showControls, hideVideoControls, showVideoControls]);
 
-  const stopVideoPlayback = async () => {
+  const stopVideoPlayback = () => {
     if (!videoPlayer) return;
     videoPlayer.pause();
   };
 
-  const togglePlayPause = async () => {
+  const togglePlayPause = () => {
     if (!isVideoLoaded || !videoPlayer) return;
 
     try {
@@ -846,7 +846,7 @@ const RecordingDetailsScreen = () => {
 
     return (
       <Animated.View style={[containerStyle, { opacity: controlsOpacity }]}>
-        <TouchableOpacity onPress={togglePlayPause} disabled={!isVideoLoaded}>
+        <TouchableOpacity onPress={() => void togglePlayPause()} disabled={!isVideoLoaded}>
           <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.tertiary} />
         </TouchableOpacity>
 
@@ -950,7 +950,7 @@ const RecordingDetailsScreen = () => {
           showControls && (
             <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
               <TouchableOpacity
-                onPress={togglePlayPause}
+                onPress={() => void togglePlayPause()}
                 activeOpacity={0.8}
                 style={styles.fullButtonTouchable}
               >
@@ -963,7 +963,7 @@ const RecordingDetailsScreen = () => {
         {isVideoLoaded && isVideoEnded && !isSeeking && !showInitialLoading && showControls && (
           <Animated.View style={[styles.replayButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
-              onPress={togglePlayPause}
+              onPress={() => void togglePlayPause()}
               activeOpacity={0.8}
               style={styles.fullButtonTouchable}
             >
@@ -981,7 +981,7 @@ const RecordingDetailsScreen = () => {
           !showInitialLoading && (
             <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
               <TouchableOpacity
-                onPress={togglePlayPause}
+                onPress={() => void togglePlayPause()}
                 activeOpacity={0.8}
                 style={styles.fullButtonTouchable}
               >
@@ -1010,7 +1010,7 @@ const RecordingDetailsScreen = () => {
             <Ionicons name="alert-circle" size={48} style={styles.errorIcon} />
             <Text style={styles.errorTitle}>Unable to Load Recording</Text>
             <Text style={styles.errorText}>Something went wrong. Please try again.</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <TouchableOpacity style={styles.retryButton} onPress={() => void refetch()}>
               <Text style={styles.retryText}>Try Again</Text>
             </TouchableOpacity>
           </View>
@@ -1071,7 +1071,7 @@ const RecordingDetailsScreen = () => {
           showControls && (
             <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
               <TouchableOpacity
-                onPress={togglePlayPause}
+                onPress={() => void togglePlayPause()}
                 activeOpacity={0.8}
                 style={styles.fullButtonTouchable}
               >
@@ -1251,7 +1251,7 @@ const RecordingDetailsScreen = () => {
           },
           {
             text: "Remove",
-            onPress: confirmDeleteDownload,
+            onPress: () => void confirmDeleteDownload(),
             style: "destructive",
             loading: isDeleting,
           },

@@ -83,7 +83,7 @@ const DownloadsScreen = () => {
   // Check for downloads when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadDownloads();
+      void loadDownloads();
       return () => {
         // Optional cleanup if needed
       };
@@ -92,7 +92,7 @@ const DownloadsScreen = () => {
 
   // Initial load when component mounts
   useEffect(() => {
-    loadDownloads();
+    void loadDownloads();
   }, [loadDownloads]);
 
   // Handle delete download
@@ -379,7 +379,7 @@ const DownloadsScreen = () => {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              loadDownloads();
+              void loadDownloads();
             }}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}
@@ -409,7 +409,7 @@ const DownloadsScreen = () => {
           },
           {
             text: "Delete",
-            onPress: confirmDeleteDownload,
+            onPress: () => void confirmDeleteDownload(),
             style: "destructive",
             loading: isDeleting,
           },
@@ -432,7 +432,7 @@ const DownloadsScreen = () => {
           },
           {
             text: "Clear All",
-            onPress: confirmClearAllDownloads,
+            onPress: () => void confirmClearAllDownloads(),
             style: "destructive",
             loading: isClearing,
           },

@@ -121,27 +121,6 @@ export const createInteractiveShadows = (theme: Theme) => {
   };
 };
 
-// Shadow animation utilities
-export const createShadowAnimation = (theme: Theme) => {
-  return {
-    // Smooth shadow transitions
-    transition: {
-      duration: theme.animation.duration.normal,
-      easing: theme.animation.easing.easeInOut,
-    },
-    // Shadow entrance animations
-    entrance: {
-      from: createShadow("level0", theme),
-      to: createShadow("level1", theme),
-    },
-    // Shadow exit animations
-    exit: {
-      from: createShadow("level1", theme),
-      to: createShadow("level0", theme),
-    },
-  };
-};
-
 // Utility functions for common shadow patterns
 export const shadows = {
   // Get elevation value

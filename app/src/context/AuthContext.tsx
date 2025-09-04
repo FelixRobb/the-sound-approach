@@ -34,7 +34,7 @@ export const AuthContext = createContext<AuthContextType>({
   deleteAccount: async () => {},
   clearError: () => {},
   completeOnboarding: async () => {},
-  resetOnboarding: async () => {},
+  resetOnboarding: () => {},
 });
 
 // Reducer function
@@ -160,44 +160,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Add network restore callback to refresh session when network is restored
   useEffect(() => {
-    const unsubscribe = onNetworkRestore(async () => {
-      try {
-        // Skip if no user is logged in
-        if (!state.userToken || !state.user) return;
+    const unsubscribe = onNetworkRestore(() => {
+      void (async () => {
+        try {
+          // Skip if no user is logged in
+          if (!state.userToken || !state.user) return;
 
-        // Refresh session when network is restored
-        const { data, error } = await supabase.auth.refreshSession();
+          // Refresh session when network is restored
+          const { data, error } = await supabase.auth.refreshSession();
 
-        if (error) {
-          console.warn("Failed to refresh session on network restore:", error);
-          return;
-        }
-
-        if (data?.session) {
-          // Check onboarding status
-          const hasCompletedOnboarding = await checkOnboardingStatus(data.session.user.id);
-
-          let restoredBookCode =
-            (data.session.user.user_metadata?.book_code as string | undefined) ?? undefined;
-
-          if (!restoredBookCode) {
-            restoredBookCode = await fetchUserBookCode(data.session.user.id);
+          if (error) {
+            console.warn("Failed to refresh session on network restore:", error);
+            return;
           }
 
-          dispatch({
-            type: "RESTORE_TOKEN",
-            token: data.session.access_token,
-            user: {
-              id: data.session.user.id,
-              email: data.session.user.email || "",
-              bookCode: restoredBookCode,
-            },
-            hasCompletedOnboarding,
-          });
+          if (data?.session) {
+            // Check onboarding status
+            const hasCompletedOnboarding = await checkOnboardingStatus(data.session.user.id);
+
+            let restoredBookCode =
+              (data.session.user.user_metadata?.book_code as string | undefined) ?? undefined;
+
+            if (!restoredBookCode) {
+              restoredBookCode = await fetchUserBookCode(data.session.user.id);
+            }
+
+            dispatch({
+              type: "RESTORE_TOKEN",
+              token: data.session.access_token,
+              user: {
+                id: data.session.user.id,
+                email: data.session.user.email || "",
+                bookCode: restoredBookCode,
+              },
+              hasCompletedOnboarding,
+            });
+          }
+        } catch (error) {
+          console.error("Error refreshing session on network restore:", error);
         }
-      } catch (error) {
-        console.error("Error refreshing session on network restore:", error);
-      }
+      })();
     });
 
     return () => unsubscribe();
@@ -516,7 +518,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    bootstrapAsync();
+    void bootstrapAsync();
 
     // Cleanup function
     return () => {
@@ -740,7 +742,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: "AUTH_ERROR", error: null });
     },
 
-    resetOnboarding: async () => {
+    resetOnboarding: () => {
       dispatch({ type: "RESET_ONBOARDING" });
     },
 

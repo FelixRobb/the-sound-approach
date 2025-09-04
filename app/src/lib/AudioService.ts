@@ -85,7 +85,7 @@ class AudioService {
   }
 
   // Cleanup method to prevent memory leaks
-  private async cleanup(): Promise<void> {
+  private cleanup(): void {
     try {
       if (this.cleanupTimer) {
         clearTimeout(this.cleanupTimer);
@@ -112,15 +112,15 @@ class AudioService {
   }
 
   // Destroy the service instance (for testing or complete cleanup)
-  public async destroy(): Promise<void> {
+  public destroy(): void {
     this.isDestroyed = true;
-    await this.cleanup();
+    void this.cleanup();
     this.listeners.clear();
     this.state = { ...initialState };
   }
 
   // Load and play an audio track with comprehensive error handling
-  public async playTrack(uri: string, recording: Recording): Promise<boolean> {
+  public playTrack(uri: string, recording: Recording): boolean {
     if (this.isDestroyed) {
       console.error("Cannot play track: AudioService has been destroyed");
       return false;
@@ -146,7 +146,7 @@ class AudioService {
       }
 
       // Stop any current track and clean up
-      await this.stop();
+      void this.stop();
 
       // Update state to loading
       this.updateState({
@@ -180,7 +180,7 @@ class AudioService {
       this.cleanupTimer = setTimeout(() => {
         if (this.state.playbackState === "loading") {
           console.warn("Audio loading timeout, stopping playback");
-          this.stop().catch(console.error);
+          this.stop();
         }
       }, 30000); // 30 second timeout
 
@@ -190,7 +190,7 @@ class AudioService {
       console.error("Error in playTrack:", errorMessage, error);
 
       // Clean up on error
-      await this.cleanup();
+      this.cleanup();
 
       this.updateState({
         uri: null,
@@ -205,7 +205,7 @@ class AudioService {
   }
 
   // Play the loaded track
-  private async play(): Promise<boolean> {
+  private play(): boolean {
     if (this.isDestroyed) {
       console.error("Cannot play: AudioService has been destroyed");
       return false;
@@ -235,7 +235,7 @@ class AudioService {
   }
 
   // Pause the current track without unloading player
-  public async pause(): Promise<boolean> {
+  public pause(): boolean {
     if (this.isDestroyed) {
       console.error("Cannot pause: AudioService has been destroyed");
       return false;
@@ -270,7 +270,7 @@ class AudioService {
   }
 
   // Stop and unload the current track
-  public async stop(): Promise<boolean> {
+  public stop(): boolean {
     if (this.isDestroyed) {
       console.warn("AudioService already destroyed");
       return true;
@@ -395,9 +395,7 @@ class AudioService {
         newPlaybackState = "idle";
         // Auto-cleanup when finished
         setTimeout(() => {
-          this.stop().catch((error) => {
-            console.error("Error auto-stopping after finish:", error);
-          });
+          this.stop();
         }, 100);
       } else if (status.playing) {
         newPlaybackState = "playing";
@@ -427,7 +425,7 @@ class AudioService {
   /**
    * Seek the current track to a given position in **seconds**
    */
-  public async seekTo(positionSeconds: number): Promise<boolean> {
+  public seekTo(positionSeconds: number): boolean {
     if (this.isDestroyed) {
       console.error("Cannot seek: AudioService has been destroyed");
       return false;
@@ -447,7 +445,7 @@ class AudioService {
       // Clamp position to valid range
       const clampedPosition = Math.max(0, Math.min(this.state.duration, positionSeconds));
 
-      await this.player.seekTo(clampedPosition);
+      void this.player.seekTo(clampedPosition);
       this.updateState({
         position: clampedPosition,
         error: null,
@@ -465,7 +463,7 @@ class AudioService {
   }
 
   /** Convenience: skip backward by given seconds (default 10s) */
-  public async skipBackward(seconds = 10): Promise<boolean> {
+  public skipBackward(seconds = 10): boolean {
     if (typeof seconds !== "number" || seconds <= 0) {
       console.error("Invalid skip backward seconds:", seconds);
       return false;
@@ -476,7 +474,7 @@ class AudioService {
   }
 
   /** Convenience: skip forward by given seconds (default 10s) */
-  public async skipForward(seconds = 10): Promise<boolean> {
+  public skipForward(seconds = 10): boolean {
     if (typeof seconds !== "number" || seconds <= 0) {
       console.error("Invalid skip forward seconds:", seconds);
       return false;

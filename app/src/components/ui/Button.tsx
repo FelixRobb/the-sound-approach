@@ -95,14 +95,12 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
 
     // Create dynamic styles based on theme, variant, and state
     const styles = StyleSheet.create({
-      // Base button styles
       button: {
-        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
         borderRadius: theme.borderRadius.md,
         borderWidth: 0,
-        // Size-based padding
+        flexDirection: "row",
+        justifyContent: "center",
         paddingHorizontal:
           size === "sm"
             ? theme.spacing.sm
@@ -137,84 +135,40 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
         ...(fullWidth && { width: "100%" }),
       },
 
-      // Text styles
-      text: {
-        fontSize:
-          size === "xs" ? 12 : size === "sm" ? 14 : size === "lg" ? 18 : size === "xl" ? 20 : 16,
-        fontWeight: "600",
-        textAlign: "center",
-      },
-
-      // Icon container
-      leftIconContainer: {
-        marginHorizontal: size === "icon" ? 0 : 4,
-      },
-
-      rightIconContainer: {
-        marginHorizontal: size === "icon" ? 0 : 4,
-      },
-
-      // Loading indicator
-      loadingContainer: {
-        marginRight: children || title ? theme.spacing.xs : 0,
-      },
-
-      // Variant styles
       default: {
         backgroundColor: theme.colors.surface,
+        elevation: 6,
         shadowColor: theme.colors.shadow,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
-        elevation: 6,
       },
+
       defaultText: {
         color: theme.colors.onSurface,
       },
 
-      primary: {
-        backgroundColor: theme.colors.primary,
-        shadowColor: theme.colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-      },
-      primaryText: {
-        color: theme.colors.onPrimary,
-      },
-
       destructive: {
         backgroundColor: theme.colors.error,
+        elevation: 6,
         shadowColor: theme.colors.error,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
-        elevation: 6,
       },
+
       destructiveText: {
         color: theme.colors.onError,
       },
 
-      outline: {
-        backgroundColor: theme.colors.transparent,
-        borderWidth: 1,
-        borderColor: theme.colors.outline,
+      disabled: {
+        backgroundColor: theme.colors.surfaceVariant,
+        elevation: 0,
+        opacity: 0.6,
+        shadowOpacity: 0,
       },
-      outlineText: {
-        color: theme.colors.onSurface,
-      },
-
-      secondary: {
-        backgroundColor: theme.colors.secondary,
-        shadowColor: theme.colors.secondary,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
-      },
-      secondaryText: {
-        color: theme.colors.onSecondary,
+      disabledText: {
+        color: theme.colors.onSurfaceVariant,
       },
 
       ghost: {
@@ -224,25 +178,64 @@ const Button = forwardRef<React.ElementRef<typeof TouchableOpacity>, ButtonProps
         color: theme.colors.primary,
       },
 
+      leftIconContainer: {
+        marginHorizontal: size === "icon" ? 0 : 4,
+      },
       link: {
         backgroundColor: theme.colors.transparent,
         paddingHorizontal: 0,
         paddingVertical: 0,
       },
+
       linkText: {
         color: theme.colors.primary,
         textDecorationLine: "underline",
       },
-
-      // Disabled state
-      disabled: {
-        backgroundColor: theme.colors.surfaceVariant,
-        shadowOpacity: 0,
-        elevation: 0,
-        opacity: 0.6,
+      loadingContainer: {
+        marginRight: children || title ? theme.spacing.xs : 0,
       },
-      disabledText: {
-        color: theme.colors.onSurfaceVariant,
+
+      outline: {
+        backgroundColor: theme.colors.transparent,
+        borderColor: theme.colors.outline,
+        borderWidth: 1,
+      },
+      outlineText: {
+        color: theme.colors.onSurface,
+      },
+
+      primary: {
+        backgroundColor: theme.colors.primary,
+        elevation: 6,
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      primaryText: {
+        color: theme.colors.onPrimary,
+      },
+
+      rightIconContainer: {
+        marginHorizontal: size === "icon" ? 0 : 4,
+      },
+      secondary: {
+        backgroundColor: theme.colors.secondary,
+        elevation: 3,
+        shadowColor: theme.colors.secondary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+
+      secondaryText: {
+        color: theme.colors.onSecondary,
+      },
+      text: {
+        fontSize:
+          size === "xs" ? 12 : size === "sm" ? 14 : size === "lg" ? 18 : size === "xl" ? 20 : 16,
+        fontWeight: "600",
+        textAlign: "center",
       },
     });
 

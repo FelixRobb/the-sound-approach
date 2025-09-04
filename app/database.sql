@@ -40,14 +40,3 @@ CREATE TABLE public.user_activations (
   CONSTRAINT user_activations_book_code_id_fkey FOREIGN KEY (book_code_id) REFERENCES book_codes(id) ON DELETE CASCADE,
   CONSTRAINT user_activations_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
-
-CREATE TABLE public.user_downloads (
-  id uuid NOT NULL DEFAULT extensions.uuid_generate_v4(),
-  user_id uuid NOT NULL,
-  recording_id uuid NOT NULL,
-  downloaded_at timestamp with time zone NULL DEFAULT now(),
-  CONSTRAINT user_downloads_pkey PRIMARY KEY (id),
-  CONSTRAINT user_downloads_user_id_recording_id_key UNIQUE (user_id, recording_id),
-  CONSTRAINT user_downloads_recording_id_fkey FOREIGN KEY (recording_id) REFERENCES recordings(id) ON DELETE CASCADE,
-  CONSTRAINT user_downloads_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-);

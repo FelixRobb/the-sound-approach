@@ -24,13 +24,13 @@ type AudioContextType = {
   duration: number;
 
   // Seeking helpers
-  seekTo: (seconds: number) => Promise<boolean>;
-  skipForward: (seconds?: number) => Promise<boolean>;
-  skipBackward: (seconds?: number) => Promise<boolean>;
+  seekTo: (seconds: number) => boolean;
+  skipForward: (seconds?: number) => boolean;
+  skipBackward: (seconds?: number) => boolean;
 
   // Actions
   togglePlayPause: (recording: Recording) => Promise<boolean>;
-  stopPlayback: () => Promise<void>;
+  stopPlayback: () => void;
 };
 
 // Create the context with default values
@@ -41,11 +41,11 @@ const AudioContext = createContext<AudioContextType>({
   error: null,
   position: 0,
   duration: 0,
-  seekTo: () => Promise.resolve(false),
-  skipForward: () => Promise.resolve(false),
-  skipBackward: () => Promise.resolve(false),
+  seekTo: () => false,
+  skipForward: () => false,
+  skipBackward: () => false,
   togglePlayPause: () => Promise.resolve(false),
-  stopPlayback: () => Promise.resolve(),
+  stopPlayback: () => {},
 });
 
 // Provider component
@@ -82,7 +82,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Cleanup function to ensure audio is stopped when provider unmounts
     return () => {
       audioService.removeListener(listenerId);
-      audioService.stop().catch(console.error);
+      audioService.stop();
     };
   }, [listenerId, audioService]);
 
@@ -104,7 +104,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // already-loaded URI.  This avoids calling getBestAudioUri (which performs async
       // network/storage work) when we only need to pause or resume the current track.
       if (audioState.recording?.id === recording.id) {
-        const result = await audioService.playTrack(audioState.uri ?? "", recording);
+        const result = audioService.playTrack(audioState.uri ?? "", recording);
 
         // Show the audio bar when toggling succeeds (e.g. resuming playback)
         if (result) {
@@ -132,7 +132,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       // Use the simplified playTrack method which handles all the logic
-      const result = await audioService.playTrack(uri, recording);
+      const result = audioService.playTrack(uri, recording);
 
       // Show the audio bar when a track starts playing
       if (result) {
@@ -147,9 +147,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Stop playback method
-  const stopPlayback = async (): Promise<void> => {
+  const stopPlayback = (): void => {
     try {
-      await audioService.stop();
+      audioService.stop();
     } catch (error) {
       console.error("Error stopping playback:", error);
     }

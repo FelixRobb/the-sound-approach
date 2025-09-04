@@ -395,7 +395,7 @@ const SearchScreen = () => {
       }
     };
 
-    loadRecentSearches();
+    void loadRecentSearches();
   }, []);
 
   // Save recent searches to storage with additional metadata
@@ -481,7 +481,7 @@ const SearchScreen = () => {
   // Effect to handle debounced search
   useEffect(() => {
     if (debouncedSearchQuery.trim()) {
-      handleSearch(debouncedSearchQuery);
+      void handleSearch(debouncedSearchQuery);
     } else {
       setSearchResults({ recordings: [], species: [] });
       setIsLoading(false);
@@ -494,7 +494,7 @@ const SearchScreen = () => {
     const recording = searchResults.recordings.find((rec) => rec.id === recordingId);
     if (recording) {
       // Save the recording title with type and ID
-      saveRecentSearch(recording.title, "recording", recording.id);
+      void saveRecentSearch(recording.title, "recording", recording.id);
     }
     navigation.navigate("RecordingDetails", { recordingId });
   };
@@ -505,7 +505,7 @@ const SearchScreen = () => {
     const species = searchResults.species.find((sp) => sp.id === speciesId);
     if (species) {
       // Save the species common name with type and ID
-      saveRecentSearch(species.common_name, "species", species.id);
+      void saveRecentSearch(species.common_name, "species", species.id);
     }
     navigation.navigate("SpeciesDetails", { speciesId });
   };
@@ -704,7 +704,7 @@ const SearchScreen = () => {
             innerContainerStyle={styles.searchInput}
             selectionColor={theme.colors.primary}
             returnKeyType="search"
-            onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
+            onSubmitEditing={() => void handleSearch(debouncedSearchQuery)}
             textAlignVertical="center"
             containerStyle={styles.searchInputContainer}
           />
@@ -774,7 +774,7 @@ const SearchScreen = () => {
               Recent Searches
             </Text>
             {recentSearches.length > 0 && (
-              <TouchableOpacity onPress={clearRecentSearches}>
+              <TouchableOpacity onPress={() => void clearRecentSearches()}>
                 <Text
                   style={createThemedTextStyle(theme, {
                     size: "lg",
@@ -831,7 +831,7 @@ const SearchScreen = () => {
                     style={styles.recentItemAction}
                     onPress={() => {
                       setSearchQuery(item.query);
-                      handleSearch(item.query);
+                      void handleSearch(item.query);
                     }}
                   >
                     <Ionicons name="search" size={20} color={theme.colors.primary} />
