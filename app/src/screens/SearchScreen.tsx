@@ -18,7 +18,6 @@ import BackgroundPattern from "../components/BackgroundPattern";
 import DownloadedBadge from "../components/DownloadedBadge";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import PageBadge from "../components/PageBadge";
 import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
@@ -352,7 +351,7 @@ const SearchScreen = () => {
         const savedSearches = await AsyncStorage.getItem("recentSearches");
         if (savedSearches) {
           // Handle both old format (strings) and new format (objects)
-          const parsedSearches = JSON.parse(savedSearches);
+          const parsedSearches = JSON.parse(savedSearches) as SearchHistoryItem[];
 
           // Filter to only include valid SearchHistoryItem objects with required fields
           const validSearches = parsedSearches
@@ -418,7 +417,9 @@ const SearchScreen = () => {
 
       // Get existing searches
       const savedSearches = await AsyncStorage.getItem("recentSearches");
-      const searches: SearchHistoryItem[] = savedSearches ? JSON.parse(savedSearches) : [];
+      const searches: SearchHistoryItem[] = savedSearches
+        ? (JSON.parse(savedSearches) as SearchHistoryItem[])
+        : [];
 
       // Add to recent searches (avoid duplicates by resultType+resultId and limit to 10)
       const updatedSearches = [
@@ -494,7 +495,7 @@ const SearchScreen = () => {
     const recording = searchResults.recordings.find((rec) => rec.id === recordingId);
     if (recording) {
       // Save the recording title with type and ID
-      void saveRecentSearch(recording.title, "recording", recording.id);
+      void saveRecentSearch(recording.rec_number.toString(), "recording", recording.id);
     }
     navigation.navigate("RecordingDetails", { recordingId });
   };
@@ -520,11 +521,11 @@ const SearchScreen = () => {
       return { recordings: [], species: searchResults.species };
     } else if (activeFilter === "recordings") {
       return { recordings: searchResults.recordings, species: [] };
-    } else if (activeFilter === "pages" && /^\d+$/.test(sanitizedQuery)) {
+    } else if (activeFilter === "recnumber" && /^\d+$/.test(sanitizedQuery)) {
       // Filter recordings by page number
       const pageNumber = parseInt(sanitizedQuery, 10);
       const pageRecordings = searchResults.recordings.filter(
-        (rec) => rec.book_page_number === pageNumber
+        (rec) => rec.rec_number === pageNumber
       );
       return { recordings: pageRecordings, species: [] };
     }
@@ -549,7 +550,7 @@ const SearchScreen = () => {
         }}
       >
         <View style={styles.resultCardHeader}>
-          <Text style={styles.resultTitle}>{item.title}</Text>
+          <Text style={styles.resultTitle}>{item.rec_number}</Text>
           {item.species && (
             <Text style={styles.scientificName}>{item.species.scientific_name}</Text>
           )}
@@ -560,8 +561,6 @@ const SearchScreen = () => {
             <Text style={styles.speciesName}>{item.species?.common_name || "Unknown Species"}</Text>
 
             <View style={styles.resultMeta}>
-              <PageBadge page={item.book_page_number} />
-
               <View style={styles.typeIndicator}>
                 <Ionicons
                   name="musical-notes-outline"
