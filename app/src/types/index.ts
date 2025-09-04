@@ -17,10 +17,10 @@ export type MediaType = "audio-hq" | "audio_lq" | "sonogram_video";
 
 export type Recording = {
   id: string;
-  catalogueCode: string;
+  catalogue_code: string;
   species_id: string;
-  recNumber: number;
-  siteName: string;
+  rec_number: number;
+  site_name: string;
   audiohqid?: string;
   audiolqid?: string;
   sonogramvideoid?: string;
@@ -109,16 +109,10 @@ export type DownloadInfo = {
   error?: string;
 };
 
-export type DownloadRecord = {
-  recording: Recording;
+export type DownloadRecord = Recording & {
   recording_id: string;
   audio_path: string;
   downloaded_at: number;
-  title?: string;
-  species_name?: string;
-  scientific_name?: string;
-  book_page_number?: number;
-  caption?: string;
 };
 
 export type DownloadContextType = {

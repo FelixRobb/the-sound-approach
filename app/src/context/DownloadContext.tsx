@@ -7,13 +7,7 @@ import { createContext, useState, useEffect, useContext, useCallback } from "rea
 import { ENV } from "../config/env";
 import { clearUserDownloads } from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
-import type {
-  Recording,
-  DownloadRecord,
-  DownloadContextType,
-  DownloadInfo,
-  Species,
-} from "../types";
+import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types";
 
 import { AuthContext } from "./AuthContext";
 
@@ -132,39 +126,13 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Actually download the audio file
       await FileSystem.downloadAsync(audioUrlData.signedUrl, audioPath);
 
-      // Get species info if available
-      let speciesName = "";
-      let scientificName = "";
-
-      if (recording.species_id) {
-        try {
-          const { data: speciesData } = (await supabase
-            .from("species")
-            .select("common_name, scientific_name")
-            .eq("id", recording.species_id)
-            .single()) as { data: Species | null; error: Error | null };
-
-          if (speciesData) {
-            speciesName = speciesData.common_name;
-            scientificName = speciesData.scientific_name;
-          }
-        } catch (error) {
-          console.error("Error fetching species data:", error);
-        }
-      }
-
       // Save download info to AsyncStorage
       const userId = authState.user?.id || "anonymous";
       const downloadRecord: DownloadRecord = {
-        recording: recording,
         recording_id: recording.id,
         audio_path: audioPath,
         downloaded_at: Date.now(),
-        title: recording.title,
-        species_name: speciesName,
-        scientific_name: scientificName,
-        book_page_number: recording.book_page_number,
-        caption: recording.caption,
+        ...recording,
       };
 
       // Store the download record

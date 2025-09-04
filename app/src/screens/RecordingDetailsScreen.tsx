@@ -27,7 +27,6 @@ import DetailHeader from "../components/DetailHeader";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import PageBadge from "../components/PageBadge";
 import { Button } from "../components/ui";
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -137,6 +136,19 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 3.84,
       zIndex: theme.zIndex.base5,
     },
+    dateContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginTop: theme.spacing.sm,
+    },
+    dateText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.sm,
+    },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
@@ -148,6 +160,11 @@ const RecordingDetailsScreen = () => {
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
+    },
+    descriptionHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginBottom: theme.spacing.sm,
     },
     descriptionText: {
       ...createThemedTextStyle(theme, {
@@ -166,11 +183,11 @@ const RecordingDetailsScreen = () => {
     },
     descriptionTitle: {
       ...createThemedTextStyle(theme, {
-        size: "2xl",
+        size: "xl",
         weight: "bold",
         color: "onSurface",
       }),
-      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.sm,
     },
     downloadButtonSmall: {
       backgroundColor: theme.colors.tertiary,
@@ -296,9 +313,44 @@ const RecordingDetailsScreen = () => {
     fullscreenVideo: {
       flex: 1,
     },
-    pageBadgeWrapper: {
-      alignSelf: "flex-start",
-      marginVertical: theme.spacing.xs,
+    locationContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginTop: theme.spacing.sm,
+    },
+    locationText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.sm,
+    },
+    metadataGrid: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.sm,
+    },
+    metadataItem: {
+      flex: 1,
+      marginHorizontal: theme.spacing.xs,
+    },
+    metadataLabel: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "bold",
+        color: "primary",
+      }),
+      marginBottom: theme.spacing.xs,
+      textTransform: "uppercase",
+    },
+    metadataValue: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onSurface",
+      }),
     },
     pauseButton: {
       alignItems: "center",
@@ -334,6 +386,26 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.surfaceVariant,
       justifyContent: "center",
       width: "100%",
+    },
+    recordingInfoCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 3,
+      marginBottom: theme.spacing.md,
+      overflow: "hidden",
+      padding: theme.spacing.md,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
+    },
+    recordingInfoTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     replayButton: {
       alignItems: "center",
@@ -1029,7 +1101,7 @@ const RecordingDetailsScreen = () => {
     return (
       <View style={styles.fullscreenContainer}>
         <View style={styles.fullscreenHeader}>
-          <Text style={styles.fullscreenTitle}>{recording.title}</Text>
+          <Text style={styles.fullscreenTitle}>{recording.species?.scientific_name}</Text>
           <Text style={styles.fullscreenSubtitle}>{recording.species?.common_name}</Text>
         </View>
         <VideoView
@@ -1121,7 +1193,7 @@ const RecordingDetailsScreen = () => {
     <View style={styles.container}>
       <BackgroundPattern />
       <DetailHeader
-        title={recording.title}
+        title={recording.species?.common_name}
         subtitle={recording.species?.scientific_name}
         rightElement={
           getDownloadStatus() === "completed" && (
@@ -1140,11 +1212,6 @@ const RecordingDetailsScreen = () => {
           <View style={styles.speciesHeader}>
             <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
             <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
-            {recording.book_page_number && (
-              <View style={styles.pageBadgeWrapper}>
-                <PageBadge page={recording.book_page_number} />
-              </View>
-            )}
           </View>
 
           <TouchableOpacity
@@ -1188,8 +1255,45 @@ const RecordingDetailsScreen = () => {
           {renderVideoPlayer()}
         </View>
 
+        {/* Recording Information Card */}
+        <View style={styles.recordingInfoCard}>
+          <Text style={styles.recordingInfoTitle}>Recording Information</Text>
+
+          <View style={styles.metadataGrid}>
+            <View style={styles.metadataItem}>
+              <Text style={styles.metadataLabel}>Catalogue Code</Text>
+              <Text style={styles.metadataValue}>{recording.catalogue_code}</Text>
+            </View>
+
+            <View style={styles.metadataItem}>
+              <Text style={styles.metadataLabel}>Recording #</Text>
+              <Text style={styles.metadataValue}>{recording.rec_number}</Text>
+            </View>
+          </View>
+
+          <View style={styles.locationContainer}>
+            <Ionicons name="location-outline" size={16} color={theme.colors.primary} />
+            <Text style={styles.locationText}>{recording.site_name}</Text>
+          </View>
+
+          <View style={styles.dateContainer}>
+            <Ionicons name="calendar-outline" size={16} color={theme.colors.primary} />
+            <Text style={styles.dateText}>
+              {new Date(recording.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </Text>
+          </View>
+        </View>
+
+        {/* Description Card */}
         <View style={styles.descriptionCard}>
-          <Text style={styles.descriptionTitle}>Description</Text>
+          <View style={styles.descriptionHeader}>
+            <Ionicons name="document-text-outline" size={20} color={theme.colors.primary} />
+            <Text style={styles.descriptionTitle}>Description</Text>
+          </View>
           <Text style={styles.descriptionText}>{recording.caption}</Text>
         </View>
         <View style={styles.downloadCard}>

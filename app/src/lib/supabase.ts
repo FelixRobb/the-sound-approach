@@ -35,6 +35,7 @@ AppState.addEventListener("change", (state) => {
 // Database functions
 export const fetchRecordingsByBookOrder = async () => {
   const { data, error } = await supabase
+
     .from("recordings")
     .select(
       `
@@ -46,9 +47,7 @@ export const fetchRecordingsByBookOrder = async () => {
       )
     `
     )
-    .order("book_page_number", { ascending: true })
-    .order("order_in_book", { ascending: true });
-
+    .order("rec_number", { ascending: true });
   if (error) {
     throw error;
   }
@@ -82,8 +81,7 @@ export const fetchRecordingsBySpecies = async (speciesId: string) => {
       )
     `
     )
-    .eq("species_id", speciesId)
-    .order("order_in_book", { ascending: true });
+    .eq("species_id", speciesId);
 
   if (error) {
     throw error;

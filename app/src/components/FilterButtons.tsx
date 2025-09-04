@@ -7,8 +7,8 @@ import { createThemedTextStyle } from "../lib/theme/typography";
 
 interface FilterButtonsProps {
   theme: Theme;
-  sortBy: "title" | "species" | "page";
-  setSortBy: (value: "title" | "species" | "page") => void;
+  sortBy: "speciescommon" | "rec_number" | "speciesscientific";
+  setSortBy: (value: "speciescommon" | "rec_number" | "speciesscientific") => void;
   sortOrder: "asc" | "desc";
   setSortOrder: (value: "asc" | "desc") => void;
   downloadedFilter: "all" | "downloaded" | "not_downloaded";
@@ -86,9 +86,9 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
 
   const getSortOrderDisplayText = () => {
     if (sortOrder === "asc") {
-      return sortBy === "page" ? "1→100" : "A→Z";
+      return sortBy === "rec_number" ? "1→100" : "A→Z";
     } else {
-      return sortBy === "page" ? "100→1" : "Z→A";
+      return sortBy === "rec_number" ? "100→1" : "Z→A";
     }
   };
 
@@ -102,18 +102,12 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
         <View style={styles.filterRow}>
           <Text style={styles.filterSectionTitle}>Sort By</Text>
 
-          {/* Page Sort Button */}
+          {/* Rec Number Sort Button */}
           <TouchableOpacity
-            style={[styles.filterButton, sortBy === "page" && styles.filterButtonActive]}
-            onPress={() => setSortBy("page")}
+            style={[styles.filterButton, sortBy === "rec_number" && styles.filterButtonActive]}
+            onPress={() => setSortBy("rec_number")}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name="book-outline"
-              size={14}
-              color={sortBy === "page" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
-              style={styles.filterButtonIcon}
-            />
             <Text
               style={[
                 createThemedTextStyle(theme, {
@@ -121,7 +115,7 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
                   weight: "normal",
                   color: "onSurfaceVariant",
                 }),
-                sortBy === "page" &&
+                sortBy === "rec_number" &&
                   createThemedTextStyle(theme, {
                     size: "base",
                     weight: "normal",
@@ -129,22 +123,16 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
                   }),
               ]}
             >
-              Page
+              Recording Number
             </Text>
           </TouchableOpacity>
 
           {/* Title Sort Button */}
           <TouchableOpacity
-            style={[styles.filterButton, sortBy === "title" && styles.filterButtonActive]}
-            onPress={() => setSortBy("title")}
+            style={[styles.filterButton, sortBy === "speciescommon" && styles.filterButtonActive]}
+            onPress={() => setSortBy("speciescommon")}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name="text-outline"
-              size={14}
-              color={sortBy === "title" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
-              style={styles.filterButtonIcon}
-            />
             <Text
               style={[
                 createThemedTextStyle(theme, {
@@ -152,7 +140,7 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
                   weight: "normal",
                   color: "onSurfaceVariant",
                 }),
-                sortBy === "title" &&
+                sortBy === "speciescommon" &&
                   createThemedTextStyle(theme, {
                     size: "base",
                     weight: "normal",
@@ -160,21 +148,18 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
                   }),
               ]}
             >
-              Title
+              Species Common
             </Text>
           </TouchableOpacity>
           {/* Species Sort Button */}
           <TouchableOpacity
-            style={[styles.filterButton, sortBy === "species" && styles.filterButtonActive]}
-            onPress={() => setSortBy("species")}
+            style={[
+              styles.filterButton,
+              sortBy === "speciesscientific" && styles.filterButtonActive,
+            ]}
+            onPress={() => setSortBy("speciesscientific")}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name="leaf-outline"
-              size={14}
-              color={sortBy === "species" ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
-              style={styles.filterButtonIcon}
-            />
             <Text
               style={[
                 createThemedTextStyle(theme, {
@@ -182,7 +167,7 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
                   weight: "normal",
                   color: "onSurfaceVariant",
                 }),
-                sortBy === "species" &&
+                sortBy === "speciesscientific" &&
                   createThemedTextStyle(theme, {
                     size: "base",
                     weight: "normal",
@@ -190,7 +175,7 @@ const FilterButtons: React.FC<FilterButtonsProps> = ({
                   }),
               ]}
             >
-              Species
+              Species Scientific
             </Text>
           </TouchableOpacity>
 

@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React from "react";
@@ -11,24 +10,19 @@ import { RootStackParamList } from "../types";
 
 import DownloadedBadge from "./DownloadedBadge";
 import MiniAudioPlayer from "./MiniAudioPlayer";
-import PageBadge from "./PageBadge";
 
 interface RecordingCardProps {
   recording: Recording;
-  sortBy?: "title" | "species" | "page";
   isDownloaded?: boolean;
-  showSpeciesInfo?: boolean;
-  showCaption?: boolean;
   indented?: boolean;
+  sortBy?: "speciescommon" | "rec_number" | "speciesscientific";
 }
 
 const RecordingCard: React.FC<RecordingCardProps> = ({
   recording,
-  sortBy = "page",
   isDownloaded = false,
-  showSpeciesInfo = true,
-  showCaption = false,
   indented = false,
+  sortBy = "rec_number",
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useEnhancedTheme();
@@ -38,12 +32,13 @@ const RecordingCard: React.FC<RecordingCardProps> = ({
       alignItems: "center",
       flexShrink: 0,
       justifyContent: "center",
-      marginLeft: theme.spacing.sm,
+      marginLeft: theme.spacing.xs,
     },
     badgeContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: theme.spacing.xs,
+      position: "absolute",
+      right: -2,
+      top: -2,
+      zIndex: 10,
     },
     caption: {
       ...createThemedTextStyle(theme, {
@@ -54,79 +49,89 @@ const RecordingCard: React.FC<RecordingCardProps> = ({
       lineHeight: 18,
       marginTop: theme.spacing.xxs,
     },
-    commonName: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      flexShrink: 1,
-    },
     contentContainer: {
+      alignItems: "flex-start",
       flex: 1,
       justifyContent: "center",
       minWidth: 0,
     },
-
-    metadataRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: theme.spacing.xs,
-      marginTop: theme.spacing.xxs,
-    },
-
     posterContainer: {
       alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.borderRadius.md,
-      elevation: 2,
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.outline,
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 1,
+      elevation: 3,
       flexShrink: 0,
-      height: 56,
+      height: 54,
       justifyContent: "center",
       marginRight: theme.spacing.md,
+      position: "relative",
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      width: 56,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      width: 54,
     },
-    posterIcon: {
-      opacity: 0.6,
+    posterOverlay: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: theme.borderRadius.lg - 1,
+      bottom: 1,
+      justifyContent: "center",
+      left: 1,
+      position: "absolute",
+      right: 1,
+      top: 1,
+    },
+    posterText: {
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "onPrimaryContainer",
+      }),
+      fontSize: 18,
     },
     recordingCard: {
       alignItems: "center",
       backgroundColor: theme.colors.transparent,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
-      marginHorizontal: indented ? theme.spacing.xl : 0,
-      minHeight: 72,
+      marginHorizontal: indented ? theme.spacing.xl : theme.spacing.xs,
+      marginVertical: theme.spacing.xxs,
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
     },
-    scientificName: {
+    secondaryTitle: {
       ...createThemedTextStyle(theme, {
-        size: "sm",
+        size: "lg",
         weight: "normal",
         color: "onSurfaceVariant",
       }),
-      flexShrink: 2,
-      fontStyle: "italic",
-      marginLeft: theme.spacing.xs,
     },
     speciesContainer: {
-      alignItems: "center",
-      flexDirection: "row",
+      alignItems: "flex-start",
       flex: 1,
       minWidth: 0,
     },
     title: {
       ...createThemedTextStyle(theme, {
         size: "lg",
-        weight: "medium",
+        weight: "semiBold",
         color: "onSurface",
       }),
-      lineHeight: 20,
-      marginBottom: theme.spacing.xxs,
+      lineHeight: 22,
+    },
+    titleContainer: {
+      flexDirection: "row",
+      gap: theme.spacing.xs,
+    },
+    titleText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "semiBold",
+        color: "onSurface",
+      }),
     },
   });
 
@@ -134,65 +139,76 @@ const RecordingCard: React.FC<RecordingCardProps> = ({
     navigation.navigate("RecordingDetails", { recordingId: recording.id });
   };
 
+  const getTitle = (recording: Recording): React.ReactNode => {
+    if (recording.species) {
+      if (sortBy === "speciescommon" || sortBy === "rec_number") {
+        return (
+          <View style={styles.titleContainer}>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.titleText}>
+              {recording.species.common_name || `Recording ${recording.rec_number}`} •{" "}
+              <Text style={styles.secondaryTitle} numberOfLines={1} ellipsizeMode="tail">
+                {recording.species.scientific_name}
+              </Text>
+            </Text>
+          </View>
+        );
+      } else if (sortBy === "speciesscientific") {
+        return (
+          <View style={styles.titleContainer}>
+            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.titleText}>
+              {recording.species.scientific_name || `Recording ${recording.rec_number}`} •{" "}
+            </Text>
+            <Text style={styles.secondaryTitle} numberOfLines={1} ellipsizeMode="tail">
+              {recording.species.common_name}
+            </Text>
+          </View>
+        );
+      }
+    }
+    return <Text>{`Recording ${recording.rec_number}`}</Text>;
+  };
+
   return (
     <TouchableOpacity
       style={styles.recordingCard}
       onPress={handlePress}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
       accessibilityRole="button"
-      accessibilityLabel={`Play recording: ${recording.title} by ${recording.species?.common_name || "Unknown species"}`}
+      accessibilityLabel={`Play recording ${recording.rec_number}: ${recording.species?.common_name || "Unknown species"}`}
       accessibilityHint="Tap to view recording details"
     >
-      {/* Visual Poster Element - Like Spotify's album art */}
+      {/* Enhanced Poster Element */}
       <View style={styles.posterContainer}>
-        <Ionicons
-          name="musical-notes"
-          size={24}
-          color={theme.colors.primary}
-          style={styles.posterIcon}
-        />
+        <View style={styles.posterOverlay}>
+          <Text style={styles.posterText}>{recording.rec_number}</Text>
+        </View>
+
+        {/* Download Badge - positioned at top-right corner */}
+        {isDownloaded && (
+          <View style={styles.badgeContainer}>
+            <DownloadedBadge compact smallRound />
+          </View>
+        )}
       </View>
 
       {/* Content Section */}
       <View style={styles.contentContainer}>
-        {/* Title */}
-        <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-          {recording.title}
-        </Text>
+        {/* Species Title */}
+        <View style={styles.speciesContainer}>
+          <Text style={styles.title}>{getTitle(recording)}</Text>
+        </View>
 
-        {/* Species Information */}
-        {showSpeciesInfo && sortBy !== "species" && recording.species && (
-          <View style={styles.speciesContainer}>
-            <Text style={styles.commonName} numberOfLines={1} ellipsizeMode="tail">
-              {recording.species.common_name}
-            </Text>
-            {recording.species.scientific_name && (
-              <Text style={styles.scientificName} numberOfLines={1} ellipsizeMode="tail">
-                • {recording.species.scientific_name}
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* Caption for species view */}
-        {showCaption && sortBy === "species" && recording.caption && (
+        {/* Additional Information */}
+        {recording.caption && (
           <Text style={styles.caption} numberOfLines={2} ellipsizeMode="tail">
-            {recording.caption}
+            {recording.caption.slice(0, 80)} {" • "} {recording.site_name || "Unknown site"}
           </Text>
         )}
-
-        {/* Metadata Row with Badges */}
-        <View style={styles.metadataRow}>
-          <View style={styles.badgeContainer}>
-            <PageBadge page={recording.book_page_number} />
-            {isDownloaded && <DownloadedBadge />}
-          </View>
-        </View>
       </View>
 
-      {/* Action Area */}
+      {/* Audio Player */}
       <View style={styles.actionContainer}>
-        <MiniAudioPlayer recording={recording} size={44} />
+        <MiniAudioPlayer recording={recording} size={48} />
       </View>
     </TouchableOpacity>
   );

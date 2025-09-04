@@ -90,8 +90,8 @@ const GlobalAudioBar: React.FC = () => {
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const navigationState = useNavigationState((state) => state);
 
-  // Simplified animation values
-  const translateY = useSharedValue(0);
+  // Animation values - start from hidden position for slide-in effect
+  const translateY = useSharedValue(120);
   // Handle layout measurement
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
     const { height } = event.nativeEvent.layout;
@@ -108,7 +108,7 @@ const GlobalAudioBar: React.FC = () => {
     }
   }, [stopPlayback, hideBar]);
 
-  // Much simpler gesture handler
+  // Pan gesture handler for dismissing the audio bar
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
       // Only allow downward movement
@@ -117,18 +117,19 @@ const GlobalAudioBar: React.FC = () => {
     })
     .onEnd((event) => {
       if (event.translationY > 50) {
-        // Dismiss gesture - continue from current position for smooth animation
+        // Dismiss gesture - animate to fully hidden position
         const currentY = Math.max(0, event.translationY);
-        translateY.value = withTiming(200, {
-          duration: Math.max(150, 300 * (1 - currentY / 200)), // Shorter duration if already partway down
+        const dismissDistance = 120; // Consistent with slide-in distance
+        translateY.value = withTiming(dismissDistance, {
+          duration: Math.max(150, 300 * (1 - currentY / dismissDistance)), // Shorter duration if already partway down
         });
         sliderProgress.value = 0;
         runOnJS(handleDismiss)();
       } else {
-        // Snap back
+        // Snap back to visible position
         translateY.value = withSpring(0, {
-          damping: 15,
-          stiffness: 200,
+          damping: 20,
+          stiffness: 300,
         });
       }
     });
@@ -291,12 +292,20 @@ const GlobalAudioBar: React.FC = () => {
     }, 100);
   }, [hasTabBar, slideAnim]);
 
-  // Reset animation values when component becomes visible
+  // Handle slide-in animation when component becomes visible and slide-out when hidden
   useEffect(() => {
     if (isVisible) {
-      translateY.value = 0;
+      // Animate in from below
+      translateY.value = withSpring(0, {
+        damping: 20,
+        stiffness: 300,
+      });
     } else {
-      // When the bar is hidden, ensure slider is reset so it starts from 0 on next show
+      // When the bar should be hidden, move it off-screen
+      translateY.value = withTiming(120, {
+        duration: 200,
+      });
+      // Reset slider state
       sliderProgress.value = 0;
       sliderMin.value = 0;
       sliderMax.value = 1;
@@ -304,8 +313,8 @@ const GlobalAudioBar: React.FC = () => {
     }
   }, [isVisible, translateY, sliderProgress, sliderMin, sliderMax]);
 
-  // If we don't have a current recording or the bar is hidden, don't render
-  if (!currentRecording || !isVisible) return null;
+  // Only render if we have a current recording
+  if (!currentRecording) return null;
 
   const styles = StyleSheet.create({
     container: {
@@ -366,6 +375,13 @@ const GlobalAudioBar: React.FC = () => {
       }),
       fontVariant: ["tabular-nums"],
     },
+    secondaryTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+    },
     slider: {
       backgroundColor: theme.colors.surfaceVariant,
       borderRadius: 2,
@@ -392,18 +408,16 @@ const GlobalAudioBar: React.FC = () => {
         color: "onSurfaceVariant",
       }),
     },
-    title: {
-      color: theme.colors.onSurface,
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "medium",
-        color: "onSurface",
-      }),
-      marginBottom: theme.spacing.xs,
-    },
     titleContainer: {
       flex: 1,
       minWidth: 0,
+    },
+    titleText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "semiBold",
+        color: "onSurface",
+      }),
     },
   });
 
@@ -421,15 +435,17 @@ const GlobalAudioBar: React.FC = () => {
               onPress={handleNavigateToDetails}
               hitSlop={{ top: 8, bottom: 8, left: 0, right: 0 }}
             >
-              <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-                {currentRecording?.title || "Unknown Recording"}
+              <Text numberOfLines={1} ellipsizeMode="tail" style={styles.titleText}>
+                {currentRecording?.species?.common_name ||
+                  `Recording ${currentRecording?.rec_number}`}{" "}
+                •{" "}
+                <Text style={styles.secondaryTitle} numberOfLines={1} ellipsizeMode="tail">
+                  {currentRecording?.species?.scientific_name}
+                </Text>
               </Text>
-              {currentRecording?.species && (
+              {currentRecording?.caption && (
                 <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
-                  {currentRecording.species.common_name}
-                  {currentRecording.species.scientific_name
-                    ? ` • ${currentRecording.species.scientific_name}`
-                    : ""}
+                  {currentRecording?.caption}
                 </Text>
               )}
             </Pressable>

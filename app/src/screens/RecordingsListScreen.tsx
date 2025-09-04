@@ -59,7 +59,9 @@ const RecordingsListScreen = () => {
   const insets = useSafeAreaInsets();
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [sortBy, setSortBy] = useState<"title" | "species" | "page">("page");
+  const [sortBy, setSortBy] = useState<"speciescommon" | "rec_number" | "speciesscientific">(
+    "rec_number"
+  );
   const [downloadedFilter, setDownloadedFilter] = useState<"all" | "downloaded" | "not_downloaded">(
     "all"
   );
@@ -279,17 +281,16 @@ const RecordingsListScreen = () => {
 
     const lowerQuery = query.toLowerCase();
     let score = 0;
-
-    // Exact title match (highest priority)
-    if (recording.title.toLowerCase() === lowerQuery) {
+    // rec_number match
+    if (recording.rec_number.toString() === lowerQuery) {
       score += 100;
     }
-    // Title starts with query
-    else if (recording.title.toLowerCase().startsWith(lowerQuery)) {
+    // rec_number starts with query
+    else if (recording.rec_number.toString().startsWith(lowerQuery)) {
       score += 80;
     }
-    // Title contains query
-    else if (recording.title.toLowerCase().includes(lowerQuery)) {
+    // rec_number contains query
+    else if (recording.rec_number.toString().includes(lowerQuery)) {
       score += 60;
     }
 
@@ -322,15 +323,6 @@ const RecordingsListScreen = () => {
     // Caption contains query (lower priority)
     if (recording.caption.toLowerCase().includes(lowerQuery)) {
       score += 30;
-    }
-
-    // Book page number exact match (lowest priority but still relevant)
-    if (recording.book_page_number.toString() === lowerQuery) {
-      score += 35;
-    }
-    // Book page number contains query
-    else if (recording.book_page_number.toString().includes(lowerQuery)) {
-      score += 15;
     }
 
     return score;
@@ -401,16 +393,18 @@ const RecordingsListScreen = () => {
         let comparison = 0;
 
         switch (sortBy) {
-          case "title":
-            comparison = a.item.title.localeCompare(b.item.title);
-            break;
-          case "species":
+          case "speciescommon":
             comparison = (a.item.species?.common_name || "").localeCompare(
               b.item.species?.common_name || ""
             );
             break;
-          case "page":
-            comparison = a.item.book_page_number - b.item.book_page_number;
+          case "rec_number":
+            comparison = a.item.rec_number - b.item.rec_number;
+            break;
+          case "speciesscientific":
+            comparison = (a.item.species?.scientific_name || "").localeCompare(
+              b.item.species?.scientific_name || ""
+            );
             break;
         }
 
@@ -446,7 +440,11 @@ const RecordingsListScreen = () => {
 
   // Group recordings by species for SectionList when sorting by species
   const recordingsSections = React.useMemo(() => {
-    if (sortBy !== "species" || !filteredAndSortedRecordings) return [];
+    if (
+      (sortBy !== "speciescommon" && sortBy !== "speciesscientific") ||
+      !filteredAndSortedRecordings
+    )
+      return [];
 
     const map = new Map<string, { title: string; data: Recording[] }>();
 
@@ -477,11 +475,9 @@ const RecordingsListScreen = () => {
       return (
         <RecordingCard
           recording={item}
-          sortBy={sortBy}
           isDownloaded={isItemDownloaded}
-          showSpeciesInfo={sortBy !== "species"}
-          showCaption={sortBy === "species"}
-          indented={sortBy === "species"}
+          indented={sortBy === "speciescommon" || sortBy === "speciesscientific"}
+          sortBy={sortBy}
         />
       );
     },
@@ -642,7 +638,7 @@ const RecordingsListScreen = () => {
           <View style={styles.listContainer}>
             {/* Only render the active tab's FlatList */}
             {activeTab === "book" &&
-              (sortBy === "species" ? (
+              (sortBy === "speciescommon" || sortBy === "speciesscientific" ? (
                 <SectionList
                   sections={recordingsSections}
                   contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}

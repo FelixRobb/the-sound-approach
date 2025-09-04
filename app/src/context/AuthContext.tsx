@@ -332,6 +332,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: sessionData.session.user.email || "",
             });
 
+            const hasCompletedOnboarding = await checkOnboardingStatus(sessionData.session.user.id);
+
             dispatch({
               type: "RESTORE_TOKEN",
               token: sessionData.session.access_token,
@@ -339,6 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 id: sessionData.session.user.id,
                 email: sessionData.session.user.email || "",
               },
+              hasCompletedOnboarding,
             });
             return;
           }
@@ -369,10 +372,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isValid: boolean;
             };
             if (isValid && token && user) {
+              const hasCompletedOnboarding = await checkOnboardingStatus(user.id);
               dispatch({
                 type: "RESTORE_TOKEN",
                 token,
                 user,
+                hasCompletedOnboarding,
               });
             } else {
               await clearOfflineAuthData();
@@ -401,10 +406,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   isValid: boolean;
                 };
                 if (isValid && token && user) {
+                  const hasCompletedOnboarding = await checkOnboardingStatus(user.id);
                   dispatch({
                     type: "RESTORE_TOKEN",
                     token,
                     user,
+                    hasCompletedOnboarding,
                   });
                 } else {
                   await clearAuthState();
@@ -457,10 +464,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   isValid: boolean;
                 };
                 if (isValid && token && user) {
+                  const hasCompletedOnboarding = await checkOnboardingStatus(user.id);
                   dispatch({
                     type: "RESTORE_TOKEN",
                     token,
                     user,
+                    hasCompletedOnboarding,
                   });
                 } else {
                   await clearOfflineAuthData();
@@ -477,10 +486,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
             if (isValid && token && user) {
               // Use offline data temporarily
+              const hasCompletedOnboarding = await checkOnboardingStatus(user.id);
               dispatch({
                 type: "RESTORE_TOKEN",
                 token,
                 user,
+                hasCompletedOnboarding,
               });
             } else {
               await clearOfflineAuthData();
@@ -502,10 +513,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isValid: boolean;
             };
             if (isValid && token && user) {
+              const hasCompletedOnboarding = await checkOnboardingStatus(user.id);
               dispatch({
                 type: "RESTORE_TOKEN",
                 token,
                 user,
+                hasCompletedOnboarding,
               });
             } else {
               dispatch({ type: "RESTORE_TOKEN", token: null, user: null });

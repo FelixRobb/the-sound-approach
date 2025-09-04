@@ -10,7 +10,7 @@ import { createThemedTextStyle } from "../lib/theme/typography";
 import type { RootStackParamList } from "../types";
 
 interface DetailHeaderProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   rightElement?: ReactNode;
 }

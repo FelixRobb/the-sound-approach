@@ -208,7 +208,6 @@ const DownloadsScreen = () => {
       flex: 1,
     },
     listContent: {
-      padding: theme.spacing.md,
       paddingBottom: globalAudioBarHeight,
     },
     loadingCard: {
@@ -395,7 +394,7 @@ const DownloadsScreen = () => {
           setSelectedDownload(null);
         }}
         title="Delete Download"
-        message={`Are you sure you want to delete "${selectedDownload?.title || "this recording"}"? You'll need to download it again for offline use.`}
+        message={`Are you sure you want to delete "${selectedDownload?.species?.common_name || "this recording"}"? You'll need to download it again for offline use.`}
         icon="trash-outline"
         iconColor={theme.colors.error}
         buttons={[
