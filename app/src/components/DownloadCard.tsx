@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withTiming,
   runOnJS,
 } from "react-native-reanimated";
 
@@ -22,6 +23,8 @@ interface DownloadCardProps {
   showDeleteButton?: boolean;
   onDeletePress?: () => void;
   showPlayButton?: boolean;
+  shouldResetPosition?: boolean;
+  isDeleting?: boolean;
 }
 
 const DownloadCard: React.FC<DownloadCardProps> = ({
@@ -30,13 +33,23 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
   showDeleteButton = false,
   onDeletePress,
   showPlayButton = true,
+  shouldResetPosition = false,
+  isDeleting = false,
 }) => {
   const { theme } = useEnhancedTheme();
   const translateX = useSharedValue(0);
+  const opacity = useSharedValue(1);
   const [isRevealed, setIsRevealed] = useState(false);
 
   const SWIPE_THRESHOLD = -80;
   const DELETE_ZONE_WIDTH = 80;
+
+  // Handle delete animation
+  useEffect(() => {
+    if (isDeleting) {
+      opacity.value = withTiming(0, { duration: 300 });
+    }
+  }, [isDeleting, opacity]);
 
   const styles = StyleSheet.create({
     actionContainer: {
@@ -105,15 +118,6 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       }),
       marginTop: theme.spacing.xxs,
       opacity: 0.7,
-    },
-    downloadIndicator: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: theme.borderRadius.sm,
-      height: 16,
-      justifyContent: "center",
-      marginLeft: theme.spacing.xs,
-      width: 16,
     },
     headerRow: {
       alignItems: "flex-start",
@@ -202,31 +206,59 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
   // Modern gesture handler
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
-      // Only allow leftward movement (negative translationX)
-      const newTranslateX = Math.min(0, event.translationX);
-      translateX.value = newTranslateX;
+      if (isRevealed) {
+        // When revealed, calculate new position based on current position + translation
+        // Allow dragging back to the right (towards 0) but not beyond it
+        const newTranslateX = Math.min(0, SWIPE_THRESHOLD + event.translationX);
+        translateX.value = newTranslateX;
+      } else {
+        // When not revealed, only allow leftward movement (negative translationX)
+        const newTranslateX = Math.min(0, event.translationX);
+        translateX.value = newTranslateX;
+      }
     })
     .onEnd((event) => {
-      if (event.translationX < SWIPE_THRESHOLD) {
-        // Swipe threshold reached - show delete action
-        translateX.value = withSpring(SWIPE_THRESHOLD, {
-          damping: 15,
-          stiffness: 200,
-        });
-        runOnJS(setIsRevealed)(true);
+      if (isRevealed) {
+        // If currently revealed, check if dragged back far enough to close
+        const finalPosition = SWIPE_THRESHOLD + event.translationX;
+        if (finalPosition > SWIPE_THRESHOLD / 2) {
+          // Close the delete action
+          translateX.value = withSpring(0, {
+            damping: 15,
+            stiffness: 200,
+          });
+          runOnJS(setIsRevealed)(false);
+        } else {
+          // Keep it revealed
+          translateX.value = withSpring(SWIPE_THRESHOLD, {
+            damping: 15,
+            stiffness: 200,
+          });
+        }
       } else {
-        // Snap back to original position
-        translateX.value = withSpring(0, {
-          damping: 15,
-          stiffness: 200,
-        });
-        runOnJS(setIsRevealed)(false);
+        // Not revealed, check if should reveal
+        if (event.translationX < SWIPE_THRESHOLD) {
+          // Swipe threshold reached - show delete action
+          translateX.value = withSpring(SWIPE_THRESHOLD, {
+            damping: 15,
+            stiffness: 200,
+          });
+          runOnJS(setIsRevealed)(true);
+        } else {
+          // Snap back to original position
+          translateX.value = withSpring(0, {
+            damping: 15,
+            stiffness: 200,
+          });
+          runOnJS(setIsRevealed)(false);
+        }
       }
     });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateX: translateX.value }],
+      opacity: opacity.value,
     };
   });
 
@@ -235,42 +267,30 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
     const clampedProgress = Math.min(1, progress);
 
     return {
-      opacity: clampedProgress,
+      opacity: clampedProgress * opacity.value, // Apply both reveal and delete fade
       transform: [{ scale: clampedProgress }],
     };
   });
 
   const handleDeletePress = () => {
-    if (showDeleteButton && onDeletePress) {
-      Alert.alert(
-        "Delete Download",
-        `Are you sure you want to remove recording ${item.rec_number} from your downloads?`,
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-            onPress: resetPosition,
-          },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: () => {
-              onDeletePress();
-              resetPosition();
-            },
-          },
-        ]
-      );
-    }
+    onDeletePress?.();
+    // Don't reset position immediately - let the parent handle it
   };
 
-  const resetPosition = () => {
+  const resetPosition = useCallback(() => {
     setIsRevealed(false);
     translateX.value = withSpring(0, {
       damping: 15,
       stiffness: 200,
     });
-  };
+  }, [translateX]);
+
+  // Handle shouldResetPosition prop
+  useEffect(() => {
+    if (shouldResetPosition) {
+      resetPosition();
+    }
+  }, [shouldResetPosition, resetPosition]);
 
   const handleCardPress = () => {
     if (isRevealed) {
@@ -281,7 +301,7 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
   };
 
   return (
-    <View style={styles.downloadCard}>
+    <Animated.View style={[styles.downloadCard, { opacity: opacity.value }]}>
       {/* Delete Action Background */}
       {showDeleteButton && (
         <View style={styles.deleteActionContainer}>
@@ -327,13 +347,6 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
                         {item.species.common_name || "Unknown Recording"}
                       </Text>
                     )}
-                    <View style={styles.downloadIndicator}>
-                      <Ionicons
-                        name="cloud-done"
-                        size={10}
-                        color={theme.colors.onPrimaryContainer}
-                      />
-                    </View>
                   </View>
 
                   {/* Scientific Name */}
@@ -365,7 +378,7 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
           </TouchableOpacity>
         </Animated.View>
       </GestureDetector>
-    </View>
+    </Animated.View>
   );
 };
 

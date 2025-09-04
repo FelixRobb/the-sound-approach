@@ -136,19 +136,6 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 3.84,
       zIndex: theme.zIndex.base5,
     },
-    dateContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginTop: theme.spacing.sm,
-    },
-    dateText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginLeft: theme.spacing.sm,
-    },
     descriptionCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
@@ -1274,17 +1261,6 @@ const RecordingDetailsScreen = () => {
           <View style={styles.locationContainer}>
             <Ionicons name="location-outline" size={16} color={theme.colors.primary} />
             <Text style={styles.locationText}>{recording.site_name}</Text>
-          </View>
-
-          <View style={styles.dateContainer}>
-            <Ionicons name="calendar-outline" size={16} color={theme.colors.primary} />
-            <Text style={styles.dateText}>
-              {new Date(recording.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </Text>
           </View>
         </View>
 
