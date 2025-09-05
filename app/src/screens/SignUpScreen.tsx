@@ -59,6 +59,20 @@ const SignUpScreen = () => {
       top: 0,
     },
 
+    bookCodeContainer: {
+      marginBottom: theme.spacing.md,
+      marginTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
+      textAlign: "center",
+    },
+    bookCodeText: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: -theme.spacing.sm,
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
@@ -72,6 +86,9 @@ const SignUpScreen = () => {
       borderRadius: theme.borderRadius.full,
       marginBottom: theme.spacing.md,
       padding: theme.spacing.md,
+    },
+    input: {
+      marginBottom: theme.spacing.md,
     },
     loginContainer: {
       borderTopColor: theme.colors.surfaceVariant,
@@ -117,23 +134,6 @@ const SignUpScreen = () => {
         color: "onSurface",
       }),
       marginBottom: theme.spacing.sm,
-      textAlign: "center",
-    },
-    input: {
-      marginBottom: theme.spacing.md,
-    },
-    bookCodeText: {
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginTop: -theme.spacing.sm,
-    },
-    bookCodeContainer: {
-      marginTop: theme.spacing.sm,
-      marginBottom: theme.spacing.md,
-      paddingHorizontal: theme.spacing.sm,
       textAlign: "center",
     },
   });
@@ -285,7 +285,7 @@ const SignUpScreen = () => {
               }}
               autoCapitalize="characters"
               returnKeyType="done"
-              onSubmitEditing={handleSubmit}
+              onSubmitEditing={() => void handleSubmit()}
               ref={bookCodeInputRef}
               style={styles.input}
             />
@@ -297,7 +297,7 @@ const SignUpScreen = () => {
             </View>
 
             <Button
-              onPress={handleSubmit}
+              onPress={() => void handleSubmit()}
               disabled={isLoading}
               loading={isLoading}
               title={isLoading ? "Creating Account..." : "Create Account"}

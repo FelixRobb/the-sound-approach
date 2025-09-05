@@ -90,6 +90,7 @@ const OfflineWelcomeScreen = () => {
 
   return (
     <ImageBackground
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       source={require("../../assets/background-sound-approach.png")}
       style={styles.backgroundImage}
       resizeMode="cover"

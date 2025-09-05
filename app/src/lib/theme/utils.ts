@@ -1,3 +1,4 @@
+/* eslint-disable react-native/sort-styles */
 import { StyleSheet } from "react-native";
 
 import { createShadow } from "./shadows";
@@ -17,10 +18,10 @@ export const createButtonStyles = (theme: Theme) => {
   return StyleSheet.create({
     // Base button styles
     base: {
-      borderRadius: themeBorderRadius.md,
       alignItems: "center",
-      justifyContent: "center",
+      borderRadius: themeBorderRadius.md,
       flexDirection: "row",
+      justifyContent: "center",
       ...createShadow("level1", theme),
     },
     // Size variants
@@ -61,8 +62,8 @@ export const createButtonStyles = (theme: Theme) => {
     },
     outlined: {
       backgroundColor: colors.surface,
-      borderWidth: 1,
       borderColor: colors.outline,
+      borderWidth: 1,
     },
     text: {
       backgroundColor: colors.surface,
@@ -195,9 +196,9 @@ export const createInputStyles = (theme: Theme) => {
     // Base input styles
     base: {
       backgroundColor: colors.surfaceVariant,
+      borderColor: colors.outline,
       borderRadius: themeBorderRadius.md,
       borderWidth: 1,
-      borderColor: colors.outline,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
     },
@@ -276,13 +277,13 @@ export const createCardStyles = (theme: Theme) => {
     base: {
       backgroundColor: colors.surface,
       borderRadius: themeBorderRadius.md,
-      padding: spacing.md,
       marginVertical: spacing.xs,
+      padding: spacing.md,
     },
     // Elevation variants
     flat: {
-      borderWidth: 1,
       borderColor: colors.outline,
+      borderWidth: 1,
     },
     elevated: {
       ...createShadow("level1", theme),
@@ -308,16 +309,16 @@ export const createCardStyles = (theme: Theme) => {
     },
     // Content styles
     header: {
-      borderBottomWidth: 1,
       borderBottomColor: colors.outline,
-      paddingBottom: spacing.md,
+      borderBottomWidth: 1,
       marginBottom: spacing.md,
+      paddingBottom: spacing.md,
     },
     footer: {
-      borderTopWidth: 1,
       borderTopColor: colors.outline,
-      paddingTop: spacing.md,
+      borderTopWidth: 1,
       marginTop: spacing.md,
+      paddingTop: spacing.md,
     },
   });
 };
@@ -328,24 +329,24 @@ export const createLayoutStyles = (theme: Theme) => {
   return StyleSheet.create({
     // Container styles
     container: {
-      flex: 1,
       backgroundColor: colors.background,
+      flex: 1,
     },
     safeArea: {
-      flex: 1,
       backgroundColor: colors.background,
+      flex: 1,
     },
     // Layout utilities
     row: {
-      flexDirection: "row",
       alignItems: "center",
+      flexDirection: "row",
     },
     column: {
       flexDirection: "column",
     },
     center: {
-      justifyContent: "center",
       alignItems: "center",
+      justifyContent: "center",
     },
     spaceBetween: {
       justifyContent: "space-between",
@@ -476,39 +477,4 @@ export const createResponsiveStyles = <T>(styles: {
   xlarge?: T;
 }) => {
   return styles;
-};
-
-// Animation style utilities
-export const createAnimatedStyles = (theme: Theme) => {
-  const { animation } = theme;
-
-  return {
-    // Fade animations
-    fadeIn: {
-      opacity: 1,
-      transition: `opacity ${animation.duration.normal}ms ${animation.easing.easeInOut}`,
-    },
-    fadeOut: {
-      opacity: 0,
-      transition: `opacity ${animation.duration.fast}ms ${animation.easing.easeOut}`,
-    },
-    // Scale animations
-    scaleIn: {
-      transform: [{ scale: 1 }],
-      transition: `transform ${animation.duration.normal}ms ${animation.easing.easeOut}`,
-    },
-    scaleOut: {
-      transform: [{ scale: 0.95 }],
-      transition: `transform ${animation.duration.fast}ms ${animation.easing.easeIn}`,
-    },
-    // Slide animations
-    slideIn: {
-      transform: [{ translateX: 0 }],
-      transition: `transform ${animation.duration.normal}ms ${animation.easing.easeOut}`,
-    },
-    slideOut: {
-      transform: [{ translateX: -100 }],
-      transition: `transform ${animation.duration.normal}ms ${animation.easing.easeIn}`,
-    },
-  };
 };

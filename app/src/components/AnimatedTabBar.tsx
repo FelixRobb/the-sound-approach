@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
 import Animated, {
@@ -102,18 +102,18 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
       borderColor: theme.colors.outline,
       borderRadius: theme.borderRadius.full,
       borderWidth: 1,
+      elevation: 3,
       flexDirection: "row",
       height: 46,
       marginTop: theme.spacing.sm,
       overflow: "hidden",
       paddingHorizontal: theme.spacing.xs,
       position: "relative",
-      width: "94%",
-      elevation: 3,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.8,
       shadowRadius: 4,
+      width: "94%",
     },
     tabText: {
       ...createThemedTextStyle(theme, {
@@ -157,7 +157,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
                   }),
             ]}
           >
-            By Book Order
+            Recordings
           </Text>
         </Animated.View>
       </TouchableOpacity>
@@ -169,8 +169,8 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
         activeOpacity={0.7}
       >
         <Animated.View style={[styles.rowCenter, speciesTabStyle]}>
-          <Ionicons
-            name="leaf-outline"
+          <MaterialCommunityIcons
+            name="bird"
             size={18}
             color={
               activeTab === "species" ? theme.colors.onTertiary : theme.colors.onSurfaceVariant
@@ -192,7 +192,7 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({
                   }),
             ]}
           >
-            By Species
+            Species
           </Text>
         </Animated.View>
       </TouchableOpacity>

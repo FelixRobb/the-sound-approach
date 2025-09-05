@@ -17,7 +17,7 @@ import "expo-dev-client";
 // Create a client for React Query
 const queryClient = new QueryClient();
 
-SplashScreen.preventAutoHideAsync(); // Prevent native splash screen from hiding immediately
+void SplashScreen.preventAutoHideAsync(); // Prevent native splash screen from hiding immediately
 
 // App content with theme context
 const AppContent = () => {

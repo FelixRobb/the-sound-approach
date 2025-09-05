@@ -48,14 +48,14 @@ export const useCustomModal = () => {
       buttons: [
         {
           text: options?.cancelText || "Cancel",
-          onPress: hideModal,
+          onPress: () => void hideModal(),
           style: "cancel",
         },
         {
           text: options?.confirmText || "Confirm",
-          onPress: async () => {
-            await onConfirm();
-            hideModal();
+          onPress: () => {
+            void onConfirm();
+            void hideModal();
           },
           style: options?.confirmStyle || "default",
         },

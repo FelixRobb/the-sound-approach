@@ -109,100 +109,44 @@ const Input = forwardRef<RNTextInput, InputProps>(
 
     // Create dynamic styles based on theme and state
     const styles = StyleSheet.create({
+      clearButton: {
+        alignItems: "center",
+        justifyContent: "center",
+      },
+
+      clearButtonContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        position: "absolute",
+        right: theme.spacing.md,
+        zIndex: theme.zIndex.base,
+      },
       container: {
         marginBottom: theme.spacing.sm,
       },
-      labelContainer: {
-        flexDirection: "row",
-        marginBottom: theme.spacing.xs,
-      },
-      label: {
-        fontSize:
-          size === "sm"
-            ? theme.typography.bodyLarge.fontSize
-            : size === "lg"
-              ? theme.typography.bodyLarge.fontSize
-              : theme.typography.bodyLarge.fontSize,
-        fontWeight: "600",
-        color: theme.colors.onSurface,
-        marginBottom: 4,
-      },
-      required: {
-        color: theme.colors.error,
-        marginLeft: 2,
-      },
-      inputContainer: {
-        position: "relative",
-        flexDirection: "row",
-        alignItems: "center",
-      },
-      input: {
-        flex: 1,
-        fontSize:
-          size === "sm"
-            ? theme.typography.bodyLarge.fontSize
-            : size === "lg"
-              ? theme.typography.bodyLarge.fontSize
-              : theme.typography.bodyLarge.fontSize,
-        color: theme.colors.onSurface,
-        paddingVertical:
-          size === "sm"
-            ? theme.spacing.sm
-            : size === "lg"
-              ? theme.spacing.lg
-              : theme.spacing.md - 4,
-        paddingHorizontal: theme.spacing.xs,
-        // Add left padding if there's a left icon
-        paddingLeft: leftIcon ? 50 : theme.spacing.md,
-        // Add right padding if there's a right icon or password toggle
-        paddingRight: rightIcon || isPassword ? 40 : theme.spacing.md,
-      },
-      leftIconContainer: {
-        position: "absolute",
-        left: theme.spacing.md,
-        zIndex: theme.zIndex.base,
-        alignItems: "center",
-        justifyContent: "center",
-      },
-      rightIconContainer: {
-        position: "absolute",
-        right: theme.spacing.md,
-        zIndex: theme.zIndex.base,
-        alignItems: "center",
-        justifyContent: "center",
-      },
-      clearButtonContainer: {
-        position: "absolute",
-        right: theme.spacing.md,
-        zIndex: theme.zIndex.base,
-        alignItems: "center",
-        justifyContent: "center",
-      },
-      helperText: {
-        fontSize: theme.typography.bodySmall.fontSize,
-        color: theme.colors.onSurfaceVariant,
-        marginTop: theme.spacing.xs,
-      },
-      errorText: {
-        fontSize: theme.typography.bodySmall.fontSize,
-        color: theme.colors.error,
-        marginTop: theme.spacing.xs,
-        flexDirection: "row",
-        alignItems: "center",
-      },
-      errorIcon: {
-        marginRight: theme.spacing.xs,
-      },
-      // Variants
       default: {
-        borderWidth: 1,
+        backgroundColor: theme.colors.surface,
         borderColor: error
           ? theme.colors.error
           : isFocused
             ? theme.colors.primary
             : theme.colors.outline,
         borderRadius: theme.borderRadius.md,
-        backgroundColor: theme.colors.surface,
+        borderWidth: 1,
+      },
+      disabled: {
+        backgroundColor: theme.colors.surfaceVariant,
+        opacity: 0.6,
+      },
+      errorIcon: {
+        marginRight: theme.spacing.xs,
+      },
+      errorText: {
+        alignItems: "center",
+        color: theme.colors.error,
+        flexDirection: "row",
+        fontSize: theme.typography.bodySmall.fontSize,
+        marginTop: theme.spacing.xs,
       },
       filled: {
         backgroundColor: error
@@ -213,23 +157,78 @@ const Input = forwardRef<RNTextInput, InputProps>(
         borderRadius: theme.borderRadius.md,
         borderWidth: 0,
       },
+      helperText: {
+        color: theme.colors.onSurfaceVariant,
+        fontSize: theme.typography.bodySmall.fontSize,
+        marginTop: theme.spacing.xs,
+      },
+      input: {
+        color: theme.colors.onSurface,
+        flex: 1,
+        fontSize:
+          size === "sm"
+            ? theme.typography.bodyLarge.fontSize
+            : size === "lg"
+              ? theme.typography.bodyLarge.fontSize
+              : theme.typography.bodyLarge.fontSize,
+        paddingHorizontal: theme.spacing.xs,
+        paddingLeft: leftIcon ? 50 : theme.spacing.md,
+        paddingRight: rightIcon || isPassword ? 40 : theme.spacing.md,
+        paddingVertical:
+          size === "sm"
+            ? theme.spacing.sm
+            : size === "lg"
+              ? theme.spacing.lg
+              : theme.spacing.md - 4,
+      },
+      inputContainer: {
+        alignItems: "center",
+        flexDirection: "row",
+        position: "relative",
+      },
+      label: {
+        color: theme.colors.onSurface,
+        fontSize:
+          size === "sm"
+            ? theme.typography.bodyLarge.fontSize
+            : size === "lg"
+              ? theme.typography.bodyLarge.fontSize
+              : theme.typography.bodyLarge.fontSize,
+        fontWeight: "600",
+        marginBottom: 4,
+      },
+
+      labelContainer: {
+        flexDirection: "row",
+        marginBottom: theme.spacing.xs,
+      },
+      leftIconContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        left: theme.spacing.md,
+        position: "absolute",
+        zIndex: theme.zIndex.base,
+      },
       outlined: {
-        borderWidth: 2,
+        backgroundColor: theme.colors.transparent,
         borderColor: error
           ? theme.colors.error
           : isFocused
             ? theme.colors.primary
             : theme.colors.outline,
         borderRadius: theme.borderRadius.md,
-        backgroundColor: theme.colors.transparent,
+        borderWidth: 2,
       },
-      disabled: {
-        backgroundColor: theme.colors.surfaceVariant,
-        opacity: 0.6,
+      required: {
+        color: theme.colors.error,
+        marginLeft: 2,
       },
-      clearButton: {
+      rightIconContainer: {
         alignItems: "center",
         justifyContent: "center",
+        position: "absolute",
+        right: theme.spacing.md,
+        zIndex: theme.zIndex.base,
       },
     });
 

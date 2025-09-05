@@ -53,16 +53,21 @@ const OfflineScreen = () => {
     try {
       const downloadedRecordings = await getDownloadedRecordings();
       // Map the downloaded recordings to match the DownloadedRecording type
-      const formattedRecordings = downloadedRecordings.map((record) => ({
-        recording: record.recording,
+      const formattedRecordings = downloadedRecordings.map((record: DownloadRecord) => ({
         recording_id: record.recording_id,
         audio_path: record.audio_path,
         downloaded_at: record.downloaded_at,
-        title: record.title,
-        species_name: record.species_name,
-        scientific_name: record.scientific_name,
-        book_page_number: record.book_page_number,
+        rec_number: record.rec_number,
+        site_name: record.site_name,
+        species_id: record.species_id,
         caption: record.caption,
+        id: record.id,
+        catalogue_code: record.catalogue_code,
+        audiohqid: record.audiohqid,
+        audiolqid: record.audiolqid,
+        sonogramvideoid: record.sonogramvideoid,
+        species: record.species,
+        createdAt: new Date(record.downloaded_at).toISOString(),
       }));
       setDownloads(formattedRecordings);
     } catch (error) {
@@ -76,7 +81,7 @@ const OfflineScreen = () => {
   // Check for downloads when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadDownloads();
+      void loadDownloads();
       return () => {
         // Optional cleanup if needed
       };
@@ -85,7 +90,7 @@ const OfflineScreen = () => {
 
   // Initial load when component mounts
   useEffect(() => {
-    loadDownloads();
+    void loadDownloads();
   }, [loadDownloads]);
 
   // Create styles with theme support
@@ -333,7 +338,7 @@ const OfflineScreen = () => {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              loadDownloads();
+              void loadDownloads();
             }}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}

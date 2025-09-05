@@ -590,7 +590,7 @@ const ProfileSettingsScreen = () => {
           },
           {
             text: "Sign Out",
-            onPress: confirmSignOut,
+            onPress: () => void confirmSignOut(),
             style: "destructive",
             loading: isSigningOut,
           },
@@ -613,7 +613,7 @@ const ProfileSettingsScreen = () => {
           },
           {
             text: "Clear All",
-            onPress: confirmClearAllDownloads,
+            onPress: () => void confirmClearAllDownloads(),
             style: "destructive",
             loading: isClearingDownloads,
           },

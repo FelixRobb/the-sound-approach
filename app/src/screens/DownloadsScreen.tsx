@@ -44,6 +44,7 @@ const DownloadsScreen = () => {
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Modal states
@@ -52,6 +53,8 @@ const DownloadsScreen = () => {
   const [selectedDownload, setSelectedDownload] = useState<DownloadRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set());
+  const [resetPositionForItem, setResetPositionForItem] = useState<string | null>(null);
 
   // Format bytes to human-readable size
   const formatBytes = (bytes: number, decimals = 2) => {
@@ -67,38 +70,66 @@ const DownloadsScreen = () => {
   };
 
   // Load downloaded recordings from database
-  const loadDownloads = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const downloadedRecordings = await getDownloadedRecordings();
-      setDownloads(downloadedRecordings);
-    } catch (error) {
-      console.error("Error loading downloads:", error);
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-    }
-  }, [getDownloadedRecordings]);
+  const loadDownloads = useCallback(
+    async (showLoadingScreen = true) => {
+      if (showLoadingScreen && !hasInitiallyLoaded) {
+        setIsLoading(true);
+      }
+      try {
+        const downloadedRecordings = await getDownloadedRecordings();
+        setDownloads(downloadedRecordings);
+        if (!hasInitiallyLoaded) {
+          setHasInitiallyLoaded(true);
+        }
+      } catch (error) {
+        console.error("Error loading downloads:", error);
+      } finally {
+        if (showLoadingScreen) {
+          setIsLoading(false);
+        }
+        setRefreshing(false);
+      }
+    },
+    [getDownloadedRecordings, hasInitiallyLoaded]
+  );
 
   // Check for downloads when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadDownloads();
+      // Don't reload if we're in the middle of deleting items
+      if (deletingItems.size === 0) {
+        // Load silently after initial load to avoid loading screen
+        void loadDownloads(false);
+      }
       return () => {
         // Optional cleanup if needed
       };
-    }, [loadDownloads])
+    }, [loadDownloads, deletingItems.size])
   );
 
-  // Initial load when component mounts
+  // Initial load when component mounts - show loading screen
   useEffect(() => {
-    loadDownloads();
+    void loadDownloads(true);
   }, [loadDownloads]);
 
   // Handle delete download
   const handleDeleteDownload = (item: DownloadRecord) => {
     setSelectedDownload(item);
     setShowDeleteModal(true);
+  };
+
+  // Handle cancel delete - reset position
+  const handleCancelDelete = () => {
+    if (selectedDownload) {
+      // Trigger reset for the specific item
+      setResetPositionForItem(selectedDownload.recording_id);
+      // Clear the reset flag after a brief delay
+      setTimeout(() => {
+        setResetPositionForItem(null);
+      }, 100);
+    }
+    setShowDeleteModal(false);
+    setSelectedDownload(null);
   };
 
   // Handle clear all downloads
@@ -110,16 +141,39 @@ const DownloadsScreen = () => {
     if (!selectedDownload) return;
 
     setIsDeleting(true);
+    setShowDeleteModal(false);
+
+    // Mark this item as deleting for animation
+    setDeletingItems((prev) => new Set(prev).add(selectedDownload.recording_id));
+
     try {
       await deleteDownload(selectedDownload.recording_id);
-      setDownloads((prev) =>
-        prev.filter((download) => download.recording_id !== selectedDownload.recording_id)
-      );
+
+      // Don't remove from downloads array immediately - let the animation complete
+      // The animation will handle the visual removal
+
+      // Wait for the complete animation sequence to finish
+      // Initial fade (200ms) + delay (150ms) + spring collapse + spring slide-ups + buffer = 900ms
+      setTimeout(() => {
+        setDownloads((prev) =>
+          prev.filter((download) => download.recording_id !== selectedDownload.recording_id)
+        );
+        setDeletingItems((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(selectedDownload.recording_id);
+          return newSet;
+        });
+      }, 900);
     } catch (error) {
       console.error("Delete error:", error);
+      // Remove from deleting set on error
+      setDeletingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(selectedDownload.recording_id);
+        return newSet;
+      });
     } finally {
       setIsDeleting(false);
-      setShowDeleteModal(false);
       setSelectedDownload(null);
     }
   };
@@ -208,7 +262,6 @@ const DownloadsScreen = () => {
       flex: 1,
     },
     listContent: {
-      padding: theme.spacing.md,
       paddingBottom: globalAudioBarHeight,
     },
     loadingCard: {
@@ -233,10 +286,6 @@ const DownloadsScreen = () => {
       ...createThemedTextStyle(theme, { size: "sm", weight: "medium", color: "onSurface" }),
       marginTop: theme.spacing.md,
       textAlign: "center",
-    },
-
-    separator: {
-      height: theme.spacing.md,
     },
     storageInfo: {
       alignItems: "center",
@@ -311,8 +360,8 @@ const DownloadsScreen = () => {
     </View>
   );
 
-  // Render download item
-  const renderDownloadItem = ({ item }: { item: DownloadRecord }) => {
+  // Render download item with animation delay calculation
+  const renderDownloadItem = ({ item, index }: { item: DownloadRecord; index: number }) => {
     const handleItemPress = () => {
       navigation.navigate("RecordingDetails", { recordingId: item.recording_id });
     };
@@ -321,6 +370,21 @@ const DownloadsScreen = () => {
       handleDeleteDownload(item);
     };
 
+    // Calculate if this item should have a slide-up animation
+    // Find if there's a deleting item above this one in the current list
+    const deletingItemIndex = downloads.findIndex((download) =>
+      deletingItems.has(download.recording_id)
+    );
+
+    // Only animate items that are below the deleting item and not deleting themselves
+    const isItemDeleting = deletingItems.has(item.recording_id);
+    const shouldAnimateUp =
+      !isItemDeleting && deletingItemIndex !== -1 && index > deletingItemIndex;
+
+    // Calculate delay: start after the delete item begins collapsing (350ms)
+    // Add staggered delay based on distance from deleted item for smooth cascading effect
+    const animationDelay = shouldAnimateUp ? 350 + (index - deletingItemIndex - 1) * 40 : 0;
+
     return (
       <DownloadCard
         item={item}
@@ -328,6 +392,9 @@ const DownloadsScreen = () => {
         showPlayButton={true}
         showDeleteButton={true}
         onDeletePress={handleDeletePress}
+        shouldResetPosition={resetPositionForItem === item.recording_id}
+        isDeleting={isItemDeleting}
+        animationDelay={animationDelay}
       />
     );
   };
@@ -345,8 +412,8 @@ const DownloadsScreen = () => {
     </View>
   );
 
-  // Loading state
-  if (isLoading && !refreshing) {
+  // Loading state - only show on initial load
+  if (isLoading && !refreshing && !hasInitiallyLoaded) {
     return (
       <View style={styles.container}>
         <BackgroundPattern />
@@ -370,16 +437,23 @@ const DownloadsScreen = () => {
       <FlatList
         data={downloads}
         renderItem={renderDownloadItem}
-        keyExtractor={(item) => item.recording_id.toString()}
+        keyExtractor={(item) => item.recording_id}
         contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={<EmptyState />}
+        removeClippedSubviews={false}
+        windowSize={10}
+        maxToRenderPerBatch={5}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              setRefreshing(true);
-              loadDownloads();
+              // Only allow refresh if no items are currently being deleted
+              if (deletingItems.size === 0) {
+                setRefreshing(true);
+                void loadDownloads(false);
+              }
             }}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}
@@ -390,26 +464,20 @@ const DownloadsScreen = () => {
       {/* Delete Download Modal */}
       <CustomModal
         visible={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setSelectedDownload(null);
-        }}
+        onClose={handleCancelDelete}
         title="Delete Download"
-        message={`Are you sure you want to delete "${selectedDownload?.title || "this recording"}"? You'll need to download it again for offline use.`}
+        message={`Are you sure you want to delete "${selectedDownload?.species?.common_name || "this recording"}"? You'll need to download it again for offline use.`}
         icon="trash-outline"
         iconColor={theme.colors.error}
         buttons={[
           {
             text: "Cancel",
-            onPress: () => {
-              setShowDeleteModal(false);
-              setSelectedDownload(null);
-            },
+            onPress: handleCancelDelete,
             style: "cancel",
           },
           {
             text: "Delete",
-            onPress: confirmDeleteDownload,
+            onPress: () => void confirmDeleteDownload(),
             style: "destructive",
             loading: isDeleting,
           },
@@ -432,7 +500,7 @@ const DownloadsScreen = () => {
           },
           {
             text: "Clear All",
-            onPress: confirmClearAllDownloads,
+            onPress: () => void confirmClearAllDownloads(),
             style: "destructive",
             loading: isClearing,
           },

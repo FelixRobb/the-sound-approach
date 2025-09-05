@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -15,10 +15,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
-import DownloadedBadge from "../components/DownloadedBadge";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
-import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import PageBadge from "../components/PageBadge";
+import RecordingCard from "../components/RecordingCard";
 import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
@@ -60,12 +58,12 @@ const SearchScreen = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300); // 300ms debounce delay
+  const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResults>({
     recordings: [],
     species: [],
   });
   const [recentSearches, setRecentSearches] = useState<SearchHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings">("all");
   const insets = useSafeAreaInsets();
@@ -153,7 +151,6 @@ const SearchScreen = () => {
       paddingHorizontal: theme.spacing.xl,
     },
     listContent: {
-      padding: theme.spacing.md,
       paddingBottom: globalAudioBarHeight,
     },
     loadingContainer: {
@@ -161,14 +158,6 @@ const SearchScreen = () => {
       flex: 1,
       justifyContent: "center",
       paddingTop: theme.spacing.sm,
-    },
-    loadingText: {
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "normal",
-        color: "onBackground",
-      }),
-      marginTop: theme.spacing.sm,
     },
     recentContainer: {
       padding: theme.spacing.md,
@@ -231,15 +220,7 @@ const SearchScreen = () => {
       }),
     },
     resultCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
       marginVertical: 8,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
     },
     resultCardContent: {
       flexDirection: "row",
@@ -247,19 +228,8 @@ const SearchScreen = () => {
       padding: theme.spacing.md,
       paddingTop: theme.spacing.sm,
     },
-    resultCardHeader: {
-      borderBottomColor: theme.colors.surfaceVariant,
-      borderBottomWidth: 1,
-      padding: theme.spacing.md,
-      paddingBottom: theme.spacing.md,
-    },
     resultCardLeft: {
       flex: 1,
-    },
-    resultCardRight: {
-      alignItems: "center",
-      justifyContent: "center",
-      marginLeft: theme.spacing.sm,
     },
     resultCount: {
       ...createThemedTextStyle(theme, {
@@ -267,14 +237,8 @@ const SearchScreen = () => {
         weight: "normal",
         color: "primary",
       }),
+      marginHorizontal: theme.spacing.lg,
       marginTop: theme.spacing.sm,
-    },
-    resultMeta: {
-      alignItems: "flex-start",
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-      marginTop: 8,
     },
     resultTitle: {
       ...createThemedTextStyle(theme, {
@@ -291,8 +255,8 @@ const SearchScreen = () => {
         weight: "normal",
         color: "onSurfaceVariant",
       }),
-      marginBottom: theme.spacing.sm,
-      marginTop: theme.spacing.sm,
+      marginHorizontal: theme.spacing.xl,
+      marginVertical: theme.spacing.sm,
     },
     scientificName: {
       ...createThemedTextStyle(theme, {
@@ -318,30 +282,27 @@ const SearchScreen = () => {
     separator: {
       height: theme.spacing.sm,
     },
-    speciesName: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurface",
-      }),
-      marginBottom: theme.spacing.xs,
+    speciesActionContainer: {
+      padding: theme.spacing.xs,
     },
-    typeIndicator: {
+    speciesPosterContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.borderRadius.sm,
-      flexDirection: "row",
-      minHeight: 20,
-      paddingHorizontal: theme.spacing.xs,
-      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.md,
+      height: 50,
+      justifyContent: "center",
+      marginRight: theme.spacing.md,
+      overflow: "hidden",
+      width: 50,
     },
-    typeIndicatorText: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginLeft: theme.spacing.xs,
+    speciesPosterOverlay: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.borderRadius.md,
+      height: "100%",
+      justifyContent: "center",
+      opacity: 0.8,
+      width: "100%",
     },
   });
 
@@ -352,7 +313,7 @@ const SearchScreen = () => {
         const savedSearches = await AsyncStorage.getItem("recentSearches");
         if (savedSearches) {
           // Handle both old format (strings) and new format (objects)
-          const parsedSearches = JSON.parse(savedSearches);
+          const parsedSearches = JSON.parse(savedSearches) as SearchHistoryItem[];
 
           // Filter to only include valid SearchHistoryItem objects with required fields
           const validSearches = parsedSearches
@@ -395,7 +356,7 @@ const SearchScreen = () => {
       }
     };
 
-    loadRecentSearches();
+    void loadRecentSearches();
   }, []);
 
   // Save recent searches to storage with additional metadata
@@ -418,7 +379,9 @@ const SearchScreen = () => {
 
       // Get existing searches
       const savedSearches = await AsyncStorage.getItem("recentSearches");
-      const searches: SearchHistoryItem[] = savedSearches ? JSON.parse(savedSearches) : [];
+      const searches: SearchHistoryItem[] = savedSearches
+        ? (JSON.parse(savedSearches) as SearchHistoryItem[])
+        : [];
 
       // Add to recent searches (avoid duplicates by resultType+resultId and limit to 10)
       const updatedSearches = [
@@ -453,8 +416,7 @@ const SearchScreen = () => {
   // Handle search
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
-
-    setIsLoading(true);
+    setIsSearching(true);
     setHasSearched(true);
 
     try {
@@ -474,17 +436,17 @@ const SearchScreen = () => {
     } catch (error) {
       console.error("Search error:", error);
     } finally {
-      setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
   // Effect to handle debounced search
   useEffect(() => {
     if (debouncedSearchQuery.trim()) {
-      handleSearch(debouncedSearchQuery);
+      void handleSearch(debouncedSearchQuery);
     } else {
       setSearchResults({ recordings: [], species: [] });
-      setIsLoading(false);
+      setIsSearching(false);
     }
   }, [debouncedSearchQuery]);
 
@@ -494,7 +456,11 @@ const SearchScreen = () => {
     const recording = searchResults.recordings.find((rec) => rec.id === recordingId);
     if (recording) {
       // Save the recording title with type and ID
-      saveRecentSearch(recording.title, "recording", recording.id);
+      void saveRecentSearch(
+        recording.rec_number.toString() + " - " + recording.species?.common_name,
+        "recording",
+        recording.id
+      );
     }
     navigation.navigate("RecordingDetails", { recordingId });
   };
@@ -505,7 +471,7 @@ const SearchScreen = () => {
     const species = searchResults.species.find((sp) => sp.id === speciesId);
     if (species) {
       // Save the species common name with type and ID
-      saveRecentSearch(species.common_name, "species", species.id);
+      void saveRecentSearch(species.common_name, "species", species.id);
     }
     navigation.navigate("SpeciesDetails", { speciesId });
   };
@@ -520,11 +486,11 @@ const SearchScreen = () => {
       return { recordings: [], species: searchResults.species };
     } else if (activeFilter === "recordings") {
       return { recordings: searchResults.recordings, species: [] };
-    } else if (activeFilter === "pages" && /^\d+$/.test(sanitizedQuery)) {
+    } else if (activeFilter === "recnumber" && /^\d+$/.test(sanitizedQuery)) {
       // Filter recordings by page number
       const pageNumber = parseInt(sanitizedQuery, 10);
       const pageRecordings = searchResults.recordings.filter(
-        (rec) => rec.book_page_number === pageNumber
+        (rec) => rec.rec_number === pageNumber
       );
       return { recordings: pageRecordings, species: [] };
     }
@@ -535,52 +501,18 @@ const SearchScreen = () => {
   const { recordings, species } = filteredResults();
 
   // Get total result count
-  const totalResultCount = recordings.length + species.length;
+  const totalResultCount = recordings.length + species.length || null;
 
   // Render recording item
   const renderRecordingItem = ({ item }: { item: Recording }) => {
     // Determine the best audio URI (downloaded or remote HQ) for the mini player
 
     return (
-      <TouchableOpacity
-        style={styles.resultCard}
-        onPress={() => {
-          handleNavigateToRecording(item.id);
-        }}
-      >
-        <View style={styles.resultCardHeader}>
-          <Text style={styles.resultTitle}>{item.title}</Text>
-          {item.species && (
-            <Text style={styles.scientificName}>{item.species.scientific_name}</Text>
-          )}
-        </View>
-
-        <View style={styles.resultCardContent}>
-          <View style={styles.resultCardLeft}>
-            <Text style={styles.speciesName}>{item.species?.common_name || "Unknown Species"}</Text>
-
-            <View style={styles.resultMeta}>
-              <PageBadge page={item.book_page_number} />
-
-              <View style={styles.typeIndicator}>
-                <Ionicons
-                  name="musical-notes-outline"
-                  size={12}
-                  color={theme.colors.onSurfaceVariant}
-                />
-                <Text style={styles.typeIndicatorText}>Recording</Text>
-              </View>
-              {/* Download badge displayed inline with metadata */}
-              {isDownloaded(item.id) && <DownloadedBadge compact />}
-            </View>
-          </View>
-
-          {/* Mini player shown on the right */}
-          <View style={styles.resultCardRight}>
-            <MiniAudioPlayer recording={item} size={34} />
-          </View>
-        </View>
-      </TouchableOpacity>
+      <RecordingCard
+        recording={item}
+        isDownloaded={isDownloaded(item.id)}
+        onPress={() => handleNavigateToRecording(item.id)}
+      />
     );
   };
 
@@ -592,20 +524,32 @@ const SearchScreen = () => {
         onPress={() => {
           handleNavigateToSpecies(item.id);
         }}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={`View species: ${item.common_name}`}
+        accessibilityHint="Tap to view species details"
       >
-        <View style={styles.resultCardHeader}>
-          <Text style={styles.resultTitle}>{item.common_name}</Text>
-          <Text style={styles.scientificName}>{item.scientific_name}</Text>
-        </View>
-
         <View style={styles.resultCardContent}>
-          <View style={styles.resultCardLeft}>
-            <View style={styles.resultMeta}>
-              <View style={styles.typeIndicator}>
-                <Ionicons name="leaf-outline" size={12} color={theme.colors.onSurfaceVariant} />
-                <Text style={styles.typeIndicatorText}>Species</Text>
-              </View>
+          {/* Enhanced Poster Element */}
+          <View style={styles.speciesPosterContainer}>
+            <View style={styles.speciesPosterOverlay}>
+              <MaterialCommunityIcons
+                name="bird"
+                size={24}
+                color={theme.colors.onPrimaryContainer}
+              />
             </View>
+          </View>
+
+          {/* Content Section */}
+          <View style={styles.resultCardLeft}>
+            <Text style={styles.resultTitle}>{item.common_name}</Text>
+            <Text style={styles.scientificName}>{item.scientific_name}</Text>
+          </View>
+
+          {/* Action Icon */}
+          <View style={styles.speciesActionContainer}>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
           </View>
         </View>
       </TouchableOpacity>
@@ -614,16 +558,15 @@ const SearchScreen = () => {
 
   // Render search results
   const renderSearchResults = () => {
-    if (isLoading && !hasSearched) {
+    if (isSearching && !hasSearched) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Searching...</Text>
         </View>
       );
     }
 
-    if (totalResultCount === 0) {
+    if (totalResultCount === null && !isSearching) {
       return (
         <View style={styles.emptyContainer}>
           <Ionicons
@@ -704,7 +647,7 @@ const SearchScreen = () => {
             innerContainerStyle={styles.searchInput}
             selectionColor={theme.colors.primary}
             returnKeyType="search"
-            onSubmitEditing={() => handleSearch(debouncedSearchQuery)}
+            onSubmitEditing={() => void handleSearch(debouncedSearchQuery)}
             textAlignVertical="center"
             containerStyle={styles.searchInputContainer}
           />
@@ -774,7 +717,7 @@ const SearchScreen = () => {
               Recent Searches
             </Text>
             {recentSearches.length > 0 && (
-              <TouchableOpacity onPress={clearRecentSearches}>
+              <TouchableOpacity onPress={() => void clearRecentSearches()}>
                 <Text
                   style={createThemedTextStyle(theme, {
                     size: "lg",
@@ -805,20 +748,26 @@ const SearchScreen = () => {
                     }}
                   >
                     <View style={styles.recentItemIcon}>
-                      <Ionicons
-                        name={
-                          item.resultType === "recording"
-                            ? "musical-notes-outline"
-                            : item.resultType === "species"
-                              ? "leaf-outline"
-                              : "time-outline"
-                        }
-                        size={22}
-                        color={theme.colors.tertiary}
-                      />
+                      {item.resultType === "recording" ? (
+                        <Ionicons
+                          name="musical-notes-outline"
+                          size={22}
+                          color={theme.colors.tertiary}
+                        />
+                      ) : item.resultType === "species" ? (
+                        <MaterialCommunityIcons
+                          name="bird"
+                          size={22}
+                          color={theme.colors.tertiary}
+                        />
+                      ) : (
+                        <Ionicons name="time-outline" size={22} color={theme.colors.tertiary} />
+                      )}
                     </View>
                     <View style={styles.recentItemTextContainer}>
-                      <Text style={styles.recentQueryText}>{item.name}</Text>
+                      <Text style={styles.recentQueryText} numberOfLines={1} ellipsizeMode="tail">
+                        {item.name}
+                      </Text>
                       <Text style={styles.recentItemTimestamp}>
                         {new Date(item.timestamp).toLocaleDateString()}
                       </Text>
@@ -831,7 +780,7 @@ const SearchScreen = () => {
                     style={styles.recentItemAction}
                     onPress={() => {
                       setSearchQuery(item.query);
-                      handleSearch(item.query);
+                      void handleSearch(item.query);
                     }}
                   >
                     <Ionicons name="search" size={20} color={theme.colors.primary} />

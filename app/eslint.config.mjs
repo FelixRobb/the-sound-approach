@@ -8,10 +8,16 @@ import importPlugin from "eslint-plugin-import";
 import reactNative from "eslint-plugin-react-native";
 import prettier from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const eslintConfig = [
   // Base recommended configurations
   js.configs.recommended,
+
 
   // Prettier config to disable conflicting rules
   prettierConfig,
@@ -53,6 +59,8 @@ const eslintConfig = [
           jsx: true,
         },
         project: "./tsconfig.json",
+        tsconfigRootDir: __dirname,
+        createDefaultProgram: true,
       },
       globals: {
         React: "readonly",
@@ -100,7 +108,11 @@ const eslintConfig = [
       // Disable base rule in favor of TypeScript version
       "no-unused-vars": "off",
 
-      // TypeScript rules
+      // TypeScript recommended rules
+      ...typescriptEslint.configs.recommended.rules,
+      ...typescriptEslint.configs["recommended-requiring-type-checking"].rules,
+      
+      // TypeScript custom rules
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -112,6 +124,7 @@ const eslintConfig = [
         },
       ],
       "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/strict-boolean-expressions": "off", // Can be too strict for React Native
 
       // React specific rules
       "react/prop-types": "off",

@@ -167,7 +167,7 @@ const SpeciesDetailsScreen = () => {
 
   // Handle retry
   const handleRetry = () => {
-    refetch();
+    void refetch();
   };
 
   // Render loading state
@@ -246,10 +246,8 @@ const SpeciesDetailsScreen = () => {
                 <RecordingCard
                   key={item.id}
                   recording={item}
-                  sortBy="species"
+                  sortBy="speciescommon"
                   isDownloaded={isDownloaded(item.id)}
-                  showSpeciesInfo={false}
-                  showCaption={true}
                   indented={false}
                 />
               ))}

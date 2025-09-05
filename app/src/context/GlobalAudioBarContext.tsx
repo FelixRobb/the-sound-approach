@@ -11,7 +11,7 @@ type GlobalAudioBarContextType = {
 const GlobalAudioBarContext = createContext<GlobalAudioBarContextType | undefined>(undefined);
 
 export const GlobalAudioBarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   const setVisible = (visible: boolean) => {
     setIsVisible(visible);

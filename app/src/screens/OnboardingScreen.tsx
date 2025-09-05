@@ -122,9 +122,9 @@ const OnboardingScreen = () => {
       paddingTop: insets.top + theme.spacing.sm,
     },
     header: {
-      marginTop: theme.spacing.xl,
       alignItems: "center",
       marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.xl,
     },
     headerSubtitle: {
       color: theme.colors.onSurfaceVariant,
@@ -220,7 +220,7 @@ const OnboardingScreen = () => {
         }).start();
       });
     } else {
-      handleComplete();
+      void handleComplete();
     }
   };
 

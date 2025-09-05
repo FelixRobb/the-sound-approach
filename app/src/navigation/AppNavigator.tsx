@@ -573,6 +573,8 @@ const AppNavigator: React.FC = () => {
     const setNavigationBarColor = async () => {
       if (Platform.OS === "android") {
         try {
+          // Match Android system navigation bar color to the app's tab bar surface
+          await NavigationBar.setBackgroundColorAsync(theme.colors.surface);
           if (isDark) {
             await NavigationBar.setButtonStyleAsync("light");
           } else {
@@ -584,7 +586,7 @@ const AppNavigator: React.FC = () => {
       }
     };
 
-    setNavigationBarColor();
+    void setNavigationBarColor();
   }, [theme.colors.surface, isDark]);
 
   useEffect(() => {
@@ -593,7 +595,7 @@ const AppNavigator: React.FC = () => {
         await SplashScreen.hideAsync();
       }
     };
-    hideSplash();
+    void hideSplash();
   }, [authState.isLoading, authState.userToken]);
 
   // Determine which navigator to show

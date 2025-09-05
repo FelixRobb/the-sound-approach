@@ -2,7 +2,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 
-import type { DownloadRecord } from "../types";
+import type { DownloadRecord, User } from "../types";
 
 /**
  * Clear all downloaded files and AsyncStorage data for a user
@@ -75,10 +75,7 @@ export const clearOfflineAuthData = async () => {
 /**
  * Store offline authentication data
  */
-export const storeOfflineAuthData = async (
-  accessToken: string,
-  userData: { id: string; email: string; bookCode?: string }
-) => {
+export const storeOfflineAuthData = async (accessToken: string, userData: User) => {
   try {
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 3); // 3 months from now
@@ -108,7 +105,7 @@ export const getOfflineAuthData = async () => {
         // Token is still valid
         return {
           token: offlineToken,
-          user: JSON.parse(userData),
+          user: JSON.parse(userData) as User,
           isValid: true,
         };
       }

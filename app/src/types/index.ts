@@ -17,14 +17,14 @@ export type MediaType = "audio-hq" | "audio_lq" | "sonogram_video";
 
 export type Recording = {
   id: string;
+  catalogue_code: string;
   species_id: string;
-  title: string;
-  audiohqid: string;
-  audiolqid: string;
-  sonogramvideoid: string;
-  book_page_number: number;
+  rec_number: number;
+  site_name: string;
+  audiohqid?: string;
+  audiolqid?: string;
+  sonogramvideoid?: string;
   caption: string;
-  orderInBook: number;
   createdAt: string;
   species?: Species;
 };
@@ -93,7 +93,7 @@ export type AuthContextType = {
   deleteAccount: (password: string) => Promise<void>;
   clearError: () => void;
   completeOnboarding: () => Promise<void>;
-  resetOnboarding: () => Promise<void>;
+  resetOnboarding: () => void;
 };
 
 // ==========================================
@@ -109,16 +109,10 @@ export type DownloadInfo = {
   error?: string;
 };
 
-export type DownloadRecord = {
-  recording: Recording;
+export type DownloadRecord = Recording & {
   recording_id: string;
   audio_path: string;
   downloaded_at: number;
-  title?: string;
-  species_name?: string;
-  scientific_name?: string;
-  book_page_number?: number;
-  caption?: string;
 };
 
 export type DownloadContextType = {

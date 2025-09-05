@@ -27,7 +27,6 @@ import DetailHeader from "../components/DetailHeader";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import LoadingScreen from "../components/LoadingScreen";
 import MiniAudioPlayer from "../components/MiniAudioPlayer";
-import PageBadge from "../components/PageBadge";
 import { Button } from "../components/ui";
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -149,6 +148,11 @@ const RecordingDetailsScreen = () => {
       shadowOpacity: 0.3,
       shadowRadius: 2.22,
     },
+    descriptionHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginBottom: theme.spacing.sm,
+    },
     descriptionText: {
       ...createThemedTextStyle(theme, {
         size: "lg",
@@ -166,11 +170,11 @@ const RecordingDetailsScreen = () => {
     },
     descriptionTitle: {
       ...createThemedTextStyle(theme, {
-        size: "2xl",
+        size: "xl",
         weight: "bold",
         color: "onSurface",
       }),
-      marginBottom: theme.spacing.sm,
+      marginLeft: theme.spacing.sm,
     },
     downloadButtonSmall: {
       backgroundColor: theme.colors.tertiary,
@@ -296,9 +300,44 @@ const RecordingDetailsScreen = () => {
     fullscreenVideo: {
       flex: 1,
     },
-    pageBadgeWrapper: {
-      alignSelf: "flex-start",
-      marginVertical: theme.spacing.xs,
+    locationContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginTop: theme.spacing.sm,
+    },
+    locationText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginLeft: theme.spacing.sm,
+    },
+    metadataGrid: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: theme.spacing.sm,
+      marginTop: theme.spacing.sm,
+    },
+    metadataItem: {
+      flex: 1,
+      marginHorizontal: theme.spacing.xs,
+    },
+    metadataLabel: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "bold",
+        color: "primary",
+      }),
+      marginBottom: theme.spacing.xs,
+      textTransform: "uppercase",
+    },
+    metadataValue: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onSurface",
+      }),
     },
     pauseButton: {
       alignItems: "center",
@@ -334,6 +373,26 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.surfaceVariant,
       justifyContent: "center",
       width: "100%",
+    },
+    recordingInfoCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 3,
+      marginBottom: theme.spacing.md,
+      overflow: "hidden",
+      padding: theme.spacing.md,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
+    },
+    recordingInfoTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
     },
     replayButton: {
       alignItems: "center",
@@ -608,7 +667,7 @@ const RecordingDetailsScreen = () => {
       }
     };
 
-    handleFullscreenChange();
+    void handleFullscreenChange();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVideoFullscreen]);
 
@@ -616,7 +675,7 @@ const RecordingDetailsScreen = () => {
   useEffect(() => {
     return () => {
       StatusBar.setHidden(false);
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -679,7 +738,7 @@ const RecordingDetailsScreen = () => {
     }
   };
 
-  const handleDeleteDownload = async () => {
+  const handleDeleteDownload = () => {
     setShowDeleteModal(true);
   };
 
@@ -756,12 +815,12 @@ const RecordingDetailsScreen = () => {
     }
   }, [showControls, hideVideoControls, showVideoControls]);
 
-  const stopVideoPlayback = async () => {
+  const stopVideoPlayback = () => {
     if (!videoPlayer) return;
     videoPlayer.pause();
   };
 
-  const togglePlayPause = async () => {
+  const togglePlayPause = () => {
     if (!isVideoLoaded || !videoPlayer) return;
 
     try {
@@ -846,7 +905,7 @@ const RecordingDetailsScreen = () => {
 
     return (
       <Animated.View style={[containerStyle, { opacity: controlsOpacity }]}>
-        <TouchableOpacity onPress={togglePlayPause} disabled={!isVideoLoaded}>
+        <TouchableOpacity onPress={() => void togglePlayPause()} disabled={!isVideoLoaded}>
           <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.tertiary} />
         </TouchableOpacity>
 
@@ -950,7 +1009,7 @@ const RecordingDetailsScreen = () => {
           showControls && (
             <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
               <TouchableOpacity
-                onPress={togglePlayPause}
+                onPress={() => void togglePlayPause()}
                 activeOpacity={0.8}
                 style={styles.fullButtonTouchable}
               >
@@ -963,7 +1022,7 @@ const RecordingDetailsScreen = () => {
         {isVideoLoaded && isVideoEnded && !isSeeking && !showInitialLoading && showControls && (
           <Animated.View style={[styles.replayButton, { opacity: controlsOpacity }]}>
             <TouchableOpacity
-              onPress={togglePlayPause}
+              onPress={() => void togglePlayPause()}
               activeOpacity={0.8}
               style={styles.fullButtonTouchable}
             >
@@ -981,7 +1040,7 @@ const RecordingDetailsScreen = () => {
           !showInitialLoading && (
             <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
               <TouchableOpacity
-                onPress={togglePlayPause}
+                onPress={() => void togglePlayPause()}
                 activeOpacity={0.8}
                 style={styles.fullButtonTouchable}
               >
@@ -1010,7 +1069,7 @@ const RecordingDetailsScreen = () => {
             <Ionicons name="alert-circle" size={48} style={styles.errorIcon} />
             <Text style={styles.errorTitle}>Unable to Load Recording</Text>
             <Text style={styles.errorText}>Something went wrong. Please try again.</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <TouchableOpacity style={styles.retryButton} onPress={() => void refetch()}>
               <Text style={styles.retryText}>Try Again</Text>
             </TouchableOpacity>
           </View>
@@ -1029,7 +1088,7 @@ const RecordingDetailsScreen = () => {
     return (
       <View style={styles.fullscreenContainer}>
         <View style={styles.fullscreenHeader}>
-          <Text style={styles.fullscreenTitle}>{recording.title}</Text>
+          <Text style={styles.fullscreenTitle}>{recording.species?.scientific_name}</Text>
           <Text style={styles.fullscreenSubtitle}>{recording.species?.common_name}</Text>
         </View>
         <VideoView
@@ -1071,7 +1130,7 @@ const RecordingDetailsScreen = () => {
           showControls && (
             <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
               <TouchableOpacity
-                onPress={togglePlayPause}
+                onPress={() => void togglePlayPause()}
                 activeOpacity={0.8}
                 style={styles.fullButtonTouchable}
               >
@@ -1121,7 +1180,7 @@ const RecordingDetailsScreen = () => {
     <View style={styles.container}>
       <BackgroundPattern />
       <DetailHeader
-        title={recording.title}
+        title={recording.species?.common_name}
         subtitle={recording.species?.scientific_name}
         rightElement={
           getDownloadStatus() === "completed" && (
@@ -1140,11 +1199,6 @@ const RecordingDetailsScreen = () => {
           <View style={styles.speciesHeader}>
             <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
             <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
-            {recording.book_page_number && (
-              <View style={styles.pageBadgeWrapper}>
-                <PageBadge page={recording.book_page_number} />
-              </View>
-            )}
           </View>
 
           <TouchableOpacity
@@ -1188,8 +1242,34 @@ const RecordingDetailsScreen = () => {
           {renderVideoPlayer()}
         </View>
 
+        {/* Recording Information Card */}
+        <View style={styles.recordingInfoCard}>
+          <Text style={styles.recordingInfoTitle}>Recording Information</Text>
+
+          <View style={styles.metadataGrid}>
+            <View style={styles.metadataItem}>
+              <Text style={styles.metadataLabel}>Catalogue Code</Text>
+              <Text style={styles.metadataValue}>{recording.catalogue_code}</Text>
+            </View>
+
+            <View style={styles.metadataItem}>
+              <Text style={styles.metadataLabel}>Recording #</Text>
+              <Text style={styles.metadataValue}>{recording.rec_number}</Text>
+            </View>
+          </View>
+
+          <View style={styles.locationContainer}>
+            <Ionicons name="location-outline" size={16} color={theme.colors.primary} />
+            <Text style={styles.locationText}>{recording.site_name}</Text>
+          </View>
+        </View>
+
+        {/* Description Card */}
         <View style={styles.descriptionCard}>
-          <Text style={styles.descriptionTitle}>Description</Text>
+          <View style={styles.descriptionHeader}>
+            <Ionicons name="document-text-outline" size={20} color={theme.colors.primary} />
+            <Text style={styles.descriptionTitle}>Description</Text>
+          </View>
           <Text style={styles.descriptionText}>{recording.caption}</Text>
         </View>
         <View style={styles.downloadCard}>
@@ -1251,7 +1331,7 @@ const RecordingDetailsScreen = () => {
           },
           {
             text: "Remove",
-            onPress: confirmDeleteDownload,
+            onPress: () => void confirmDeleteDownload(),
             style: "destructive",
             loading: isDeleting,
           },

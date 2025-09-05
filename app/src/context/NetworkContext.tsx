@@ -84,7 +84,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
 
     // Initial check
-    NetFetch().then((state) => {
+    void NetFetch().then((state) => {
       const connectionStatus = state.isConnected !== null ? state.isConnected : true;
       setIsConnected(connectionStatus);
     });

@@ -26,15 +26,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // the app's foreground/background state. This should only be added once.
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
-    supabase.auth.startAutoRefresh();
+    void supabase.auth.startAutoRefresh();
   } else {
-    supabase.auth.stopAutoRefresh();
+    void supabase.auth.stopAutoRefresh();
   }
 });
 
 // Database functions
 export const fetchRecordingsByBookOrder = async () => {
   const { data, error } = await supabase
+
     .from("recordings")
     .select(
       `
@@ -46,9 +47,7 @@ export const fetchRecordingsByBookOrder = async () => {
       )
     `
     )
-    .order("book_page_number", { ascending: true })
-    .order("order_in_book", { ascending: true });
-
+    .order("rec_number", { ascending: true });
   if (error) {
     throw error;
   }
@@ -82,8 +81,7 @@ export const fetchRecordingsBySpecies = async (speciesId: string) => {
       )
     `
     )
-    .eq("species_id", speciesId)
-    .order("order_in_book", { ascending: true });
+    .eq("species_id", speciesId);
 
   if (error) {
     throw error;
@@ -93,7 +91,7 @@ export const fetchRecordingsBySpecies = async (speciesId: string) => {
 };
 
 export const fetchRecordingById = async (recordingId: string) => {
-  const { data, error } = await supabase
+  const result = await supabase
     .from("recordings")
     .select(
       `
@@ -108,11 +106,11 @@ export const fetchRecordingById = async (recordingId: string) => {
     .eq("id", recordingId)
     .single();
 
-  if (error) {
-    throw error;
+  if (result.error) {
+    throw result.error;
   }
 
-  return data as Recording;
+  return result.data as Recording;
 };
 
 export type SearchResults = {
@@ -138,20 +136,6 @@ export const searchRecordings = async (query: string): Promise<SearchResults> =>
   }
 
   try {
-    // Call the PostgreSQL function for weighted search
-    const { data, error } = await supabase.rpc("search_recordings", {
-      search_query: sanitizedQuery,
-    });
-
-    if (error) {
-      console.error("Search function error:", error);
-      throw error;
-    }
-
-    // Process and separate results by type
-    const recordings: Recording[] = [];
-    const species: Species[] = [];
-
     // Define type for search result items
     type SearchResultItem = {
       result_type: "recording" | "species";
@@ -159,8 +143,22 @@ export const searchRecordings = async (query: string): Promise<SearchResults> =>
       relevance_score: number;
     };
 
-    if (data) {
-      data.forEach((item: SearchResultItem) => {
+    // Call the PostgreSQL function for weighted search
+    const result = await supabase.rpc("search_recordings", {
+      search_query: sanitizedQuery,
+    });
+
+    if (result.error) {
+      console.error("Search function error:", result.error);
+      throw result.error;
+    }
+
+    // Process and separate results by type
+    const recordings: Recording[] = [];
+    const species: Species[] = [];
+
+    if (result.data) {
+      (result.data as SearchResultItem[]).forEach((item: SearchResultItem) => {
         if (item.result_type === "recording") {
           // Convert from JSONB to Recording type
           const recordingData = item.result_data as unknown as Recording;

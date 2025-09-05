@@ -1,6 +1,6 @@
 -- Search Recordings Function with Weighted Relevance
 -- This function performs a weighted search across recordings and species
--- with priority given to exact matches in titles and species names
+-- with priority given to exact matches in species names
 
 CREATE OR REPLACE FUNCTION search_recordings(search_query TEXT)
 RETURNS TABLE (
@@ -65,9 +65,9 @@ BEGIN
     UNION ALL
     
     -- Search for recordings with weighted relevance
-    -- Priority 1: Exact match on recording title (weight 95)
-    -- Priority 2: Book page number exact match (weight 98)
-    -- Priority 3: Partial match on recording title (weight 75)
+    -- Priority 2: Rec number exact match (weight 98)
+    -- Priority 3: Site name matches (weight 30 for exact, 20 for partial)
+    -- Priority 4: Catalogue code matches (weight 30 for exact, 20 for partial)
     -- Priority 4: Species common_name match (weight 85 for exact, 55 for partial)
     -- Priority 5: Species scientific_name match (weight 65 for exact, 45 for partial)
     -- Priority 6: Caption match (weight 40 for exact, 30 for partial)
@@ -76,14 +76,14 @@ BEGIN
       jsonb_build_object(
         'id', r.id,
         'species_id', r.species_id,
-        'title', r.title,
         'audiohqid', r.audiohqid,
         'audiolqid', r.audiolqid,
         'sonogramvideoid', r.sonogramvideoid,
-        'book_page_number', r.book_page_number,
         'caption', r.caption,
-        'order_in_book', r.order_in_book,
         'created_at', r.created_at,
+        'rec_number', r.rec_number,
+        'site_name', r.site_name,
+        'catalogue_code', r.catalogue_code,
         'species', jsonb_build_object(
           'id', s.id,
           'common_name', s.common_name,
@@ -91,9 +91,6 @@ BEGIN
         )
       ) as result_data,
       CASE
-        -- Title matches
-        WHEN r.title ILIKE sanitized_query THEN 95.0  -- Exact title match
-        WHEN r.title ILIKE like_pattern THEN 75.0     -- Partial title match
         
         -- Species name matches (from joined species table)
         WHEN s.common_name ILIKE sanitized_query THEN 85.0  -- Exact species common name match
@@ -104,9 +101,17 @@ BEGIN
         -- Caption matches
         WHEN r.caption ILIKE sanitized_query THEN 40.0  -- Exact caption match
         WHEN r.caption ILIKE like_pattern THEN 30.0     -- Partial caption match
+
+        -- Site name matches
+        WHEN r.site_name ILIKE sanitized_query THEN 30.0  -- Exact site name match
+        WHEN r.site_name ILIKE like_pattern THEN 20.0     -- Partial site name match
+
+        -- Catalogue code matches
+        WHEN r.catalogue_code ILIKE sanitized_query THEN 30.0  -- Exact catalogue code match
+        WHEN r.catalogue_code ILIKE like_pattern THEN 20.0     -- Partial catalogue code match
         
-        -- Book page number match (if query is numeric)
-        WHEN sanitized_query ~ '^[0-9]+$' AND r.book_page_number = sanitized_query::INTEGER THEN 98.0
+        -- Rec number match (if query is numeric)
+        WHEN sanitized_query ~ '^[0-9]+$' AND r.rec_number = sanitized_query::INTEGER THEN 98.0
         
         ELSE 0.0
       END as relevance_score
@@ -114,11 +119,12 @@ BEGIN
       recordings r
       JOIN species s ON r.species_id = s.id
     WHERE 
-      r.title ILIKE like_pattern
-      OR r.caption ILIKE like_pattern
+       r.caption ILIKE like_pattern
+      OR r.site_name ILIKE like_pattern
+      OR r.catalogue_code ILIKE like_pattern
       OR s.common_name ILIKE like_pattern
       OR s.scientific_name ILIKE like_pattern
-      OR (sanitized_query ~ '^[0-9]+$' AND r.book_page_number = sanitized_query::INTEGER)
+      OR (sanitized_query ~ '^[0-9]+$' AND r.rec_number = sanitized_query::INTEGER)
   ) results
   -- Order by relevance score (highest first)
   ORDER BY relevance_score DESC
