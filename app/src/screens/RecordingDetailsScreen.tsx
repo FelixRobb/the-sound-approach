@@ -83,6 +83,63 @@ const RecordingDetailsScreen = () => {
   const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
 
   const styles = StyleSheet.create({
+    audioOnlyContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 3,
+      marginBottom: theme.spacing.md,
+      overflow: "hidden",
+      padding: theme.spacing.lg,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2.22,
+    },
+    audioOnlyDetails: {
+      flex: 1,
+      marginLeft: theme.spacing.md,
+    },
+    audioOnlyHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      marginBottom: theme.spacing.lg,
+    },
+    audioOnlyMainText: {
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.xs,
+    },
+    audioOnlyPlayerContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+    },
+    audioOnlyRecordingInfo: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "medium",
+        color: "primary",
+      }),
+      marginTop: theme.spacing.xs,
+    },
+    audioOnlySubText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.xs,
+    },
+    audioOnlyTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginLeft: theme.spacing.sm,
+    },
     audioPlayerContainer: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -544,7 +601,10 @@ const RecordingDetailsScreen = () => {
   const [sonogramVideoUri, setSonogramVideoUri] = useState<string | null>(null);
   const [isVideoUriLoading, setIsVideoUriLoading] = useState(false);
 
-  // Fetch sonogram video URI
+  // Check if recording has video available
+  const hasVideo = recording?.sonogramvideoid !== null;
+
+  // Fetch sonogram video URI only if video is available
   useEffect(() => {
     if (!recording) {
       setSonogramVideoUri(null);
@@ -553,7 +613,16 @@ const RecordingDetailsScreen = () => {
       return;
     }
 
-    // Start loading immediately when we have a recording
+    // If no video available, skip video loading
+    if (!hasVideo) {
+      setSonogramVideoUri(null);
+      setIsVideoUriLoading(false);
+      setShowInitialLoading(false);
+      setVideoError(false);
+      return;
+    }
+
+    // Start loading immediately when we have a recording with video
     setIsVideoUriLoading(true);
     setShowInitialLoading(false); // Hide initial loading while fetching URI
     setVideoError(false); // Reset any previous errors
@@ -572,11 +641,11 @@ const RecordingDetailsScreen = () => {
         setIsVideoUriLoading(false);
         setShowInitialLoading(false);
       });
-  }, [recording]);
+  }, [recording, hasVideo]);
 
-  // Initialize the video player
-  const videoPlayer = useVideoPlayer(sonogramVideoUri, (player) => {
-    if (!player) return;
+  // Initialize the video player only if video is available
+  const videoPlayer = useVideoPlayer(hasVideo ? sonogramVideoUri : null, (player) => {
+    if (!player || !hasVideo) return;
 
     player.timeUpdateEventInterval = 0.1; // More frequent updates for smoother slider
     player.loop = false;
@@ -607,9 +676,9 @@ const RecordingDetailsScreen = () => {
     setIsVideoEnded(false);
   }, [sonogramVideoUri, isVideoUriLoading]);
 
-  // Listen for video ready/loaded events
+  // Listen for video ready/loaded events only if video is available
   useEventListener(videoPlayer, "statusChange", (payload) => {
-    if (!isComponentMountedRef.current) return;
+    if (!isComponentMountedRef.current || !hasVideo || !videoPlayer) return;
 
     if (payload.status === "readyToPlay" && !isVideoLoaded) {
       setIsVideoLoaded(true);
@@ -626,9 +695,9 @@ const RecordingDetailsScreen = () => {
     }
   });
 
-  // Listen for timeUpdate event to update the position
+  // Listen for timeUpdate event to update the position only if video is available
   useEventListener(videoPlayer, "timeUpdate", (payload) => {
-    if (!isComponentMountedRef.current) return;
+    if (!isComponentMountedRef.current || !hasVideo || !videoPlayer) return;
 
     // Only update position when not actively seeking
     if (!isSeeking) {
@@ -642,9 +711,9 @@ const RecordingDetailsScreen = () => {
     }
   });
 
-  // Listen for playing state changes
+  // Listen for playing state changes only if video is available
   useEventListener(videoPlayer, "playingChange", (payload) => {
-    if (!isComponentMountedRef.current) return;
+    if (!isComponentMountedRef.current || !hasVideo || !videoPlayer) return;
     setIsPlaying(payload.isPlaying);
   });
 
@@ -816,12 +885,12 @@ const RecordingDetailsScreen = () => {
   }, [showControls, hideVideoControls, showVideoControls]);
 
   const stopVideoPlayback = () => {
-    if (!videoPlayer) return;
+    if (!hasVideo || !videoPlayer) return;
     videoPlayer.pause();
   };
 
   const togglePlayPause = () => {
-    if (!isVideoLoaded || !videoPlayer) return;
+    if (!hasVideo || !isVideoLoaded || !videoPlayer) return;
 
     try {
       if (isVideoEnded) {
@@ -850,10 +919,12 @@ const RecordingDetailsScreen = () => {
   };
 
   const toggleFullscreen = () => {
+    if (!hasVideo) return;
     setIsVideoFullscreen(!isVideoFullscreen);
   };
 
   const onSeekStart = () => {
+    if (!hasVideo) return;
     setIsSeeking(true);
     // Remember if we were playing before seeking
     setWasPlayingBeforeSeek(isPlaying);
@@ -864,7 +935,7 @@ const RecordingDetailsScreen = () => {
   };
 
   const onSeekComplete = (value: number) => {
-    if (!isVideoLoaded || !videoPlayer) return;
+    if (!hasVideo || !isVideoLoaded || !videoPlayer) return;
 
     try {
       // Set the video position
@@ -1079,8 +1150,8 @@ const RecordingDetailsScreen = () => {
   }
 
   if (isVideoFullscreen) {
-    // Exit fullscreen if no video URI available
-    if (!sonogramVideoUri) {
+    // Exit fullscreen if no video available or no video URI
+    if (!hasVideo || !sonogramVideoUri) {
       setIsVideoFullscreen(false);
       return null;
     }
@@ -1098,6 +1169,7 @@ const RecordingDetailsScreen = () => {
           nativeControls={false}
           allowsFullscreen={false}
           allowsPictureInPicture={false}
+          allowsVideoFrameAnalysis={false}
         />
 
         {/* Touch overlay for showing/hiding controls */}
@@ -1212,35 +1284,52 @@ const RecordingDetailsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* eslint-disable-next-line react-native/no-inline-styles */}
-        <View style={styles.videoContainer}>
-          <View style={styles.videoHeader}>
-            <Text
-              style={createThemedTextStyle(theme, {
-                size: "2xl",
-                weight: "bold",
-                color: "onSurface",
-              })}
-            >
-              Sonogram
-            </Text>
-            <View style={styles.audioPlayerContainer}>
+        {/* Video/Audio Container - adapts based on video availability */}
+        {hasVideo ? (
+          <View style={styles.videoContainer}>
+            <View style={styles.videoHeader}>
               <Text
                 style={createThemedTextStyle(theme, {
-                  size: "lg",
+                  size: "2xl",
                   weight: "bold",
                   color: "onSurface",
                 })}
               >
-                Audio
+                Sonogram
               </Text>
-              <View style={styles.audioPlayerContainerInner}>
-                <MiniAudioPlayer recording={recording} size={30} onPress={stopVideoPlayback} />
+              <View style={styles.audioPlayerContainer}>
+                <Text
+                  style={createThemedTextStyle(theme, {
+                    size: "lg",
+                    weight: "bold",
+                    color: "onSurface",
+                  })}
+                >
+                  Audio
+                </Text>
+                <View style={styles.audioPlayerContainerInner}>
+                  <MiniAudioPlayer recording={recording} size={30} onPress={stopVideoPlayback} />
+                </View>
+              </View>
+            </View>
+            {renderVideoPlayer()}
+          </View>
+        ) : (
+          <View style={styles.audioOnlyContainer}>
+            <View style={styles.audioOnlyHeader}>
+              <Ionicons name="musical-notes" size={24} color={theme.colors.primary} />
+              <Text style={styles.audioOnlyTitle}>Audio Recording</Text>
+            </View>
+            <View style={styles.audioOnlyPlayerContainer}>
+              <MiniAudioPlayer recording={recording} size={60} />
+              <View style={styles.audioOnlyDetails}>
+                <Text style={styles.audioOnlyMainText}>{recording.species?.common_name}</Text>
+                <Text style={styles.audioOnlySubText}>{recording.species?.scientific_name}</Text>
+                <Text style={styles.audioOnlyRecordingInfo}>Recording #{recording.rec_number}</Text>
               </View>
             </View>
           </View>
-          {renderVideoPlayer()}
-        </View>
+        )}
 
         {/* Recording Information Card */}
         <View style={styles.recordingInfoCard}>
