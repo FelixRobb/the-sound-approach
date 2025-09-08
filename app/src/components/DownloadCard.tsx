@@ -232,11 +232,14 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
     return `Downloaded ${date.toLocaleDateString()}`;
   };
 
-  // Modern gesture handler with improved sensitivity
+  // Pan gesture strictly limited to left-swipe movement so vertical scrolling remains responsive
   const panGesture = Gesture.Pan()
-    .minDistance(10) // Require minimum distance before gesture activates
-    .activeOffsetX([-20, 20]) // Only activate for horizontal swipes
-    .failOffsetY([-30, 30]) // Fail if vertical movement is too large
+    // Require reasonable horizontal swipe distance before activation to avoid intercepting vertical scroll
+    .minDistance(15)
+    // Only activate when swiping left (negative X) beyond threshold
+    .activeOffsetX([-25, 0])
+    // Fail (let parent scroll) if vertical movement exceeds a small value
+    .failOffsetY([-10, 10])
     .onUpdate((event) => {
       // Only process if this is primarily a horizontal gesture
       const absX = Math.abs(event.translationX);
