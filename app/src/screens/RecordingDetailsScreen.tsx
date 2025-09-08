@@ -546,7 +546,7 @@ const RecordingDetailsScreen = () => {
       ...createThemedTextStyle(theme, {
         size: "lg",
         weight: "normal",
-        color: "onSurfaceVariant",
+        color: "tertiary",
       }),
       marginLeft: theme.spacing.sm,
     },
@@ -995,14 +995,13 @@ const RecordingDetailsScreen = () => {
           theme={{
             minimumTrackTintColor: theme.colors.tertiary,
             maximumTrackTintColor: theme.colors.tertiary,
+            bubbleBackgroundColor: theme.colors.tertiary,
+            bubbleTextColor: theme.colors.onTertiary,
           }}
           containerStyle={styles.slider}
           disable={!isVideoLoaded}
           disableTapEvent
           bubble={(value) => formatTime(value)}
-          bubbleTextStyle={{
-            color: theme.colors.tertiary,
-          }}
           renderThumb={() => <View style={styles.sliderThumb} />}
         />
 
