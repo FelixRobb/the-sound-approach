@@ -14,7 +14,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     // Use AsyncStorage only on native platforms (Android/iOS)
     storage: AsyncStorage,
-    autoRefreshToken: true,
+    autoRefreshToken: true, // Enable automatic token refresh
     persistSession: true,
     detectSessionInUrl: false,
     // Ensure only a single refresh process runs at a time (required in RN)

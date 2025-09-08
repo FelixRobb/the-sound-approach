@@ -61,6 +61,7 @@ const RecordingDetailsScreen = () => {
   const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
   const [showInitialLoading, setShowInitialLoading] = useState(true);
   const [isVideoEnded, setIsVideoEnded] = useState(false);
+  const [videoUriError, setVideoUriError] = useState(false);
 
   // Controls visibility state
   const [showControls, setShowControls] = useState(true);
@@ -602,23 +603,26 @@ const RecordingDetailsScreen = () => {
   const [isVideoUriLoading, setIsVideoUriLoading] = useState(false);
 
   // Check if recording has video available
-  const hasVideo = recording?.sonogramvideoid !== null;
+  const [hasVideo, setHasVideo] = useState(false);
 
   // Fetch sonogram video URI only if video is available
   useEffect(() => {
     if (!recording) {
+      setHasVideo(false);
       setSonogramVideoUri(null);
       setIsVideoUriLoading(false);
       setShowInitialLoading(false);
+      setVideoUriError(false);
       return;
     }
+    setHasVideo(recording.sonogramvideoid !== null);
 
-    // If no video available, skip video loading
     if (!hasVideo) {
       setSonogramVideoUri(null);
       setIsVideoUriLoading(false);
       setShowInitialLoading(false);
       setVideoError(false);
+      setVideoUriError(false);
       return;
     }
 
@@ -626,17 +630,18 @@ const RecordingDetailsScreen = () => {
     setIsVideoUriLoading(true);
     setShowInitialLoading(false); // Hide initial loading while fetching URI
     setVideoError(false); // Reset any previous errors
+    setVideoUriError(false); // Reset URI error before fetching
 
     getSonogramVideoUri(recording)
       .then((uri) => {
         setSonogramVideoUri(uri);
         setIsVideoUriLoading(false);
-        // Show initial loading if we got a valid URI
-        if (uri) {
-          setShowInitialLoading(true);
-        }
+        setVideoUriError(!uri);
+        setShowInitialLoading(!!uri);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Error fetching sonogram video URI:", error);
+        setVideoUriError(true);
         setSonogramVideoUri(null);
         setIsVideoUriLoading(false);
         setShowInitialLoading(false);
@@ -647,7 +652,7 @@ const RecordingDetailsScreen = () => {
   const videoPlayer = useVideoPlayer(hasVideo ? sonogramVideoUri : null, (player) => {
     if (!player || !hasVideo) return;
 
-    player.timeUpdateEventInterval = 0.1; // More frequent updates for smoother slider
+    player.timeUpdateEventInterval = 0.5; // More frequent updates for smoother slider
     player.loop = false;
 
     // Force load the video on iOS by setting a small volume initially
@@ -1018,7 +1023,7 @@ const RecordingDetailsScreen = () => {
 
   const renderVideoPlayer = () => {
     // Show error only if we're not loading and there's actually an error or no URI
-    if (!isVideoUriLoading && !sonogramVideoUri && !videoError) {
+    if (videoUriError) {
       return (
         <View style={styles.playerContainerError}>
           <Ionicons name="alert-circle" size={40} color={theme.colors.error} />

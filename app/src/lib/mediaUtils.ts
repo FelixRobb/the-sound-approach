@@ -47,7 +47,7 @@ export const getSonogramVideoUri = async (recording: Recording): Promise<string 
     .createSignedUrl(`${recording.sonogramvideoid}.mp4`, 60 * 60 * 24 * 30);
   if (error) {
     console.error("Error creating signed URL:", error);
-    return null;
+    throw error;
   }
-  return data?.signedUrl || null;
+  return data?.signedUrl as string | null;
 };

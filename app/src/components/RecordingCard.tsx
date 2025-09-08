@@ -102,7 +102,7 @@ const RecordingCard: React.FC<RecordingCardProps> = ({
       marginHorizontal: indented ? theme.spacing.xl : theme.spacing.xs,
       marginVertical: theme.spacing.xxs,
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
     secondaryTitle: {
       ...createThemedTextStyle(theme, {
