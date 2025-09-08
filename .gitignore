@@ -1,3 +1,6 @@
 .vercel
 
 /node_modules
+/high-quality-recordings
+/e-sonagrams
+/mp3s
