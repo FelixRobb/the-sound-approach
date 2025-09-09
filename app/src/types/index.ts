@@ -13,7 +13,7 @@ export type Species = {
   created_at: string;
 };
 
-export type MediaType = "audio-hq" | "audio_lq" | "sonogram_video";
+export type MediaType = "audio-hq" | "audio_lq" | "sonagram_video";
 
 export type Recording = {
   id: string;
@@ -23,8 +23,9 @@ export type Recording = {
   site_name: string;
   audiohqid?: string;
   audiolqid?: string;
-  sonogramvideoid?: string;
+  sonagramvideoid?: string;
   caption: string;
+  recorded_by: string;
   createdAt: string;
   species?: Species;
 };
@@ -123,7 +124,7 @@ export type DownloadContextType = {
   deleteDownload: (recordingId: string) => Promise<void>;
   clearAllDownloads: () => Promise<void>;
   isDownloaded: (recordingId: string) => boolean;
-  getDownloadPath: (fileId: string, isAudio: boolean) => string | null;
+  getDownloadPath: (fileId: string) => string | null;
   getDownloadedRecordings: () => Promise<DownloadRecord[]>;
 };
 
@@ -268,7 +269,7 @@ export type DownloadItemProps = {
   isPlaying: boolean;
 };
 
-export type SonogramViewerProps = {
+export type sonagramViewerProps = {
   uri: string | null;
   onPress: () => void;
 };

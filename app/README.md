@@ -1,11 +1,11 @@
 # The Sound Approach
 
-A React Native mobile application for high-quality audio playback with sonogram visualizations, built with Expo.
+A React Native mobile application for high-quality audio playback with sonagram visualizations, built with Expo.
 
 ## Features
 
 - 🎵 High-quality audio playback
-- 📊 Sonogram visualization support
+- 📊 sonagram visualization support
 - 📱 Cross-platform (iOS and Android)
 - 💾 Offline mode with downloadable content
 - 🌓 Light/Dark theme support
@@ -105,7 +105,7 @@ Required environment variables:
 
 - `AUDIO_HQ_BUCKET` - Supabase bucket for high-quality audio
 - `AUDIO_LQ_BUCKET` - Supabase bucket for low-quality audio
-- `SONOGRAMS_BUCKET` - Supabase bucket for sonogram videos
+- `sonagramS_BUCKET` - Supabase bucket for sonagram videos
 
 ## License
 

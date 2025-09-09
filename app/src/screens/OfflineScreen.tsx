@@ -65,8 +65,9 @@ const OfflineScreen = () => {
         catalogue_code: record.catalogue_code,
         audiohqid: record.audiohqid,
         audiolqid: record.audiolqid,
-        sonogramvideoid: record.sonogramvideoid,
+        sonagramvideoid: record.sonagramvideoid,
         species: record.species,
+        recorded_by: record.recorded_by,
         createdAt: new Date(record.downloaded_at).toISOString(),
       }));
       setDownloads(formattedRecordings);

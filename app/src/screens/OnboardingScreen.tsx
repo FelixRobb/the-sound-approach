@@ -24,7 +24,7 @@ const onboardingSteps: OnboardingStep[] = [
     icon: "musical-notes",
     title: "Discover Bird Sounds",
     description:
-      "Explore high-quality recordings from 'The Sound Approach to Birding' book with detailed sonograms and expert commentary.",
+      "Explore high-quality recordings from 'The Sound Approach to Birding' book with detailed sonagrams and expert commentary.",
     color: "#4CAF50",
   },
   {

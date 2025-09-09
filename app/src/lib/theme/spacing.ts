@@ -10,6 +10,7 @@ export const spacing: Spacing = {
   xl: 32,
   xxl: 48,
   xxxl: 64,
+  "2xl": 96,
 };
 
 // Spacing utility functions
@@ -28,6 +29,7 @@ export const createSpacingVariants = () => {
       xl: { padding: spacing.xl },
       xxl: { padding: spacing.xxl },
       xxxl: { padding: spacing.xxxl },
+      "2xl": { padding: spacing["2xl"] },
     },
     paddingHorizontal: {
       xxs: { paddingHorizontal: spacing.xxs },
@@ -38,6 +40,7 @@ export const createSpacingVariants = () => {
       xl: { paddingHorizontal: spacing.xl },
       xxl: { paddingHorizontal: spacing.xxl },
       xxxl: { paddingHorizontal: spacing.xxxl },
+      "2xl": { paddingHorizontal: spacing["2xl"] },
     },
     paddingVertical: {
       xxs: { paddingVertical: spacing.xxs },
@@ -48,6 +51,7 @@ export const createSpacingVariants = () => {
       xl: { paddingVertical: spacing.xl },
       xxl: { paddingVertical: spacing.xxl },
       xxxl: { paddingVertical: spacing.xxxl },
+      "2xl": { paddingVertical: spacing["2xl"] },
     },
     margin: {
       xxs: { margin: spacing.xxs },
@@ -58,6 +62,7 @@ export const createSpacingVariants = () => {
       xl: { margin: spacing.xl },
       xxl: { margin: spacing.xxl },
       xxxl: { margin: spacing.xxxl },
+      "2xl": { margin: spacing["2xl"] },
     },
     marginHorizontal: {
       xxs: { marginHorizontal: spacing.xxs },
@@ -68,6 +73,7 @@ export const createSpacingVariants = () => {
       xl: { marginHorizontal: spacing.xl },
       xxl: { marginHorizontal: spacing.xxl },
       xxxl: { marginHorizontal: spacing.xxxl },
+      "2xl": { marginHorizontal: spacing["2xl"] },
     },
     marginVertical: {
       xxs: { marginVertical: spacing.xxs },
@@ -78,6 +84,7 @@ export const createSpacingVariants = () => {
       xl: { marginVertical: spacing.xl },
       xxl: { marginVertical: spacing.xxl },
       xxxl: { marginVertical: spacing.xxxl },
+      "2xl": { marginVertical: spacing["2xl"] },
     },
     gap: {
       xxs: { gap: spacing.xxs },
@@ -88,6 +95,7 @@ export const createSpacingVariants = () => {
       xl: { gap: spacing.xl },
       xxl: { gap: spacing.xxl },
       xxxl: { gap: spacing.xxxl },
+      "2xl": { gap: spacing["2xl"] },
     },
   };
 };

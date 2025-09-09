@@ -4,7 +4,6 @@ import * as FileSystem from "expo-file-system";
 import type React from "react";
 import { createContext, useState, useEffect, useContext, useCallback } from "react";
 
-import { ENV } from "../config/env";
 import { clearUserDownloads } from "../lib/storageUtils";
 import { supabase } from "../lib/supabase";
 import type { Recording, DownloadRecord, DownloadContextType, DownloadInfo } from "../types";
@@ -118,7 +117,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Download low-quality audio file (MP3) only
       const audioPath = `${downloadsDir}audio_${recording.audiolqid}.mp3`;
       const { data: audioUrlData } = await supabase.storage
-        .from(ENV.AUDIO_LQ_BUCKET) // Use environment variable for bucket name
+        .from(process.env.AUDIO_LQ_BUCKET || "") // Use environment variable for bucket name
         .createSignedUrl(`${recording.audiolqid}.mp3`, 60 * 60 * 24 * 30);
 
       if (!audioUrlData?.signedUrl) throw new Error("Failed to get audio URL");
@@ -240,11 +239,11 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   // Get the file path for a downloaded file
-  const getDownloadPath = (fileId: string, isAudio: boolean) => {
+  const getDownloadPath = (fileId: string) => {
     if (!fileId) return null;
 
     const downloadsDir = FileSystem.documentDirectory + "downloads/";
-    return isAudio ? `${downloadsDir}audio_${fileId}.mp3` : `${downloadsDir}sonogram_${fileId}.png`;
+    return `${downloadsDir}audio_${fileId}.mp3`;
   };
 
   return (
