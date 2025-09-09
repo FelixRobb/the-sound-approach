@@ -44,8 +44,14 @@ const RecordingDetailsScreen = () => {
   const { theme } = useEnhancedTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
-  const { downloadRecording, isDownloaded, downloads, deleteDownload } =
-    useContext(DownloadContext);
+  const {
+    downloadRecording,
+    isDownloaded,
+    downloads,
+    deleteDownload,
+    resumeDownload,
+    pauseDownload,
+  } = useContext(DownloadContext);
   const { stopPlayback } = useAudio();
   const globalAudioBarHeight = useGlobalAudioBarHeight();
 
@@ -105,6 +111,7 @@ const RecordingDetailsScreen = () => {
       flex: 1,
     },
     content: {
+      backgroundColor: theme.colors.background,
       paddingBottom: globalAudioBarHeight + theme.spacing.md,
     },
     contentSection: {
@@ -146,6 +153,21 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.tertiary,
       borderRadius: theme.borderRadius.full,
       padding: 8,
+    },
+    downloadStatusContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing.xs,
+      marginTop: theme.spacing.sm,
+    },
+    downloadStatusText: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "medium",
+        color: "onSurfaceVariant",
+      }),
+      flex: 1,
+      textAlign: "center",
     },
     errorCard: {
       alignItems: "center",
@@ -322,7 +344,6 @@ const RecordingDetailsScreen = () => {
       }),
       flex: 1,
     },
-
     infoValueMonospace: {
       fontFamily: "monospace",
       fontSize: 13,
@@ -341,6 +362,7 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 16,
       zIndex: 2,
     },
+
     mediaHeader: {
       alignItems: "center",
       flexDirection: "row",
@@ -400,6 +422,18 @@ const RecordingDetailsScreen = () => {
     primaryActionButton: {
       marginBottom: theme.spacing.md,
     },
+    progressBar: {
+      backgroundColor: theme.colors.primary,
+      height: "100%",
+    },
+    progressContainer: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 2,
+      height: 4,
+      marginTop: theme.spacing.sm,
+      overflow: "hidden",
+      width: "100%",
+    },
     replayButton: {
       alignItems: "center",
       borderRadius: theme.borderRadius.full,
@@ -436,6 +470,9 @@ const RecordingDetailsScreen = () => {
       marginBottom: theme.spacing.xs,
       opacity: 0.9,
       textAlign: "center",
+    },
+    scrollView: {
+      backgroundColor: theme.colors.primary,
     },
     slider: {
       backgroundColor: theme.colors.tertiary,
@@ -532,11 +569,42 @@ const RecordingDetailsScreen = () => {
     queryFn: () => fetchRecordingById(route.params.recordingId),
   });
 
+  // Get download status for this recording
+  const downloadStatus = recording ? downloads[recording.id] : null;
+  const isDownloading = downloadStatus?.status === "downloading";
+  const isPaused = downloadStatus?.status === "paused";
+  const hasError = downloadStatus?.status === "error";
+  const progress = downloadStatus?.progress || 0;
+
   const [sonagramVideoUri, setsonagramVideoUri] = useState<string | null>(null);
   const [isVideoUriLoading, setIsVideoUriLoading] = useState(false);
 
   // Check if recording has video available
   const [hasVideo, setHasVideo] = useState(false);
+
+  // Handle resume download
+  const handleResumePress = async () => {
+    if (isPaused && downloadStatus && recording) {
+      try {
+        await resumeDownload(recording.id);
+      } catch (error) {
+        console.error("Failed to resume download:", error);
+        setShowDownloadErrorModal(true);
+      }
+    }
+  };
+
+  // Handle pause download
+  const handlePausePress = async () => {
+    if (isDownloading && recording) {
+      try {
+        await pauseDownload(recording.id);
+      } catch (error) {
+        console.error("Failed to pause download:", error);
+        setShowDownloadErrorModal(true);
+      }
+    }
+  };
 
   // Fetch sonagram video URI only if video is available
   useEffect(() => {
@@ -1202,9 +1270,15 @@ const RecordingDetailsScreen = () => {
             </TouchableOpacity>
           )
         }
+        bgColor="primary"
+        textColor="onPrimary"
       />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Hero Section - Species Info */}
         <View style={styles.heroSection}>
           <View style={styles.heroBackground}>
@@ -1318,26 +1392,58 @@ const RecordingDetailsScreen = () => {
             leftIcon={
               getDownloadStatus() === "completed"
                 ? { name: "trash-outline", color: theme.colors.onError }
-                : { name: "cloud-download", color: theme.colors.onPrimary }
+                : isPaused
+                  ? { name: "play", color: theme.colors.onPrimary }
+                  : isDownloading
+                    ? { name: "pause", color: theme.colors.onPrimary }
+                    : { name: "cloud-download", color: theme.colors.onPrimary }
             }
             onPress={
               getDownloadStatus() === "completed"
                 ? handleDeleteDownload
-                : getDownloadStatus() === "downloading"
-                  ? undefined
-                  : handleDownload
+                : isPaused
+                  ? handleResumePress
+                  : isDownloading
+                    ? handlePausePress
+                    : handleDownload
             }
             variant={getDownloadStatus() === "completed" ? "destructive" : "primary"}
             size="lg"
             style={styles.primaryActionButton}
             fullWidth
+            disabled={false}
           >
             {getDownloadStatus() === "completed"
               ? "Remove Download"
-              : getDownloadStatus() === "downloading"
-                ? "Downloading..."
-                : "Download for Offline Use"}
+              : isPaused
+                ? "Resume Download"
+                : isDownloading
+                  ? "Pause Download"
+                  : hasError
+                    ? "Retry Download"
+                    : "Download for Offline Use"}
           </Button>
+
+          {/* Download Progress and Status */}
+          {(isDownloading || isPaused || hasError) && (
+            <>
+              {/* Progress Bar */}
+              {(isDownloading || isPaused) && (
+                <View style={styles.progressContainer}>
+                  <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+                </View>
+              )}
+
+              {/* Status Text and Error Messages */}
+              <View style={styles.downloadStatusContainer}>
+                <Text style={hasError ? styles.errorText : styles.downloadStatusText}>
+                  {isDownloading && `Downloading... ${Math.round(progress * 100)}% complete`}
+                  {isPaused && `Paused at ${Math.round(progress * 100)}%`}
+                  {hasError && downloadStatus?.error}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
 

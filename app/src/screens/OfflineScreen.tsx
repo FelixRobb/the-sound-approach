@@ -68,6 +68,9 @@ const OfflineScreen = () => {
         sonagramvideoid: record.sonagramvideoid,
         species: record.species,
         recorded_by: record.recorded_by,
+        download_status: record.download_status,
+        download_progress: record.download_progress,
+        started_at: record.started_at,
         createdAt: new Date(record.downloaded_at).toISOString(),
       }));
       setDownloads(formattedRecordings);

@@ -101,19 +101,24 @@ export type AuthContextType = {
 // Download Types
 // ==========================================
 
-export type DownloadStatus = "idle" | "downloading" | "completed" | "error";
+export type DownloadStatus = "idle" | "downloading" | "paused" | "completed" | "error";
 
 export type DownloadInfo = {
   recordingId: string;
   status: DownloadStatus;
   progress: number;
   error?: string;
+  resumableUri?: string;
 };
 
 export type DownloadRecord = Recording & {
   recording_id: string;
   audio_path: string;
   downloaded_at: number;
+  download_status: DownloadStatus;
+  download_progress: number;
+  download_error?: string;
+  started_at: number;
 };
 
 export type DownloadContextType = {
@@ -121,6 +126,8 @@ export type DownloadContextType = {
   downloadedRecordings: string[];
   totalStorageUsed: number;
   downloadRecording: (recording: Recording) => Promise<void>;
+  pauseDownload: (recordingId: string) => Promise<void>;
+  resumeDownload: (recordingId: string) => Promise<void>;
   deleteDownload: (recordingId: string) => Promise<void>;
   clearAllDownloads: () => Promise<void>;
   isDownloaded: (recordingId: string) => boolean;

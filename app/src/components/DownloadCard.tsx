@@ -1,5 +1,6 @@
+/* eslint-disable react-native/sort-styles */
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -11,6 +12,7 @@ import Animated, {
   withDelay,
 } from "react-native-reanimated";
 
+import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { createThemedTextStyle } from "../lib/theme";
 import type { DownloadRecord } from "../types";
@@ -40,6 +42,7 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
   animationDelay = 0,
 }) => {
   const { theme } = useEnhancedTheme();
+  const { downloads, resumeDownload } = useContext(DownloadContext);
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
   const translateY = useSharedValue(0);
@@ -48,6 +51,24 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
 
   const SWIPE_THRESHOLD = -100;
   const DELETE_ZONE_WIDTH = 80;
+
+  // Get download status for this recording
+  const downloadStatus = downloads[item.recording_id];
+  const isDownloading = downloadStatus?.status === "downloading";
+  const isPaused = downloadStatus?.status === "paused";
+  const hasError = downloadStatus?.status === "error";
+  const progress = downloadStatus?.progress || 0;
+
+  // Handle resume download
+  const handleResumePress = async () => {
+    if (isPaused && downloadStatus) {
+      try {
+        await resumeDownload(item.recording_id);
+      } catch (error) {
+        console.error("Failed to resume download:", error);
+      }
+    }
+  };
 
   // Handle delete animation with slide up effect
   useEffect(() => {
@@ -128,6 +149,20 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       justifyContent: "center",
       width: 44,
     },
+    downloadStatusContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing.xs,
+      marginTop: theme.spacing.xs,
+    },
+    downloadStatusText: {
+      ...createThemedTextStyle(theme, {
+        size: "xs",
+        weight: "medium",
+        color: "onSurfaceVariant",
+      }),
+      flex: 1,
+    },
     downloadCard: {
       backgroundColor: theme.colors.transparent,
       marginHorizontal: theme.spacing.xxs,
@@ -151,6 +186,13 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       }),
       marginTop: theme.spacing.xxs,
       opacity: 0.7,
+    },
+    errorText: {
+      ...createThemedTextStyle(theme, {
+        size: "xs",
+        weight: "medium",
+        color: "error",
+      }),
     },
     headerRow: {
       alignItems: "flex-start",
@@ -197,6 +239,33 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
         color: "onPrimaryContainer",
       }),
       fontSize: 18,
+    },
+    progressBar: {
+      backgroundColor: theme.colors.primary,
+      height: "100%",
+    },
+    progressContainer: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 2,
+      height: 4,
+      marginTop: theme.spacing.xs,
+      overflow: "hidden",
+      width: "100%",
+    },
+    resumeButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.sm,
+      justifyContent: "center",
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+    },
+    resumeButtonText: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "medium",
+        color: "onPrimary",
+      }),
     },
     secondaryTitle: {
       ...createThemedTextStyle(theme, {
@@ -423,12 +492,39 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
 
                   {/* Download Date */}
                   <Text style={styles.downloadDate}>{formatDownloadDate(item.downloaded_at)}</Text>
+
+                  {/* Download Progress and Status */}
+                  {(isDownloading || isPaused || hasError) && (
+                    <View style={styles.downloadStatusContainer}>
+                      <Text style={hasError ? styles.errorText : styles.downloadStatusText}>
+                        {isDownloading && `Downloading... ${Math.round(progress * 100)}%`}
+                        {isPaused && `Paused at ${Math.round(progress * 100)}%`}
+                        {hasError && downloadStatus?.error}
+                      </Text>
+                      {isPaused && (
+                        <TouchableOpacity
+                          style={styles.resumeButton}
+                          onPress={() => void handleResumePress()}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.resumeButtonText}>Resume</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Progress Bar */}
+                  {(isDownloading || isPaused) && (
+                    <View style={styles.progressContainer}>
+                      <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+                    </View>
+                  )}
                 </View>
               </View>
             </View>
 
             {/* Audio Player */}
-            {showPlayButton && (
+            {showPlayButton && downloadStatus?.status === "completed" && (
               <View style={styles.actionContainer}>
                 <MiniAudioPlayer recording={item} size={44} />
               </View>
