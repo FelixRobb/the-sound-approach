@@ -71,6 +71,10 @@ const GlobalAudioBar: React.FC = () => {
   const sliderProgress = useSharedValue(0);
   const sliderMin = useSharedValue(0);
   const sliderMax = useSharedValue(1);
+  // Gating to avoid jump after seek: hold slider at target until audio catches up
+  const seekTarget = useSharedValue<number | null>(null);
+  const awaitingCatchUp = useSharedValue(0); // 1 when waiting for position to reach seek target
+  const isSeekingRef = useSharedValue(0); // shared gate to avoid async state races while dragging
   const [isSeeking, setIsSeeking] = useState(false);
 
   const {
@@ -123,7 +127,6 @@ const GlobalAudioBar: React.FC = () => {
         translateY.value = withTiming(dismissDistance, {
           duration: Math.max(150, 300 * (1 - currentY / dismissDistance)), // Shorter duration if already partway down
         });
-        sliderProgress.value = 0;
         runOnJS(handleDismiss)();
       } else {
         // Snap back to visible position
@@ -147,6 +150,7 @@ const GlobalAudioBar: React.FC = () => {
   // Small gap between audio bar and tab bar - consistent across platforms
   const gapBetweenAudioBarAndTabBar = 12;
   const baseBottomMargin = safeAreaBottom > 0 ? 0 : 5;
+  const POSITION_EPSILON = 0.3; // seconds threshold to consider position caught up
 
   const bottomPosition = useAnimatedStyle(() => {
     const interpolatedBottom = interpolate(
@@ -229,23 +233,6 @@ const GlobalAudioBar: React.FC = () => {
       });
   }, [currentRecording, isDownloaded, getDownloadPath, isConnected]);
 
-  // Update slider values when duration changes
-  useEffect(() => {
-    if (duration > 0) {
-      sliderMax.value = duration;
-    }
-  }, [duration, sliderMax]);
-
-  // Update slider position when not seeking
-  useEffect(() => {
-    if (!isSeeking && duration > 0) {
-      sliderProgress.value = position;
-    }
-    if (isLoading) {
-      sliderProgress.value = 0;
-    }
-  }, [position, duration, isSeeking, sliderProgress, isLoading]);
-
   const handlePlayPause = () => {
     if (!audioUri || !currentRecording) return;
     togglePlayPause(currentRecording).catch(() => {});
@@ -256,8 +243,67 @@ const GlobalAudioBar: React.FC = () => {
     navigation.navigate("RecordingDetails", { recordingId: currentRecording.id });
   };
 
+  // Update slider position when not seeking
+  useEffect(() => {
+    if (duration <= 0) return;
+    if (isSeeking || isSeekingRef.value) return;
+
+    // If we're waiting for the player position to catch up to the seek target, hold steady
+    if (awaitingCatchUp.value) {
+      const target = seekTarget.value;
+      if (target === null) {
+        // Safety: if no target, stop gating and sync to position
+        awaitingCatchUp.value = 0;
+        sliderProgress.value = position;
+        return;
+      }
+      const distance = Math.abs(position - target);
+      if (distance <= POSITION_EPSILON) {
+        // Caught up: release the gate and follow position again
+        awaitingCatchUp.value = 0;
+        seekTarget.value = null;
+        sliderProgress.value = position;
+      } else {
+        // Keep the slider at the seek target until we catch up
+        if (Math.abs(sliderProgress.value - target) > 0.001) {
+          sliderProgress.value = target;
+        }
+      }
+      return;
+    }
+
+    // Normal syncing when not seeking and not awaiting catch-up
+    sliderProgress.value = position;
+  }, [position, duration, isSeeking, sliderProgress, awaitingCatchUp, seekTarget, isSeekingRef]);
+
+  // Update slider values when duration changes
+  useEffect(() => {
+    if (duration > 0) {
+      sliderMax.value = duration;
+      // Ensure progress never exceeds duration when it updates
+      if (sliderProgress.value > duration) {
+        sliderProgress.value = duration;
+      }
+      // Clamp seek target if currently set
+      if (seekTarget.value !== null && seekTarget.value > duration) {
+        seekTarget.value = duration;
+      }
+    }
+  }, [duration, sliderMax, sliderProgress, seekTarget]);
+
+  // Reset gating when recording changes
+  useEffect(() => {
+    awaitingCatchUp.value = 0;
+    seekTarget.value = null;
+    isSeekingRef.value = 0;
+    setIsSeeking(false);
+  }, [currentRecording?.id, awaitingCatchUp, seekTarget, isSeekingRef]);
+
   // Slider seeking logic
   const onSeekStart = () => {
+    isSeekingRef.value = 1;
+    awaitingCatchUp.value = 0;
+    seekTarget.value = null;
     setIsSeeking(true);
   };
 
@@ -265,20 +311,30 @@ const GlobalAudioBar: React.FC = () => {
     if (!currentRecording || duration <= 0) return;
 
     try {
-      void seekTo(value);
-      sliderProgress.value = value;
+      const clamped = Math.max(0, Math.min(value, duration));
+      void seekTo(clamped);
+      sliderProgress.value = clamped;
+      // Begin catch-up phase: hold UI at target until audio reports similar position
+      seekTarget.value = clamped;
+      awaitingCatchUp.value = 1;
+      isSeekingRef.value = 0;
+      setIsSeeking(false);
     } catch (error) {
       console.error("Error seeking audio:", error);
-    } finally {
-      const delay = 100;
-      setTimeout(() => setIsSeeking(false), delay);
+      // Still reset seeking state even on error
+      isSeekingRef.value = 0;
+      setIsSeeking(false);
     }
   };
 
   const onValueChange = (value: number) => {
-    if (isSeeking) {
-      sliderProgress.value = value;
+    // Ensure immediate gating to prevent sync effect from overriding during drag
+    if (!isSeekingRef.value) {
+      isSeekingRef.value = 1;
+      setIsSeeking(true);
     }
+    const clamped = duration > 0 ? Math.max(0, Math.min(value, duration)) : value;
+    sliderProgress.value = clamped;
   };
 
   // Animate position based on tab bar presence
@@ -305,13 +361,10 @@ const GlobalAudioBar: React.FC = () => {
       translateY.value = withTiming(120, {
         duration: 200,
       });
-      // Reset slider state
-      sliderProgress.value = 0;
-      sliderMin.value = 0;
-      sliderMax.value = 1;
+      isSeekingRef.value = 0;
       setIsSeeking(false);
     }
-  }, [isVisible, translateY, sliderProgress, sliderMin, sliderMax]);
+  }, [isVisible, translateY, sliderProgress, sliderMin, sliderMax, isSeekingRef]);
 
   // Only render if we have a current recording
   if (!currentRecording) return null;
@@ -329,6 +382,13 @@ const GlobalAudioBar: React.FC = () => {
       flexDirection: "row",
       gap: theme.spacing.md,
       marginBottom: theme.spacing.sm,
+    },
+    headphonesText: {
+      ...createThemedTextStyle(theme, {
+        size: "xs",
+        weight: "medium",
+        color: "onSurfaceVariant",
+      }),
     },
     inner: {
       backgroundColor: theme.colors.globalAudioBar,
@@ -484,7 +544,6 @@ const GlobalAudioBar: React.FC = () => {
               minimumTrackTintColor: theme.colors.primary,
               maximumTrackTintColor: theme.colors.surfaceVariant,
               bubbleBackgroundColor: theme.colors.tertiary,
-              bubbleTextColor: theme.colors.onTertiary,
             }}
             containerStyle={styles.slider}
             disable={!currentRecording || duration <= 0}
@@ -503,6 +562,7 @@ const GlobalAudioBar: React.FC = () => {
 
           <View style={styles.progressRow}>
             <Text style={styles.progressText}>{formatTime(position)}</Text>
+            <Text style={styles.headphonesText}>Best with headphones</Text>
             <Text style={styles.progressText}>{formatTime(duration)}</Text>
           </View>
         </View>

@@ -41,6 +41,7 @@
     "expo-system-ui": "~5.0.10",
     "expo-video": "~2.2.2",
     "patch-package": "^8.0.0",
+    "bna-ui": "1.2.7",
     "react": "19.0.0",
     "react-native": "0.79.5",
     "react-native-awesome-slider": "^2.9.0",

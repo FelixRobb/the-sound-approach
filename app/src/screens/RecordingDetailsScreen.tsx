@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute, type RouteProp, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { Slider } from "react-native-awesome-slider";
 import { useSharedValue } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
@@ -32,7 +33,7 @@ import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { useGlobalAudioBar } from "../context/GlobalAudioBarContext";
-import { getSonogramVideoUri } from "../lib/mediaUtils";
+import { getsonagramVideoUri } from "../lib/mediaUtils";
 import { fetchRecordingById } from "../lib/supabase";
 import { createThemedTextStyle } from "../lib/theme/typography";
 import type { RootStackParamList } from "../types";
@@ -43,8 +44,14 @@ const RecordingDetailsScreen = () => {
   const { theme } = useEnhancedTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
-  const { downloadRecording, isDownloaded, downloads, deleteDownload } =
-    useContext(DownloadContext);
+  const {
+    downloadRecording,
+    isDownloaded,
+    downloads,
+    deleteDownload,
+    resumeDownload,
+    pauseDownload,
+  } = useContext(DownloadContext);
   const { stopPlayback } = useAudio();
   const globalAudioBarHeight = useGlobalAudioBarHeight();
 
@@ -82,94 +89,34 @@ const RecordingDetailsScreen = () => {
   const sliderProgress = useSharedValue(0);
   const sliderMin = useSharedValue(0);
   const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
-
+  const insets = useSafeAreaInsets();
   const styles = StyleSheet.create({
-    audioOnlyContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      marginBottom: theme.spacing.md,
-      overflow: "hidden",
-      padding: theme.spacing.lg,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
+    actionSection: {
+      paddingBottom: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.lg,
     },
-    audioOnlyDetails: {
-      flex: 1,
-      marginLeft: theme.spacing.md,
-    },
-    audioOnlyHeader: {
+    audioPlayerButton: {
       alignItems: "center",
-      flexDirection: "row",
-      marginBottom: theme.spacing.lg,
-    },
-    audioOnlyMainText: {
-      ...createThemedTextStyle(theme, {
-        size: "xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-      marginBottom: theme.spacing.xs,
-    },
-    audioOnlyPlayerContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-    },
-    audioOnlyRecordingInfo: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "medium",
-        color: "primary",
-      }),
-      marginTop: theme.spacing.xs,
-    },
-    audioOnlySubText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginBottom: theme.spacing.xs,
-    },
-    audioOnlyTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "2xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-      marginLeft: theme.spacing.sm,
-    },
-    audioPlayerContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      overflow: "hidden",
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    audioPlayerContainerInner: {
-      marginLeft: theme.spacing.md,
+      justifyContent: "center",
     },
     buttonIcon: {
-      marginLeft: isPlaying ? 0 : theme.spacing.xs, // Slight adjustment for play icon centering
+      marginLeft: isPlaying ? 0 : theme.spacing.xs,
     },
-
+    cardContent: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.sm,
+    },
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
     content: {
-      padding: theme.spacing.md,
-      paddingBottom: globalAudioBarHeight,
+      backgroundColor: theme.colors.background,
+      paddingBottom: globalAudioBarHeight + theme.spacing.md,
+    },
+    contentSection: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.xl,
     },
     controlsBackdrop: {
       ...StyleSheet.absoluteFillObject,
@@ -183,40 +130,16 @@ const RecordingDetailsScreen = () => {
       bottom: theme.spacing.sm,
       elevation: 5,
       flexDirection: "row",
-      left: theme.spacing.md,
+      left: theme.spacing.sm,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
       position: "absolute",
-      right: theme.spacing.md,
+      right: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
       zIndex: theme.zIndex.base5,
-    },
-    descriptionCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      marginBottom: theme.spacing.md,
-      overflow: "hidden",
-      padding: theme.spacing.md,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    descriptionHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      marginBottom: theme.spacing.sm,
-    },
-    descriptionText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
     },
     descriptionTextError: {
       ...createThemedTextStyle(theme, {
@@ -226,30 +149,25 @@ const RecordingDetailsScreen = () => {
       }),
       marginTop: theme.spacing.sm,
     },
-    descriptionTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-      marginLeft: theme.spacing.sm,
-    },
     downloadButtonSmall: {
       backgroundColor: theme.colors.tertiary,
       borderRadius: theme.borderRadius.full,
       padding: 8,
     },
-    downloadCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      marginBottom: theme.spacing.md,
-      overflow: "hidden",
-      padding: theme.spacing.md,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
+    downloadStatusContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing.xs,
+      marginTop: theme.spacing.sm,
+    },
+    downloadStatusText: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "medium",
+        color: "onSurfaceVariant",
+      }),
+      flex: 1,
+      textAlign: "center",
     },
     errorCard: {
       alignItems: "center",
@@ -290,6 +208,9 @@ const RecordingDetailsScreen = () => {
       }),
       marginBottom: theme.spacing.sm,
       textAlign: "center",
+    },
+    flexOne: {
+      flex: 1,
     },
     fullButtonTouchable: {
       alignItems: "center",
@@ -335,6 +256,8 @@ const RecordingDetailsScreen = () => {
       borderBottomColor: theme.colors.backdrop,
       borderBottomWidth: 1,
       padding: theme.spacing.md,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
       position: "absolute",
       top: 0,
       width: "100%",
@@ -357,46 +280,112 @@ const RecordingDetailsScreen = () => {
     },
     fullscreenVideo: {
       flex: 1,
+      marginLeft: insets.left,
+      marginRight: insets.right,
     },
-    locationContainer: {
+    heroBackground: {
+      bottom: 0,
+      left: 0,
+      opacity: 0.1,
+      position: "absolute",
+      right: 0,
+      top: 0,
+    },
+    heroContent: {
       alignItems: "center",
-      flexDirection: "row",
+      marginBottom: theme.spacing.md,
+      zIndex: 1,
+    },
+    heroSection: {
+      backgroundColor: theme.colors.primary,
+      overflow: "hidden",
+      paddingBottom: theme.spacing.xxl,
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.xl,
+      position: "relative",
+    },
+    infoBody: {
       marginTop: theme.spacing.sm,
     },
-    locationText: {
+    infoCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 2,
+      marginBottom: theme.spacing.lg,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    infoRow: {
+      alignItems: "flex-start",
+      borderBottomColor: theme.colors.outline,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      flexDirection: "row",
+      paddingVertical: theme.spacing.sm,
+    },
+    infoRowIcon: {
+      marginRight: theme.spacing.sm,
+      marginTop: 2,
+    },
+    infoRowLast: {
+      borderBottomWidth: 0,
+      paddingBottom: 0,
+    },
+    infoRowText: {
+      flex: 1,
+    },
+    infoValue: {
       ...createThemedTextStyle(theme, {
-        size: "lg",
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      flex: 1,
+    },
+    infoValueMonospace: {
+      fontFamily: "monospace",
+      fontSize: 13,
+    },
+
+    mediaCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      elevation: 8,
+      marginHorizontal: theme.spacing.lg,
+      marginTop: -theme.spacing.xxl,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      zIndex: 2,
+    },
+
+    mediaHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+    },
+    mediaSubtitle: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
         weight: "normal",
         color: "onSurfaceVariant",
       }),
-      marginLeft: theme.spacing.sm,
+      marginTop: theme.spacing.xs,
     },
-    metadataGrid: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: theme.spacing.sm,
-      marginTop: theme.spacing.sm,
-    },
-    metadataItem: {
-      flex: 1,
-      marginHorizontal: theme.spacing.xs,
-    },
-    metadataLabel: {
+    mediaTitle: {
       ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "bold",
-        color: "primary",
-      }),
-      marginBottom: theme.spacing.xs,
-      textTransform: "uppercase",
-    },
-    metadataValue: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
+        size: "xl",
         weight: "bold",
         color: "onSurface",
       }),
     },
+    mediaborderbottom: { borderBottomColor: theme.colors.outline + "20", borderBottomWidth: 1 },
     pauseButton: {
       alignItems: "center",
       height: 80,
@@ -423,34 +412,27 @@ const RecordingDetailsScreen = () => {
       aspectRatio: 16 / 9,
       backgroundColor: theme.colors.background,
       position: "relative",
-      width: "100%",
     },
     playerContainerError: {
       alignItems: "center",
       aspectRatio: 16 / 9,
       backgroundColor: theme.colors.surfaceVariant,
       justifyContent: "center",
-      width: "100%",
     },
-    recordingInfoCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
+    primaryActionButton: {
       marginBottom: theme.spacing.md,
-      overflow: "hidden",
-      padding: theme.spacing.md,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
     },
-    recordingInfoTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-      marginBottom: theme.spacing.xs,
+    progressBar: {
+      backgroundColor: theme.colors.primary,
+      height: "100%",
+    },
+    progressContainer: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 2,
+      height: 4,
+      marginTop: theme.spacing.sm,
+      overflow: "hidden",
+      width: "100%",
     },
     replayButton: {
       alignItems: "center",
@@ -482,9 +464,15 @@ const RecordingDetailsScreen = () => {
       ...createThemedTextStyle(theme, {
         size: "lg",
         weight: "normal",
-        color: "onSurfaceVariant",
+        color: "onPrimary",
       }),
+      fontStyle: "italic",
       marginBottom: theme.spacing.xs,
+      opacity: 0.9,
+      textAlign: "center",
+    },
+    scrollView: {
+      backgroundColor: theme.colors.primary,
     },
     slider: {
       backgroundColor: theme.colors.tertiary,
@@ -503,44 +491,50 @@ const RecordingDetailsScreen = () => {
       shadowRadius: 2,
       width: theme.spacing.md,
     },
-    speciesButton: {
+    speciesAction: {
       alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderTopColor: theme.colors.primary,
-      borderTopWidth: 1,
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: theme.borderRadius.md,
       flexDirection: "row",
-      justifyContent: "center",
+      marginTop: theme.spacing.lg,
       padding: theme.spacing.md,
     },
-    speciesButtonText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "bold",
-        color: "onSurface",
-      }),
+    speciesActionIcon: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.sm,
       marginRight: theme.spacing.sm,
+      padding: theme.spacing.xs,
     },
-    speciesCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      marginBottom: theme.spacing.md,
-      overflow: "hidden",
+    speciesActionText: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "medium",
+        color: "onPrimaryContainer",
+      }),
+      flex: 1,
+    },
+    speciesAvatar: {
+      alignItems: "center",
+      backgroundColor: theme.colors.onPrimary,
+      borderRadius: 40,
+      elevation: 8,
+      height: 80,
+      justifyContent: "center",
+      marginBottom: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    speciesHeader: {
-      padding: theme.spacing.md,
+      shadowRadius: 8,
+      width: 80,
     },
     speciesName: {
       ...createThemedTextStyle(theme, {
-        size: "2xl",
+        size: "6xl",
         weight: "bold",
-        color: "onSurface",
+        color: "onPrimary",
       }),
       marginBottom: theme.spacing.xs,
+      textAlign: "center",
     },
     timeText: {
       ...createThemedTextStyle(theme, {
@@ -552,30 +546,6 @@ const RecordingDetailsScreen = () => {
     },
     video: {
       flex: 1,
-    },
-    videoContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 3,
-      marginBottom: theme.spacing.md,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2.22,
-    },
-    videoHeader: {
-      alignItems: "center",
-      borderBottomColor: theme.colors.backdrop,
-      borderBottomWidth: 1,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.5,
-      shadowRadius: 6,
     },
     videoOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -599,26 +569,57 @@ const RecordingDetailsScreen = () => {
     queryFn: () => fetchRecordingById(route.params.recordingId),
   });
 
-  const [sonogramVideoUri, setSonogramVideoUri] = useState<string | null>(null);
+  // Get download status for this recording
+  const downloadStatus = recording ? downloads[recording.id] : null;
+  const isDownloading = downloadStatus?.status === "downloading";
+  const isPaused = downloadStatus?.status === "paused";
+  const hasError = downloadStatus?.status === "error";
+  const progress = downloadStatus?.progress || 0;
+
+  const [sonagramVideoUri, setsonagramVideoUri] = useState<string | null>(null);
   const [isVideoUriLoading, setIsVideoUriLoading] = useState(false);
 
   // Check if recording has video available
   const [hasVideo, setHasVideo] = useState(false);
 
-  // Fetch sonogram video URI only if video is available
+  // Handle resume download
+  const handleResumePress = async () => {
+    if (isPaused && downloadStatus && recording) {
+      try {
+        await resumeDownload(recording.id);
+      } catch (error) {
+        console.error("Failed to resume download:", error);
+        setShowDownloadErrorModal(true);
+      }
+    }
+  };
+
+  // Handle pause download
+  const handlePausePress = async () => {
+    if (isDownloading && recording) {
+      try {
+        await pauseDownload(recording.id);
+      } catch (error) {
+        console.error("Failed to pause download:", error);
+        setShowDownloadErrorModal(true);
+      }
+    }
+  };
+
+  // Fetch sonagram video URI only if video is available
   useEffect(() => {
     if (!recording) {
       setHasVideo(false);
-      setSonogramVideoUri(null);
+      setsonagramVideoUri(null);
       setIsVideoUriLoading(false);
       setShowInitialLoading(false);
       setVideoUriError(false);
       return;
     }
-    setHasVideo(recording.sonogramvideoid !== null);
+    setHasVideo(recording.sonagramvideoid !== null);
 
     if (!hasVideo) {
-      setSonogramVideoUri(null);
+      setsonagramVideoUri(null);
       setIsVideoUriLoading(false);
       setShowInitialLoading(false);
       setVideoError(false);
@@ -632,31 +633,31 @@ const RecordingDetailsScreen = () => {
     setVideoError(false); // Reset any previous errors
     setVideoUriError(false); // Reset URI error before fetching
 
-    getSonogramVideoUri(recording)
+    getsonagramVideoUri(recording)
       .then((uri) => {
-        setSonogramVideoUri(uri);
+        setsonagramVideoUri(uri);
         setIsVideoUriLoading(false);
         setVideoUriError(!uri);
         setShowInitialLoading(!!uri);
       })
       .catch((error) => {
-        console.error("Error fetching sonogram video URI:", error);
+        console.error("Error fetching sonagram video URI:", error);
         setVideoUriError(true);
-        setSonogramVideoUri(null);
+        setsonagramVideoUri(null);
         setIsVideoUriLoading(false);
         setShowInitialLoading(false);
       });
   }, [recording, hasVideo]);
 
   // Initialize the video player only if video is available
-  const videoPlayer = useVideoPlayer(hasVideo ? sonogramVideoUri : null, (player) => {
+  const videoPlayer = useVideoPlayer(hasVideo ? sonagramVideoUri : null, (player) => {
     if (!player || !hasVideo) return;
 
     player.timeUpdateEventInterval = 0.5; // More frequent updates for smoother slider
     player.loop = false;
 
     // Force load the video on iOS by setting a small volume initially
-    if (sonogramVideoUri) {
+    if (sonagramVideoUri) {
       player.volume = 0.01;
       // Preload the video with proper cleanup
       volumeTimeoutRef.current = setTimeout(() => {
@@ -674,12 +675,12 @@ const RecordingDetailsScreen = () => {
     setVideoDuration(0);
     setVideoPosition(0);
     // Only show initial loading if we have a URI and we're not currently loading the URI
-    setShowInitialLoading(!!sonogramVideoUri && !isVideoUriLoading);
+    setShowInitialLoading(!!sonagramVideoUri && !isVideoUriLoading);
     setIsPlaying(false);
     setIsSeeking(false);
     setWasPlayingBeforeSeek(false);
     setIsVideoEnded(false);
-  }, [sonogramVideoUri, isVideoUriLoading]);
+  }, [sonagramVideoUri, isVideoUriLoading]);
 
   // Listen for video ready/loaded events only if video is available
   useEventListener(videoPlayer, "statusChange", (payload) => {
@@ -1155,7 +1156,7 @@ const RecordingDetailsScreen = () => {
 
   if (isVideoFullscreen) {
     // Exit fullscreen if no video available or no video URI
-    if (!hasVideo || !sonogramVideoUri) {
+    if (!hasVideo || !sonagramVideoUri) {
       setIsVideoFullscreen(false);
       return null;
     }
@@ -1255,6 +1256,7 @@ const RecordingDetailsScreen = () => {
   return (
     <View style={styles.container}>
       <BackgroundPattern />
+      {/* Header */}
       <DetailHeader
         title={recording.species?.common_name}
         subtitle={recording.species?.scientific_name}
@@ -1268,126 +1270,180 @@ const RecordingDetailsScreen = () => {
             </TouchableOpacity>
           )
         }
+        bgColor="primary"
+        textColor="onPrimary"
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.speciesCard}>
-          <View style={styles.speciesHeader}>
-            <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Section - Species Info */}
+        <View style={styles.heroSection}>
+          <View style={styles.heroBackground}>
+            <MaterialCommunityIcons name="bird" size={200} color={theme.colors.onPrimary} />
+          </View>
+          <View style={styles.heroContent}>
+            <View style={styles.speciesAvatar}>
+              <MaterialCommunityIcons name="bird" size={40} color={theme.colors.primary} />
+            </View>
+            <Text style={styles.speciesName}>
+              {recording.rec_number} - {recording.species?.common_name}
+            </Text>
             <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.speciesButton}
-            onPress={() =>
-              navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
-            }
-          >
-            <Text style={styles.speciesButtonText}>View Species Details</Text>
-            <Ionicons name="arrow-forward" size={20} color={theme.colors.onSurface} />
-          </TouchableOpacity>
         </View>
 
-        {/* Video/Audio Container - adapts based on video availability */}
-        {hasVideo ? (
-          <View style={styles.videoContainer}>
-            <View style={styles.videoHeader}>
-              <Text
-                style={createThemedTextStyle(theme, {
-                  size: "2xl",
-                  weight: "bold",
-                  color: "onSurface",
-                })}
-              >
-                Sonogram
+        {/* Media Player Card */}
+        <View style={styles.mediaCard}>
+          <View style={[styles.mediaHeader, hasVideo && styles.mediaborderbottom]}>
+            <View style={styles.flexOne}>
+              <Text style={styles.mediaTitle}>
+                {hasVideo ? "sonagram & Audio" : "Audio Recording"}
               </Text>
-              <View style={styles.audioPlayerContainer}>
-                <Text
-                  style={createThemedTextStyle(theme, {
-                    size: "lg",
-                    weight: "bold",
-                    color: "onSurface",
-                  })}
-                >
-                  Audio
-                </Text>
-                <View style={styles.audioPlayerContainerInner}>
-                  <MiniAudioPlayer recording={recording} size={30} onPress={stopVideoPlayback} />
+              <Text style={styles.mediaSubtitle}>Best with Headphones</Text>
+            </View>
+            <TouchableOpacity style={styles.audioPlayerButton}>
+              <MiniAudioPlayer recording={recording} size={44} onPress={stopVideoPlayback} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Video Player or Audio-only display */}
+          {hasVideo && renderVideoPlayer()}
+        </View>
+
+        {/* Content Sections */}
+        <View style={styles.contentSection}>
+          {/* Recording Information Card */}
+          <View style={styles.infoCard}>
+            <View style={styles.cardContent}>
+              <View style={styles.infoBody}>
+                {recording.caption && (
+                  <View style={styles.infoRow}>
+                    <Ionicons
+                      name="document-text"
+                      size={16}
+                      color={theme.colors.tertiary}
+                      style={styles.infoRowIcon}
+                    />
+                    <View style={styles.infoRowText}>
+                      <Text style={styles.infoValue}>{recording.caption}</Text>
+                    </View>
+                  </View>
+                )}
+                <View style={styles.infoRow}>
+                  <Ionicons
+                    name="location"
+                    size={16}
+                    color={theme.colors.tertiary}
+                    style={styles.infoRowIcon}
+                  />
+                  <View style={styles.infoRowText}>
+                    <Text style={styles.infoValue}>{recording.site_name || "N/A"}</Text>
+                  </View>
+                </View>
+                <View style={styles.infoRow}>
+                  <Ionicons
+                    name="person"
+                    size={16}
+                    color={theme.colors.tertiary}
+                    style={styles.infoRowIcon}
+                  />
+                  <View style={styles.infoRowText}>
+                    <Text style={styles.infoValue}>{recording.recorded_by || "N/A"}</Text>
+                  </View>
+                </View>
+                <View style={[styles.infoRow, styles.infoRowLast]}>
+                  <Ionicons
+                    name="pricetag"
+                    size={16}
+                    color={theme.colors.tertiary}
+                    style={styles.infoRowIcon}
+                  />
+                  <View style={styles.infoRowText}>
+                    <Text style={[styles.infoValue, styles.infoValueMonospace]}>
+                      {recording.catalogue_code || "N/A"}
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
-            {renderVideoPlayer()}
-          </View>
-        ) : (
-          <View style={styles.audioOnlyContainer}>
-            <View style={styles.audioOnlyHeader}>
-              <Ionicons name="musical-notes" size={24} color={theme.colors.primary} />
-              <Text style={styles.audioOnlyTitle}>Audio Recording</Text>
-            </View>
-            <View style={styles.audioOnlyPlayerContainer}>
-              <MiniAudioPlayer recording={recording} size={60} />
-              <View style={styles.audioOnlyDetails}>
-                <Text style={styles.audioOnlyMainText}>{recording.species?.common_name}</Text>
-                <Text style={styles.audioOnlySubText}>{recording.species?.scientific_name}</Text>
-                <Text style={styles.audioOnlyRecordingInfo}>Recording #{recording.rec_number}</Text>
-              </View>
-            </View>
-          </View>
-        )}
 
-        {/* Recording Information Card */}
-        <View style={styles.recordingInfoCard}>
-          <Text style={styles.recordingInfoTitle}>Recording Information</Text>
-
-          <View style={styles.metadataGrid}>
-            <View style={styles.metadataItem}>
-              <Text style={styles.metadataLabel}>Catalogue Code</Text>
-              <Text style={styles.metadataValue}>{recording.catalogue_code}</Text>
+              <TouchableOpacity
+                style={styles.speciesAction}
+                onPress={() =>
+                  navigation.navigate("SpeciesDetails", { speciesId: recording.species_id })
+                }
+                activeOpacity={0.7}
+              >
+                <View style={styles.speciesActionIcon}>
+                  <MaterialCommunityIcons name="bird" size={18} color={theme.colors.onPrimary} />
+                </View>
+                <Text style={styles.speciesActionText}>View all recordings for this species</Text>
+                <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.metadataItem}>
-              <Text style={styles.metadataLabel}>Recording #</Text>
-              <Text style={styles.metadataValue}>{recording.rec_number}</Text>
-            </View>
-          </View>
-
-          <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={16} color={theme.colors.primary} />
-            <Text style={styles.locationText}>{recording.site_name}</Text>
           </View>
         </View>
 
-        {/* Description Card */}
-        <View style={styles.descriptionCard}>
-          <View style={styles.descriptionHeader}>
-            <Ionicons name="document-text-outline" size={20} color={theme.colors.primary} />
-            <Text style={styles.descriptionTitle}>Description</Text>
-          </View>
-          <Text style={styles.descriptionText}>{recording.caption}</Text>
-        </View>
-        <View style={styles.downloadCard}>
+        {/* Action Section */}
+        <View style={styles.actionSection}>
           <Button
             leftIcon={
               getDownloadStatus() === "completed"
-                ? { name: "trash-outline", color: theme.colors.onPrimary }
-                : { name: "cloud-download", color: theme.colors.onPrimary }
+                ? { name: "trash-outline", color: theme.colors.onError }
+                : isPaused
+                  ? { name: "play", color: theme.colors.onPrimary }
+                  : isDownloading
+                    ? { name: "pause", color: theme.colors.onPrimary }
+                    : { name: "cloud-download", color: theme.colors.onPrimary }
             }
             onPress={
               getDownloadStatus() === "completed"
                 ? handleDeleteDownload
-                : getDownloadStatus() === "downloading"
-                  ? undefined
-                  : handleDownload
+                : isPaused
+                  ? handleResumePress
+                  : isDownloading
+                    ? handlePausePress
+                    : handleDownload
             }
-            variant="primary"
+            variant={getDownloadStatus() === "completed" ? "destructive" : "primary"}
             size="lg"
+            style={styles.primaryActionButton}
+            fullWidth
+            disabled={false}
           >
             {getDownloadStatus() === "completed"
               ? "Remove Download"
-              : getDownloadStatus() === "downloading"
-                ? "Downloading..."
-                : "Download for Offline Use"}
+              : isPaused
+                ? "Resume Download"
+                : isDownloading
+                  ? "Pause Download"
+                  : hasError
+                    ? "Retry Download"
+                    : "Download for Offline Use"}
           </Button>
+
+          {/* Download Progress and Status */}
+          {(isDownloading || isPaused || hasError) && (
+            <>
+              {/* Progress Bar */}
+              {(isDownloading || isPaused) && (
+                <View style={styles.progressContainer}>
+                  <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+                </View>
+              )}
+
+              {/* Status Text and Error Messages */}
+              <View style={styles.downloadStatusContainer}>
+                <Text style={hasError ? styles.errorText : styles.downloadStatusText}>
+                  {isDownloading && `Downloading... ${Math.round(progress * 100)}% complete`}
+                  {isPaused && `Paused at ${Math.round(progress * 100)}%`}
+                  {hasError && downloadStatus?.error}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
 

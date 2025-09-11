@@ -28,6 +28,6 @@
     "*.d.ts",
     "assets",
     "recordings",
-    "sonograms"
+    "sonagrams"
   ]
 }

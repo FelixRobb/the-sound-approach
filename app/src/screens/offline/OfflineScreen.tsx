@@ -12,14 +12,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import BackgroundPattern from "../components/BackgroundPattern";
-import CustomModal from "../components/CustomModal";
-import DownloadCard from "../components/DownloadCard";
-import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
-import { DownloadContext } from "../context/DownloadContext";
-import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { createThemedTextStyle } from "../lib/theme";
-import type { DownloadRecord } from "../types";
+import BackgroundPattern from "../../components/BackgroundPattern";
+import CustomModal from "../../components/CustomModal";
+import DownloadCard from "../../components/DownloadCard";
+import { useGlobalAudioBarHeight } from "../../components/GlobalAudioBar";
+import { DownloadContext } from "../../context/DownloadContext";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../../lib/theme";
+import type { DownloadRecord } from "../../types";
 
 const { width } = Dimensions.get("window");
 
@@ -65,8 +65,12 @@ const OfflineScreen = () => {
         catalogue_code: record.catalogue_code,
         audiohqid: record.audiohqid,
         audiolqid: record.audiolqid,
-        sonogramvideoid: record.sonogramvideoid,
+        sonagramvideoid: record.sonagramvideoid,
         species: record.species,
+        recorded_by: record.recorded_by,
+        download_status: record.download_status,
+        download_progress: record.download_progress,
+        started_at: record.started_at,
         createdAt: new Date(record.downloaded_at).toISOString(),
       }));
       setDownloads(formattedRecordings);

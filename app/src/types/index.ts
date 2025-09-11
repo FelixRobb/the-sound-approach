@@ -13,7 +13,7 @@ export type Species = {
   created_at: string;
 };
 
-export type MediaType = "audio-hq" | "audio_lq" | "sonogram_video";
+export type MediaType = "audio-hq" | "audio_lq" | "sonagram_video";
 
 export type Recording = {
   id: string;
@@ -23,8 +23,9 @@ export type Recording = {
   site_name: string;
   audiohqid?: string;
   audiolqid?: string;
-  sonogramvideoid?: string;
+  sonagramvideoid?: string;
   caption: string;
+  recorded_by: string;
   createdAt: string;
   species?: Species;
 };
@@ -100,19 +101,24 @@ export type AuthContextType = {
 // Download Types
 // ==========================================
 
-export type DownloadStatus = "idle" | "downloading" | "completed" | "error";
+export type DownloadStatus = "idle" | "downloading" | "paused" | "completed" | "error";
 
 export type DownloadInfo = {
   recordingId: string;
   status: DownloadStatus;
   progress: number;
   error?: string;
+  resumableUri?: string;
 };
 
 export type DownloadRecord = Recording & {
   recording_id: string;
   audio_path: string;
   downloaded_at: number;
+  download_status: DownloadStatus;
+  download_progress: number;
+  download_error?: string;
+  started_at: number;
 };
 
 export type DownloadContextType = {
@@ -120,10 +126,12 @@ export type DownloadContextType = {
   downloadedRecordings: string[];
   totalStorageUsed: number;
   downloadRecording: (recording: Recording) => Promise<void>;
+  pauseDownload: (recordingId: string) => Promise<void>;
+  resumeDownload: (recordingId: string) => Promise<void>;
   deleteDownload: (recordingId: string) => Promise<void>;
   clearAllDownloads: () => Promise<void>;
   isDownloaded: (recordingId: string) => boolean;
-  getDownloadPath: (fileId: string, isAudio: boolean) => string | null;
+  getDownloadPath: (fileId: string) => string | null;
   getDownloadedRecordings: () => Promise<DownloadRecord[]>;
 };
 
@@ -268,7 +276,7 @@ export type DownloadItemProps = {
   isPlaying: boolean;
 };
 
-export type SonogramViewerProps = {
+export type sonagramViewerProps = {
   uri: string | null;
   onPress: () => void;
 };

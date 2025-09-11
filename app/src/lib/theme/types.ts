@@ -95,6 +95,7 @@ export interface Spacing {
   xl: number;
   xxl: number;
   xxxl: number;
+  "2xl": number;
 }
 
 // Typography scale

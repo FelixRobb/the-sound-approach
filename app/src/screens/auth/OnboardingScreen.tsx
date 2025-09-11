@@ -4,10 +4,10 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Button } from "../components/ui/Button";
-import { AuthContext } from "../context/AuthContext";
-import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { createThemedTextStyle } from "../lib/theme/typography";
+import { Button } from "../../components/ui/Button";
+import { AuthContext } from "../../context/AuthContext";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../../lib/theme/typography";
 
 type OnboardingStep = {
   id: number;
@@ -24,7 +24,7 @@ const onboardingSteps: OnboardingStep[] = [
     icon: "musical-notes",
     title: "Discover Bird Sounds",
     description:
-      "Explore high-quality recordings from 'The Sound Approach to Birding' book with detailed sonograms and expert commentary.",
+      "Explore high-quality recordings from 'The Sound Approach to Birding' book with detailed sonagrams and expert commentary.",
     color: "#4CAF50",
   },
   {

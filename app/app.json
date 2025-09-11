@@ -21,6 +21,7 @@
       }
     },
     "ios": {
+      "requireFullScreen": true,
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": [
@@ -50,7 +51,13 @@
       "expo-asset",
       "expo-font",
       "expo-audio",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "PORTRAIT_UP"
+        }
+      ]
     ],
     "extra": {
       "eas": {

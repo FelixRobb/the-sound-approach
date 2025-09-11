@@ -4,11 +4,11 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useContext } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
-import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
-import { DownloadContext } from "../context/DownloadContext";
-import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { createThemedTextStyle } from "../lib/theme";
-import type { OfflineStackParamList } from "../types";
+import { useGlobalAudioBarHeight } from "../../components/GlobalAudioBar";
+import { DownloadContext } from "../../context/DownloadContext";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../../lib/theme";
+import type { OfflineStackParamList } from "../../types";
 
 const OfflineNoticeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();

@@ -13,12 +13,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
-import { Button, Input } from "../components/ui";
-import { AuthContext } from "../context/AuthContext";
-import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { createThemedTextStyle } from "../lib/theme/typography";
-import type { RootStackParamList } from "../types";
+import { useGlobalAudioBarHeight } from "../../components/GlobalAudioBar";
+import { Button, Input } from "../../components/ui";
+import { AuthContext } from "../../context/AuthContext";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../../lib/theme/typography";
+import type { RootStackParamList } from "../../types";
 
 const DeleteAccountScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

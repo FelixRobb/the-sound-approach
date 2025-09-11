@@ -6,6 +6,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import type { ThemeColors } from "../lib/theme/types";
 import { createThemedTextStyle } from "../lib/theme/typography";
 import type { RootStackParamList } from "../types";
 
@@ -13,13 +14,14 @@ interface DetailHeaderProps {
   title?: string;
   subtitle?: string;
   rightElement?: ReactNode;
+  bgColor?: keyof ThemeColors;
+  textColor?: keyof ThemeColors;
 }
 
-const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
+const DetailHeader = ({ title, subtitle, rightElement, bgColor, textColor }: DetailHeaderProps) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
-
   const styles = StyleSheet.create({
     backButton: {
       alignItems: "center",
@@ -40,7 +42,7 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
       ...createThemedTextStyle(theme, {
         size: "lg",
         weight: "normal",
-        color: "onSurfaceVariant",
+        color: textColor || "onSurfaceVariant",
       }),
     },
     titleContainer: {
@@ -49,16 +51,25 @@ const DetailHeader = ({ title, subtitle, rightElement }: DetailHeaderProps) => {
   });
 
   return (
-    <View style={styles.header}>
+    <View
+      style={[
+        styles.header,
+        { backgroundColor: bgColor ? theme.colors[bgColor] : theme.colors.background },
+      ]}
+    >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+        <Ionicons
+          name="chevron-back"
+          size={24}
+          color={textColor ? theme.colors[textColor] : theme.colors.primary}
+        />
       </TouchableOpacity>
       <View style={styles.titleContainer}>
         <Text
           style={createThemedTextStyle(theme, {
             size: "4xl",
             weight: "bold",
-            color: "secondary",
+            color: textColor || "secondary",
           })}
         >
           {title}
