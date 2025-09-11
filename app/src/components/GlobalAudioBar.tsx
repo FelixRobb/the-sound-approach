@@ -667,4 +667,29 @@ export const useGlobalAudioBarHeight = (): number => {
   return totalHeight;
 };
 
+// Higher-order component that wraps screens with GlobalAudioBar
+type ScreenProps<
+  T extends Record<string, object | undefined> = Record<string, object | undefined>,
+> = {
+  navigation: NativeStackNavigationProp<T>;
+  route: RouteProp<T, keyof T>;
+};
+
+export const withGlobalAudioBar = <T extends Record<string, object | undefined>>(
+  WrappedComponent: React.ComponentType<ScreenProps<T>>
+) => {
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+  });
+
+  return (props: ScreenProps<T>) => (
+    <View style={styles.container}>
+      <WrappedComponent {...props} />
+      <GlobalAudioBar />
+    </View>
+  );
+};
+
 export default GlobalAudioBar;

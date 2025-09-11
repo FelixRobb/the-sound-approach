@@ -1,10 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer, NavigationProp, RouteProp } from "@react-navigation/native";
-import {
-  createNativeStackNavigator,
-  NativeStackNavigationProp,
-} from "@react-navigation/native-stack";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useContext, useEffect, useRef } from "react";
@@ -18,7 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import GlobalAudioBar from "../components/GlobalAudioBar";
+import { withGlobalAudioBar } from "../components/GlobalAudioBar";
 import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
@@ -37,28 +34,6 @@ import RecordingDetailsScreen from "../screens/RecordingDetailsScreen";
 import RecordingsListScreen from "../screens/RecordingsListScreen";
 import SearchScreen from "../screens/SearchScreen";
 import SpeciesDetailsScreen from "../screens/SpeciesDetailsScreen";
-import { RootStackParamList } from "../types";
-
-// Higher-order component that wraps screens with GlobalAudioBar
-type ScreenProps = {
-  navigation: NavigationProp<NativeStackNavigationProp<RootStackParamList>>;
-  route: RouteProp<RootStackParamList>;
-};
-
-const withGlobalAudioBar = <T extends ScreenProps>(WrappedComponent: React.ComponentType<T>) => {
-  return (props: T) => (
-    <View style={styles.container}>
-      <WrappedComponent {...props} />
-      <GlobalAudioBar />
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 type AnimatedTabButtonProps = React.PropsWithChildren<{
   onPress?: (event: GestureResponderEvent) => void;

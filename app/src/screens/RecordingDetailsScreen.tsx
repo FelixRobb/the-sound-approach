@@ -3,6 +3,7 @@ import { useNavigation, useRoute, type RouteProp, useFocusEffect } from "@react-
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { useEventListener } from "expo";
+import { LinearGradient } from "expo-linear-gradient";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
@@ -90,473 +91,6 @@ const RecordingDetailsScreen = () => {
   const sliderMin = useSharedValue(0);
   const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
   const insets = useSafeAreaInsets();
-  const styles = StyleSheet.create({
-    actionSection: {
-      paddingBottom: theme.spacing.lg,
-      paddingHorizontal: theme.spacing.lg,
-    },
-    audioPlayerButton: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    buttonIcon: {
-      marginLeft: isPlaying ? 0 : theme.spacing.xs,
-    },
-    cardContent: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.sm,
-    },
-    container: {
-      backgroundColor: theme.colors.background,
-      flex: 1,
-    },
-    content: {
-      backgroundColor: theme.colors.background,
-      paddingBottom: globalAudioBarHeight + theme.spacing.md,
-    },
-    contentSection: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.xl,
-    },
-    controlsBackdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: theme.colors.backdrop,
-      zIndex: theme.zIndex.base2,
-    },
-    controlsContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.backdrop,
-      borderRadius: theme.borderRadius.lg,
-      bottom: theme.spacing.sm,
-      elevation: 5,
-      flexDirection: "row",
-      left: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      position: "absolute",
-      right: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      zIndex: theme.zIndex.base5,
-    },
-    descriptionTextError: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginTop: theme.spacing.sm,
-    },
-    downloadButtonSmall: {
-      backgroundColor: theme.colors.tertiary,
-      borderRadius: theme.borderRadius.full,
-      padding: 8,
-    },
-    downloadStatusContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: theme.spacing.xs,
-      marginTop: theme.spacing.sm,
-    },
-    downloadStatusText: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "medium",
-        color: "onSurfaceVariant",
-      }),
-      flex: 1,
-      textAlign: "center",
-    },
-    errorCard: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 4,
-      padding: theme.spacing.lg,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-      width: width * 0.9,
-    },
-    errorContainer: {
-      alignItems: "center",
-      flex: 1,
-      justifyContent: "center",
-      padding: theme.spacing.md,
-    },
-    errorIcon: {
-      color: theme.colors.error,
-      marginBottom: theme.spacing.md,
-    },
-    errorText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginBottom: theme.spacing.md,
-      textAlign: "center",
-    },
-    errorTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "2xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-      marginBottom: theme.spacing.sm,
-      textAlign: "center",
-    },
-    flexOne: {
-      flex: 1,
-    },
-    fullButtonTouchable: {
-      alignItems: "center",
-      height: "100%",
-      justifyContent: "center",
-      width: "100%",
-    },
-    fullScreenVideoOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    fullscreenButton: {
-      marginLeft: theme.spacing.sm,
-    },
-    fullscreenContainer: {
-      backgroundColor: theme.colors.background,
-      height: "100%",
-      position: "absolute",
-      width: "100%",
-      zIndex: theme.zIndex.base7,
-    },
-    fullscreenControls: {
-      alignItems: "center",
-      backgroundColor: theme.colors.backdrop,
-      borderRadius: theme.borderRadius.md,
-      bottom: theme.spacing.md,
-      elevation: 5,
-      flexDirection: "row",
-      left: theme.spacing.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      position: "absolute",
-      right: theme.spacing.md,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      zIndex: theme.zIndex.base10,
-    },
-    fullscreenHeader: {
-      backgroundColor: theme.colors.background,
-      borderBottomColor: theme.colors.backdrop,
-      borderBottomWidth: 1,
-      padding: theme.spacing.md,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      position: "absolute",
-      top: 0,
-      width: "100%",
-      zIndex: theme.zIndex.base10,
-    },
-    fullscreenSubtitle: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginTop: theme.spacing.xs,
-    },
-    fullscreenTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "2xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-    },
-    fullscreenVideo: {
-      flex: 1,
-      marginLeft: insets.left,
-      marginRight: insets.right,
-    },
-    heroBackground: {
-      bottom: 0,
-      left: 0,
-      opacity: 0.1,
-      position: "absolute",
-      right: 0,
-      top: 0,
-    },
-    heroContent: {
-      alignItems: "center",
-      marginBottom: theme.spacing.md,
-      zIndex: 1,
-    },
-    heroSection: {
-      backgroundColor: theme.colors.primary,
-      overflow: "hidden",
-      paddingBottom: theme.spacing.xxl,
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.xl,
-      position: "relative",
-    },
-    infoBody: {
-      marginTop: theme.spacing.sm,
-    },
-    infoCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      elevation: 2,
-      marginBottom: theme.spacing.lg,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-    },
-    infoRow: {
-      alignItems: "flex-start",
-      borderBottomColor: theme.colors.outline,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      flexDirection: "row",
-      paddingVertical: theme.spacing.sm,
-    },
-    infoRowIcon: {
-      marginRight: theme.spacing.sm,
-      marginTop: 2,
-    },
-    infoRowLast: {
-      borderBottomWidth: 0,
-      paddingBottom: 0,
-    },
-    infoRowText: {
-      flex: 1,
-    },
-    infoValue: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onSurface",
-      }),
-      flex: 1,
-    },
-    infoValueMonospace: {
-      fontFamily: "monospace",
-      fontSize: 13,
-    },
-
-    mediaCard: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.xl,
-      elevation: 8,
-      marginHorizontal: theme.spacing.lg,
-      marginTop: -theme.spacing.xxl,
-      overflow: "hidden",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.15,
-      shadowRadius: 16,
-      zIndex: 2,
-    },
-
-    mediaHeader: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.md,
-    },
-    mediaSubtitle: {
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginTop: theme.spacing.xs,
-    },
-    mediaTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-    },
-    mediaborderbottom: { borderBottomColor: theme.colors.outline + "20", borderBottomWidth: 1 },
-    pauseButton: {
-      alignItems: "center",
-      height: 80,
-      justifyContent: "center",
-      left: "50%",
-      position: "absolute",
-      top: "50%",
-      transform: [{ translateX: -40 }, { translateY: -40 }],
-      width: 80,
-      zIndex: theme.zIndex.base4,
-    },
-    playButton: {
-      alignItems: "center",
-      height: 80,
-      justifyContent: "center",
-      left: "50%",
-      position: "absolute",
-      top: "50%",
-      transform: [{ translateX: -40 }, { translateY: -40 }],
-      width: 80,
-      zIndex: theme.zIndex.base4,
-    },
-    playerContainer: {
-      aspectRatio: 16 / 9,
-      backgroundColor: theme.colors.background,
-      position: "relative",
-    },
-    playerContainerError: {
-      alignItems: "center",
-      aspectRatio: 16 / 9,
-      backgroundColor: theme.colors.surfaceVariant,
-      justifyContent: "center",
-    },
-    primaryActionButton: {
-      marginBottom: theme.spacing.md,
-    },
-    progressBar: {
-      backgroundColor: theme.colors.primary,
-      height: "100%",
-    },
-    progressContainer: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: 2,
-      height: 4,
-      marginTop: theme.spacing.sm,
-      overflow: "hidden",
-      width: "100%",
-    },
-    replayButton: {
-      alignItems: "center",
-      borderRadius: theme.borderRadius.full,
-      height: 80,
-      justifyContent: "center",
-      left: "50%",
-      position: "absolute",
-      top: "50%",
-      transform: [{ translateX: -40 }, { translateY: -40 }],
-      width: 80,
-      zIndex: theme.zIndex.base4,
-    },
-    retryButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-    },
-    retryText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "bold",
-        color: "onPrimary",
-      }),
-    },
-    scientificName: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onPrimary",
-      }),
-      fontStyle: "italic",
-      marginBottom: theme.spacing.xs,
-      opacity: 0.9,
-      textAlign: "center",
-    },
-    scrollView: {
-      backgroundColor: theme.colors.primary,
-    },
-    slider: {
-      backgroundColor: theme.colors.tertiary,
-      flex: 1,
-      height: theme.spacing.xl,
-      marginHorizontal: theme.spacing.sm,
-    },
-    sliderThumb: {
-      backgroundColor: theme.colors.tertiary,
-      borderRadius: theme.borderRadius.sm,
-      elevation: 2,
-      height: theme.spacing.md,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2,
-      width: theme.spacing.md,
-    },
-    speciesAction: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: theme.borderRadius.md,
-      flexDirection: "row",
-      marginTop: theme.spacing.lg,
-      padding: theme.spacing.md,
-    },
-    speciesActionIcon: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.sm,
-      marginRight: theme.spacing.sm,
-      padding: theme.spacing.xs,
-    },
-    speciesActionText: {
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "medium",
-        color: "onPrimaryContainer",
-      }),
-      flex: 1,
-    },
-    speciesAvatar: {
-      alignItems: "center",
-      backgroundColor: theme.colors.onPrimary,
-      borderRadius: 40,
-      elevation: 8,
-      height: 80,
-      justifyContent: "center",
-      marginBottom: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      width: 80,
-    },
-    speciesName: {
-      ...createThemedTextStyle(theme, {
-        size: "6xl",
-        weight: "bold",
-        color: "onPrimary",
-      }),
-      marginBottom: theme.spacing.xs,
-      textAlign: "center",
-    },
-    timeText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "tertiary",
-      }),
-      marginLeft: theme.spacing.sm,
-    },
-    video: {
-      flex: 1,
-    },
-    videoOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    videoTouchOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      zIndex: theme.zIndex.base3,
-    },
-  });
 
   // Fetch recording details
   const {
@@ -977,6 +511,505 @@ const RecordingDetailsScreen = () => {
     }
   }, [isPlaying, resetControlsTimeout, showControls]);
 
+  const styles = StyleSheet.create({
+    actionSection: {
+      paddingBottom: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.lg,
+    },
+    audioPlayerButton: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    buttonIcon: {
+      marginLeft: isPlaying ? 0 : theme.spacing.xs,
+    },
+    cardContent: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.sm,
+    },
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
+    content: {
+      paddingBottom: globalAudioBarHeight + theme.spacing.md,
+    },
+    contentSection: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.xl,
+    },
+    controlsBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.backdrop,
+      zIndex: theme.zIndex.base2,
+    },
+    controlsContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.backdrop,
+      borderRadius: theme.borderRadius.lg,
+      bottom: theme.spacing.sm,
+      elevation: 5,
+      flexDirection: "row",
+      left: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      position: "absolute",
+      right: theme.spacing.sm,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      zIndex: theme.zIndex.base5,
+    },
+    descriptionTextError: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.sm,
+    },
+    downloadButtonSmall: {
+      backgroundColor: theme.colors.tertiary,
+      borderRadius: theme.borderRadius.full,
+      padding: 8,
+    },
+    downloadStatusContainer: {
+      alignItems: "center",
+      flexDirection: "row",
+      gap: theme.spacing.xs,
+      marginTop: theme.spacing.sm,
+    },
+    downloadStatusText: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "medium",
+        color: "onSurfaceVariant",
+      }),
+      flex: 1,
+      textAlign: "center",
+    },
+    errorCard: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 4,
+      padding: theme.spacing.lg,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      width: width * 0.9,
+    },
+    errorContainer: {
+      alignItems: "center",
+      flex: 1,
+      justifyContent: "center",
+      padding: theme.spacing.md,
+    },
+    errorIcon: {
+      color: theme.colors.error,
+      marginBottom: theme.spacing.md,
+    },
+    errorText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
+      textAlign: "center",
+    },
+    errorTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
+      textAlign: "center",
+    },
+    flexOne: {
+      flex: 1,
+    },
+    fullButtonTouchable: {
+      alignItems: "center",
+      height: "100%",
+      justifyContent: "center",
+      width: "100%",
+    },
+    fullScreenVideoOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    fullscreenButton: {
+      marginLeft: theme.spacing.sm,
+    },
+    fullscreenContainer: {
+      backgroundColor: theme.colors.background,
+      height: "100%",
+      position: "absolute",
+      width: "100%",
+      zIndex: theme.zIndex.base7,
+    },
+    fullscreenControls: {
+      alignItems: "center",
+      backgroundColor: theme.colors.backdrop,
+      borderRadius: theme.borderRadius.md,
+      bottom: theme.spacing.md,
+      elevation: 5,
+      flexDirection: "row",
+      left: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      position: "absolute",
+      right: theme.spacing.md,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      zIndex: theme.zIndex.base10,
+    },
+    fullscreenHeader: {
+      backgroundColor: theme.colors.background,
+      borderBottomColor: theme.colors.backdrop,
+      borderBottomWidth: 1,
+      padding: theme.spacing.md,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
+      position: "absolute",
+      top: 0,
+      width: "100%",
+      zIndex: theme.zIndex.base10,
+    },
+    fullscreenSubtitle: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
+    },
+    fullscreenTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+    },
+    fullscreenVideo: {
+      flex: 1,
+      marginLeft: insets.left,
+      marginRight: insets.right,
+    },
+    heroBackground: {
+      position: "absolute",
+      right: -30,
+      top: -20,
+      zIndex: 0,
+    },
+    heroContent: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.xl,
+      zIndex: 1,
+    },
+    heroGradient: {
+      flex: 1,
+      minHeight: 180,
+    },
+    heroSection: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      elevation: 4,
+      marginHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.md,
+      overflow: "hidden",
+      paddingBottom: theme.spacing.xl,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+    },
+    heroTopRow: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: theme.spacing.lg,
+    },
+    infoBody: {
+      marginTop: theme.spacing.sm,
+    },
+    infoCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 2,
+      marginBottom: theme.spacing.lg,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    infoRow: {
+      alignItems: "flex-start",
+      borderBottomColor: theme.colors.outline,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      flexDirection: "row",
+      paddingVertical: theme.spacing.sm,
+    },
+    infoRowIcon: {
+      marginRight: theme.spacing.sm,
+      marginTop: 2,
+    },
+    infoRowLast: {
+      borderBottomWidth: 0,
+      paddingBottom: 0,
+    },
+    infoRowText: {
+      flex: 1,
+    },
+    infoValue: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "normal",
+        color: "onSurface",
+      }),
+      flex: 1,
+    },
+    infoValueMonospace: {
+      fontFamily: "monospace",
+      fontSize: 13,
+    },
+    mediaCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      elevation: 8,
+      marginHorizontal: theme.spacing.lg,
+      marginTop: -theme.spacing.xxl,
+      overflow: "hidden",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      zIndex: 2,
+    },
+    mediaHeader: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+    },
+    mediaSubtitle: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginTop: theme.spacing.xs,
+    },
+
+    mediaTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+    },
+    mediaborderbottom: {
+      borderBottomColor: theme.colors.outline + "20",
+      borderBottomWidth: 1,
+    },
+    pauseButton: {
+      alignItems: "center",
+      height: 80,
+      justifyContent: "center",
+      left: "50%",
+      position: "absolute",
+      top: "50%",
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      zIndex: theme.zIndex.base4,
+    },
+    playButton: {
+      alignItems: "center",
+      height: 80,
+      justifyContent: "center",
+      left: "50%",
+      position: "absolute",
+      top: "50%",
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      zIndex: theme.zIndex.base4,
+    },
+    playerContainer: {
+      aspectRatio: 16 / 9,
+      backgroundColor: theme.colors.background,
+      position: "relative",
+    },
+    playerContainerError: {
+      alignItems: "center",
+      aspectRatio: 16 / 9,
+      backgroundColor: theme.colors.surfaceVariant,
+      justifyContent: "center",
+    },
+    primaryActionButton: {
+      marginBottom: theme.spacing.md,
+    },
+    progressBar: {
+      backgroundColor: theme.colors.primary,
+      height: "100%",
+    },
+    progressContainer: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 2,
+      height: 4,
+      marginTop: theme.spacing.sm,
+      overflow: "hidden",
+      width: "100%",
+    },
+    recordingNumberBadge: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: theme.borderRadius.full,
+      elevation: 2,
+      height: theme.spacing.xl,
+      justifyContent: "center",
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      width: theme.spacing.xl,
+    },
+    recordingNumberText: {
+      ...createThemedTextStyle(theme, {
+        size: "sm",
+        weight: "bold",
+        color: "primary",
+      }),
+    },
+    replayButton: {
+      alignItems: "center",
+      borderRadius: theme.borderRadius.full,
+      height: 80,
+      justifyContent: "center",
+      left: "50%",
+      position: "absolute",
+      top: "50%",
+      transform: [{ translateX: -40 }, { translateY: -40 }],
+      width: 80,
+      zIndex: theme.zIndex.base4,
+    },
+    retryButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+    },
+    retryText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "bold",
+        color: "onPrimary",
+      }),
+    },
+    scientificName: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      fontStyle: "italic",
+      marginTop: theme.spacing.xs,
+    },
+    slider: {
+      backgroundColor: theme.colors.tertiary,
+      flex: 1,
+      height: theme.spacing.xl,
+      marginHorizontal: theme.spacing.sm,
+    },
+    sliderThumb: {
+      backgroundColor: theme.colors.tertiary,
+      borderRadius: theme.borderRadius.sm,
+      elevation: 2,
+      height: theme.spacing.md,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2,
+      width: theme.spacing.md,
+    },
+    speciesAction: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: theme.borderRadius.md,
+      flexDirection: "row",
+      marginTop: theme.spacing.lg,
+      padding: theme.spacing.md,
+    },
+    speciesActionIcon: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.sm,
+      marginRight: theme.spacing.sm,
+      padding: theme.spacing.xs,
+    },
+    speciesActionText: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "medium",
+        color: "onPrimaryContainer",
+      }),
+      flex: 1,
+    },
+    speciesAvatar: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: theme.borderRadius.full,
+      elevation: 3,
+      height: 64,
+      justifyContent: "center",
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      width: 64,
+    },
+    speciesInfoContainer: {
+      flex: 1,
+    },
+    speciesName: {
+      ...createThemedTextStyle(theme, {
+        size: "3xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      lineHeight: 36,
+    },
+    timeText: {
+      ...createThemedTextStyle(theme, {
+        size: "lg",
+        weight: "normal",
+        color: "tertiary",
+      }),
+      marginLeft: theme.spacing.sm,
+    },
+    video: {
+      flex: 1,
+    },
+    videoOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    videoTouchOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: theme.zIndex.base3,
+    },
+  });
+
   const renderVideoControls = (isFullscreen = false) => {
     const containerStyle = isFullscreen ? styles.fullscreenControls : styles.controlsContainer;
 
@@ -1270,29 +1303,41 @@ const RecordingDetailsScreen = () => {
             </TouchableOpacity>
           )
         }
-        bgColor="primary"
-        textColor="onPrimary"
       />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Hero Section - Species Info */}
         <View style={styles.heroSection}>
-          <View style={styles.heroBackground}>
-            <MaterialCommunityIcons name="bird" size={200} color={theme.colors.onPrimary} />
-          </View>
-          <View style={styles.heroContent}>
-            <View style={styles.speciesAvatar}>
-              <MaterialCommunityIcons name="bird" size={40} color={theme.colors.primary} />
+          <LinearGradient
+            colors={[
+              theme.colors.primaryContainer + "20",
+              theme.colors.primaryContainer + "10",
+              theme.colors.surface + "00",
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroGradient}
+          >
+            <View style={styles.heroBackground}>
+              <MaterialCommunityIcons name="bird" size={140} color={theme.colors.primary + "08"} />
             </View>
-            <Text style={styles.speciesName}>
-              {recording.rec_number} - {recording.species?.common_name}
-            </Text>
-            <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
-          </View>
+
+            <View style={styles.heroContent}>
+              <View style={styles.heroTopRow}>
+                <View style={styles.speciesAvatar}>
+                  <MaterialCommunityIcons name="bird" size={32} color={theme.colors.primary} />
+                </View>
+                <View style={styles.recordingNumberBadge}>
+                  <Text style={styles.recordingNumberText}>#{recording.rec_number}</Text>
+                </View>
+              </View>
+
+              <View style={styles.speciesInfoContainer}>
+                <Text style={styles.speciesName}>{recording.species?.common_name}</Text>
+                <Text style={styles.scientificName}>{recording.species?.scientific_name}</Text>
+              </View>
+            </View>
+          </LinearGradient>
         </View>
 
         {/* Media Player Card */}
@@ -1341,6 +1386,21 @@ const RecordingDetailsScreen = () => {
                   />
                   <View style={styles.infoRowText}>
                     <Text style={styles.infoValue}>{recording.site_name || "N/A"}</Text>
+                  </View>
+                </View>
+                <View style={styles.infoRow}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={16}
+                    color={theme.colors.tertiary}
+                    style={styles.infoRowIcon}
+                  />
+                  <View style={styles.infoRowText}>
+                    <Text style={styles.infoValue}>
+                      {recording.date_recorded
+                        ? new Date(recording.date_recorded.replace(" ", "T")).toLocaleString()
+                        : "N/A"}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.infoRow}>

@@ -26,6 +26,7 @@ export type Recording = {
   sonagramvideoid?: string;
   caption: string;
   recorded_by: string;
+  date_recorded: string;
   createdAt: string;
   species?: Species;
 };

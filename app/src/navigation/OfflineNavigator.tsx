@@ -1,29 +1,12 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StyleSheet, View } from "react-native";
 
-import GlobalAudioBar from "../components/GlobalAudioBar";
+import { withGlobalAudioBar } from "../components/GlobalAudioBar";
 import OfflineIndicator from "../components/OfflineIndicator";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import OfflineNoticeScreen from "../screens/offline/OfflineNoticeScreen";
 import OfflineScreen from "../screens/offline/OfflineScreen";
 import { OfflineStackParamList } from "../types";
-
-// Higher-order component that wraps screens with GlobalAudioBar
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const withGlobalAudioBar = (WrappedComponent: React.ComponentType<any>) => {
-  return (props: React.ComponentProps<typeof WrappedComponent>) => (
-    <View style={styles.container}>
-      <WrappedComponent {...props} />
-      <GlobalAudioBar />
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
 
 // Stack navigator for offline mode
 const OfflineStack = createNativeStackNavigator<OfflineStackParamList>();

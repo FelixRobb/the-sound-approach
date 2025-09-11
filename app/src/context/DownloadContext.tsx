@@ -38,46 +38,20 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [downloadedRecordings, setDownloadedRecordings] = useState<string[]>([]);
   const [totalStorageUsed, setTotalStorageUsed] = useState(0);
 
-  // Track active download operations for pausing
+  // Track active download operations for pausing/resuming
   const activeDownloads = useRef<Record<string, FileSystem.DownloadResumable>>({});
-
-  // Validation functions for state transitions
-  const canStartDownload = (recordingId: string): boolean => {
-    const downloadInfo = downloads[recordingId];
-
-    // Can start if no download info exists, or if the previous download failed
-    return !downloadInfo || downloadInfo.status === "error";
-  };
-
-  const canPauseDownload = (recordingId: string): boolean => {
-    const downloadInfo = downloads[recordingId];
-    return downloadInfo?.status === "downloading" && activeDownloads.current[recordingId] !== null;
-  };
-
-  const canResumeDownload = (recordingId: string): boolean => {
-    const downloadInfo = downloads[recordingId];
-    return downloadInfo?.status === "paused";
-  };
-
-  const canDeleteDownload = (recordingId: string): boolean => {
-    const downloadInfo = downloads[recordingId];
-    return downloadInfo?.status === "completed";
-  };
 
   // Load downloaded recordings and their status from AsyncStorage
   const loadDownloadedRecordings = useCallback(async () => {
     try {
       const userId = authState.user?.id || "anonymous";
-      // Get the downloads list key
       const downloadsListKey = `downloads_list_${userId}`;
       const downloadsList = await AsyncStorage.getItem(downloadsListKey);
 
       if (downloadsList) {
         const ids = JSON.parse(downloadsList) as string[];
-        setDownloadedRecordings(ids);
-
-        // Also restore the downloads status for each recording
         const downloadsStatus: Record<string, DownloadInfo> = {};
+        const validIds: string[] = [];
 
         for (const recordingId of ids) {
           const downloadKey = `download_${userId}_${recordingId}`;
@@ -86,24 +60,42 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (downloadData) {
             const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
 
-            // Restore the download status information
+            // Reconcile: if file exists locally, force status to completed
+            let reconciledStatus = downloadRecord.download_status;
+            let reconciledProgress = downloadRecord.download_progress;
+            try {
+              const fileInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
+              if (fileInfo.exists) {
+                if (reconciledStatus !== "completed" || reconciledProgress < 1) {
+                  const updatedRecord: DownloadRecord = {
+                    ...downloadRecord,
+                    download_status: "completed",
+                    download_progress: 1,
+                    downloaded_at: downloadRecord.downloaded_at || Date.now(),
+                  };
+                  await AsyncStorage.setItem(downloadKey, JSON.stringify(updatedRecord));
+                  reconciledStatus = "completed";
+                  reconciledProgress = 1;
+                }
+              }
+            } catch {
+              // Ignore file info errors; fall back to stored status
+            }
+
             downloadsStatus[recordingId] = {
               recordingId,
-              status: downloadRecord.download_status,
-              progress: downloadRecord.download_progress,
+              status: reconciledStatus,
+              progress: reconciledProgress,
             };
+            validIds.push(recordingId);
           }
         }
 
+        setDownloadedRecordings(validIds);
         setDownloads(downloadsStatus);
 
-        // Clean up any inconsistencies - remove IDs that don't have valid download records
-        const validIds = ids.filter((id) => downloadsStatus[id] !== undefined);
+        // Update storage if we cleaned up invalid entries
         if (validIds.length !== ids.length) {
-          // eslint-disable-next-line no-console
-          console.log(`Cleaned up ${ids.length - validIds.length} invalid download records`);
-          setDownloadedRecordings(validIds);
-          // Update the stored list to reflect the cleanup
           await AsyncStorage.setItem(downloadsListKey, JSON.stringify(validIds));
         }
       } else {
@@ -137,47 +129,20 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Helper function to update download record progress
-  const updateDownloadRecordProgress = async (
-    recordingId: string,
-    progress: number,
-    userId: string
-  ) => {
+  // Helper function to update download record
+  const updateDownloadRecord = async (recordingId: string, updates: Partial<DownloadRecord>) => {
     try {
+      const userId = authState.user?.id || "anonymous";
       const downloadKey = `download_${userId}_${recordingId}`;
       const existingData = await AsyncStorage.getItem(downloadKey);
 
       if (existingData) {
         const downloadRecord = JSON.parse(existingData) as DownloadRecord;
-        downloadRecord.download_progress = progress;
-        await AsyncStorage.setItem(downloadKey, JSON.stringify(downloadRecord));
+        const updatedRecord = { ...downloadRecord, ...updates };
+        await AsyncStorage.setItem(downloadKey, JSON.stringify(updatedRecord));
       }
     } catch (error) {
-      console.error("Error updating download record progress:", error);
-    }
-  };
-
-  // Helper function to update download record status
-  const updateDownloadRecordStatus = async (
-    recordingId: string,
-    status: DownloadStatus,
-    userId: string,
-    error?: string
-  ) => {
-    try {
-      const downloadKey = `download_${userId}_${recordingId}`;
-      const existingData = await AsyncStorage.getItem(downloadKey);
-
-      if (existingData) {
-        const downloadRecord = JSON.parse(existingData) as DownloadRecord;
-        downloadRecord.download_status = status;
-        if (error) {
-          downloadRecord.download_error = error;
-        }
-        await AsyncStorage.setItem(downloadKey, JSON.stringify(downloadRecord));
-      }
-    } catch (error) {
-      console.error("Error updating download record status:", error);
+      console.error("Error updating download record:", error);
     }
   };
 
@@ -187,7 +152,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const userId = authState.user?.id || "anonymous";
       const result: DownloadRecord[] = [];
 
-      // Iterate through downloaded recording IDs
       for (const recordingId of downloadedRecordings) {
         const downloadKey = `download_${userId}_${recordingId}`;
         const downloadData = await AsyncStorage.getItem(downloadKey);
@@ -206,13 +170,17 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Download a recording with progress tracking
   const downloadRecording = async (recording: Recording) => {
-    // Validate if download can be started
-    if (!canStartDownload(recording.id)) {
-      const currentStatus = downloads[recording.id]?.status;
-      throw new Error(
-        `Cannot start download: Recording is currently ${currentStatus || "in unknown state"}. ` +
-          `Only recordings with error status or new recordings can be downloaded.`
-      );
+    const recordingId = recording.id;
+    const currentDownload = downloads[recordingId];
+
+    // Don't start if already completed
+    if (currentDownload?.status === "completed") {
+      throw new Error("Recording is already downloaded");
+    }
+
+    // Don't start if actively downloading
+    if (currentDownload?.status === "downloading") {
+      throw new Error("Recording is already being downloaded");
     }
 
     // Create downloads directory if it doesn't exist
@@ -229,7 +197,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const downloadRecord: DownloadRecord = {
       recording_id: recording.id,
       audio_path: audioPath,
-      downloaded_at: 0, // Will be updated when completed
+      downloaded_at: 0,
       download_status: "downloading",
       download_progress: 0,
       started_at: Date.now(),
@@ -251,48 +219,44 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         {},
         (progress) => {
           const progressValue = progress.totalBytesWritten / progress.totalBytesExpectedToWrite;
+
           // Update in-memory download state
           setDownloads((prev) => ({
             ...prev,
-            [recording.id]: {
-              ...prev[recording.id],
+            [recordingId]: {
+              ...prev[recordingId],
               progress: progressValue,
             },
           }));
 
           // Update stored download record with progress
-          void updateDownloadRecordProgress(recording.id, progressValue, userId);
+          void updateDownloadRecord(recordingId, { download_progress: progressValue });
         }
       );
 
-      // Store resumable download URI for potential resume
-      const resumableState = downloadResumable.savable();
-      const resumableKey = `resumable_${userId}_${recording.id}`;
-      await AsyncStorage.setItem(resumableKey, JSON.stringify(resumableState));
-
       // Store active download for pausing
-      activeDownloads.current[recording.id] = downloadResumable;
+      activeDownloads.current[recordingId] = downloadResumable;
 
       // Save the initial download record to AsyncStorage
-      const downloadKey = `download_${userId}_${recording.id}`;
+      const downloadKey = `download_${userId}_${recordingId}`;
       await AsyncStorage.setItem(downloadKey, JSON.stringify(downloadRecord));
 
-      // Add to downloads list immediately
-      const newDownloadedRecordings = [...downloadedRecordings, recording.id];
-      setDownloadedRecordings(newDownloadedRecordings);
+      // Add to downloads list if not already there
+      if (!downloadedRecordings.includes(recordingId)) {
+        const newDownloadedRecordings = [...downloadedRecordings, recordingId];
+        setDownloadedRecordings(newDownloadedRecordings);
 
-      // Store the updated downloads list
-      const downloadsListKey = `downloads_list_${userId}`;
-      await AsyncStorage.setItem(downloadsListKey, JSON.stringify(newDownloadedRecordings));
+        const downloadsListKey = `downloads_list_${userId}`;
+        await AsyncStorage.setItem(downloadsListKey, JSON.stringify(newDownloadedRecordings));
+      }
 
       // Update download status to downloading
       setDownloads((prev) => ({
         ...prev,
-        [recording.id]: {
-          recordingId: recording.id,
+        [recordingId]: {
+          recordingId,
           status: "downloading",
           progress: 0,
-          resumableUri: resumableKey,
         },
       }));
 
@@ -300,30 +264,26 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const result = await downloadResumable.downloadAsync();
 
       if (result?.uri) {
-        // Download completed successfully - update the existing record
-        const downloadKey = `download_${userId}_${recording.id}`;
-        const updatedRecord = {
-          ...downloadRecord,
+        // Download completed successfully
+        await updateDownloadRecord(recordingId, {
           download_status: "completed" as DownloadStatus,
           download_progress: 1,
           downloaded_at: Date.now(),
           audio_path: result.uri,
-        };
-        await AsyncStorage.setItem(downloadKey, JSON.stringify(updatedRecord));
+        });
 
         // Update in-memory state
         setDownloads((prev) => ({
           ...prev,
-          [recording.id]: {
-            recordingId: recording.id,
+          [recordingId]: {
+            recordingId,
             status: "completed",
             progress: 1,
           },
         }));
 
-        // Clean up resumable URI and active download
-        await AsyncStorage.removeItem(resumableKey);
-        delete activeDownloads.current[recording.id];
+        // Clean up active download
+        delete activeDownloads.current[recordingId];
 
         // Update storage usage
         void calculateStorageUsed();
@@ -331,89 +291,89 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Download error:", error);
 
-      // Don't remove active download here if it was paused - only on actual errors
-      if (error instanceof Error && error.message !== "Download was paused") {
-        delete activeDownloads.current[recording.id];
-        // Update the stored record with error status
-        await updateDownloadRecordStatus(recording.id, "error", userId, error.message);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+      // Only clean up if it's not a pause operation
+      if (errorMessage !== "Download was paused") {
+        delete activeDownloads.current[recordingId];
+
+        await updateDownloadRecord(recordingId, {
+          download_status: "error" as DownloadStatus,
+          download_error: errorMessage,
+        });
+
+        setDownloads((prev) => ({
+          ...prev,
+          [recordingId]: {
+            ...prev[recordingId],
+            status: "error",
+            error: errorMessage,
+          },
+        }));
       }
 
-      handleDownloadError(recording.id, error);
-      throw error; // Re-throw to let caller handle the error
+      throw error;
     }
-  };
-
-  // Handle download errors
-  const handleDownloadError = (recordingId: string, error: unknown) => {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-
-    setDownloads((prev) => ({
-      ...prev,
-      [recordingId]: {
-        ...prev[recordingId],
-        status: "paused",
-        error: errorMessage,
-      },
-    }));
   };
 
   // Pause a download
   const pauseDownload = async (recordingId: string) => {
-    // Validate if download can be paused
-    if (!canPauseDownload(recordingId)) {
-      const currentStatus = downloads[recordingId]?.status;
-      throw new Error(
-        `Cannot pause download: Recording is currently ${currentStatus || "not downloading"}. ` +
-          `Only actively downloading recordings can be paused.`
-      );
+    const activeDownload = activeDownloads.current[recordingId];
+    const currentDownload = downloads[recordingId];
+
+    if (!activeDownload || currentDownload?.status !== "downloading") {
+      throw new Error("No active download found to pause");
     }
 
-    const activeDownload = activeDownloads.current[recordingId];
+    try {
+      // If we're already effectively complete, finalize instead of pausing
+      if ((currentDownload?.progress || 0) >= 0.999) {
+        const userId = authState.user?.id || "anonymous";
+        const downloadKey = `download_${userId}_${recordingId}`;
+        const downloadData = await AsyncStorage.getItem(downloadKey);
+        if (downloadData) {
+          const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
+            if (fileInfo.exists) {
+              await updateDownloadRecord(recordingId, {
+                download_status: "completed",
+                download_progress: 1,
+                downloaded_at: Date.now(),
+              });
 
-    if (activeDownload) {
-      try {
-        // Pause the download by calling pauseAsync
-        await activeDownload.pauseAsync().catch((error) => {
-          console.error("Error pausing download:", error);
-        });
+              setDownloads((prev) => ({
+                ...prev,
+                [recordingId]: {
+                  ...prev[recordingId],
+                  status: "completed",
+                  progress: 1,
+                },
+              }));
 
-        // Update the resumable state after pausing
-        const pauseUserId = authState.user?.id || "anonymous";
-        const resumableKey = `resumable_${pauseUserId}_${recordingId}`;
-        const resumableState = activeDownload.savable();
-        await AsyncStorage.setItem(resumableKey, JSON.stringify(resumableState));
+              delete activeDownloads.current[recordingId];
 
-        // Update download status to paused
-        setDownloads((prev) => ({
-          ...prev,
-          [recordingId]: {
-            ...prev[recordingId],
-            status: "paused",
-            resumableUri: resumableKey,
-          },
-        }));
+              await AsyncStorage.removeItem(`resumable_${userId}_${recordingId}`).catch(() => {});
 
-        // Update stored record status to paused
-        await updateDownloadRecordStatus(recordingId, "paused", pauseUserId);
-
-        // Remove from active downloads since it's paused
-        delete activeDownloads.current[recordingId];
-      } catch (error) {
-        console.error("Error pausing download:", error);
-
-        // Still update status to paused even if pause failed
-        setDownloads((prev) => ({
-          ...prev,
-          [recordingId]: {
-            ...prev[recordingId],
-            status: "paused",
-          },
-        }));
-
-        throw error; // Re-throw to let caller handle the error
+              void calculateStorageUsed();
+              return;
+            }
+          } catch {
+            // Fall through to normal pause if file check fails
+          }
+        }
       }
-    } else {
-      // No active download found, just update status
+
+      await activeDownload.pauseAsync();
+
+      const userId = authState.user?.id || "anonymous";
+
+      // Save resumable state
+      const resumableState = activeDownload.savable();
+      const resumableKey = `resumable_${userId}_${recordingId}`;
+      await AsyncStorage.setItem(resumableKey, JSON.stringify(resumableState));
+
+      // Update download status
       setDownloads((prev) => ({
         ...prev,
         [recordingId]: {
@@ -421,18 +381,66 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           status: "paused",
         },
       }));
+
+      await updateDownloadRecord(recordingId, { download_status: "paused" as DownloadStatus });
+
+      // Remove from active downloads
+      delete activeDownloads.current[recordingId];
+    } catch (error) {
+      console.error("Error pausing download:", error);
+      try {
+        // If pausing failed, check whether the file is already complete and finalize
+        const userId = authState.user?.id || "anonymous";
+        const downloadKey = `download_${userId}_${recordingId}`;
+        const downloadData = await AsyncStorage.getItem(downloadKey);
+        if (downloadData) {
+          const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
+          const fileInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
+          if (fileInfo.exists) {
+            await updateDownloadRecord(recordingId, {
+              download_status: "completed",
+              download_progress: 1,
+              downloaded_at: Date.now(),
+            });
+
+            setDownloads((prev) => ({
+              ...prev,
+              [recordingId]: {
+                ...prev[recordingId],
+                status: "completed",
+                progress: 1,
+              },
+            }));
+
+            delete activeDownloads.current[recordingId];
+            await AsyncStorage.removeItem(`resumable_${userId}_${recordingId}`).catch(() => {});
+            void calculateStorageUsed();
+            return;
+          }
+        }
+      } catch {
+        // Ignore reconciliation errors and fall through to marking paused
+      }
+
+      // Fall back: mark as paused when reconciliation isn't possible
+      setDownloads((prev) => ({
+        ...prev,
+        [recordingId]: {
+          ...prev[recordingId],
+          status: "paused",
+        },
+      }));
+
+      throw error;
     }
   };
 
   // Resume a paused download
   const resumeDownload = async (recordingId: string) => {
-    // Validate if download can be resumed
-    if (!canResumeDownload(recordingId)) {
-      const currentStatus = downloads[recordingId]?.status;
-      throw new Error(
-        `Cannot resume download: Recording is currently ${currentStatus || "not paused"}. ` +
-          `Only paused recordings can be resumed.`
-      );
+    const currentDownload = downloads[recordingId];
+
+    if (currentDownload?.status !== "paused") {
+      throw new Error("Download is not paused");
     }
 
     try {
@@ -440,23 +448,54 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const resumableKey = `resumable_${userId}_${recordingId}`;
       const resumableData = await AsyncStorage.getItem(resumableKey);
 
-      if (!resumableData) {
-        throw new Error(
-          `No resumable download data found for this recording. ` +
-            `The download may have been corrupted or cleaned up. Please start a new download.`
-        );
+      // If progress shows completion or file exists, finalize without resuming
+      if ((currentDownload?.progress || 0) >= 0.999) {
+        const downloadKey = `download_${userId}_${recordingId}`;
+        const downloadData = await AsyncStorage.getItem(downloadKey);
+        if (downloadData) {
+          const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
+            if (fileInfo.exists) {
+              await updateDownloadRecord(recordingId, {
+                download_status: "completed",
+                download_progress: 1,
+                downloaded_at: Date.now(),
+              });
+
+              setDownloads((prev) => ({
+                ...prev,
+                [recordingId]: {
+                  ...prev[recordingId],
+                  status: "completed",
+                  progress: 1,
+                },
+              }));
+
+              await AsyncStorage.removeItem(resumableKey).catch(() => {});
+              delete activeDownloads.current[recordingId];
+              void calculateStorageUsed();
+              return;
+            }
+          } catch {
+            // If file check fails, continue to attempt normal resume
+          }
+        }
       }
 
-      // Parse the resumable state and create download resumable
+      if (!resumableData) {
+        throw new Error("No resumable download data found");
+      }
+
       const resumableState = JSON.parse(resumableData) as {
-        url?: string;
-        fileUri?: string;
+        url: string;
+        fileUri: string;
         options?: Record<string, unknown>;
         resumeData?: string;
       };
 
       if (!resumableState.url || !resumableState.fileUri) {
-        throw new Error("Invalid resumable state");
+        throw new Error("Invalid resumable state data");
       }
 
       const downloadResumable = new FileSystem.DownloadResumable(
@@ -472,9 +511,14 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               progress: progressValue,
             },
           }));
+
+          void updateDownloadRecord(recordingId, { download_progress: progressValue });
         },
         resumableState.resumeData
       );
+
+      // Store active download
+      activeDownloads.current[recordingId] = downloadResumable;
 
       // Update status to downloading
       setDownloads((prev) => ({
@@ -486,31 +530,19 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         },
       }));
 
-      // Update stored record status to downloading
-      const resumeUserId = authState.user?.id || "anonymous";
-      await updateDownloadRecordStatus(recordingId, "downloading", resumeUserId);
+      await updateDownloadRecord(recordingId, { download_status: "downloading" as DownloadStatus });
 
       // Resume download
       const result = await downloadResumable.resumeAsync();
 
       if (result?.uri) {
-        // Update the existing record to completed status
-        const downloadKey = `download_${resumeUserId}_${recordingId}`;
-        const existingData = await AsyncStorage.getItem(downloadKey);
+        await updateDownloadRecord(recordingId, {
+          download_status: "completed" as DownloadStatus,
+          download_progress: 1,
+          downloaded_at: Date.now(),
+          audio_path: result.uri,
+        });
 
-        if (existingData) {
-          const downloadRecord = JSON.parse(existingData) as DownloadRecord;
-          const updatedRecord = {
-            ...downloadRecord,
-            download_status: "completed" as DownloadStatus,
-            download_progress: 1,
-            downloaded_at: Date.now(),
-            audio_path: result.uri,
-          };
-          await AsyncStorage.setItem(downloadKey, JSON.stringify(updatedRecord));
-        }
-
-        // Update in-memory state
         setDownloads((prev) => ({
           ...prev,
           [recordingId]: {
@@ -520,30 +552,44 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           },
         }));
 
-        // Clean up resumable URI
-        const resumableKey = `resumable_${resumeUserId}_${recordingId}`;
+        // Clean up resumable data
         await AsyncStorage.removeItem(resumableKey);
+        delete activeDownloads.current[recordingId];
 
-        // Update storage usage
         void calculateStorageUsed();
       }
     } catch (error) {
       console.error("Resume download error:", error);
 
-      handleDownloadError(recordingId, error);
-      throw error; // Re-throw to let caller handle the error
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+      setDownloads((prev) => ({
+        ...prev,
+        [recordingId]: {
+          ...prev[recordingId],
+          status: "error",
+          error: errorMessage,
+        },
+      }));
+
+      await updateDownloadRecord(recordingId, {
+        download_status: "error" as DownloadStatus,
+        download_error: errorMessage,
+      });
+
+      delete activeDownloads.current[recordingId];
+
+      throw error;
     }
   };
 
   // Delete a downloaded recording
   const deleteDownload = async (recordingId: string) => {
-    // Validate if download can be deleted
-    if (!canDeleteDownload(recordingId)) {
-      const currentStatus = downloads[recordingId]?.status;
-      throw new Error(
-        `Cannot delete download: Recording is currently ${currentStatus || "not completed"}. ` +
-          `Only completed downloads can be deleted.`
-      );
+    const currentDownload = downloads[recordingId];
+
+    // Don't allow deletion only if there's an active download operation
+    if (currentDownload?.status === "downloading" && activeDownloads.current[recordingId]) {
+      throw new Error("Cannot delete active download. Pause it first.");
     }
 
     try {
@@ -553,48 +599,33 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Get the download record
       const downloadData = await AsyncStorage.getItem(downloadKey);
 
-      if (!downloadData) {
-        throw new Error(
-          `Download record not found. The download may have already been deleted or was never completed.`
-        );
-      }
+      if (downloadData) {
+        const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
 
-      const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
-
-      // Additional safety check: only delete if status is completed
-      if (downloadRecord.download_status !== "completed") {
-        throw new Error(
-          `Cannot delete incomplete download. Current status: ${downloadRecord.download_status}`
-        );
-      }
-
-      // Delete files with error handling
-      try {
-        const audioInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
-        if (audioInfo.exists) {
-          await FileSystem.deleteAsync(downloadRecord.audio_path);
+        // Delete audio file if it exists
+        try {
+          const audioInfo = await FileSystem.getInfoAsync(downloadRecord.audio_path);
+          if (audioInfo.exists) {
+            await FileSystem.deleteAsync(downloadRecord.audio_path);
+          }
+        } catch (fileError) {
+          console.warn("Warning: Could not delete audio file:", fileError);
         }
-      } catch (fileError) {
-        console.warn("Warning: Could not delete audio file:", fileError);
-        // Continue with deletion process even if file deletion fails
       }
 
       // Remove from AsyncStorage
       await AsyncStorage.removeItem(downloadKey);
 
+      // Clean up resumable data
+      const resumableKey = `resumable_${userId}_${recordingId}`;
+      await AsyncStorage.removeItem(resumableKey).catch(() => {});
+
       // Update the downloads list
       const newDownloadedRecordings = downloadedRecordings.filter((id) => id !== recordingId);
       setDownloadedRecordings(newDownloadedRecordings);
 
-      // Store the updated downloads list
       const downloadsListKey = `downloads_list_${userId}`;
       await AsyncStorage.setItem(downloadsListKey, JSON.stringify(newDownloadedRecordings));
-
-      // Clean up any remaining resumable data
-      const resumableKey = `resumable_${userId}_${recordingId}`;
-      await AsyncStorage.removeItem(resumableKey).catch(() => {
-        // Ignore errors for resumable cleanup
-      });
 
       // Update downloads state
       setDownloads((prev) => {
@@ -603,24 +634,26 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return newDownloads;
       });
 
-      // Update storage usage
+      // Clean up active download reference
+      delete activeDownloads.current[recordingId];
+
       void calculateStorageUsed();
     } catch (error) {
       console.error("Delete download error:", error);
-
-      throw error; // Re-throw to let caller handle the error
+      throw error;
     }
   };
 
-  // Clear all downloads - now uses the utility function
+  // Clear all downloads
   const clearAllDownloads = async () => {
     try {
       const userId = authState.user?.id || null;
 
-      // Use the utility function to clear downloads
+      // Clear active downloads
+      activeDownloads.current = {};
+
       await clearUserDownloads(userId);
 
-      // Update local state
       setDownloadedRecordings([]);
       setDownloads({});
       setTotalStorageUsed(0);
@@ -631,26 +664,13 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Check if a recording is downloaded (completed)
   const isDownloaded = (recordingId: string) => {
-    // Check if it's in the downloads list
-    if (!downloadedRecordings.includes(recordingId)) return false;
-
     const downloadStatus = downloads[recordingId];
-
-    // If we have status information, check if it's completed
-    if (downloadStatus) {
-      return downloadStatus.status === "completed";
-    }
-
-    // If no status info is available but it's in downloadedRecordings,
-    // it might be a legacy download or the status wasn't loaded yet
-    // For backwards compatibility, assume it's downloaded if it's in the list
-    return true;
+    return downloadStatus?.status === "completed";
   };
 
   // Get the file path for a downloaded file
   const getDownloadPath = (fileId: string) => {
     if (!fileId) return null;
-
     const downloadsDir = FileSystem.documentDirectory + "downloads/";
     return `${downloadsDir}audio_${fileId}.mp3`;
   };
