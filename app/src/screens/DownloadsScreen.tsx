@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useFocusEffect, useRoute } from "@react-navigation/native";
+import { useNavigation, useFocusEffect, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import {
@@ -28,7 +28,7 @@ const { width } = Dimensions.get("window");
 
 const DownloadsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute();
+  const route = useRoute<RouteProp<RootStackParamList>>();
   const { totalStorageUsed, deleteDownload, clearAllDownloads, getDownloadedRecordings } =
     useContext(DownloadContext);
   const { theme } = useEnhancedTheme();

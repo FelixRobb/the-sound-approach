@@ -41,21 +41,12 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Track active download operations for pausing
   const activeDownloads = useRef<Record<string, FileSystem.DownloadResumable>>({});
 
-  // Track ongoing operations to prevent race conditions
-  const ongoingOperations = useRef<Set<string>>(new Set());
-
   // Validation functions for state transitions
   const canStartDownload = (recordingId: string): boolean => {
     const downloadInfo = downloads[recordingId];
-    const isAlreadyDownloaded = downloadedRecordings.includes(recordingId);
 
-    // Can start if not in downloads list, or if status is error/idle
-    return (
-      !isAlreadyDownloaded ||
-      !downloadInfo ||
-      downloadInfo.status === "error" ||
-      downloadInfo.status === "idle"
-    );
+    // Can start if no download info exists, or if the previous download failed
+    return !downloadInfo || downloadInfo.status === "error";
   };
 
   const canPauseDownload = (recordingId: string): boolean => {
@@ -73,42 +64,56 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return downloadInfo?.status === "completed";
   };
 
-  // Helper function to check if an operation is already in progress
-  const isOperationInProgress = (recordingId: string): boolean => {
-    return ongoingOperations.current.has(recordingId);
-  };
-
-  // Helper function to start an operation (with locking)
-  const startOperation = (recordingId: string, operationType: string): void => {
-    if (isOperationInProgress(recordingId)) {
-      throw new Error(
-        `Another operation (${operationType}) is already in progress for this recording`
-      );
-    }
-    ongoingOperations.current.add(recordingId);
-  };
-
-  // Helper function to end an operation (release lock)
-  const endOperation = (recordingId: string): void => {
-    ongoingOperations.current.delete(recordingId);
-  };
-
-  // Load downloaded recordings from AsyncStorage
+  // Load downloaded recordings and their status from AsyncStorage
   const loadDownloadedRecordings = useCallback(async () => {
     try {
+      const userId = authState.user?.id || "anonymous";
       // Get the downloads list key
-      const downloadsListKey = `downloads_list_${authState.user?.id || "anonymous"}`;
+      const downloadsListKey = `downloads_list_${userId}`;
       const downloadsList = await AsyncStorage.getItem(downloadsListKey);
 
       if (downloadsList) {
         const ids = JSON.parse(downloadsList) as string[];
         setDownloadedRecordings(ids);
+
+        // Also restore the downloads status for each recording
+        const downloadsStatus: Record<string, DownloadInfo> = {};
+
+        for (const recordingId of ids) {
+          const downloadKey = `download_${userId}_${recordingId}`;
+          const downloadData = await AsyncStorage.getItem(downloadKey);
+
+          if (downloadData) {
+            const downloadRecord = JSON.parse(downloadData) as DownloadRecord;
+
+            // Restore the download status information
+            downloadsStatus[recordingId] = {
+              recordingId,
+              status: downloadRecord.download_status,
+              progress: downloadRecord.download_progress,
+            };
+          }
+        }
+
+        setDownloads(downloadsStatus);
+
+        // Clean up any inconsistencies - remove IDs that don't have valid download records
+        const validIds = ids.filter((id) => downloadsStatus[id] !== undefined);
+        if (validIds.length !== ids.length) {
+          // eslint-disable-next-line no-console
+          console.log(`Cleaned up ${ids.length - validIds.length} invalid download records`);
+          setDownloadedRecordings(validIds);
+          // Update the stored list to reflect the cleanup
+          await AsyncStorage.setItem(downloadsListKey, JSON.stringify(validIds));
+        }
       } else {
         setDownloadedRecordings([]);
+        setDownloads({});
       }
     } catch (error) {
       console.error("Error loading downloaded recordings:", error);
       setDownloadedRecordings([]);
+      setDownloads({});
     }
   }, [authState.user?.id]);
 
@@ -201,11 +206,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Download a recording with progress tracking
   const downloadRecording = async (recording: Recording) => {
-    // Check for concurrent operations
-    if (isOperationInProgress(recording.id)) {
-      throw new Error("Another operation is already in progress for this recording");
-    }
-
     // Validate if download can be started
     if (!canStartDownload(recording.id)) {
       const currentStatus = downloads[recording.id]?.status;
@@ -214,9 +214,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           `Only recordings with error status or new recordings can be downloaded.`
       );
     }
-
-    // Start operation lock
-    startOperation(recording.id, "download");
 
     // Create downloads directory if it doesn't exist
     const downloadsDir = FileSystem.documentDirectory + "downloads/";
@@ -330,9 +327,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         // Update storage usage
         void calculateStorageUsed();
-
-        // Release operation lock
-        endOperation(recording.id);
       }
     } catch (error) {
       console.error("Download error:", error);
@@ -343,9 +337,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Update the stored record with error status
         await updateDownloadRecordStatus(recording.id, "error", userId, error.message);
       }
-
-      // Always release operation lock on error
-      endOperation(recording.id);
 
       handleDownloadError(recording.id, error);
       throw error; // Re-throw to let caller handle the error
@@ -368,11 +359,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Pause a download
   const pauseDownload = async (recordingId: string) => {
-    // Check for concurrent operations
-    if (isOperationInProgress(recordingId)) {
-      throw new Error("Another operation is already in progress for this recording");
-    }
-
     // Validate if download can be paused
     if (!canPauseDownload(recordingId)) {
       const currentStatus = downloads[recordingId]?.status;
@@ -381,9 +367,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           `Only actively downloading recordings can be paused.`
       );
     }
-
-    // Start operation lock
-    startOperation(recordingId, "pause");
 
     const activeDownload = activeDownloads.current[recordingId];
 
@@ -415,9 +398,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         // Remove from active downloads since it's paused
         delete activeDownloads.current[recordingId];
-
-        // Release operation lock
-        endOperation(recordingId);
       } catch (error) {
         console.error("Error pausing download:", error);
 
@@ -430,12 +410,10 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           },
         }));
 
-        // Release operation lock on error
-        endOperation(recordingId);
         throw error; // Re-throw to let caller handle the error
       }
     } else {
-      // No active download found, just update status and release lock
+      // No active download found, just update status
       setDownloads((prev) => ({
         ...prev,
         [recordingId]: {
@@ -443,19 +421,11 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           status: "paused",
         },
       }));
-
-      // Release operation lock
-      endOperation(recordingId);
     }
   };
 
   // Resume a paused download
   const resumeDownload = async (recordingId: string) => {
-    // Check for concurrent operations
-    if (isOperationInProgress(recordingId)) {
-      throw new Error("Another operation is already in progress for this recording");
-    }
-
     // Validate if download can be resumed
     if (!canResumeDownload(recordingId)) {
       const currentStatus = downloads[recordingId]?.status;
@@ -464,9 +434,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           `Only paused recordings can be resumed.`
       );
     }
-
-    // Start operation lock
-    startOperation(recordingId, "resume");
 
     try {
       const userId = authState.user?.id || "anonymous";
@@ -559,15 +526,9 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         // Update storage usage
         void calculateStorageUsed();
-
-        // Release operation lock
-        endOperation(recordingId);
       }
     } catch (error) {
       console.error("Resume download error:", error);
-
-      // Always release operation lock on error
-      endOperation(recordingId);
 
       handleDownloadError(recordingId, error);
       throw error; // Re-throw to let caller handle the error
@@ -576,11 +537,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Delete a downloaded recording
   const deleteDownload = async (recordingId: string) => {
-    // Check for concurrent operations
-    if (isOperationInProgress(recordingId)) {
-      throw new Error("Another operation is already in progress for this recording");
-    }
-
     // Validate if download can be deleted
     if (!canDeleteDownload(recordingId)) {
       const currentStatus = downloads[recordingId]?.status;
@@ -589,9 +545,6 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           `Only completed downloads can be deleted.`
       );
     }
-
-    // Start operation lock
-    startOperation(recordingId, "delete");
 
     try {
       const userId = authState.user?.id || "anonymous";
@@ -652,14 +605,8 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       // Update storage usage
       void calculateStorageUsed();
-
-      // Release operation lock
-      endOperation(recordingId);
     } catch (error) {
       console.error("Delete download error:", error);
-
-      // Always release operation lock on error
-      endOperation(recordingId);
 
       throw error; // Re-throw to let caller handle the error
     }
@@ -684,11 +631,20 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Check if a recording is downloaded (completed)
   const isDownloaded = (recordingId: string) => {
-    // Check if it's in the downloads list AND has completed status
+    // Check if it's in the downloads list
     if (!downloadedRecordings.includes(recordingId)) return false;
 
     const downloadStatus = downloads[recordingId];
-    return downloadStatus?.status === "completed";
+
+    // If we have status information, check if it's completed
+    if (downloadStatus) {
+      return downloadStatus.status === "completed";
+    }
+
+    // If no status info is available but it's in downloadedRecordings,
+    // it might be a legacy download or the status wasn't loaded yet
+    // For backwards compatibility, assume it's downloaded if it's in the list
+    return true;
   };
 
   // Get the file path for a downloaded file
