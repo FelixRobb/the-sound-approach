@@ -31,6 +31,7 @@ const OfflineScreen = () => {
 
   const [downloads, setDownloads] = useState<DownloadRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showOfflineModal, setShowOfflineModal] = useState(false);
 
@@ -48,53 +49,48 @@ const OfflineScreen = () => {
   };
 
   // Load downloaded recordings from database
-  const loadDownloads = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const downloadedRecordings = await getDownloadedRecordings();
-      // Map the downloaded recordings to match the DownloadedRecording type
-      const formattedRecordings = downloadedRecordings.map((record: DownloadRecord) => ({
-        recording_id: record.recording_id,
-        audio_path: record.audio_path,
-        downloaded_at: record.downloaded_at,
-        rec_number: record.rec_number,
-        site_name: record.site_name,
-        species_id: record.species_id,
-        caption: record.caption,
-        id: record.id,
-        catalogue_code: record.catalogue_code,
-        audiohqid: record.audiohqid,
-        audiolqid: record.audiolqid,
-        sonagramvideoid: record.sonagramvideoid,
-        species: record.species,
-        recorded_by: record.recorded_by,
-        download_status: record.download_status,
-        download_progress: record.download_progress,
-        started_at: record.started_at,
-        createdAt: new Date(record.downloaded_at).toISOString(),
-      }));
-      setDownloads(formattedRecordings);
-    } catch (error) {
-      console.error("Error loading downloads:", error);
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
-    }
-  }, [getDownloadedRecordings]);
+  const loadDownloads = useCallback(
+    async (showLoadingScreen = true) => {
+      if (showLoadingScreen && !hasInitiallyLoaded) {
+        setIsLoading(true);
+      }
+      try {
+        const downloadedRecordings = await getDownloadedRecordings();
+        // Filter to only show completed downloads for offline use
+        const completedDownloads = downloadedRecordings.filter(
+          (recording) => recording.download_status === "completed"
+        );
+
+        setDownloads(completedDownloads);
+        if (!hasInitiallyLoaded) {
+          setHasInitiallyLoaded(true);
+        }
+      } catch (error) {
+        console.error("Error loading downloads:", error);
+      } finally {
+        if (showLoadingScreen) {
+          setIsLoading(false);
+        }
+        setRefreshing(false);
+      }
+    },
+    [getDownloadedRecordings, hasInitiallyLoaded]
+  );
 
   // Check for downloads when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      void loadDownloads();
+      // Load silently after initial load to avoid loading screen
+      void loadDownloads(false);
       return () => {
         // Optional cleanup if needed
       };
     }, [loadDownloads])
   );
 
-  // Initial load when component mounts
+  // Initial load when component mounts - show loading screen
   useEffect(() => {
-    void loadDownloads();
+    void loadDownloads(true);
   }, [loadDownloads]);
 
   // Create styles with theme support
@@ -308,8 +304,8 @@ const OfflineScreen = () => {
     </View>
   );
 
-  // Loading state
-  if (isLoading && !refreshing) {
+  // Loading state - only show on initial load
+  if (isLoading && !refreshing && !hasInitiallyLoaded) {
     return (
       <View style={styles.container}>
         <BackgroundPattern />
@@ -333,16 +329,21 @@ const OfflineScreen = () => {
       <FlatList
         data={downloads}
         renderItem={renderDownloadItem}
-        keyExtractor={(item) => item.recording_id.toString()}
+        keyExtractor={(item) => item.recording_id}
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={<EmptyState />}
+        removeClippedSubviews={false}
+        windowSize={10}
+        maxToRenderPerBatch={5}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              void loadDownloads();
+              void loadDownloads(false);
             }}
             colors={[theme.colors.primary]}
             tintColor={theme.colors.primary}
