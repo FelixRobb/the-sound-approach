@@ -4,8 +4,8 @@ import { StyleSheet, View } from "react-native";
 import GlobalAudioBar from "../components/GlobalAudioBar";
 import OfflineIndicator from "../components/OfflineIndicator";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import OfflineNoticeScreen from "../screens/OfflineNoticeScreen";
-import OfflineScreen from "../screens/OfflineScreen";
+import OfflineNoticeScreen from "../screens/offline/OfflineNoticeScreen";
+import OfflineScreen from "../screens/offline/OfflineScreen";
 import { OfflineStackParamList } from "../types";
 
 // Higher-order component that wraps screens with GlobalAudioBar

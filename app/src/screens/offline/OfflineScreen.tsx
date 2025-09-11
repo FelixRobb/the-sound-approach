@@ -12,14 +12,14 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import BackgroundPattern from "../components/BackgroundPattern";
-import CustomModal from "../components/CustomModal";
-import DownloadCard from "../components/DownloadCard";
-import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
-import { DownloadContext } from "../context/DownloadContext";
-import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { createThemedTextStyle } from "../lib/theme";
-import type { DownloadRecord } from "../types";
+import BackgroundPattern from "../../components/BackgroundPattern";
+import CustomModal from "../../components/CustomModal";
+import DownloadCard from "../../components/DownloadCard";
+import { useGlobalAudioBarHeight } from "../../components/GlobalAudioBar";
+import { DownloadContext } from "../../context/DownloadContext";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../../lib/theme";
+import type { DownloadRecord } from "../../types";
 
 const { width } = Dimensions.get("window");
 

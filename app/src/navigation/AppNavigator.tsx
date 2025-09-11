@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { NavigationContainer, NavigationProp, RouteProp } from "@react-navigation/native";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { useContext, useEffect, useRef } from "react";
@@ -22,23 +25,28 @@ import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { NetworkContext } from "../context/NetworkContext";
 import { navigationDarkTheme, navigationLightTheme, borderRadius } from "../lib/theme";
 import OfflineNavigator from "../navigation/OfflineNavigator";
-import DeleteAccountScreen from "../screens/DeleteAccountScreen";
+import DeleteAccountScreen from "../screens/auth/DeleteAccountScreen";
+import LoginScreen from "../screens/auth/LoginScreen";
+import OnboardingScreen from "../screens/auth/OnboardingScreen";
+import SignUpScreen from "../screens/auth/SignUpScreen";
+import WelcomeScreen from "../screens/auth/WelcomeScreen";
 import DownloadsScreen from "../screens/DownloadsScreen";
-import LoginScreen from "../screens/LoginScreen";
-import OfflineWelcomeScreen from "../screens/OfflineWelcomeScreen";
-import OnboardingScreen from "../screens/OnboardingScreen";
+import OfflineWelcomeScreen from "../screens/offline/OfflineWelcomeScreen";
 import ProfileSettingsScreen from "../screens/ProfileSettingsScreen";
 import RecordingDetailsScreen from "../screens/RecordingDetailsScreen";
 import RecordingsListScreen from "../screens/RecordingsListScreen";
 import SearchScreen from "../screens/SearchScreen";
-import SignUpScreen from "../screens/SignUpScreen";
 import SpeciesDetailsScreen from "../screens/SpeciesDetailsScreen";
-import WelcomeScreen from "../screens/WelcomeScreen";
+import { RootStackParamList } from "../types";
 
 // Higher-order component that wraps screens with GlobalAudioBar
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const withGlobalAudioBar = (WrappedComponent: React.ComponentType<any>) => {
-  return (props: React.ComponentProps<typeof WrappedComponent>) => (
+type ScreenProps = {
+  navigation: NavigationProp<NativeStackNavigationProp<RootStackParamList>>;
+  route: RouteProp<RootStackParamList>;
+};
+
+const withGlobalAudioBar = <T extends ScreenProps>(WrappedComponent: React.ComponentType<T>) => {
+  return (props: T) => (
     <View style={styles.container}>
       <WrappedComponent {...props} />
       <GlobalAudioBar />
@@ -486,7 +494,7 @@ const MainNavigator: React.FC = () => {
       <MainStack.Navigator
         screenOptions={{
           headerShown: false,
-          animation: "fade",
+          animation: "slide_from_right",
           gestureEnabled: true,
           gestureDirection: "horizontal",
           presentation: "card",
@@ -513,7 +521,7 @@ const MainNavigator: React.FC = () => {
           options={{
             presentation: "card",
             gestureEnabled: true,
-            animation: "slide_from_right",
+            gestureDirection: "horizontal",
             contentStyle: {
               backgroundColor: theme.colors.background,
             },
@@ -524,8 +532,6 @@ const MainNavigator: React.FC = () => {
           component={withGlobalAudioBar(DeleteAccountScreen)}
           options={{
             presentation: "card",
-            gestureEnabled: true,
-            animation: "slide_from_right",
             contentStyle: {
               backgroundColor: theme.colors.background,
             },

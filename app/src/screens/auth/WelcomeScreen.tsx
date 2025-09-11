@@ -5,9 +5,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Button } from "../components/ui";
-import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import type { RootStackParamList } from "../types";
+import { Button } from "../../components/ui";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
+import type { RootStackParamList } from "../../types";
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -92,7 +92,7 @@ const WelcomeScreen = () => {
   return (
     <ImageBackground
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      source={require("../../assets/background-sound-approach.png")}
+      source={require("../../../assets/background-sound-approach.png")}
       style={styles.backgroundImage}
       resizeMode="cover"
     >

@@ -52,6 +52,96 @@ export interface InputProps extends Omit<TextInputProps, "style"> {
   type?: "text" | "email" | "password" | "number";
   showPasswordToggle?: boolean;
 
+  // Password saver support
+  textContentType?:
+    | "none"
+    | "URL"
+    | "addressCity"
+    | "addressCityAndState"
+    | "addressState"
+    | "countryName"
+    | "creditCardNumber"
+    | "emailAddress"
+    | "familyName"
+    | "fullStreetAddress"
+    | "givenName"
+    | "jobTitle"
+    | "location"
+    | "middleName"
+    | "name"
+    | "namePrefix"
+    | "nameSuffix"
+    | "nickname"
+    | "organizationName"
+    | "postalCode"
+    | "streetAddressLine1"
+    | "streetAddressLine2"
+    | "sublocality"
+    | "telephoneNumber"
+    | "username"
+    | "password"
+    | "newPassword"
+    | "oneTimeCode";
+  passwordRules?: string;
+  autoComplete?:
+    | "additional-name"
+    | "address-line1"
+    | "address-line2"
+    | "birthdate-day"
+    | "birthdate-full"
+    | "birthdate-month"
+    | "birthdate-year"
+    | "cc-csc"
+    | "cc-exp"
+    | "cc-exp-day"
+    | "cc-exp-month"
+    | "cc-exp-year"
+    | "cc-number"
+    | "country"
+    | "current-password"
+    | "email"
+    | "family-name"
+    | "given-name"
+    | "honorific-prefix"
+    | "honorific-suffix"
+    | "name"
+    | "new-password"
+    | "off"
+    | "one-time-code"
+    | "postal-code"
+    | "street-address"
+    | "tel"
+    | "username"
+    | "cc-family-name"
+    | "cc-given-name"
+    | "cc-middle-name"
+    | "cc-name"
+    | "cc-type"
+    | "nickname"
+    | "organization"
+    | "organization-title"
+    | "url"
+    | "gender"
+    | "name-family"
+    | "name-given"
+    | "name-middle"
+    | "name-middle-initial"
+    | "name-prefix"
+    | "name-suffix"
+    | "password"
+    | "password-new"
+    | "postal-address"
+    | "postal-address-country"
+    | "postal-address-extended"
+    | "postal-address-extended-postal-code"
+    | "postal-address-locality"
+    | "postal-address-region"
+    | "sms-otp"
+    | "tel-country-code"
+    | "tel-device"
+    | "tel-national"
+    | "username-new";
+
   // Styling overrides
   containerStyle?: ViewStyle;
   inputStyle?: TextStyle;
@@ -80,6 +170,9 @@ const Input = forwardRef<RNTextInput, InputProps>(
       rightIcon,
       type = "text",
       showPasswordToggle = false,
+      textContentType,
+      passwordRules,
+      autoComplete,
       containerStyle,
       inputStyle,
       labelStyle,
@@ -106,6 +199,27 @@ const Input = forwardRef<RNTextInput, InputProps>(
     const keyboardType =
       type === "email" ? "email-address" : type === "number" ? "numeric" : "default";
     const autoCapitalize = type === "email" ? "none" : "sentences";
+
+    // Password saver optimizations
+    const getTextContentType = () => {
+      if (textContentType) return textContentType;
+      if (type === "email") return "emailAddress";
+      if (isPassword) return "password";
+      return "none";
+    };
+
+    const getAutoComplete = () => {
+      if (autoComplete) return autoComplete;
+      if (type === "email") return "email";
+      if (isPassword) return "password";
+      return "off";
+    };
+
+    const getPasswordRules = () => {
+      if (passwordRules) return passwordRules;
+      if (isPassword) return "minlength: 8; required: lower; required: upper; required: digit;";
+      return undefined;
+    };
 
     // Create dynamic styles based on theme and state
     const styles = StyleSheet.create({
@@ -305,6 +419,17 @@ const Input = forwardRef<RNTextInput, InputProps>(
             keyboardType={keyboardType}
             autoCapitalize={autoCapitalize}
             autoCorrect={type !== "email"}
+            // Password saver support
+            textContentType={getTextContentType()}
+            passwordRules={getPasswordRules()}
+            autoComplete={getAutoComplete()}
+            // Keyboard optimization
+            enablesReturnKeyAutomatically={true}
+            blurOnSubmit={type !== "password"}
+            // Accessibility
+            accessibilityLabel={label || placeholder}
+            accessibilityHint={error || helperText}
+            accessibilityRole="text"
             {...props}
           />
 

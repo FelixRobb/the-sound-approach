@@ -1,0 +1,243 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState, useContext, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput as RNTextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+
+import BackgroundPattern from "../../components/BackgroundPattern";
+import { useToast } from "../../components/bna-toast";
+import DetailHeader from "../../components/DetailHeader";
+import { Input, Button, Card } from "../../components/ui";
+import { AuthContext } from "../../context/AuthContext";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
+import { createThemedTextStyle } from "../../lib/theme";
+import type { RootStackParamList } from "../../types";
+
+const LoginScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signIn, state: authState, clearError } = useContext(AuthContext);
+  const { theme } = useEnhancedTheme();
+  const toast = useToast();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const passwordInputRef = useRef<RNTextInput>(null);
+
+  // Handle auth errors locally to this screen
+  useEffect(() => {
+    if (authState.error) {
+      toast.error(authState.error);
+      clearError(); // Clear from global state immediately
+    }
+  }, [authState.error, clearError, toast]);
+
+  // Create styles based on theme
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
+    form: {
+      marginTop: theme.spacing.sm,
+    },
+    input: {
+      marginBottom: theme.spacing.md,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: "center",
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
+    },
+    signupContainer: {
+      borderTopColor: theme.colors.surfaceVariant,
+      borderTopWidth: 1,
+      flexDirection: "row",
+      justifyContent: "center",
+      marginTop: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+    },
+    signupText: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+    },
+    subtitle: {
+      ...createThemedTextStyle(theme, {
+        size: "base",
+        weight: "normal",
+        color: "onSurfaceVariant",
+      }),
+      marginBottom: theme.spacing.md,
+      textAlign: "center",
+    },
+    title: {
+      ...createThemedTextStyle(theme, {
+        size: "2xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
+      marginBottom: theme.spacing.sm,
+      textAlign: "center",
+    },
+    welcomeIcon: {
+      alignSelf: "center",
+      backgroundColor: theme.colors.tertiaryContainer,
+      borderRadius: theme.borderRadius.full,
+      marginBottom: theme.spacing.md,
+      padding: theme.spacing.md,
+    },
+  });
+
+  // Validate email format
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async () => {
+    // Reset errors
+    setEmailError("");
+    setPasswordError("");
+    toast.dismissAll();
+
+    // Validate inputs
+    let isValid = true;
+
+    if (!email) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    // Submit form
+    setIsLoading(true);
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <BackgroundPattern />
+      <DetailHeader title="Sign In" />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Card variant="elevated" size="lg" padding={theme.spacing.md}>
+          <View style={styles.welcomeIcon}>
+            <Ionicons name="person-circle-outline" size={32} color={theme.colors.tertiary} />
+          </View>
+
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to continue your birding journey</Text>
+
+          <View style={styles.form}>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                setEmailError("");
+              }}
+              error={emailError}
+              leftIcon={{
+                name: "mail-outline",
+                color: theme.colors.tertiary,
+              }}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
+              textContentType="emailAddress"
+              autoComplete="email"
+              style={styles.input}
+            />
+
+            <Input
+              ref={passwordInputRef}
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setPasswordError("");
+              }}
+              error={passwordError}
+              leftIcon={{
+                name: "lock-closed-outline",
+                color: theme.colors.tertiary,
+              }}
+              showPasswordToggle
+              returnKeyType="done"
+              onSubmitEditing={() => void handleSubmit()}
+              textContentType="password"
+              autoComplete="password"
+              passwordRules="minlength: 8; required: lower; required: upper; required: digit;"
+              style={styles.input}
+            />
+
+            <Button
+              onPress={() => void handleSubmit()}
+              disabled={isLoading}
+              loading={isLoading}
+              title={isLoading ? "Signing In..." : "Sign In"}
+              rightIcon={{ name: "log-in-outline" }}
+              size="lg"
+              variant="primary"
+              fullWidth
+            />
+
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>Don&apos;t have an account? </Text>
+              <Button
+                onPress={() => {
+                  toast.dismissAll(); // Clear local error when navigating
+                  navigation.navigate("SignUp");
+                }}
+                title="Sign Up"
+                variant="link"
+                size="sm"
+              />
+            </View>
+          </View>
+        </Card>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+};
+
+export default LoginScreen;

@@ -3,7 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
+import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
 const OfflineWelcomeScreen = () => {
   const { theme, isDark } = useEnhancedTheme();
   const insets = useSafeAreaInsets();
@@ -91,7 +91,7 @@ const OfflineWelcomeScreen = () => {
   return (
     <ImageBackground
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      source={require("../../assets/background-sound-approach.png")}
+      source={require("../../../assets/background-sound-approach.png")}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
