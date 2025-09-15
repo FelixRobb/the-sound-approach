@@ -524,8 +524,7 @@ const RecordingDetailsScreen = () => {
       marginLeft: isPlaying ? 0 : theme.spacing.xs,
     },
     cardContent: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.sm,
+      padding: theme.spacing.md,
     },
     container: {
       backgroundColor: theme.colors.background,
@@ -738,9 +737,6 @@ const RecordingDetailsScreen = () => {
       justifyContent: "space-between",
       marginBottom: theme.spacing.lg,
     },
-    infoBody: {
-      marginTop: theme.spacing.sm,
-    },
     infoCard: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
@@ -751,6 +747,16 @@ const RecordingDetailsScreen = () => {
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
+    },
+    infoHeader: {
+      marginBottom: theme.spacing.sm,
+    },
+    infoHeaderTitle: {
+      ...createThemedTextStyle(theme, {
+        size: "xl",
+        weight: "bold",
+        color: "onSurface",
+      }),
     },
     infoRow: {
       alignItems: "flex-start",
@@ -1363,7 +1369,10 @@ const RecordingDetailsScreen = () => {
           {/* Recording Information Card */}
           <View style={styles.infoCard}>
             <View style={styles.cardContent}>
-              <View style={styles.infoBody}>
+              <View style={styles.infoHeader}>
+                <Text style={styles.infoHeaderTitle}>Recording Information</Text>
+              </View>
+              <View>
                 {recording.caption && (
                   <View style={styles.infoRow}>
                     <Ionicons

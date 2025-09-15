@@ -143,9 +143,9 @@ BEGIN
       OR r.recorded_by ILIKE like_pattern
       OR (is_numeric AND r.rec_number = numeric_value)
   ) results
-  WHERE relevance_score > 0  -- Only return results with some relevance
+  WHERE results.relevance_score > 0  -- Only return results with some relevance
   -- Order by relevance score (highest first), then by result type (species first)
-  ORDER BY relevance_score DESC, result_type ASC
+  ORDER BY results.relevance_score DESC, results.result_type ASC
   LIMIT 100;
 END;
 $$;
@@ -155,12 +155,12 @@ GRANT EXECUTE ON FUNCTION search_recordings(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION search_recordings(TEXT) TO anon;
 
 -- Recommended indexes for better performance:
--- CREATE INDEX CONCURRENTLY idx_species_common_name_lower ON species (LOWER(common_name));
--- CREATE INDEX CONCURRENTLY idx_species_scientific_name_lower ON species (LOWER(scientific_name));
--- CREATE INDEX CONCURRENTLY idx_species_common_name_text ON species USING gin(common_name gin_trgm_ops);
--- CREATE INDEX CONCURRENTLY idx_species_scientific_name_text ON species USING gin(scientific_name gin_trgm_ops);
--- CREATE INDEX CONCURRENTLY idx_recordings_rec_number ON recordings (rec_number);
--- CREATE INDEX CONCURRENTLY idx_recordings_site_name_text ON recordings USING gin(site_name gin_trgm_ops);
--- CREATE INDEX CONCURRENTLY idx_recordings_catalogue_code_text ON recordings USING gin(catalogue_code gin_trgm_ops);
--- CREATE INDEX CONCURRENTLY idx_recordings_recorded_by_text ON recordings USING gin(recorded_by gin_trgm_ops);
--- CREATE INDEX CONCURRENTLY idx_recordings_caption_text ON recordings USING gin(caption gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_species_common_name_lower ON species (LOWER(common_name));
+CREATE INDEX CONCURRENTLY idx_species_scientific_name_lower ON species (LOWER(scientific_name));
+CREATE INDEX CONCURRENTLY idx_species_common_name_text ON species USING gin(common_name gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_species_scientific_name_text ON species USING gin(scientific_name gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_recordings_rec_number ON recordings (rec_number);
+CREATE INDEX CONCURRENTLY idx_recordings_site_name_text ON recordings USING gin(site_name gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_recordings_catalogue_code_text ON recordings USING gin(catalogue_code gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_recordings_recorded_by_text ON recordings USING gin(recorded_by gin_trgm_ops);
+CREATE INDEX CONCURRENTLY idx_recordings_caption_text ON recordings USING gin(caption gin_trgm_ops);

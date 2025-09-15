@@ -424,6 +424,11 @@ const SearchScreen = () => {
       setSearchResults(results);
 
       // Update the active filter based on results
+      if (query.length === 0) {
+        setHasSearched(false);
+        setIsSearching(false);
+        return;
+      }
       if (results.recordings.length > 0 && results.species.length === 0) {
         setActiveFilter("recordings");
       } else if (results.species.length > 0 && results.recordings.length === 0) {

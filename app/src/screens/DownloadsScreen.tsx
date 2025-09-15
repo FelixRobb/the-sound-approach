@@ -297,6 +297,12 @@ const DownloadsScreen = () => {
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
     },
+    storageInfoInner: {
+      flexDirection: "column",
+      flex: 1,
+      gap: theme.spacing.xxs,
+      justifyContent: "space-between",
+    },
   });
 
   // Custom header component
@@ -336,15 +342,26 @@ const DownloadsScreen = () => {
 
       <View style={styles.storageInfoContainer}>
         <View style={styles.storageInfo}>
-          <Text
-            style={createThemedTextStyle(theme, {
-              size: "lg",
-              weight: "normal",
-              color: "onSurfaceVariant",
-            })}
-          >
-            Storage used: {formatBytes(totalStorageUsed)}
-          </Text>
+          <View style={styles.storageInfoInner}>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "lg",
+                weight: "normal",
+                color: "onSurface",
+              })}
+            >
+              Storage used: {formatBytes(totalStorageUsed)}
+            </Text>
+            <Text
+              style={createThemedTextStyle(theme, {
+                size: "base",
+                weight: "normal",
+                color: "onSurfaceVariant",
+              })}
+            >
+              Drag a recording to the left to delete it
+            </Text>
+          </View>
           <Button
             onPress={handleClearAllDownloads}
             disabled={downloads.length === 0}
