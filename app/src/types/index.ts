@@ -69,7 +69,7 @@ export type AuthState = {
   isSignout: boolean;
   userToken: string | null;
   user: User | null;
-  error: string | null;
+  error: AuthError | null;
   hasCompletedOnboarding: boolean;
 };
 
@@ -83,7 +83,7 @@ export type AuthAction =
   | { type: "SIGN_IN"; token: string; user: User; hasCompletedOnboarding?: boolean }
   | { type: "SIGN_UP"; token: string; user: User }
   | { type: "SIGN_OUT" }
-  | { type: "AUTH_ERROR"; error: string | null }
+  | { type: "AUTH_ERROR"; error: AuthError | null }
   | { type: "COMPLETE_ONBOARDING" }
   | { type: "RESET_ONBOARDING" };
 
@@ -98,6 +98,12 @@ export type AuthContextType = {
   resetOnboarding: () => void;
 };
 
+export type AuthError = {
+  uniqueid: string;
+  name: string;
+  type: "SIGNIN" | "SIGNUP" | "SIGNOUT" | "DELETE_ACCOUNT";
+  message: string;
+};
 // ==========================================
 // Download Types
 // ==========================================

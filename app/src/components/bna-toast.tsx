@@ -43,7 +43,7 @@ interface ToastProps extends ToastData {
 
 const { width: screenWidth } = Dimensions.get("window");
 const DYNAMIC_ISLAND_HEIGHT = 37;
-const EXPANDED_HEIGHT = 85;
+const EXPANDED_HEIGHT = 62;
 const TOAST_MARGIN = 8;
 const DYNAMIC_ISLAND_WIDTH = 126;
 const EXPANDED_WIDTH = screenWidth - 32;
@@ -133,7 +133,7 @@ export function Toast({
   };
 
   const getIcon = () => {
-    const iconProps = { size: 16, color: getVariantColor() };
+    const iconProps = { size: 22, color: getVariantColor() };
 
     switch (variant) {
       case "success":
@@ -227,7 +227,7 @@ export function Toast({
     position: "absolute",
     top: getTopPosition(),
     alignSelf: "center",
-    shadowColor: "#000",
+    shadowColor: theme.colors.onSurface,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 20,
@@ -254,9 +254,10 @@ export function Toast({
       alignItems: "center",
       bottom: 0,
       flexDirection: "row",
+      gap: theme.spacing.sm,
       left: 0,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       position: "absolute",
       right: 0,
       top: 0,
@@ -287,7 +288,7 @@ export function Toast({
                 {title && (
                   <Text
                     style={createThemedTextStyle(theme, {
-                      size: "base",
+                      size: "lg",
                       weight: "bold",
                       color: "onSurface",
                     })}
@@ -300,7 +301,7 @@ export function Toast({
                 {description && (
                   <Text
                     style={createThemedTextStyle(theme, {
-                      size: "sm",
+                      size: "base",
                       weight: "normal",
                       color: "onSurfaceVariant",
                     })}
@@ -327,7 +328,7 @@ export function Toast({
               )}
 
               <TouchableOpacity onPress={dismiss} style={styles.closeButton}>
-                <Ionicons name="close" size={14} color={mutedTextColor} />
+                <Ionicons name="close" size={16} color={mutedTextColor} />
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -369,7 +370,7 @@ export function ToastProvider({ children, maxToasts = 3 }: ToastProviderProps) {
       const newToast: ToastData = {
         ...toastData,
         id,
-        duration: toastData.duration ?? 4000,
+        duration: toastData.duration ?? 40000,
       };
 
       setToasts((prev) => {

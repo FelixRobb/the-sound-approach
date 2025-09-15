@@ -32,20 +32,23 @@ const AppContent = () => {
 
   return (
     <View style={styles.container}>
-      <GestureHandlerRootView style={styles.container}>
-        <StatusBar style={isDark ? "light" : "dark"} />
-        <QueryClientProvider client={queryClient}>
-          <NetworkProvider>
-            <GlobalAudioBarProvider>
-              <AuthProvider>
-                <DownloadProvider>
-                  <AppNavigator />
-                </DownloadProvider>
-              </AuthProvider>
-            </GlobalAudioBarProvider>
-          </NetworkProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
+      <ToastProvider>
+        <GestureHandlerRootView style={styles.container}>
+          <StatusBar style={isDark ? "light" : "dark"} />
+
+          <QueryClientProvider client={queryClient}>
+            <NetworkProvider>
+              <GlobalAudioBarProvider>
+                <AuthProvider>
+                  <DownloadProvider>
+                    <AppNavigator />
+                  </DownloadProvider>
+                </AuthProvider>
+              </GlobalAudioBarProvider>
+            </NetworkProvider>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
+      </ToastProvider>
     </View>
   );
 };
@@ -54,9 +57,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <EnhancedThemeProvider>
-        <ToastProvider>
-          <AppContent />
-        </ToastProvider>
+        <AppContent />
       </EnhancedThemeProvider>
     </SafeAreaProvider>
   );

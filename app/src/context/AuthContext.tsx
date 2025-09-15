@@ -3,6 +3,7 @@ import { fetch as NetFetch } from "@react-native-community/netinfo";
 import type React from "react";
 import { createContext, useReducer, useEffect, useContext } from "react";
 
+import { useToast } from "../components/bna-toast";
 import {
   clearUserDownloads,
   clearOfflineAuthData,
@@ -84,11 +85,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         hasCompletedOnboarding: true,
       };
-    case "AUTH_ERROR":
-      return {
-        ...state,
-        error: action.error,
-      };
     default:
       return state;
   }
@@ -157,6 +153,13 @@ const fetchUserBookCode = async (userId: string): Promise<string | undefined> =>
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const { onNetworkRestore } = useContext(NetworkContext);
+  const toast = useToast();
+
+  // Helper function to show error toast
+  const showErrorToast = (title: string, message: string) => {
+    toast.dismissAll(); // Clear any existing toasts
+    toast.error(title, message);
+  };
 
   // Add network restore callback to refresh session when network is restored
   useEffect(() => {
@@ -552,7 +555,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-          dispatch({ type: "AUTH_ERROR", error: error.message });
+          showErrorToast("Login Error", error.message || "Unknown error");
           return;
         }
 
@@ -586,7 +589,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       } catch (error) {
-        dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" });
+        showErrorToast("Login Error", "An unexpected error occurred");
       }
     },
 
@@ -599,15 +602,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         )) as { data: boolean; error: Error | null };
 
         if (validationError) {
-          dispatch({ type: "AUTH_ERROR", error: "Error validating book code" });
+          showErrorToast("Signup Error", "Error validating book code");
           return;
         }
 
         if (!isAvailable) {
-          dispatch({
-            type: "AUTH_ERROR",
-            error: "Invalid book code or maximum activations reached",
-          });
+          showErrorToast("Signup Error", "Invalid book code or maximum activations reached");
           return;
         }
 
@@ -623,7 +623,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (error) {
-          dispatch({ type: "AUTH_ERROR", error: error.message });
+          showErrorToast("Signup Error", error.message);
           return;
         }
 
@@ -666,7 +666,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       } catch (e) {
-        dispatch({ type: "AUTH_ERROR", error: "An unexpected error occurred" });
+        showErrorToast("Signup Error", "An unexpected error occurred");
       }
     },
 
@@ -705,7 +705,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } = await supabase.auth.getSession();
 
         if (sessionError || !session) {
-          dispatch({ type: "AUTH_ERROR", error: "No active session found" });
+          showErrorToast("Delete Account Error", "No active session found");
           return;
         }
 
@@ -716,7 +716,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (signInError) {
-          dispatch({ type: "AUTH_ERROR", error: "Invalid password" });
+          showErrorToast("Delete Account Error", "Invalid password");
           return;
         }
 
@@ -735,7 +735,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const result = (await response.json()) as { error: string | null };
 
         if (!response.ok) {
-          dispatch({ type: "AUTH_ERROR", error: result.error || "Failed to delete account" });
+          showErrorToast("Delete Account Error", result.error || "Failed to delete account");
           return;
         }
 
@@ -744,10 +744,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SIGN_OUT" });
       } catch (e) {
         console.error("Error deleting account:", e);
-        dispatch({
-          type: "AUTH_ERROR",
-          error: "An unexpected error occurred while deleting account",
-        });
+        showErrorToast(
+          "Delete Account Error",
+          "An unexpected error occurred while deleting account"
+        );
       }
     },
 

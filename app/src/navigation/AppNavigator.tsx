@@ -571,9 +571,9 @@ const AppNavigator: React.FC = () => {
   }, [theme.colors.surface, isDark]);
 
   useEffect(() => {
-    const hideSplash = async () => {
+    const hideSplash = () => {
       if (!authState.isLoading && authState.userToken !== undefined) {
-        await SplashScreen.hideAsync();
+        SplashScreen.hide();
       }
     };
     void hideSplash();

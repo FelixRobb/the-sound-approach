@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useRef } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,6 @@ import {
 } from "react-native";
 
 import BackgroundPattern from "../../components/BackgroundPattern";
-import { useToast } from "../../components/bna-toast";
 import DetailHeader from "../../components/DetailHeader";
 import { Input, Button, Card } from "../../components/ui";
 import { AuthContext } from "../../context/AuthContext";
@@ -23,9 +22,8 @@ import type { RootStackParamList } from "../../types";
 
 const LoginScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { signIn, state: authState, clearError } = useContext(AuthContext);
+  const { signIn } = useContext(AuthContext);
   const { theme } = useEnhancedTheme();
-  const toast = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,14 +32,6 @@ const LoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const passwordInputRef = useRef<RNTextInput>(null);
-
-  // Handle auth errors locally to this screen
-  useEffect(() => {
-    if (authState.error) {
-      toast.error(authState.error);
-      clearError(); // Clear from global state immediately
-    }
-  }, [authState.error, clearError, toast]);
 
   // Create styles based on theme
   const styles = StyleSheet.create({
@@ -113,7 +103,6 @@ const LoginScreen = () => {
     // Reset errors
     setEmailError("");
     setPasswordError("");
-    toast.dismissAll();
 
     // Validate inputs
     let isValid = true;
@@ -139,7 +128,6 @@ const LoginScreen = () => {
       await signIn(email, password);
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +213,6 @@ const LoginScreen = () => {
               <Text style={styles.signupText}>Don&apos;t have an account? </Text>
               <Button
                 onPress={() => {
-                  toast.dismissAll(); // Clear local error when navigating
                   navigation.navigate("SignUp");
                 }}
                 title="Sign Up"

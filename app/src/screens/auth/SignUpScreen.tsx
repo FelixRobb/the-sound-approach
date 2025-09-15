@@ -3,7 +3,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useRef } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,6 @@ import {
 } from "react-native";
 
 import DetailHeader from "../../components/DetailHeader";
-import ErrorAlert from "../../components/ErrorAlert";
 import { Input, Button, Card } from "../../components/ui";
 import { AuthContext } from "../../context/AuthContext";
 import { useEnhancedTheme } from "../../context/EnhancedThemeProvider";
@@ -25,9 +24,8 @@ import type { RootStackParamList } from "../../types";
 
 const SignUpScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { signUp, state: authState, clearError } = useContext(AuthContext);
+  const { signUp } = useContext(AuthContext);
   const { theme } = useEnhancedTheme();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [bookCode, setBookCode] = useState("");
@@ -35,18 +33,9 @@ const SignUpScreen = () => {
   const [passwordError, setPasswordError] = useState("");
   const [bookCodeError, setBookCodeError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
 
   const passwordInputRef = useRef<RNTextInput>(null);
   const bookCodeInputRef = useRef<RNTextInput>(null);
-
-  // Handle auth errors locally to this screen
-  useEffect(() => {
-    if (authState.error) {
-      setLocalError(authState.error);
-      clearError(); // Clear from global state immediately
-    }
-  }, [authState.error, clearError]);
 
   const styles = StyleSheet.create({
     backgroundPattern: {
@@ -160,7 +149,6 @@ const SignUpScreen = () => {
     setEmailError("");
     setPasswordError("");
     setBookCodeError("");
-    setLocalError(null);
 
     // Validate inputs
     let isValid = true;
@@ -197,14 +185,9 @@ const SignUpScreen = () => {
       await signUp(email, password, bookCode);
     } catch (error) {
       console.error("Signup error:", error);
-      setLocalError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDismissError = () => {
-    setLocalError(null);
   };
 
   // Background pattern
@@ -230,8 +213,6 @@ const SignUpScreen = () => {
 
           <Text style={styles.title}>Join The Sound Approach</Text>
           <Text style={styles.subtitle}>Create your account to start your birding adventure</Text>
-
-          <ErrorAlert error={localError} onDismiss={handleDismissError} />
 
           <View style={styles.form}>
             <Input
@@ -311,7 +292,6 @@ const SignUpScreen = () => {
               <Text style={styles.loginText}>Already have an account? </Text>
               <TouchableOpacity
                 onPress={() => {
-                  setLocalError(null); // Clear local error when navigating
                   navigation.navigate("Login");
                 }}
               >
