@@ -1,6 +1,4 @@
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState, useEffect, useContext } from "react";
 import {
@@ -9,7 +7,6 @@ import {
   StyleSheet,
   FlatList,
   SectionList,
-  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
 } from "react-native";
@@ -20,6 +17,7 @@ import BackgroundPattern from "../components/BackgroundPattern";
 import FilterButtons from "../components/FilterButtons";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import RecordingCard from "../components/RecordingCard";
+import SpeciesCard from "../components/SpeciesCard";
 import SpeciesFilterButtons from "../components/SpeciesFilterButtons";
 import { Input } from "../components/ui";
 import { Button } from "../components/ui/Button";
@@ -28,7 +26,6 @@ import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import { createThemedTextStyle } from "../lib/theme/typography";
 import type { Recording, Species } from "../types";
-import { RootStackParamList } from "../types";
 
 // Custom debounce hook
 const useDebounce = <T,>(value: T, delay: number): T => {
@@ -48,7 +45,6 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 };
 
 const RecordingsListScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { isDownloaded } = useContext(DownloadContext);
   const { theme } = useEnhancedTheme();
   const globalAudioBarHeight = useGlobalAudioBarHeight();
@@ -196,76 +192,6 @@ const RecordingsListScreen = () => {
         color: "onSurfaceVariant",
       }),
       marginTop: theme.spacing.xs,
-    },
-    speciesAction: {
-      alignItems: "center",
-      justifyContent: "center",
-      marginLeft: theme.spacing.sm,
-    },
-    speciesActionButton: {
-      alignItems: "center",
-      height: 32,
-      justifyContent: "center",
-      width: 32,
-    },
-    speciesCard: {
-      elevation: 2,
-      marginHorizontal: theme.spacing.md,
-      marginVertical: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.15,
-      shadowRadius: 3,
-    },
-    speciesContent: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      minHeight: 48,
-    },
-    speciesInfo: {
-      flex: 1,
-      marginRight: theme.spacing.sm,
-      minWidth: 0,
-    },
-    speciesName: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "bold",
-        color: "onSurface",
-      }),
-      lineHeight: 22,
-      marginBottom: theme.spacing.xxs,
-    },
-    speciesPosterContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.borderRadius.md,
-      height: 50,
-      justifyContent: "center",
-      marginRight: theme.spacing.sm,
-      overflow: "hidden",
-      width: 50,
-    },
-    speciesPosterOverlay: {
-      alignItems: "center",
-      backgroundColor: theme.colors.primaryContainer,
-      borderRadius: theme.borderRadius.md,
-      height: 50,
-      justifyContent: "center",
-      overflow: "hidden",
-      width: 50,
-    },
-    speciesScientificName: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      fontStyle: "italic",
-      lineHeight: 18,
     },
   });
 
@@ -517,60 +443,9 @@ const RecordingsListScreen = () => {
   // Render species item
   const renderSpeciesItem = React.useCallback(
     ({ item }: { item: Species }) => {
-      return (
-        <TouchableOpacity
-          style={styles.speciesCard}
-          onPress={() => {
-            navigation.navigate("SpeciesDetails", { speciesId: item.id });
-          }}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={`View details for ${item.common_name} (${item.scientific_name})`}
-          accessibilityHint="Tap to view species details and recordings"
-        >
-          <View style={styles.speciesContent}>
-            <View style={styles.speciesPosterContainer}>
-              <View style={styles.speciesPosterOverlay}>
-                <MaterialCommunityIcons
-                  name="bird"
-                  size={24}
-                  color={theme.colors.onPrimaryContainer}
-                />
-              </View>
-            </View>
-            <View style={styles.speciesInfo}>
-              <Text style={styles.speciesName} numberOfLines={1} ellipsizeMode="tail">
-                {speciesSortBy === "speciesscientific" ? item.scientific_name : item.common_name}
-              </Text>
-              <Text style={styles.speciesScientificName} numberOfLines={1} ellipsizeMode="tail">
-                {speciesSortBy === "speciesscientific" ? item.common_name : item.scientific_name}
-              </Text>
-            </View>
-
-            <View style={styles.speciesAction}>
-              <View style={styles.speciesActionButton}>
-                <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      );
+      return <SpeciesCard species={item} sortBy={speciesSortBy} />;
     },
-    [
-      styles.speciesCard,
-      styles.speciesContent,
-      styles.speciesPosterContainer,
-      styles.speciesPosterOverlay,
-      styles.speciesInfo,
-      styles.speciesName,
-      styles.speciesScientificName,
-      styles.speciesAction,
-      styles.speciesActionButton,
-      theme.colors.onPrimaryContainer,
-      theme.colors.primary,
-      navigation,
-      speciesSortBy,
-    ]
+    [speciesSortBy]
   );
 
   // Empty state component

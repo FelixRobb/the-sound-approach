@@ -270,6 +270,19 @@ export type RecordingItemProps = {
   isDownloaded: boolean;
 };
 
+export type SpeciesCardProps = {
+  species: Species;
+  sortBy?: "speciescommon" | "speciesscientific";
+  onPress?: () => void;
+};
+
+export type RecordingCardProps = {
+  recording: Recording;
+  isDownloaded?: boolean;
+  indented?: boolean;
+  sortBy?: "speciescommon" | "rec_number" | "speciesscientific";
+  onPress?: () => void;
+};
 export type SpeciesItemProps = {
   species: Species;
   onPress: () => void;
@@ -306,6 +319,6 @@ export type StorageInfo = {
   free: number;
 };
 
-export type SearchFilter = "all" | "species" | "recordings" | "pages";
+export type SearchFilter = "all" | "species" | "recordings";
 
 export type SortOption = "book" | "name" | "recent";

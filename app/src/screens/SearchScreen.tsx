@@ -17,12 +17,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BackgroundPattern from "../components/BackgroundPattern";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import RecordingCard from "../components/RecordingCard";
+import SearchFilterButtons from "../components/SearchFilterButtons";
+import SpeciesCard from "../components/SpeciesCard";
 import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { searchRecordings, type SearchResults } from "../lib/supabase";
 import { createThemedTextStyle } from "../lib/theme";
-import type { Recording, RootStackParamList, Species } from "../types";
+import type { Recording, RootStackParamList, SearchFilter, Species } from "../types";
 
 // Custom debounce hook
 const useDebounce = <T,>(value: T, delay: number): T => {
@@ -63,6 +65,7 @@ const SearchScreen = () => {
     recordings: [],
     species: [],
   });
+  const [showresults, setshowresults] = useState(false);
   const [recentSearches, setRecentSearches] = useState<SearchHistoryItem[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings">("all");
@@ -105,45 +108,8 @@ const SearchScreen = () => {
       marginBottom: theme.spacing.sm,
       textAlign: "center",
     },
-    filterContainer: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.sm,
-    },
-    filterTab: {
-      alignItems: "center",
-      justifyContent: "center",
-      minWidth: 80,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.sm,
-    },
-    filterTabIndicator: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.xs,
-      bottom: -1,
-      height: 2,
-      left: 0,
-      position: "absolute",
-      right: 0,
-    },
-    filterTabText: {
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      textAlign: "center",
-    },
-    filterTabTextActive: {
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-    },
     header: {
-      paddingBottom: theme.spacing.md,
+      paddingBottom: theme.spacing.xs,
       paddingTop: theme.spacing.sm + insets.top,
       zIndex: theme.zIndex.base,
     },
@@ -219,53 +185,20 @@ const SearchScreen = () => {
         color: "onSurface",
       }),
     },
-    resultCard: {
-      marginVertical: 8,
-    },
-    resultCardContent: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      padding: theme.spacing.md,
-      paddingTop: theme.spacing.sm,
-    },
-    resultCardLeft: {
-      flex: 1,
-    },
-    resultCount: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "primary",
-      }),
-      marginHorizontal: theme.spacing.lg,
-      marginTop: theme.spacing.sm,
-    },
-    resultTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "xl",
-        weight: "bold",
-        color: "primary",
-      }),
-      marginBottom: theme.spacing.xs,
-    },
     resultsHeader: {
-      color: theme.colors.primary,
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginHorizontal: theme.spacing.xl,
-      marginVertical: theme.spacing.sm,
-    },
-    scientificName: {
       ...createThemedTextStyle(theme, {
         size: "base",
-        weight: "normal",
+        weight: "semiBold",
         color: "onSurfaceVariant",
       }),
-      fontStyle: "italic",
-      marginTop: theme.spacing.xs,
+      letterSpacing: 0.5,
+      marginBottom: theme.spacing.sm,
+      marginHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.lg,
+      textTransform: "uppercase",
+    },
+    resultsSection: {
+      marginBottom: theme.spacing.lg,
     },
     searchInput: {
       borderRadius: theme.borderRadius.full,
@@ -281,28 +214,6 @@ const SearchScreen = () => {
     },
     separator: {
       height: theme.spacing.sm,
-    },
-    speciesActionContainer: {
-      padding: theme.spacing.xs,
-    },
-    speciesPosterContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.borderRadius.md,
-      height: 50,
-      justifyContent: "center",
-      marginRight: theme.spacing.md,
-      overflow: "hidden",
-      width: 50,
-    },
-    speciesPosterOverlay: {
-      alignItems: "center",
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.borderRadius.md,
-      height: "100%",
-      justifyContent: "center",
-      opacity: 0.8,
-      width: "100%",
     },
   });
 
@@ -417,18 +328,13 @@ const SearchScreen = () => {
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
     setIsSearching(true);
-    setHasSearched(true);
 
     try {
       const results = await searchRecordings(query);
       setSearchResults(results);
+      setHasSearched(true);
+      setshowresults(true);
 
-      // Update the active filter based on results
-      if (query.length === 0) {
-        setHasSearched(false);
-        setIsSearching(false);
-        return;
-      }
       if (results.recordings.length > 0 && results.species.length === 0) {
         setActiveFilter("recordings");
       } else if (results.species.length > 0 && results.recordings.length === 0) {
@@ -447,11 +353,13 @@ const SearchScreen = () => {
 
   // Effect to handle debounced search
   useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      void handleSearch(debouncedSearchQuery);
+    if (debouncedSearchQuery) {
+      void handleSearch(debouncedSearchQuery.trim());
     } else {
       setSearchResults({ recordings: [], species: [] });
+      setHasSearched(false);
       setIsSearching(false);
+      setshowresults(false);
     }
   }, [debouncedSearchQuery]);
 
@@ -523,42 +431,7 @@ const SearchScreen = () => {
 
   // Render species item
   const renderSpeciesItem = ({ item }: { item: Species }) => {
-    return (
-      <TouchableOpacity
-        style={styles.resultCard}
-        onPress={() => {
-          handleNavigateToSpecies(item.id);
-        }}
-        activeOpacity={0.8}
-        accessibilityRole="button"
-        accessibilityLabel={`View species: ${item.common_name}`}
-        accessibilityHint="Tap to view species details"
-      >
-        <View style={styles.resultCardContent}>
-          {/* Enhanced Poster Element */}
-          <View style={styles.speciesPosterContainer}>
-            <View style={styles.speciesPosterOverlay}>
-              <MaterialCommunityIcons
-                name="bird"
-                size={24}
-                color={theme.colors.onPrimaryContainer}
-              />
-            </View>
-          </View>
-
-          {/* Content Section */}
-          <View style={styles.resultCardLeft}>
-            <Text style={styles.resultTitle}>{item.common_name}</Text>
-            <Text style={styles.scientificName}>{item.scientific_name}</Text>
-          </View>
-
-          {/* Action Icon */}
-          <View style={styles.speciesActionContainer}>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
+    return <SpeciesCard species={item} onPress={() => handleNavigateToSpecies(item.id)} />;
   };
 
   // Render search results
@@ -590,27 +463,24 @@ const SearchScreen = () => {
 
     return (
       <ScrollView contentContainerStyle={styles.listContent}>
-        <Text style={styles.resultCount}>
-          Found {totalResultCount} {totalResultCount === 1 ? "result" : "results"}
-        </Text>
         {recordings.length > 0 && (
-          <>
-            <Text style={styles.resultsHeader}>Recordings</Text>
+          <View style={styles.resultsSection}>
+            <Text style={styles.resultsHeader}>Recordings ({recordings.length})</Text>
             {recordings.map((item) => (
               <View key={`recording-${item.id}`}>{renderRecordingItem({ item })}</View>
             ))}
-          </>
+          </View>
         )}
 
         {species.length > 0 && recordings.length > 0 && <View style={styles.sectionDivider} />}
 
         {species.length > 0 && (
-          <>
-            <Text style={styles.resultsHeader}>Species</Text>
+          <View style={styles.resultsSection}>
+            <Text style={styles.resultsHeader}>Species ({species.length})</Text>
             {species.map((item) => (
               <View key={`species-${item.id}`}>{renderSpeciesItem({ item })}</View>
             ))}
-          </>
+          </View>
         )}
       </ScrollView>
     );
@@ -648,66 +518,26 @@ const SearchScreen = () => {
             value={searchQuery}
             leftIcon={{ name: "search", color: theme.colors.tertiary }}
             clearButton={!!searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={(text) => setSearchQuery(text)}
             innerContainerStyle={styles.searchInput}
             selectionColor={theme.colors.primary}
             returnKeyType="search"
-            onSubmitEditing={() => void handleSearch(debouncedSearchQuery)}
             textAlignVertical="center"
             containerStyle={styles.searchInputContainer}
           />
 
-          {searchQuery && (
+          {showresults && (
             <>
-              <View style={styles.filterContainer}>
-                <TouchableOpacity onPress={() => setActiveFilter("all")} style={styles.filterTab}>
-                  <Text
-                    style={[
-                      styles.filterTabText,
-                      activeFilter === "all" && styles.filterTabTextActive,
-                    ]}
-                  >
-                    All
-                  </Text>
-                  {activeFilter === "all" && <View style={styles.filterTabIndicator} />}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => setActiveFilter("species")}
-                  style={styles.filterTab}
-                >
-                  <Text
-                    style={[
-                      styles.filterTabText,
-                      activeFilter === "species" && styles.filterTabTextActive,
-                    ]}
-                  >
-                    Species
-                  </Text>
-                  {activeFilter === "species" && <View style={styles.filterTabIndicator} />}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => setActiveFilter("recordings")}
-                  style={styles.filterTab}
-                >
-                  <Text
-                    style={[
-                      styles.filterTabText,
-                      activeFilter === "recordings" && styles.filterTabTextActive,
-                    ]}
-                  >
-                    Recordings
-                  </Text>
-                  {activeFilter === "recordings" && <View style={styles.filterTabIndicator} />}
-                </TouchableOpacity>
-              </View>
+              <SearchFilterButtons
+                activeFilter={activeFilter}
+                onTabChange={(tab) => setActiveFilter(tab as SearchFilter)}
+              />
             </>
           )}
         </View>
       </View>
 
-      {debouncedSearchQuery ? (
+      {showresults ? (
         <>{renderSearchResults()}</>
       ) : (
         <View style={styles.recentContainer}>

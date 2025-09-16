@@ -127,7 +127,7 @@ BEGIN
         
         -- Caption matches (lower priority)
         CASE 
-          WHEN r.caption ILIKE like_pattern THEN 15.0
+          WHEN r.caption ~* ('\y' || sanitized_query || '\y') THEN 15.0
           ELSE 0.0
         END
       ) as relevance_score

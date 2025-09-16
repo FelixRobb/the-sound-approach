@@ -5,19 +5,11 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { createThemedTextStyle } from "../lib/theme/typography";
-import type { Recording } from "../types";
+import type { Recording, RecordingCardProps } from "../types";
 import { RootStackParamList } from "../types";
 
 import DownloadedBadge from "./DownloadedBadge";
 import MiniAudioPlayer from "./MiniAudioPlayer";
-
-interface RecordingCardProps {
-  recording: Recording;
-  isDownloaded?: boolean;
-  indented?: boolean;
-  sortBy?: "speciescommon" | "rec_number" | "speciesscientific";
-  onPress?: () => void;
-}
 
 const RecordingCard: React.FC<RecordingCardProps> = ({
   recording,
