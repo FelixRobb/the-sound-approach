@@ -20,6 +20,7 @@ import BackgroundPattern from "../components/BackgroundPattern";
 import FilterButtons from "../components/FilterButtons";
 import { useGlobalAudioBarHeight } from "../components/GlobalAudioBar";
 import RecordingCard from "../components/RecordingCard";
+import SpeciesFilterButtons from "../components/SpeciesFilterButtons";
 import { Input } from "../components/ui";
 import { Button } from "../components/ui/Button";
 import { DownloadContext } from "../context/DownloadContext";
@@ -65,6 +66,12 @@ const RecordingsListScreen = () => {
   const [downloadedFilter, setDownloadedFilter] = useState<"all" | "downloaded" | "not_downloaded">(
     "all"
   );
+
+  // Species-specific sorting state
+  const [speciesSortBy, setSpeciesSortBy] = useState<"speciescommon" | "speciesscientific">(
+    "speciescommon"
+  );
+  const [speciesSortOrder, setSpeciesSortOrder] = useState<"asc" | "desc">("asc");
 
   const styles = StyleSheet.create({
     container: {
@@ -202,14 +209,10 @@ const RecordingsListScreen = () => {
       width: 32,
     },
     speciesCard: {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.outline,
-      borderRadius: theme.borderRadius.lg,
-      borderWidth: 1,
       elevation: 2,
       marginHorizontal: theme.spacing.md,
       marginVertical: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.sm,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 1 },
@@ -235,6 +238,25 @@ const RecordingsListScreen = () => {
       }),
       lineHeight: 22,
       marginBottom: theme.spacing.xxs,
+    },
+    speciesPosterContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.borderRadius.md,
+      height: 50,
+      justifyContent: "center",
+      marginRight: theme.spacing.sm,
+      overflow: "hidden",
+      width: 50,
+    },
+    speciesPosterOverlay: {
+      alignItems: "center",
+      backgroundColor: theme.colors.primaryContainer,
+      borderRadius: theme.borderRadius.md,
+      height: 50,
+      justifyContent: "center",
+      overflow: "hidden",
+      width: 50,
     },
     speciesScientificName: {
       ...createThemedTextStyle(theme, {
@@ -431,12 +453,20 @@ const RecordingsListScreen = () => {
           }
         }
 
-        // Then sort alphabetically by common name
-        const comparison = a.item.common_name.localeCompare(b.item.common_name);
-        return sortOrder === "asc" ? comparison : -comparison;
+        // Then sort by the selected species sort criteria
+        let comparison = 0;
+        switch (speciesSortBy) {
+          case "speciescommon":
+            comparison = a.item.common_name.localeCompare(b.item.common_name);
+            break;
+          case "speciesscientific":
+            comparison = a.item.scientific_name.localeCompare(b.item.scientific_name);
+            break;
+        }
+        return speciesSortOrder === "asc" ? comparison : -comparison;
       })
       .map(({ item }) => item);
-  }, [species, debouncedSearchQuery, sortOrder]);
+  }, [species, debouncedSearchQuery, speciesSortBy, speciesSortOrder]);
 
   // Group recordings by species for SectionList when sorting by species
   const recordingsSections = React.useMemo(() => {
@@ -499,12 +529,21 @@ const RecordingsListScreen = () => {
           accessibilityHint="Tap to view species details and recordings"
         >
           <View style={styles.speciesContent}>
+            <View style={styles.speciesPosterContainer}>
+              <View style={styles.speciesPosterOverlay}>
+                <MaterialCommunityIcons
+                  name="bird"
+                  size={24}
+                  color={theme.colors.onPrimaryContainer}
+                />
+              </View>
+            </View>
             <View style={styles.speciesInfo}>
               <Text style={styles.speciesName} numberOfLines={1} ellipsizeMode="tail">
-                {item.common_name}
+                {speciesSortBy === "speciesscientific" ? item.scientific_name : item.common_name}
               </Text>
               <Text style={styles.speciesScientificName} numberOfLines={1} ellipsizeMode="tail">
-                {item.scientific_name}
+                {speciesSortBy === "speciesscientific" ? item.common_name : item.scientific_name}
               </Text>
             </View>
 
@@ -518,15 +557,19 @@ const RecordingsListScreen = () => {
       );
     },
     [
-      navigation,
-      styles.speciesAction,
-      styles.speciesActionButton,
       styles.speciesCard,
       styles.speciesContent,
+      styles.speciesPosterContainer,
+      styles.speciesPosterOverlay,
       styles.speciesInfo,
       styles.speciesName,
       styles.speciesScientificName,
+      styles.speciesAction,
+      styles.speciesActionButton,
+      theme.colors.onPrimaryContainer,
       theme.colors.primary,
+      navigation,
+      speciesSortBy,
     ]
   );
 
@@ -623,6 +666,15 @@ const RecordingsListScreen = () => {
               setSortOrder={setSortOrder}
               downloadedFilter={downloadedFilter}
               setDownloadedFilter={setDownloadedFilter}
+            />
+          )}
+          {activeTab === "species" && (
+            <SpeciesFilterButtons
+              theme={theme}
+              sortBy={speciesSortBy}
+              setSortBy={setSpeciesSortBy}
+              sortOrder={speciesSortOrder}
+              setSortOrder={setSpeciesSortOrder}
             />
           )}
         </View>
