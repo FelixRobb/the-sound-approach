@@ -10,7 +10,6 @@ import { Card, CardContent } from "./ui/card";
 import { SidebarTrigger } from "./ui/sidebar";
 
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
-import { getBestAudioUri } from "@/lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "@/lib/supabase";
 import { Recording } from "@/types";
 
@@ -164,9 +163,7 @@ export default function SpeciesDetailsPage() {
       {/* Content */}
       <div className="max-w-4xl mx-auto p-6">
         <div className="space-y-4">
-          {recordings.map(async (recording) => {
-            const audioUri = await getBestAudioUri(recording);
-
+          {recordings.map((recording) => {
             return (
               <Card
                 key={recording.id}
@@ -176,11 +173,10 @@ export default function SpeciesDetailsPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     {/* Audio Player */}
-                    {audioUri && (
+                    {recording.audiohqid && (
                       <div className="flex-shrink-0">
                         <MiniAudioPlayer
-                          trackId={recording.id}
-                          audioUri={audioUri}
+                          recording={recording}
                           title={recording.species?.common_name}
                           size={40}
                         />

@@ -370,7 +370,13 @@ export default function ProfilePage() {
                 <CardDescription>Sign out of your account</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" onClick={void handleSignOut} className="w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void handleSignOut();
+                  }}
+                  className="w-full"
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </Button>

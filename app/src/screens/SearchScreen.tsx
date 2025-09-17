@@ -400,7 +400,7 @@ const SearchScreen = () => {
     } else if (activeFilter === "recordings") {
       return { recordings: searchResults.recordings, species: [] };
     } else if (activeFilter === "recnumber" && /^\d+$/.test(sanitizedQuery)) {
-      // Filter recordings by page number
+      // Filter recordings by rec number
       const pageNumber = parseInt(sanitizedQuery, 10);
       const pageRecordings = searchResults.recordings.filter(
         (rec) => rec.rec_number === pageNumber

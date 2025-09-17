@@ -82,10 +82,10 @@ export default function AppSidebar() {
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-sm">
                 <Volume2 className="size-4 text-white" />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <Link href="/" className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">The Sound Approach</span>
                 <span className="truncate text-xs text-muted-foreground">Bird Sound Library</span>
-              </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

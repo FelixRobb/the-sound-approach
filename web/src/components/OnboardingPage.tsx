@@ -32,15 +32,15 @@ const onboardingSteps: OnboardingStep[] = [
     icon: <Search className="w-12 h-12" />,
     title: "Search & Explore",
     description:
-      "Find recordings by species name, page number, or keywords. Use our powerful search to discover new sounds.",
+      "Find recordings by species name, recording number, or keywords. Use our powerful search to discover new sounds.",
     color: "bg-secondary",
   },
   {
     id: 3,
     icon: <Download className="w-12 h-12" />,
-    title: "Download for Offline",
+    title: "Download app for Offline",
     description:
-      "Download recordings to your device for offline listening. Perfect for field trips and areas with poor connectivity.",
+      "Download the app to your device for offline listening. Perfect for field trips and areas with poor connectivity.",
     color: "bg-tertiary",
   },
   {
@@ -118,7 +118,9 @@ export default function OnboardingPage() {
             <div className="flex justify-between gap-4">
               <Button
                 variant="outline"
-                onClick={void handlePrevious}
+                onClick={() => {
+                  void handlePrevious();
+                }}
                 disabled={currentStep === 0}
                 className="flex-1"
               >
@@ -127,12 +129,22 @@ export default function OnboardingPage() {
               </Button>
 
               {isLastStep ? (
-                <Button onClick={void handleComplete} className="flex-1">
+                <Button
+                  onClick={() => {
+                    void handleComplete();
+                  }}
+                  className="flex-1"
+                >
                   <Check className="w-4 h-4 mr-2" />
                   Get Started
                 </Button>
               ) : (
-                <Button onClick={void handleNext} className="flex-1">
+                <Button
+                  onClick={() => {
+                    void handleNext();
+                  }}
+                  className="flex-1"
+                >
                   Next
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -141,7 +153,13 @@ export default function OnboardingPage() {
 
             {/* Skip option */}
             {!isLastStep && (
-              <Button variant="ghost" onClick={void handleComplete} className="w-full text-sm">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  void handleComplete();
+                }}
+                className="w-full text-sm"
+              >
                 Skip tutorial
               </Button>
             )}

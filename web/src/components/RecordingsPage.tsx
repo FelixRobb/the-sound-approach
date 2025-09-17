@@ -142,7 +142,7 @@ export default function RecordingsPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search recordings, species, or page numbers..."
+              placeholder="Search recordings, species, or recording numbers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-9"
@@ -184,7 +184,7 @@ export default function RecordingsPage() {
                   <Filter className="h-4 w-4 mr-2" />
                   Sort by{" "}
                   {sortBy === "rec_number"
-                    ? "Page"
+                    ? "Rec. Number"
                     : sortBy === "speciescommon"
                       ? "Title"
                       : "Species"}

@@ -261,7 +261,9 @@ export default function FloatingAudioController() {
   }, []);
 
   const handleSliderPointerUp = useCallback(() => {
-    setIsDragDisabled(false);
+    setTimeout(() => {
+      setIsDragDisabled(false);
+    }, 300);
   }, []);
 
   // Stable time formatting
@@ -285,6 +287,7 @@ export default function FloatingAudioController() {
   return (
     <motion.div
       drag={!isDragDisabled}
+      draggable={!isDragDisabled}
       dragElastic={0.1}
       dragMomentum={false}
       dragTransition={{ bounceStiffness: 100, bounceDamping: 20 }}
@@ -318,7 +321,9 @@ export default function FloatingAudioController() {
               <Button
                 variant="default"
                 size="icon"
-                onClick={void handlePlayPause}
+                onClick={() => {
+                  void handlePlayPause();
+                }}
                 disabled={isLoading}
                 className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex-shrink-0"
               >
@@ -384,9 +389,14 @@ export default function FloatingAudioController() {
               >
                 <SkipBack className="w-4 h-4" />
               </Button>
-              <div className="text-xs text-muted-foreground min-w-[35px] text-center">
-                {formattedCurrentTime}
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePlayPause}
+                className="w-8 h-8 rounded-full"
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"

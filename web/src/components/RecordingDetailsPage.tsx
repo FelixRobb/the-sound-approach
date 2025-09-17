@@ -198,11 +198,7 @@ export default function RecordingDetailsPage() {
             </div>
             <div className="flex items-center gap-3">
               {audioUri && (
-                <MiniAudioPlayer
-                  trackId={recording.id}
-                  audioUri={audioUri}
-                  title={recording.species?.common_name}
-                />
+                <MiniAudioPlayer recording={recording} title={recording.species?.common_name} />
               )}
             </div>
           </div>

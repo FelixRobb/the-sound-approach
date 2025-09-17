@@ -168,8 +168,7 @@ export type AudioPlayerPositionProps = {
 };
 
 export type MiniAudioPlayerProps = {
-  trackId: string;
-  audioUri: string;
+  recording: Recording;
   title?: string;
   size?: number;
 };

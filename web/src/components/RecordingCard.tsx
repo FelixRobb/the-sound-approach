@@ -1,22 +1,10 @@
-import { useEffect, useState } from "react";
-
 import MiniAudioPlayer from "./MiniAudioPlayer";
 import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
 
-import { getBestAudioUri } from "@/lib/mediaUtils";
 import { RecordingCardProps } from "@/types";
 
 export default function RecordingCard({ recording, onClick }: RecordingCardProps) {
-  const [audioUri, setAudioUri] = useState<string | null>(null);
-  useEffect(() => {
-    const loadAudioUri = async () => {
-      const uri = await getBestAudioUri(recording);
-      setAudioUri(uri);
-    };
-    void loadAudioUri();
-  }, [recording]);
-
   return (
     <Card
       key={recording.id}
@@ -26,12 +14,11 @@ export default function RecordingCard({ recording, onClick }: RecordingCardProps
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           {/* Audio Player */}
-          {audioUri && (
+          {recording.audiohqid && (
             <div className="flex-shrink-0" onPointerDown={(e) => e.preventDefault()}>
               <MiniAudioPlayer
-                trackId={recording.id}
+                recording={recording}
                 title={recording.species?.common_name}
-                audioUri={audioUri || ""}
                 size={44}
               />
             </div>

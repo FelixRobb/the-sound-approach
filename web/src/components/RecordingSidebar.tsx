@@ -60,7 +60,7 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
             <SidebarMenuItem key={rec.id}>
               <SidebarMenuButton
                 asChild
-                tooltip={`${rec.species?.common_name} - Page ${rec.rec_number}${
+                tooltip={`${rec.species?.common_name} - Recording ${rec.rec_number}${
                   rec.species ? ` (${rec.species.common_name})` : ""
                 }`}
                 className="hover:bg-muted/80 rounded-md transition-colors"
@@ -114,7 +114,7 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
               <SidebarMenuItem key={rec.id}>
                 <SidebarMenuButton
                   asChild
-                  tooltip={`${rec.species?.common_name} - Page ${rec.rec_number}`}
+                  tooltip={`${rec.species?.common_name} - Recording ${rec.rec_number}`}
                   className="hover:bg-muted/80 rounded-md transition-colors"
                 >
                   <Link

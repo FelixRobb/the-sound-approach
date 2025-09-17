@@ -12,7 +12,6 @@ import { Input } from "./ui/input";
 import { Separator } from "./ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
-import { getBestAudioUri } from "@/lib/mediaUtils";
 import { searchRecordings } from "@/lib/supabase";
 import { debounce } from "@/lib/utils";
 import type { Recording, Species, SearchFilter } from "@/types";
@@ -133,7 +132,7 @@ export default function SearchPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search species, recordings, or pages..."
+              placeholder="Search species, recordings, or recording numbers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-10 text-base h-10 bg-background"
@@ -237,9 +236,7 @@ export default function SearchPage() {
                         </h2>
                       </div>
                       <div className="space-y-4">
-                        {filteredRecordings.map(async (recording) => {
-                          const audioUri = await getBestAudioUri(recording);
-
+                        {filteredRecordings.map((recording) => {
                           return (
                             <Card
                               key={recording.id}
@@ -249,14 +246,13 @@ export default function SearchPage() {
                               <CardContent className="p-4">
                                 <div className="flex items-start gap-4">
                                   {/* Audio Player */}
-                                  {audioUri && (
+                                  {recording.audiohqid && (
                                     <div
                                       className="flex-shrink-0"
                                       onPointerDown={(e) => e.preventDefault()}
                                     >
                                       <MiniAudioPlayer
-                                        trackId={recording.id}
-                                        audioUri={audioUri || ""}
+                                        recording={recording}
                                         title={recording.species?.common_name}
                                         size={44}
                                       />
@@ -383,9 +379,9 @@ export default function SearchPage() {
                         <Hash className="h-3 w-3 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">Page numbers</p>
+                        <p className="font-medium text-sm">Recording numbers</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Find recordings by book page
+                          Find recordings by recording number
                         </p>
                       </div>
                     </div>

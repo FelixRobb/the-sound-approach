@@ -25,7 +25,7 @@ The function uses the following weighting system:
 ### Recording Weights
 
 - Exact match on recording title: 95
-- Book page number match: 98
+- Rec number match: 98
 - Partial match on recording title: 75
 - Exact match on species common_name: 85
 - Exact match on species scientific_name: 65

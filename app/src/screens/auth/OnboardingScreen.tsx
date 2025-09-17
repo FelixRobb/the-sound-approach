@@ -32,7 +32,7 @@ const onboardingSteps: OnboardingStep[] = [
     icon: "search",
     title: "Search & Learn",
     description:
-      "Find specific species, recordings, or book pages quickly. Learn to identify birds by their unique sounds and calls.",
+      "Find specific species, recordings, or recording numbers quickly. Learn to identify birds by their unique sounds and calls.",
     color: "#2196F3",
   },
   {
