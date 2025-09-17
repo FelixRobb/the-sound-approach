@@ -5,13 +5,7 @@ import { Play, Pause, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 
 import { useAudio } from "@/contexts/AudioContext";
-
-type MiniAudioPlayerProps = {
-  trackId: string;
-  audioUri: string;
-  title?: string;
-  size?: number;
-};
+import { MiniAudioPlayerProps } from "@/types";
 
 export default function MiniAudioPlayer({
   trackId,
@@ -25,7 +19,7 @@ export default function MiniAudioPlayer({
   const isCurrentlyPlaying = isCurrentTrack && isPlaying;
   const isCurrentlyLoading = isCurrentTrack && isLoading;
 
-  const handlePress = async () => {
+  const handlePress = async (): Promise<void> => {
     await togglePlayPause(audioUri, trackId, title);
   };
 
@@ -36,7 +30,7 @@ export default function MiniAudioPlayer({
       onClick={(e) => {
         e.stopPropagation();
         if (isCurrentlyLoading) return;
-        handlePress();
+        void handlePress();
       }}
       className="rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
       style={{ width: size, height: size }}

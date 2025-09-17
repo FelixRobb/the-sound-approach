@@ -22,9 +22,9 @@ import SpeciesCard from "../components/SpeciesCard";
 import { Input } from "../components/ui";
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import { searchRecordings, type SearchResults } from "../lib/supabase";
+import { searchRecordings } from "../lib/supabase";
 import { createThemedTextStyle } from "../lib/theme";
-import type { Recording, RootStackParamList, SearchFilter, Species } from "../types";
+import type { Recording, RootStackParamList, SearchFilter, SearchResults, Species } from "../types";
 
 // Custom debounce hook
 const useDebounce = <T,>(value: T, delay: number): T => {
@@ -68,7 +68,7 @@ const SearchScreen = () => {
   const [showresults, setshowresults] = useState(false);
   const [recentSearches, setRecentSearches] = useState<SearchHistoryItem[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<"all" | "species" | "recordings">("all");
+  const [activeFilter, setActiveFilter] = useState<SearchFilter>("all");
   const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({

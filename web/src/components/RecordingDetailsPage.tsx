@@ -2,7 +2,7 @@
 
 import { ArrowLeft, AlertCircle, Loader2, Volume2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 
@@ -13,8 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { SidebarTrigger } from "./ui/sidebar";
 
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
-import PageBadge from "@/components/PageBadge";
-import { getBestAudioUri, getSonogramVideoUri } from "@/lib/mediaUtils";
+import { getBestAudioUri, getsonagramVideoUri } from "@/lib/mediaUtils";
 import { fetchRecordingById } from "@/lib/supabase";
 import { Recording } from "@/types";
 
@@ -27,9 +26,10 @@ export default function RecordingDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [videoError, setVideoError] = useState(false);
-
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
   const videoRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<typeof videojs.players | null>(null);
+  const playerRef = useRef<ReturnType<typeof videojs> | null>(null);
 
   // Load recording data
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function RecordingDetailsPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchRecordingById(recordingId);
+        const data: Recording = await fetchRecordingById(recordingId);
         setRecording(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load recording");
@@ -48,14 +48,20 @@ export default function RecordingDetailsPage() {
       }
     };
 
-    loadRecording();
+    void loadRecording();
   }, [recordingId]);
+
+  const loadVideoUri = useCallback(async () => {
+    const videoUri = await getsonagramVideoUri(recording as Recording);
+    setVideoUri(videoUri);
+  }, [recording]);
 
   // Initialize video.js player
   useEffect(() => {
-    if (!recording || !videoRef.current) return;
+    if (!videoRef.current) return;
 
-    const videoUri = getSonogramVideoUri(recording);
+    void loadVideoUri();
+
     if (!videoUri) return;
 
     // Create video element
@@ -82,7 +88,7 @@ export default function RecordingDetailsPage() {
       poster: "",
     });
 
-    player.on("error", () => {
+    player.on("error", (): void => {
       console.error("Video.js player error");
       setVideoError(true);
     });
@@ -91,22 +97,38 @@ export default function RecordingDetailsPage() {
 
     // Cleanup function
     return () => {
-      if (playerRef.current && !playerRef.current.isDisposed()) {
+      if (
+        playerRef.current &&
+        typeof playerRef.current.isDisposed === "function" &&
+        !playerRef.current.isDisposed()
+      ) {
         playerRef.current.dispose();
         playerRef.current = null;
       }
     };
-  }, [recording]);
+  }, [loadVideoUri, recording, videoUri, videoRef]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (playerRef.current && !playerRef.current.isDisposed()) {
+      if (
+        playerRef.current &&
+        typeof playerRef.current.isDisposed === "function" &&
+        !playerRef.current.isDisposed()
+      ) {
         playerRef.current.dispose();
         playerRef.current = null;
       }
     };
   }, []);
+
+  useEffect(() => {
+    const loadAudioUri = async () => {
+      const audioUri = await getBestAudioUri(recording as Recording);
+      setAudioUri(audioUri);
+    };
+    void loadAudioUri();
+  }, [recording]);
 
   const handleBack = () => {
     router.back();
@@ -149,9 +171,6 @@ export default function RecordingDetailsPage() {
     );
   }
 
-  const audioUri = getBestAudioUri(recording);
-  const videoUri = getSonogramVideoUri(recording);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -164,7 +183,9 @@ export default function RecordingDetailsPage() {
             </Button>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-foreground truncate">{recording.title}</h1>
+              <h1 className="text-xl font-bold text-foreground truncate">
+                {recording.species?.common_name}
+              </h1>
               {recording.species && (
                 <Button
                   variant="link"
@@ -176,12 +197,11 @@ export default function RecordingDetailsPage() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <PageBadge page={recording.book_page_number} />
               {audioUri && (
                 <MiniAudioPlayer
                   trackId={recording.id}
                   audioUri={audioUri}
-                  title={recording.title}
+                  title={recording.species?.common_name}
                 />
               )}
             </div>
@@ -192,7 +212,7 @@ export default function RecordingDetailsPage() {
       {/* Content */}
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Video Player */}
-        {videoUri && (
+        {recording.sonagramvideoid && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -242,8 +262,8 @@ export default function RecordingDetailsPage() {
 
             <div className="flex flex-col gap-2 text-sm">
               <div>
-                <span className="font-medium text-foreground">Book Page:</span>
-                <span className="ml-2 text-muted-foreground">{recording.book_page_number}</span>
+                <span className="font-medium text-foreground">Recording Number:</span>
+                <span className="ml-2 text-muted-foreground">{recording.rec_number}</span>
               </div>
             </div>
           </CardContent>

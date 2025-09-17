@@ -2,23 +2,7 @@
 
 import { createContext, useContext, useState, useRef, ReactNode, useCallback } from "react";
 
-import { AudioPlayerState } from "@/types";
-
-type AudioContextType = {
-  isPlaying: boolean;
-  isLoading: boolean;
-  currentTrackId: string | null;
-  currentTrackUri: string | null;
-  currentTrackTitle: string | null;
-  currentTime: number;
-  duration: number;
-  error: string | null;
-  togglePlayPause: (uri: string, trackId: string, title?: string) => Promise<boolean>;
-  seekTo: (time: number) => void;
-  seekForward: (seconds?: number) => void;
-  seekBackward: (seconds?: number) => void;
-  stop: () => void;
-};
+import { AudioPlayerState, AudioContextType } from "@/types";
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 

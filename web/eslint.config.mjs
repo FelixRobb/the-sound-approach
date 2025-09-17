@@ -7,6 +7,11 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import importPlugin from "eslint-plugin-import";
 import prettier from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const eslintConfig = [
   // Base recommended configurations
@@ -45,6 +50,8 @@ const eslintConfig = [
         ecmaFeatures: {
           jsx: true,
         },
+        project: "./tsconfig.json",
+        tsconfigRootDir: __dirname,
       },
       globals: {
         React: "readonly",
@@ -89,14 +96,22 @@ const eslintConfig = [
         },
       ],
 
-      // TypeScript rules
+      // TypeScript recommended rules
+      ...typescriptEslint.configs.recommended.rules,
+      ...typescriptEslint.configs["recommended-requiring-type-checking"].rules,
 
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          args: "after-used", // Only flag unused args after the last used one
+          ignoreRestSiblings: true, // Ignore rest siblings in destructuring
+        },
       ],
       "@typescript-eslint/no-non-null-assertion": "warn",
+      "@typescript-eslint/strict-boolean-expressions": "off", // Can be too strict for React Native
 
       // React specific rules
       "react/prop-types": "off",

@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient, processLock } from "@supabase/supabase-js";
 import { AppState } from "react-native";
 
-import type { Recording, Species } from "../types";
+import type { Recording, Species, SearchResults } from "../types";
 // Initialize Supabase client
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -111,11 +111,6 @@ export const fetchRecordingById = async (recordingId: string) => {
   }
 
   return result.data as Recording;
-};
-
-export type SearchResults = {
-  recordings: Recording[];
-  species: Species[];
 };
 
 // Sanitize search query to prevent SQL injection

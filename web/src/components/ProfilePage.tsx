@@ -203,7 +203,7 @@ export default function ProfilePage() {
 
               {showChangePassword && (
                 <div className="p-4 bg-muted/20 rounded-lg border border-border/50">
-                  <form onSubmit={handleChangePassword} className="space-y-4">
+                  <form onSubmit={void handleChangePassword} className="space-y-4">
                     <div className="space-y-2">
                       <label htmlFor="currentPassword" className="text-sm font-medium">
                         Current Password
@@ -370,7 +370,7 @@ export default function ProfilePage() {
                 <CardDescription>Sign out of your account</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" onClick={handleSignOut} className="w-full">
+                <Button variant="outline" onClick={void handleSignOut} className="w-full">
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </Button>
@@ -420,7 +420,7 @@ export default function ProfilePage() {
                   </AlertDescription>
                 </Alert>
 
-                <form onSubmit={handleDeleteAccount} className="space-y-4">
+                <form onSubmit={void handleDeleteAccount} className="space-y-4">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">{message?.text}</p>
                     <label htmlFor="deletePassword" className="text-sm font-medium">

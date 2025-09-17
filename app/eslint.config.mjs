@@ -60,7 +60,6 @@ const eslintConfig = [
         },
         project: "./tsconfig.json",
         tsconfigRootDir: __dirname,
-        createDefaultProgram: true,
       },
       globals: {
         React: "readonly",

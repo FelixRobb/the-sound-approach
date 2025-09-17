@@ -4,20 +4,16 @@ import { Book, Search, Loader2, AlertCircle, Music, Filter, ArrowUpDown, Play } 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-import MiniAudioPlayer from "./MiniAudioPlayer";
-import PageBadge from "./PageBadge";
-import { Badge } from "./ui/badge";
+import RecordingCard from "./RecordingCard";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
-import { getBestAudioUri } from "@/lib/mediaUtils";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "@/lib/supabase";
-import type { Recording, Species } from "@/types";
+import type { Recording, Species, SortOption } from "@/types";
 
 type TabType = "recordings" | "species";
-type SortBy = "page" | "title" | "species";
 type SortOrder = "asc" | "desc";
 
 export default function RecordingsPage() {
@@ -28,11 +24,11 @@ export default function RecordingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<SortBy>("page");
+  const [sortBy, setSortBy] = useState<SortOption>("rec_number");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -68,26 +64,26 @@ export default function RecordingsPage() {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
       return (
-        recording.title.toLowerCase().includes(query) ||
-        (recording.species?.common_name.toLowerCase().includes(query) ??
-          recording.species?.scientific_name.toLowerCase().includes(query) ??
-          recording.caption.toLowerCase().includes(query)) ||
-        recording.book_page_number.toString().includes(query)
+        (recording.species?.common_name.toLowerCase().includes(query) ?? false) ||
+        (recording.species?.scientific_name.toLowerCase().includes(query) ?? false) ||
+        (recording.species?.scientific_name.toLowerCase().includes(query) ?? false) ||
+        (recording.caption.toLowerCase().includes(query) ?? false) ||
+        (recording.rec_number.toString().includes(query) ?? false)
       );
     })
     .sort((a, b) => {
       let comparison = 0;
 
       switch (sortBy) {
-        case "title":
-          comparison = a.title.localeCompare(b.title);
-          break;
-        case "species":
+        case "speciescommon":
           comparison = (a.species?.common_name ?? "").localeCompare(b.species?.common_name ?? "");
           break;
-        case "page":
+        case "speciesscientific":
+          comparison = (a.species?.common_name ?? "").localeCompare(b.species?.common_name ?? "");
+          break;
+        case "rec_number":
         default:
-          comparison = a.book_page_number - b.book_page_number;
+          comparison = a.rec_number - b.rec_number;
           break;
       }
 
@@ -127,7 +123,7 @@ export default function RecordingsPage() {
             <AlertCircle className="h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-semibold mb-2">Failed to Load</h3>
             <p className="text-muted-foreground text-center mb-4">{error}</p>
-            <Button onClick={loadData} variant="default">
+            <Button onClick={() => void loadData()} variant="default">
               Try Again
             </Button>
           </CardContent>
@@ -175,12 +171,23 @@ export default function RecordingsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    setSortBy(sortBy === "page" ? "title" : sortBy === "title" ? "species" : "page")
+                    setSortBy(
+                      sortBy === "rec_number"
+                        ? "speciescommon"
+                        : sortBy === "speciescommon"
+                          ? "speciesscientific"
+                          : "rec_number"
+                    )
                   }
                   className="h-8"
                 >
                   <Filter className="h-4 w-4 mr-2" />
-                  Sort by {sortBy === "page" ? "Page" : sortBy === "title" ? "Title" : "Species"}
+                  Sort by{" "}
+                  {sortBy === "rec_number"
+                    ? "Page"
+                    : sortBy === "speciescommon"
+                      ? "Title"
+                      : "Species"}
                 </Button>
                 <Button
                   variant="outline"
@@ -215,66 +222,12 @@ export default function RecordingsPage() {
               ) : (
                 <div className="grid gap-4">
                   {filteredAndSortedRecordings.map((recording) => {
-                    const audioUri = getBestAudioUri(recording);
-
                     return (
-                      <Card
+                      <RecordingCard
                         key={recording.id}
-                        className="group cursor-pointer transition-all duration-200 hover:shadow-md border border-border/50 hover:border-border"
+                        recording={recording}
                         onClick={() => handleRecordingClick(recording.id)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-4">
-                            {/* Audio Player */}
-                            {audioUri && (
-                              <div
-                                className="flex-shrink-0"
-                                onPointerDown={(e) => e.preventDefault()}
-                              >
-                                <MiniAudioPlayer
-                                  trackId={recording.id}
-                                  title={recording.title}
-                                  audioUri={audioUri}
-                                  size={44}
-                                />
-                              </div>
-                            )}
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0 space-y-2">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
-                                  <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
-                                    {recording.title}
-                                  </h3>
-                                  {recording.species && (
-                                    <p className="text-muted-foreground italic text-sm mt-1">
-                                      {recording.species.scientific_name}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <PageBadge page={recording.book_page_number} />
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                {recording.species && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    {recording.species.common_name}
-                                  </Badge>
-                                )}
-                              </div>
-
-                              {recording.caption && (
-                                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                                  {recording.caption}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      />
                     );
                   })}
                 </div>

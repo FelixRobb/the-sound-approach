@@ -26,7 +26,7 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsSubmitting(true);
     clearError();
@@ -76,11 +76,11 @@ export default function AuthModal({ isOpen, onClose, mode, onModeChange }: AuthM
           {state.error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{state.error}</AlertDescription>
+              <AlertDescription>{state.error.message}</AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={void handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label
                 htmlFor="email"

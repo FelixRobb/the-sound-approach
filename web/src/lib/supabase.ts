@@ -1,72 +1,13 @@
-import { createBrowserClient, createServerClient } from "@supabase/ssr";
-import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
-import type { NextRequest, NextResponse } from "next/server";
-
 import type { Recording, Species, SearchResults } from "../types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+import { createClient } from "@/utils/supabase/client";
 
-// Client-side Supabase client
-export const createClient = () => createBrowserClient(supabaseUrl, supabaseAnonKey);
-
-// Server-side Supabase client for Server Components
-export const createServerComponentClient = (cookies: () => ReadonlyRequestCookies) =>
-  createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookies().get(name)?.value;
-      },
-    },
-  });
-
-// Server-side Supabase client for Route Handlers
-export const createRouteHandlerClient = (cookies: () => ReadonlyRequestCookies) =>
-  createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookies().get(name)?.value;
-      },
-      set(name: string, value: string, options: Record<string, unknown>) {
-        cookies().set({ name, value, ...options });
-      },
-      remove(name: string, options: Record<string, unknown>) {
-        cookies().set({ name, value: "", ...options });
-      },
-    },
-  });
-
-// Middleware Supabase client
-export const createMiddlewareClient = (request: NextRequest, response: NextResponse) =>
-  createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value;
-      },
-      set(name: string, value: string, options: Record<string, unknown>) {
-        response.cookies.set({
-          name,
-          value,
-          ...options,
-        });
-      },
-      remove(name: string, options: Record<string, unknown>) {
-        response.cookies.set({
-          name,
-          value: "",
-          ...options,
-        });
-      },
-    },
-  });
-
-// Default export for client-side usage
-export default createClient();
+export const supabase = createClient();
 
 // Database query functions
 export const fetchRecordingsByBookOrder = async () => {
-  const supabase = createClient();
   const { data, error } = await supabase
+
     .from("recordings")
     .select(
       `
@@ -78,18 +19,15 @@ export const fetchRecordingsByBookOrder = async () => {
       )
     `
     )
-    .order("book_page_number", { ascending: true })
-    .order("order_in_book", { ascending: true });
-
+    .order("rec_number", { ascending: true });
   if (error) {
     throw error;
   }
 
-  return data;
+  return data as Recording[];
 };
 
 export const fetchSpecies = async () => {
-  const supabase = createClient();
   const { data, error } = await supabase
     .from("species")
     .select("*")
@@ -99,11 +37,10 @@ export const fetchSpecies = async () => {
     throw error;
   }
 
-  return data;
+  return data as Species[];
 };
 
 export const fetchRecordingsBySpecies = async (speciesId: string) => {
-  const supabase = createClient();
   const { data, error } = await supabase
     .from("recordings")
     .select(
@@ -116,19 +53,17 @@ export const fetchRecordingsBySpecies = async (speciesId: string) => {
       )
     `
     )
-    .eq("species_id", speciesId)
-    .order("order_in_book", { ascending: true });
+    .eq("species_id", speciesId);
 
   if (error) {
     throw error;
   }
 
-  return data;
+  return data as Recording[];
 };
 
 export const fetchRecordingById = async (recordingId: string) => {
-  const supabase = createClient();
-  const { data, error } = await supabase
+  const result = await supabase
     .from("recordings")
     .select(
       `
@@ -143,15 +78,17 @@ export const fetchRecordingById = async (recordingId: string) => {
     .eq("id", recordingId)
     .single();
 
-  if (error) {
-    throw error;
+  if (result.error) {
+    throw result.error;
   }
 
-  return data;
+  return result.data as Recording;
 };
 
 // Sanitize search query to prevent SQL injection
+// Sanitize search query to prevent SQL injection
 const sanitizeSearchQuery = (query: string): string => {
+  // Remove any special characters that might be used for SQL injection
   return query.replace(/[%_'"\\[\]{}()*+?.,^$|#\s]/g, " ").trim();
 };
 
@@ -166,23 +103,7 @@ export const searchRecordings = async (query: string): Promise<SearchResults> =>
     return { recordings: [], species: [] };
   }
 
-  const supabase = createClient();
-
   try {
-    // Call the PostgreSQL function for weighted search
-    const { data, error } = await supabase.rpc("search_recordings", {
-      search_query: sanitizedQuery,
-    });
-
-    if (error) {
-      console.error("Search function error:", error);
-      throw error;
-    }
-
-    // Process and separate results by type
-    const recordings: Recording[] = [];
-    const species: Species[] = [];
-
     // Define type for search result items
     type SearchResultItem = {
       result_type: "recording" | "species";
@@ -190,8 +111,22 @@ export const searchRecordings = async (query: string): Promise<SearchResults> =>
       relevance_score: number;
     };
 
-    if (data) {
-      data.forEach((item: SearchResultItem) => {
+    // Call the PostgreSQL function for weighted search
+    const result = await supabase.rpc("search_recordings", {
+      search_query: sanitizedQuery,
+    });
+
+    if (result.error) {
+      console.error("Search function error:", result.error);
+      throw result.error;
+    }
+
+    // Process and separate results by type
+    const recordings: Recording[] = [];
+    const species: Species[] = [];
+
+    if (result.data) {
+      (result.data as SearchResultItem[]).forEach((item: SearchResultItem) => {
         if (item.result_type === "recording") {
           // Convert from JSONB to Recording type
           const recordingData = item.result_data as unknown as Recording;

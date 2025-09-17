@@ -25,7 +25,7 @@ import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { fetchRecordingsByBookOrder, fetchSpecies } from "../lib/supabase";
 import { createThemedTextStyle } from "../lib/theme/typography";
-import type { Recording, Species } from "../types";
+import type { Recording, Species, SortOption, SortOrder, SortSpeciesOption } from "../types";
 
 // Custom debounce hook
 const useDebounce = <T,>(value: T, delay: number): T => {
@@ -55,19 +55,15 @@ const RecordingsListScreen = () => {
   const [showSearch, setShowSearch] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [sortBy, setSortBy] = useState<"speciescommon" | "rec_number" | "speciesscientific">(
-    "rec_number"
-  );
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [sortBy, setSortBy] = useState<SortOption>("rec_number");
   const [downloadedFilter, setDownloadedFilter] = useState<"all" | "downloaded" | "not_downloaded">(
     "all"
   );
 
   // Species-specific sorting state
-  const [speciesSortBy, setSpeciesSortBy] = useState<"speciescommon" | "speciesscientific">(
-    "speciescommon"
-  );
-  const [speciesSortOrder, setSpeciesSortOrder] = useState<"asc" | "desc">("asc");
+  const [speciesSortBy, setSpeciesSortBy] = useState<SortSpeciesOption>("speciescommon");
+  const [speciesSortOrder, setSpeciesSortOrder] = useState<SortOrder>("asc");
 
   const styles = StyleSheet.create({
     container: {

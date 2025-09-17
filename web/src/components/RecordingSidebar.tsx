@@ -38,16 +38,16 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
       }
     };
 
-    load();
+    void load();
   }, []);
 
   const filteredRecordings = recordings.filter((rec) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (
-      rec.title.toLowerCase().includes(q) ||
       (rec.species?.common_name?.toLowerCase().includes(q) ?? false) ||
-      rec.book_page_number.toString().includes(q)
+      (rec.species?.scientific_name?.toLowerCase().includes(q) ?? false) ||
+      rec.rec_number.toString().includes(q)
     );
   });
 
@@ -60,7 +60,7 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
             <SidebarMenuItem key={rec.id}>
               <SidebarMenuButton
                 asChild
-                tooltip={`${rec.title} - Page ${rec.book_page_number}${
+                tooltip={`${rec.species?.common_name} - Page ${rec.rec_number}${
                   rec.species ? ` (${rec.species.common_name})` : ""
                 }`}
                 className="hover:bg-muted/80 rounded-md transition-colors"
@@ -114,7 +114,7 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
               <SidebarMenuItem key={rec.id}>
                 <SidebarMenuButton
                   asChild
-                  tooltip={`${rec.title} - Page ${rec.book_page_number}`}
+                  tooltip={`${rec.species?.common_name} - Page ${rec.rec_number}`}
                   className="hover:bg-muted/80 rounded-md transition-colors"
                 >
                   <Link
@@ -130,7 +130,7 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
                     </div>
                     <div className="flex flex-1 flex-col items-start min-w-0 pl-2">
                       <span className="truncate text-xs font-medium hover:text-primary transition-colors">
-                        {rec.title}
+                        {rec.species?.common_name}
                       </span>
                       <div className="flex items-center gap-1 w-full">
                         {rec.species && (
@@ -142,7 +142,7 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
                           variant="outline"
                           className="h-4 px-1 text-[10px] shrink-0 bg-muted/50"
                         >
-                          {rec.book_page_number}
+                          {rec.rec_number}
                         </Badge>
                       </div>
                     </div>

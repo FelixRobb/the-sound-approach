@@ -2,35 +2,40 @@
 
 import { LogIn, ArrowLeft, Loader2, AlertCircle, Music } from "lucide-react";
 import Link from "next/link";
-import type React from "react";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 
-import { Alert, AlertDescription } from "./ui/alert";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
+import { login } from "./actions";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
-export default function LoginPage() {
-  const { signIn, state, clearError } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+function SubmitButton() {
+  const { pending } = useFormStatus();
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    clearError();
+  return (
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? (
+        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+      ) : (
+        <LogIn className="w-4 h-4 mr-2" />
+      )}
+      {pending ? "Signing in..." : "Sign In"}
+    </Button>
+  );
+}
 
-    try {
-      await signIn(email, password);
-    } catch (error) {
-      // Error is handled by the auth context
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+export default function LoginForm() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const [showError, setShowError] = useState(!!error);
+
+  useEffect(() => {
+    setShowError(!!error);
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -48,14 +53,14 @@ export default function LoginPage() {
 
           <CardContent className="space-y-6">
             {/* Error message */}
-            {state.error && (
+            {showError && error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{state.error.message}</AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <form onSubmit={void handleSubmit} className="space-y-4">
+            <form action={login} className="space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="email"
@@ -65,12 +70,10 @@ export default function LoginPage() {
                 </label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="Enter your email"
-                  disabled={isSubmitting}
                 />
               </div>
 
@@ -83,23 +86,14 @@ export default function LoginPage() {
                 </label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Enter your password"
-                  disabled={isSubmitting}
                 />
               </div>
 
-              <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <LogIn className="w-4 h-4 mr-2" />
-                )}
-                {isSubmitting ? "Signing in..." : "Sign In"}
-              </Button>
+              <SubmitButton />
             </form>
 
             {/* Navigation */}

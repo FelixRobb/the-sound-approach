@@ -20,6 +20,7 @@ import { Card } from "./ui/card";
 import { Slider } from "./ui/slider";
 
 import { useAudio } from "@/contexts/AudioContext";
+import { AudioPlayerPositionProps } from "@/types";
 
 export default function FloatingAudioController() {
   const {
@@ -40,7 +41,7 @@ export default function FloatingAudioController() {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState<AudioPlayerPositionProps>({ x: 0, y: 0 });
   const [isDragDisabled, setIsDragDisabled] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -86,7 +87,7 @@ export default function FloatingAudioController() {
 
     if (saved) {
       try {
-        const savedPosition = JSON.parse(saved);
+        const savedPosition = JSON.parse(saved) as AudioPlayerPositionProps;
         const dimensions = getComponentDimensions();
         const margin = 16;
 
@@ -125,7 +126,7 @@ export default function FloatingAudioController() {
 
   // Recalculate constraints when component dimensions change
   const constrainPosition = useCallback(
-    (pos: { x: number; y: number }) => {
+    (pos: AudioPlayerPositionProps) => {
       if (!windowSize.width || !windowSize.height) return pos;
 
       const dimensions = getComponentDimensions();
@@ -183,11 +184,11 @@ export default function FloatingAudioController() {
   }, [windowSize, getComponentDimensions]);
 
   // Optimized event handlers
-  const handlePlayPause = useCallback(async () => {
+  const handlePlayPause = useCallback(() => {
     if (!currentTrackId || !currentTrackUri || isLoading) return;
 
     try {
-      await togglePlayPause(currentTrackUri, currentTrackId);
+      void togglePlayPause(currentTrackUri, currentTrackId);
     } catch (error) {
       console.error("Failed to toggle playback:", error);
     }
@@ -220,7 +221,7 @@ export default function FloatingAudioController() {
   const handleDragEnd = useCallback(
     (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       // Calculate the new position based on the current position plus the drag offset
-      const newPosition = {
+      const newPosition: AudioPlayerPositionProps = {
         x: position.x + info.offset.x,
         y: position.y + info.offset.y,
       };
@@ -239,7 +240,7 @@ export default function FloatingAudioController() {
     if (!isInitialized) return;
 
     const handleResize = () => {
-      setPosition((prevPos) => {
+      setPosition((prevPos: AudioPlayerPositionProps) => {
         const constrainedPos = constrainPosition(prevPos);
 
         if (constrainedPos.x !== prevPos.x || constrainedPos.y !== prevPos.y) {
@@ -317,7 +318,7 @@ export default function FloatingAudioController() {
               <Button
                 variant="default"
                 size="icon"
-                onClick={handlePlayPause}
+                onClick={void handlePlayPause}
                 disabled={isLoading}
                 className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex-shrink-0"
               >

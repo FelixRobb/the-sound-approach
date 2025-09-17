@@ -10,7 +10,6 @@ import { Card, CardContent } from "./ui/card";
 import { SidebarTrigger } from "./ui/sidebar";
 
 import MiniAudioPlayer from "@/components/MiniAudioPlayer";
-import PageBadge from "@/components/PageBadge";
 import { getBestAudioUri } from "@/lib/mediaUtils";
 import { fetchRecordingsBySpecies } from "@/lib/supabase";
 import { Recording } from "@/types";
@@ -53,7 +52,7 @@ export default function SpeciesDetailsPage() {
       }
     };
 
-    loadRecordings();
+    void loadRecordings();
   }, [speciesId]);
 
   const handleBack = () => {
@@ -165,8 +164,8 @@ export default function SpeciesDetailsPage() {
       {/* Content */}
       <div className="max-w-4xl mx-auto p-6">
         <div className="space-y-4">
-          {recordings.map((recording) => {
-            const audioUri = getBestAudioUri(recording);
+          {recordings.map(async (recording) => {
+            const audioUri = await getBestAudioUri(recording);
 
             return (
               <Card
@@ -182,7 +181,7 @@ export default function SpeciesDetailsPage() {
                         <MiniAudioPlayer
                           trackId={recording.id}
                           audioUri={audioUri}
-                          title={recording.title}
+                          title={recording.species?.common_name}
                           size={40}
                         />
                       </div>
@@ -192,9 +191,8 @@ export default function SpeciesDetailsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-foreground truncate">
-                          {recording.title}
+                          {recording.species?.common_name}
                         </h3>
-                        <PageBadge page={recording.book_page_number} />
                       </div>
 
                       {recording.caption && (

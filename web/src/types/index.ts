@@ -1,6 +1,10 @@
 import { Library, Search, User as UserIcon } from "lucide-react";
 
 // Core data types (ported from mobile app)
+// ==========================================
+// Database Types
+// ==========================================
+
 export type Species = {
   id: string;
   common_name: string;
@@ -8,16 +12,20 @@ export type Species = {
   created_at: string;
 };
 
+export type MediaType = "audio-hq" | "audio_lq" | "sonagram_video";
+
 export type Recording = {
   id: string;
+  catalogue_code: string;
   species_id: string;
-  title: string;
-  audiohqid: string;
-  audiolqid: string;
-  sonogramvideoid: string;
-  book_page_number: number;
+  rec_number: number;
+  site_name: string;
+  audiohqid?: string;
+  audiolqid?: string;
+  sonagramvideoid?: string;
   caption: string;
-  orderInBook: number;
+  recorded_by: string;
+  date_recorded: string;
   createdAt: string;
   species?: Species;
 };
@@ -37,29 +45,57 @@ export type UserActivation = {
   activated_at: string;
 };
 
+// ==========================================
+// Authentication Types
+// ==========================================
+
 export type User = {
   id: string;
   email: string;
+  /** Optional 8-character book access code that links the user to a physical copy of the book */
   bookCode?: string;
 };
 
-// Authentication types
 export type AuthState = {
   isLoading: boolean;
+  isSignout: boolean;
+  userToken: string | null;
   user: User | null;
-  error: string | null;
+  error: AuthError | null;
   hasCompletedOnboarding: boolean;
 };
 
 export type AuthAction =
-  | { type: "LOADING" }
-  | { type: "SIGN_IN"; user: User }
-  | { type: "SIGN_UP"; user: User }
+  | {
+      type: "RESTORE_TOKEN";
+      token: string | null;
+      user: User | null;
+      hasCompletedOnboarding?: boolean;
+    }
+  | { type: "SIGN_IN"; token: string; user: User; hasCompletedOnboarding?: boolean }
+  | { type: "SIGN_UP"; token: string; user: User }
   | { type: "SIGN_OUT" }
-  | { type: "ERROR"; error: string }
-  | { type: "RESTORE_TOKEN"; user: User; hasCompletedOnboarding: boolean }
+  | { type: "AUTH_ERROR"; error: AuthError | null }
   | { type: "COMPLETE_ONBOARDING" }
   | { type: "RESET_ONBOARDING" };
+
+export type AuthContextType = {
+  state: AuthState;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, bookCode: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
+  clearError: () => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
+};
+
+export type AuthError = {
+  name: string;
+  type: "SIGNIN" | "SIGNUP" | "SIGNOUT" | "DELETE_ACCOUNT";
+  message: string;
+};
 
 // Audio types
 export type AudioPlayerState = {
@@ -78,6 +114,22 @@ export type AudioState = {
   error: string | null;
 };
 
+export type AudioContextType = {
+  isPlaying: boolean;
+  isLoading: boolean;
+  currentTrackId: string | null;
+  currentTrackUri: string | null;
+  currentTrackTitle: string | null;
+  currentTime: number;
+  duration: number;
+  error: string | null;
+  togglePlayPause: (uri: string, trackId: string, title?: string) => Promise<boolean>;
+  seekTo: (time: number) => void;
+  seekForward: (seconds?: number) => void;
+  seekBackward: (seconds?: number) => void;
+  stop: () => void;
+};
+
 export type AudioAction =
   | { type: "PLAY"; trackId: string }
   | { type: "PAUSE" }
@@ -87,28 +139,6 @@ export type AudioAction =
   | { type: "SET_LOADING"; isLoading: boolean }
   | { type: "SET_ERROR"; error: string | null };
 
-// Download types
-export type DownloadState = {
-  downloads: Record<string, DownloadItem>;
-  isDownloading: boolean;
-  error: string | null;
-};
-
-export type DownloadItem = {
-  id: string;
-  title: string;
-  progress: number;
-  status: "pending" | "downloading" | "completed" | "error";
-  localUri?: string;
-};
-
-export type DownloadAction =
-  | { type: "START_DOWNLOAD"; item: DownloadItem }
-  | { type: "UPDATE_PROGRESS"; id: string; progress: number }
-  | { type: "COMPLETE_DOWNLOAD"; id: string; localUri: string }
-  | { type: "ERROR_DOWNLOAD"; id: string; error: string }
-  | { type: "REMOVE_DOWNLOAD"; id: string };
-
 // Search types
 export type SearchFilter = "all" | "recordings" | "species";
 
@@ -117,6 +147,10 @@ export type SearchResults = {
   species: Species[];
 };
 
+export type SortOption = "rec_number" | "speciescommon" | "speciesscientific";
+export type SortSpeciesOption = "speciescommon" | "speciesscientific";
+
+export type SortOrder = "asc" | "desc";
 // Component prop types
 export type SpeciesCardProps = {
   species: Species;
@@ -128,6 +162,17 @@ export type RecordingCardProps = {
   onClick?: () => void;
 };
 
+export type AudioPlayerPositionProps = {
+  x: number;
+  y: number;
+};
+
+export type MiniAudioPlayerProps = {
+  trackId: string;
+  audioUri: string;
+  title?: string;
+  size?: number;
+};
 // Navigation types
 export type TabType = "recordings" | "search" | "profile";
 

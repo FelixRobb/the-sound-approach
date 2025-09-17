@@ -57,20 +57,20 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
 
-  const handleNext = () => {
+  const handleNext = (): void => {
     if (currentStep < onboardingSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = (): void => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
 
-  const handleComplete = async () => {
-    await completeOnboarding();
+  const handleComplete = (): void => {
+    void completeOnboarding();
     router.push("/dashboard");
   };
 
@@ -118,7 +118,7 @@ export default function OnboardingPage() {
             <div className="flex justify-between gap-4">
               <Button
                 variant="outline"
-                onClick={handlePrevious}
+                onClick={void handlePrevious}
                 disabled={currentStep === 0}
                 className="flex-1"
               >
@@ -127,12 +127,12 @@ export default function OnboardingPage() {
               </Button>
 
               {isLastStep ? (
-                <Button onClick={handleComplete} className="flex-1">
+                <Button onClick={void handleComplete} className="flex-1">
                   <Check className="w-4 h-4 mr-2" />
                   Get Started
                 </Button>
               ) : (
-                <Button onClick={handleNext} className="flex-1">
+                <Button onClick={void handleNext} className="flex-1">
                   Next
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -141,7 +141,7 @@ export default function OnboardingPage() {
 
             {/* Skip option */}
             {!isLastStep && (
-              <Button variant="ghost" onClick={handleComplete} className="w-full text-sm">
+              <Button variant="ghost" onClick={void handleComplete} className="w-full text-sm">
                 Skip tutorial
               </Button>
             )}

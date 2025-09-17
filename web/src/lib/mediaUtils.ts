@@ -1,45 +1,42 @@
-import { ENV } from "@/config/env";
+import { supabase } from "./supabase";
+
 import { Recording } from "@/types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-// Get the best available audio URI for a recording
-export const getBestAudioUri = (recording: Recording): string | null => {
+export const getBestAudioUri = async (recording: Recording): Promise<string | null> => {
+  const audioHqBucket = process.env.AUDIO_HQ_BUCKET || "audio-hq";
   if (!recording) return null;
-
-  // For web, we'll prefer high quality audio
+  // First try to use downloaded audio if available
   if (recording.audiohqid) {
-    return `${supabaseUrl}/storage/v1/object/public/${ENV.AUDIO_HQ_BUCKET}/${recording.audiohqid}.wav`;
-  }
-
-  // Fallback to low quality if high quality not available
-  if (recording.audiolqid) {
-    return `${supabaseUrl}/storage/v1/object/public/${ENV.AUDIO_LQ_BUCKET}/${recording.audiolqid}.mp3`;
+    // Use public URL from Supabase for high-quality audio (WAV)
+    const { data, error } = await supabase.storage
+      .from(audioHqBucket)
+      .createSignedUrl(`${recording.audiohqid}.wav`, 60 * 60 * 24 * 30);
+    if (error) {
+      console.error("Error creating signed URL:", error);
+      return null;
+    }
+    return data?.signedUrl || null;
   }
 
   return null;
 };
 
-// Get sonogram video URI for a recording
-export const getSonogramVideoUri = (recording: Recording): string | null => {
-  if (!recording?.sonogramvideoid) return null;
-
-  return `${supabaseUrl}/storage/v1/object/public/${ENV.SONOGRAMS_BUCKET}/${recording.sonogramvideoid}.mp4`;
-};
-
-// Format duration in seconds to MM:SS format
-export const formatDuration = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-};
-
-// Check if a URL is accessible
-export const checkMediaAvailability = async (url: string): Promise<boolean> => {
-  try {
-    const response = await fetch(url, { method: "HEAD" });
-    return response.ok;
-  } catch {
-    return false;
+/**
+ * Gets the sonagram video URI for a recording
+ * @param recording The recording to get the sonagram video URI for
+ * @param isConnected Boolean indicating if there's an internet connection
+ * @returns The URI to the sonagram video or null if not available
+ */
+export const getsonagramVideoUri = async (recording: Recording): Promise<string | null> => {
+  if (!recording || !recording.sonagramvideoid) return null;
+  const sonagramBucket = process.env.SONAGRAMS_BUCKET || "sonogramvideos";
+  // Use public URL from Supabase for sonagram video
+  const { data, error } = await supabase.storage
+    .from(sonagramBucket)
+    .createSignedUrl(`${recording.sonagramvideoid}.mp4`, 60 * 60 * 24 * 30);
+  if (error) {
+    console.error("Error creating signed URL:", error);
+    throw error;
   }
+  return data?.signedUrl as string | null;
 };

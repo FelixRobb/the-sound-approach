@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
 import MiniAudioPlayer from "./MiniAudioPlayer";
-import PageBadge from "./PageBadge";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -42,7 +41,7 @@ export default function SearchPage() {
     const saved = localStorage.getItem("recentSearches");
     if (saved) {
       try {
-        setRecentSearches(JSON.parse(saved));
+        setRecentSearches(JSON.parse(saved) as string[]);
       } catch {
         // Ignore invalid JSON
       }
@@ -85,7 +84,7 @@ export default function SearchPage() {
   // Perform search when debounced query changes
   useEffect(() => {
     if (debouncedQuery.trim()) {
-      performSearch(debouncedQuery);
+      void performSearch(debouncedQuery);
     } else {
       setRecordings([]);
       setSpecies([]);
@@ -238,8 +237,8 @@ export default function SearchPage() {
                         </h2>
                       </div>
                       <div className="space-y-4">
-                        {filteredRecordings.map((recording) => {
-                          const audioUri = getBestAudioUri(recording);
+                        {filteredRecordings.map(async (recording) => {
+                          const audioUri = await getBestAudioUri(recording);
 
                           return (
                             <Card
@@ -257,8 +256,8 @@ export default function SearchPage() {
                                     >
                                       <MiniAudioPlayer
                                         trackId={recording.id}
-                                        audioUri={audioUri}
-                                        title={recording.title}
+                                        audioUri={audioUri || ""}
+                                        title={recording.species?.common_name}
                                         size={44}
                                       />
                                     </div>
@@ -269,16 +268,13 @@ export default function SearchPage() {
                                     <div className="flex items-start justify-between gap-3">
                                       <div className="min-w-0 flex-1">
                                         <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
-                                          {recording.title}
+                                          {recording.species?.common_name}
                                         </h3>
                                         {recording.species && (
                                           <p className="text-muted-foreground italic text-sm mt-1">
                                             {recording.species.scientific_name}
                                           </p>
                                         )}
-                                      </div>
-                                      <div className="flex items-center gap-2 flex-shrink-0">
-                                        <PageBadge page={recording.book_page_number} />
                                       </div>
                                     </div>
 

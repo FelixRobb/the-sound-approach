@@ -121,11 +121,11 @@ export default function SignupPage() {
             {state.error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{state.error}</AlertDescription>
+                <AlertDescription>{state.error.message}</AlertDescription>
               </Alert>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="email"

@@ -99,7 +99,6 @@ export type AuthContextType = {
 };
 
 export type AuthError = {
-  uniqueid: string;
   name: string;
   type: "SIGNIN" | "SIGNUP" | "SIGNOUT" | "DELETE_ACCOUNT";
   message: string;
@@ -288,6 +287,11 @@ export type SpeciesItemProps = {
   onPress: () => void;
 };
 
+export type SearchResults = {
+  recordings: Recording[];
+  species: Species[];
+};
+
 export type DownloadItemProps = {
   download: DownloadRecord;
   onPress: () => void;
@@ -321,4 +325,7 @@ export type StorageInfo = {
 
 export type SearchFilter = "all" | "species" | "recordings";
 
-export type SortOption = "book" | "name" | "recent";
+export type SortOption = "rec_number" | "speciescommon" | "speciesscientific";
+export type SortSpeciesOption = "speciescommon" | "speciesscientific";
+
+export type SortOrder = "asc" | "desc";
