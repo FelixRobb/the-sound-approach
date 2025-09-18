@@ -242,19 +242,45 @@ export default function RecordingDetailsPage() {
             <CardTitle>Recording Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recording.species && (
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{recording.species.common_name}</Badge>
-                <Badge variant="outline">{recording.species.scientific_name}</Badge>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">{recording.species?.common_name}</Badge>
+              <Badge variant="outline">{recording.species?.scientific_name}</Badge>
+            </div>
 
-            {recording.caption && (
-              <div>
-                <h4 className="font-medium text-foreground mb-2">Description</h4>
-                <p className="text-muted-foreground leading-relaxed">{recording.caption}</p>
-              </div>
-            )}
+            <div>
+              <h4 className="font-medium text-foreground mb-2">Site Name</h4>
+              <p className="text-muted-foreground leading-relaxed">
+                {recording.site_name || "N/A"}
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-2">Catalogue Code</h4>
+              <p className="text-muted-foreground leading-relaxed">
+                {recording.catalogue_code || "N/A"}
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-2">Recorded By</h4>
+              <p className="text-muted-foreground leading-relaxed">
+                {recording.recorded_by || "N/A"}
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-2">Date Recorded</h4>
+              <p className="text-muted-foreground leading-relaxed">
+                {recording.date_recorded
+                  ? new Date(recording.date_recorded.replace(" ", "T")).toLocaleString()
+                  : "N/A"}{" "}
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-2">Description</h4>
+              <p className="text-muted-foreground leading-relaxed">{recording.caption}</p>
+            </div>
 
             <div className="flex flex-col gap-2 text-sm">
               <div>

@@ -8,6 +8,7 @@ import { useFormStatus } from "react-dom";
 
 import { login } from "./actions";
 
+import SecretKeyCombo from "@/components/SecretKeyCombo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +40,8 @@ export default function LoginForm() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <SecretKeyCombo />
+
       <div className="w-full max-w-md">
         <Card className="shadow-2xl border-0">
           <CardHeader className="text-center pb-4">

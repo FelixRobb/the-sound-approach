@@ -6,12 +6,7 @@ import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { fetchRecordingsByBookOrder } from "@/lib/supabase";
 import type { Recording } from "@/types";
 
@@ -24,7 +19,6 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { setOpen } = useSidebar();
 
   useEffect(() => {
     const load = async () => {
@@ -68,7 +62,6 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
                 <Link
                   href={`/recording/${rec.id}`}
                   onClick={() => {
-                    setOpen(false);
                     onNavigate?.();
                   }}
                 >
@@ -115,12 +108,11 @@ export default function RecordingSidebar({ onNavigate, collapsed = false }: Reco
                 <SidebarMenuButton
                   asChild
                   tooltip={`${rec.species?.common_name} - Recording ${rec.rec_number}`}
-                  className="hover:bg-muted/80 rounded-md transition-colors"
+                  className="hover:bg-muted/50 rounded-md transition-colors"
                 >
                   <Link
                     href={`/recording/${rec.id}`}
                     onClick={() => {
-                      setOpen(false);
                       onNavigate?.();
                     }}
                     className="group"

@@ -220,6 +220,7 @@ export default function FloatingAudioController() {
   // Save position when dragging ends
   const handleDragEnd = useCallback(
     (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      if (isDragDisabled) return;
       // Calculate the new position based on the current position plus the drag offset
       const newPosition: AudioPlayerPositionProps = {
         x: position.x + info.offset.x,
@@ -232,7 +233,7 @@ export default function FloatingAudioController() {
       setPosition(constrainedPosition);
       localStorage.setItem("floatingAudioController-position", JSON.stringify(constrainedPosition));
     },
-    [position, constrainPosition]
+    [position, constrainPosition, isDragDisabled]
   );
 
   // Handle window resize to reposition if needed
@@ -255,15 +256,18 @@ export default function FloatingAudioController() {
     return () => window.removeEventListener("resize", handleResize);
   }, [constrainPosition, isInitialized]);
 
-  // Handle slider interactions to disable drag
-  const handleSliderPointerDown = useCallback(() => {
+  // Handle slider interactions to disable drag - FIXED VERSION
+  const handleSliderPointerDown = useCallback((e: React.PointerEvent) => {
     setIsDragDisabled(true);
+    // Stop event propagation to prevent drag system from starting
+    e.stopPropagation();
   }, []);
 
   const handleSliderPointerUp = useCallback(() => {
+    // Small delay to ensure slider interaction completes before re-enabling drag
     setTimeout(() => {
       setIsDragDisabled(false);
-    }, 300);
+    }, 50);
   }, []);
 
   // Stable time formatting
@@ -287,6 +291,7 @@ export default function FloatingAudioController() {
   return (
     <motion.div
       drag={!isDragDisabled}
+      dragListener={!isDragDisabled}
       draggable={!isDragDisabled}
       dragElastic={0.1}
       dragMomentum={false}
@@ -407,12 +412,13 @@ export default function FloatingAudioController() {
               </Button>
             </div>
 
-            {/* Progress Slider */}
+            {/* Progress Slider - FIXED VERSION */}
             <div
               className="space-y-1"
               onPointerDown={handleSliderPointerDown}
               onPointerUp={handleSliderPointerUp}
               onPointerLeave={handleSliderPointerUp}
+              style={{ touchAction: "none" }} // Prevents browser scroll/pan during slider interaction
             >
               <Slider
                 value={[currentTime]}
