@@ -1,7 +1,13 @@
 import type { PostgrestError } from "@supabase/supabase-js";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { checkAdminAuth } from "@/lib/adminAuth";
+import {
+  unauthorizedResponse,
+  serverErrorResponse,
+  badRequestResponse,
+  successResponse,
+} from "@/lib/apiResponse";
 import { Recording } from "@/types";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -9,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const isAuthorized = await checkAdminAuth(request);
     if (!isAuthorized) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse();
     }
 
     const supabase = createAdminClient();
@@ -25,16 +31,19 @@ export async function GET(request: NextRequest) {
         )
       `
       )
-      .order("rec_number")) as { data: Recording[]; error: PostgrestError | null };
+      .order("rec_number", { ascending: true, nullsFirst: false })) as {
+      data: Recording[];
+      error: PostgrestError | null;
+    };
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json(recordings);
+    return successResponse(recordings, { cache: "SHORT_CACHE" });
   } catch (error) {
     console.error("Error fetching recordings:", error);
-    return NextResponse.json({ error: "Failed to fetch recordings" }, { status: 500 });
+    return serverErrorResponse("Failed to fetch recordings");
   }
 }
 
@@ -42,20 +51,25 @@ export async function PUT(request: NextRequest) {
   try {
     const isAuthorized = await checkAdminAuth(request);
     if (!isAuthorized) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse();
     }
 
-    const body = (await request.json()) as { id: string; updateData: Partial<Recording> };
-    const { id, ...updateData } = body;
+    const body = (await request.json()) as Partial<Recording> & { id: string };
+    const { id, species, ...updateData } = body;
 
     if (!id) {
-      return NextResponse.json({ error: "Recording ID is required" }, { status: 400 });
+      return badRequestResponse("Recording ID is required");
     }
+
+    // Remove any undefined values and the species relation data
+    const cleanUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== undefined)
+    );
 
     const supabase = createAdminClient();
     const { data, error } = (await supabase
       .from("recordings")
-      .update(updateData)
+      .update(cleanUpdateData)
       .eq("id", id)
       .select(
         `
@@ -73,10 +87,10 @@ export async function PUT(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(data);
+    return successResponse(data);
   } catch (error) {
     console.error("Error updating recording:", error);
-    return NextResponse.json({ error: "Failed to update recording" }, { status: 500 });
+    return serverErrorResponse("Failed to update recording");
   }
 }
 
@@ -84,16 +98,21 @@ export async function POST(request: NextRequest) {
   try {
     const isAuthorized = await checkAdminAuth(request);
     if (!isAuthorized) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse();
     }
 
-    const body = (await request.json()) as { id: string; updateData: Partial<Recording> };
+    const body = (await request.json()) as Partial<Recording>;
     const supabase = createAdminClient();
-    const { id, ...updateData } = body;
+
+    // Remove any undefined values and the species relation data
+    const { species, ...insertData } = body;
+    const cleanInsertData = Object.fromEntries(
+      Object.entries(insertData).filter(([_, value]) => value !== undefined && value !== "")
+    );
 
     const { data, error } = (await supabase
       .from("recordings")
-      .insert(updateData)
+      .insert(cleanInsertData)
       .select(
         `
         *,
@@ -110,9 +129,9 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(data);
+    return successResponse(data);
   } catch (error) {
     console.error("Error creating recording:", error);
-    return NextResponse.json({ error: "Failed to create recording" }, { status: 500 });
+    return serverErrorResponse("Failed to create recording");
   }
 }

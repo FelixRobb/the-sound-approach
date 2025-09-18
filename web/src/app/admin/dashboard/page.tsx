@@ -112,7 +112,7 @@ export default function AdminDashboard() {
                 <p className="text-muted-foreground">Manage recordings and species data</p>
               </div>
             </div>
-            <Button variant="outline" onClick={void handleLogout}>
+            <Button variant="outline" onClick={() => void handleLogout()}>
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </Button>

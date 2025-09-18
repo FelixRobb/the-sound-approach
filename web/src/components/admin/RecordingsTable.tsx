@@ -440,9 +440,10 @@ export default function RecordingsTable({
                           onChange={(e) =>
                             setEditData({ ...editData, date_recorded: e.target.value })
                           }
+                          type="datetime-local"
                         />
                       ) : recording.date_recorded ? (
-                        new Date(recording.date_recorded.replace(" ", "T")).toLocaleDateString()
+                        new Date(recording.date_recorded.replace(" ", "T")).toLocaleString()
                       ) : (
                         "N/A"
                       )}

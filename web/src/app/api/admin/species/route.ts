@@ -1,13 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import { PostgrestError } from "@supabase/supabase-js";
+import { NextRequest } from "next/server";
 
 import { checkAdminAuth } from "@/lib/adminAuth";
+import {
+  unauthorizedResponse,
+  serverErrorResponse,
+  badRequestResponse,
+  successResponse,
+} from "@/lib/apiResponse";
+import { Species } from "@/types";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function GET(request: NextRequest) {
   try {
     const isAuthorized = await checkAdminAuth(request);
     if (!isAuthorized) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse();
     }
 
     const supabase = createAdminClient();
@@ -20,10 +28,10 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(species);
+    return successResponse(species, { cache: "SHORT_CACHE" });
   } catch (error) {
     console.error("Error fetching species:", error);
-    return NextResponse.json({ error: "Failed to fetch species" }, { status: 500 });
+    return serverErrorResponse("Failed to fetch species");
   }
 }
 
@@ -31,32 +39,32 @@ export async function PUT(request: NextRequest) {
   try {
     const isAuthorized = await checkAdminAuth(request);
     if (!isAuthorized) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse();
     }
 
-    const body = await request.json();
-    const { id, ...updateData } = body;
+    const body = (await request.json()) as { id: string; updateData: Partial<Species> };
+    const { id, ...updateData } = body as { id: string; updateData: Partial<Species> };
 
     if (!id) {
-      return NextResponse.json({ error: "Species ID is required" }, { status: 400 });
+      return badRequestResponse("Species ID is required");
     }
 
     const supabase = createAdminClient();
-    const { data, error } = await supabase
+    const { data, error } = (await supabase
       .from("species")
       .update(updateData)
       .eq("id", id)
       .select()
-      .single();
+      .single()) as { data: Species; error: PostgrestError | null };
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json(data);
+    return successResponse(data);
   } catch (error) {
     console.error("Error updating species:", error);
-    return NextResponse.json({ error: "Failed to update species" }, { status: 500 });
+    return serverErrorResponse("Failed to update species");
   }
 }
 
@@ -64,21 +72,24 @@ export async function POST(request: NextRequest) {
   try {
     const isAuthorized = await checkAdminAuth(request);
     if (!isAuthorized) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse();
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as Species;
     const supabase = createAdminClient();
 
-    const { data, error } = await supabase.from("species").insert(body).select().single();
+    const { data, error } = (await supabase.from("species").insert(body).select().single()) as {
+      data: Species;
+      error: PostgrestError | null;
+    };
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json(data);
+    return successResponse(data);
   } catch (error) {
     console.error("Error creating species:", error);
-    return NextResponse.json({ error: "Failed to create species" }, { status: 500 });
+    return serverErrorResponse("Failed to create species");
   }
 }

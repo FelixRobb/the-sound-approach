@@ -244,6 +244,7 @@ export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: Sp
                             setEditData({ ...editData, scientific_name: e.target.value })
                           }
                           placeholder="Scientific name"
+                          type="datetime-local"
                         />
                       ) : (
                         <div className="italic text-muted-foreground">
@@ -253,7 +254,7 @@ export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: Sp
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {new Date(speciesItem.created_at).toLocaleDateString()}
+                        {new Date(speciesItem.created_at).toLocaleString()}
                       </Badge>
                     </TableCell>
                     <TableCell>
