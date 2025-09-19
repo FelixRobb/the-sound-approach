@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit, Save, X, Plus, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Edit, Save, X, Plus, AlertCircle, CheckCircle, Loader2, Trash } from "lucide-react";
 import { useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -14,6 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,9 +33,16 @@ interface SpeciesTableProps {
   onUpdate: (species: Species) => void;
   onAdd: (species: Species) => void;
   onRefresh: () => void;
+  isReloading: boolean;
 }
 
-export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: SpeciesTableProps) {
+export default function SpeciesTable({
+  species,
+  onUpdate,
+  onAdd,
+  onRefresh,
+  isReloading,
+}: SpeciesTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Species>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +53,8 @@ export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: Sp
     common_name: "",
     scientific_name: "",
   });
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteSelectedSpecies, setDeleteSelectedSpecies] = useState<Species | null>(null);
   const startEdit = (species: Species) => {
     setEditingId(species.id);
     setEditData({ ...species });
@@ -126,6 +136,26 @@ export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: Sp
     }
   };
 
+  const confirmDeleteSpecies = (species: Species) => {
+    setShowDeleteModal(true);
+    setDeleteSelectedSpecies(species);
+  };
+
+  const deleteSpecies = async (id: string) => {
+    const response = await fetch("/api/admin/species", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to delete species");
+    }
+    onRefresh();
+    setShowDeleteModal(false);
+    setDeleteSelectedSpecies(null);
+    setSuccess("Species deleted successfully");
+    setTimeout(() => setSuccess(""), 3000);
+  };
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -205,7 +235,8 @@ export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: Sp
         <CardHeader>
           <CardTitle>Species Database</CardTitle>
           <CardDescription>{species.length} total species in the database</CardDescription>
-          <Button variant="outline" onClick={() => void onRefresh()}>
+          <Button variant="outline" onClick={() => void onRefresh()} disabled={isReloading}>
+            {isReloading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Refresh
           </Button>
         </CardHeader>
@@ -290,6 +321,15 @@ export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: Sp
                           <Edit className="w-4 h-4" />
                         </Button>
                       )}
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => void confirmDeleteSpecies(speciesItem)}
+                        className="text-red-500 ml-2"
+                        disabled={isLoading || editingId === speciesItem.id}
+                      >
+                        <Trash className="w-4 h-4" color="red" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -298,6 +338,29 @@ export default function SpeciesTable({ species, onUpdate, onAdd, onRefresh }: Sp
           </div>
         </CardContent>
       </Card>
+      <Dialog open={showDeleteModal} onOpenChange={() => setShowDeleteModal(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Species</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &quot;
+              {deleteSelectedSpecies?.common_name || "this species"}&quot;? Related recordings will
+              also be deleted. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={() => void deleteSpecies(deleteSelectedSpecies?.id || "")}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

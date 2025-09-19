@@ -1,6 +1,17 @@
 "use client";
 
-import { Edit, Save, X, Plus, AlertCircle, CheckCircle, Loader2, Upload, File } from "lucide-react";
+import {
+  Edit,
+  Save,
+  X,
+  Plus,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  Upload,
+  File,
+  Trash,
+} from "lucide-react";
 import { useState, useRef } from "react";
 
 import FileUploader from "./FileUploader";
@@ -44,7 +55,9 @@ interface RecordingsTableProps {
   species: Species[];
   onUpdate: (recording: Recording) => void;
   onAdd: (recording: Recording) => void;
+  onDelete: (id: string) => void;
   onRefresh: () => void;
+  isReloading: boolean;
 }
 
 export default function RecordingsTable({
@@ -52,7 +65,9 @@ export default function RecordingsTable({
   species,
   onUpdate,
   onAdd,
+  onDelete,
   onRefresh,
+  isReloading,
 }: RecordingsTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Recording>>({});
@@ -69,7 +84,8 @@ export default function RecordingsTable({
     date_recorded: "",
     species_id: "",
   });
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteSelectedRecording, setDeleteSelectedRecording] = useState<Recording | null>(null);
   // File upload states for add dialog
   const [selectedFiles, setSelectedFiles] = useState<{
     audiohqid: File | null;
@@ -139,44 +155,119 @@ export default function RecordingsTable({
 
     try {
       const hasFiles = Object.values(selectedFiles).some((f) => f);
-      let response;
 
+      // Always use direct upload flow for new recordings with files
       if (hasFiles) {
-        // Use FormData for requests with files
-        const formData = new FormData();
-        formData.append("recordingData", JSON.stringify(newRecording));
+        // Create recording first with direct upload flag
+        const response = await fetch("/api/admin/recordings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...newRecording, directUpload: true }),
+        });
 
-        // Add files to FormData
-        Object.entries(selectedFiles).forEach(([fileType, file]) => {
-          if (file) {
-            formData.append(fileType, file);
+        if (!response.ok) {
+          const data = (await response.json()) as { error?: string };
+          throw new Error(data.error || "Failed to create recording");
+        }
+
+        const result = (await response.json()) as { recording: Recording; directUpload: boolean };
+        const createdRecording = result.recording;
+
+        // Upload files directly to Supabase using signed URLs
+        const uploadPromises = Object.entries(selectedFiles).map(async ([mediaType, file]) => {
+          if (!file) return;
+
+          try {
+            // Get upload token
+            const tokenResponse = await fetch("/api/admin/upload-token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                recordingId: createdRecording.id,
+                recNumber: createdRecording.rec_number,
+                mediaType: mediaType as "audiohqid" | "audiolqid" | "sonagramvideoid",
+              }),
+            });
+
+            if (!tokenResponse.ok) {
+              throw new Error(`Failed to get upload token for ${mediaType}`);
+            }
+
+            const tokenData = (await tokenResponse.json()) as {
+              uploadUrl: string;
+              token: string;
+              fileName: string;
+              allowedMimeTypes: string[];
+            };
+
+            // Validate file type
+            if (!tokenData.allowedMimeTypes.includes(file.type)) {
+              throw new Error(`Invalid file type for ${mediaType}: ${file.type}`);
+            }
+
+            // Upload directly to Supabase
+            const uploadResponse = await fetch(tokenData.uploadUrl, {
+              method: "PUT",
+              body: file,
+              headers: {
+                "Content-Type": file.type,
+              },
+            });
+
+            if (!uploadResponse.ok) {
+              throw new Error(`Failed to upload ${mediaType}`);
+            }
+
+            // Confirm upload
+            const confirmResponse = await fetch("/api/admin/upload-confirm", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                recordingId: createdRecording.id,
+                mediaType: mediaType as "audiohqid" | "audiolqid" | "sonagramvideoid",
+                token: tokenData.token,
+                fileName: tokenData.fileName,
+              }),
+            });
+
+            if (!confirmResponse.ok) {
+              throw new Error(`Failed to confirm upload for ${mediaType}`);
+            }
+
+            return confirmResponse.json();
+          } catch (uploadError) {
+            console.error(`Error uploading ${mediaType}:`, uploadError);
+            throw uploadError;
           }
         });
 
-        response = await fetch("/api/admin/recordings", {
-          method: "POST",
-          body: formData,
-        });
+        // Wait for all uploads to complete
+        await Promise.all(uploadPromises.filter(Boolean));
+
+        // Refresh to get updated recording with file references
+        onRefresh();
+
+        setSuccess("Recording created successfully with files uploaded");
       } else {
-        // Use JSON for requests without files (backwards compatibility)
-        response = await fetch("/api/admin/recordings", {
+        // No files - use simple JSON request
+        const response = await fetch("/api/admin/recordings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newRecording),
         });
+
+        if (!response.ok) {
+          const data = (await response.json()) as { error?: string };
+          throw new Error(data.error || "Failed to create recording");
+        }
+
+        const createdRecording = (await response.json()) as Recording;
+        onAdd(createdRecording);
+        setSuccess("Recording created successfully");
       }
 
-      if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
-        throw new Error(data.error || "Failed to create recording");
-      }
-
-      const createdRecording = (await response.json()) as Recording;
-
-      onAdd(createdRecording);
       setShowAddDialog(false);
       resetAddForm();
-      setSuccess("Recording created successfully" + (hasFiles ? " with files uploaded" : ""));
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(""), 3000);
@@ -187,6 +278,26 @@ export default function RecordingsTable({
     }
   };
 
+  const confirmDeleteRecording = (recording: Recording) => {
+    setShowDeleteModal(true);
+    setDeleteSelectedRecording(recording);
+  };
+
+  const deleteRecording = async (id: string) => {
+    const response = await fetch("/api/admin/recordings", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to delete recording");
+    }
+    onDelete(id);
+    setShowDeleteModal(false);
+    setDeleteSelectedRecording(null);
+    setSuccess("Recording deleted successfully");
+    setTimeout(() => setSuccess(""), 3000);
+  };
   const resetAddForm = () => {
     setNewRecording({
       rec_number: 0,
@@ -353,12 +464,12 @@ export default function RecordingsTable({
 
                   {/* High Quality Audio Upload */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">High Quality Audio (.mp3, .wav)</label>
+                    <label className="text-sm font-medium">High Quality Audio (.wav)</label>
                     <div className="flex items-center gap-2">
                       <input
                         ref={fileUploadRefs.audiohqid}
                         type="file"
-                        accept=".mp3,.wav"
+                        accept=".wav"
                         onChange={handleFileSelect("audiohqid")}
                         disabled={isLoading}
                         className="hidden"
@@ -393,12 +504,12 @@ export default function RecordingsTable({
 
                   {/* Low Quality Audio Upload */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Low Quality Audio (.mp3, .wav)</label>
+                    <label className="text-sm font-medium">Low Quality Audio (.mp3)</label>
                     <div className="flex items-center gap-2">
                       <input
                         ref={fileUploadRefs.audiolqid}
                         type="file"
-                        accept=".mp3,.wav"
+                        accept=".mp3"
                         onChange={handleFileSelect("audiolqid")}
                         disabled={isLoading}
                         className="hidden"
@@ -519,7 +630,8 @@ export default function RecordingsTable({
         <CardHeader>
           <CardTitle>Recordings Database</CardTitle>
           <CardDescription>{recordings.length} total recordings in the database</CardDescription>
-          <Button variant="outline" onClick={() => void onRefresh()}>
+          <Button variant="outline" onClick={() => void onRefresh()} disabled={isReloading}>
+            {isReloading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Refresh
           </Button>
         </CardHeader>
@@ -688,6 +800,15 @@ export default function RecordingsTable({
                           <Edit className="w-4 h-4" />
                         </Button>
                       )}
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => void confirmDeleteRecording(recording)}
+                        className="text-red-500 ml-2"
+                        disabled={isLoading || editingId === recording.id}
+                      >
+                        <Trash className="w-4 h-4" color="red" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -696,6 +817,29 @@ export default function RecordingsTable({
           </div>
         </CardContent>
       </Card>
+      <Dialog open={showDeleteModal} onOpenChange={() => setShowDeleteModal(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Recording</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &quot;
+              {deleteSelectedRecording?.species?.common_name || "this recording"}&quot;? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={() => void deleteRecording(deleteSelectedRecording?.id || "")}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

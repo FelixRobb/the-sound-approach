@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
-    return successResponse(recordings, { cache: "SHORT_CACHE" });
+    return successResponse(recordings, { cache: "NO_CACHE" });
   } catch (error) {
     console.error("Error fetching recordings:", error);
     return serverErrorResponse("Failed to fetch recordings");
@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
       throw error;
     }
 
-    return successResponse(data);
+    return successResponse(data, { cache: "NO_CACHE" });
   } catch (error) {
     console.error("Error updating recording:", error);
     return serverErrorResponse("Failed to update recording");
@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get("content-type") || "";
     let recordingData: Partial<Recording>;
     const files: { [key: string]: File } = {};
+    let useDirectUpload = false;
 
     // Handle both JSON and FormData requests
     if (contentType.includes("multipart/form-data")) {
@@ -114,17 +115,26 @@ export async function POST(request: NextRequest) {
       const recordingDataStr = formData.get("recordingData") as string;
       recordingData = JSON.parse(recordingDataStr) as Partial<Recording>;
 
-      // Extract files
-      const audiohqFile = formData.get("audiohqid") as File | null;
-      const audiolqFile = formData.get("audiolqid") as File | null;
-      const sonagramFile = formData.get("sonagramvideoid") as File | null;
+      // Check if this is a direct upload request (no files, just data)
+      const directUploadFlag = formData.get("directUpload") as string;
+      useDirectUpload = directUploadFlag === "true";
 
-      if (audiohqFile) files.audiohqid = audiohqFile;
-      if (audiolqFile) files.audiolqid = audiolqFile;
-      if (sonagramFile) files.sonagramvideoid = sonagramFile;
+      if (!useDirectUpload) {
+        // Extract files for traditional upload
+        const audiohqFile = formData.get("audiohqid") as File | null;
+        const audiolqFile = formData.get("audiolqid") as File | null;
+        const sonagramFile = formData.get("sonagramvideoid") as File | null;
+
+        if (audiohqFile) files.audiohqid = audiohqFile;
+        if (audiolqFile) files.audiolqid = audiolqFile;
+        if (sonagramFile) files.sonagramvideoid = sonagramFile;
+      }
     } else {
-      // Handle JSON request (backwards compatibility)
-      recordingData = (await request.json()) as Partial<Recording>;
+      // Handle JSON request (backwards compatibility and direct upload setup)
+      const body = (await request.json()) as Partial<Recording> & { directUpload?: boolean };
+      const { directUpload, ...restData } = body;
+      recordingData = restData;
+      useDirectUpload = directUpload || false;
     }
 
     const supabase = createAdminClient();
@@ -157,7 +167,16 @@ export async function POST(request: NextRequest) {
 
     let finalRecording = createdRecording;
 
-    // Upload files if any are provided
+    // Handle direct upload mode - return recording with upload tokens
+    if (useDirectUpload) {
+      return successResponse({
+        recording: finalRecording,
+        directUpload: true,
+        message: "Recording created. Use upload tokens for file uploads.",
+      });
+    }
+
+    // Upload files if any are provided (traditional upload)
     if (Object.keys(files).length > 0) {
       const paddedRecNumber = createdRecording.rec_number.toString().padStart(4, "0");
 
@@ -239,9 +258,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return successResponse(finalRecording);
+    return successResponse(finalRecording, { cache: "NO_CACHE" });
   } catch (error) {
     console.error("Error creating recording:", error);
     return serverErrorResponse("Failed to create recording");
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const isAuthorized = await checkAdminAuth(request);
+    if (!isAuthorized) {
+      return unauthorizedResponse();
+    }
+
+    const { id } = (await request.json()) as { id: string };
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.from("recordings").delete().eq("id", id);
+
+    if (error) {
+      throw error;
+    }
+
+    return successResponse(data, { cache: "NO_CACHE" });
+  } catch (error) {
+    console.error("Error deleting recording:", error);
+    return serverErrorResponse("Failed to delete recording");
   }
 }

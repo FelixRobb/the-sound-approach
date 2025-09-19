@@ -65,34 +65,97 @@ export default function FileUploader({ recording, onFileUploaded }: FileUploader
     setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("recordingId", recording.id);
-      formData.append("mediaType", mediaType);
-      formData.append("recNumber", recording.rec_number.toString());
-
-      // Simulate progress for better UX
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 20;
-        });
-      }, 500);
-
-      const response = await fetch("/api/admin/upload", {
+      // Step 1: Get upload token
+      setUploadProgress(10);
+      const tokenResponse = await fetch("/api/admin/upload-token", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recordingId: recording.id,
+          recNumber: recording.rec_number,
+          mediaType: mediaType as "audiohqid" | "audiolqid" | "sonagramvideoid",
+        }),
       });
 
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      if (!response.ok) {
-        const data = (await response.json()) as { error?: string };
-        throw new Error(data.error || "Upload failed");
+      if (!tokenResponse.ok) {
+        const data = (await tokenResponse.json()) as { error?: string };
+        throw new Error(data.error || "Failed to get upload token");
       }
 
-      const { recording: updatedRecording } = (await response.json()) as { recording: Recording };
+      const tokenData = (await tokenResponse.json()) as {
+        uploadUrl: string;
+        token: string;
+        fileName: string;
+        allowedMimeTypes: string[];
+      };
+
+      // Step 2: Validate file type
+      setUploadProgress(20);
+      if (!tokenData.allowedMimeTypes.includes(selectedFile.type)) {
+        throw new Error(`Invalid file type: ${selectedFile.type}`);
+      }
+
+      // Step 3: Upload directly to Supabase with progress tracking
+      setUploadProgress(30);
+
+      const xhr = new XMLHttpRequest();
+
+      // Create promise to handle the upload
+      const uploadPromise = new Promise<void>((resolve, reject) => {
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable) {
+            const progress = 30 + (event.loaded / event.total) * 60; // 30-90% for upload
+            setUploadProgress(Math.round(progress));
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadProgress(90);
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed due to network error"));
+        });
+
+        xhr.addEventListener("abort", () => {
+          reject(new Error("Upload was cancelled"));
+        });
+
+        xhr.open("PUT", tokenData.uploadUrl);
+        xhr.setRequestHeader("Content-Type", selectedFile.type);
+        xhr.send(selectedFile);
+      });
+
+      await uploadPromise;
+
+      // Step 4: Confirm upload
+      setUploadProgress(95);
+      const confirmResponse = await fetch("/api/admin/upload-confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recordingId: recording.id,
+          mediaType: mediaType as "audiohqid" | "audiolqid" | "sonagramvideoid",
+          token: tokenData.token,
+          fileName: tokenData.fileName,
+        }),
+      });
+
+      if (!confirmResponse.ok) {
+        const data = (await confirmResponse.json()) as { error?: string };
+        throw new Error(data.error || "Failed to confirm upload");
+      }
+
+      const { recording: updatedRecording } = (await confirmResponse.json()) as {
+        recording: Recording;
+      };
+
+      setUploadProgress(100);
       onFileUploaded(updatedRecording);
       setSuccess("File uploaded successfully!");
 

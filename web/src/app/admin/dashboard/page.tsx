@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [species, setSpecies] = useState<Species[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReloading, setIsReloading] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("recordings");
   const router = useRouter();
@@ -52,6 +53,37 @@ export default function AdminDashboard() {
       setIsLoading(false);
     }
   }, [router]);
+  const reloadData = useCallback(async (): Promise<void> => {
+    setIsReloading(true);
+    setError("");
+
+    try {
+      const [recordingsRes, speciesRes] = await Promise.all([
+        fetch("/api/admin/recordings"),
+        fetch("/api/admin/species"),
+      ]);
+
+      if (!recordingsRes.ok || !speciesRes.ok) {
+        if (recordingsRes.status === 401 || speciesRes.status === 401) {
+          router.push("/admin/login");
+          return;
+        }
+        throw new Error("Failed to load data");
+      }
+
+      const [recordingsData, speciesData] = await Promise.all([
+        recordingsRes.json() as Promise<Recording[]>,
+        speciesRes.json() as Promise<Species[]>,
+      ]);
+
+      setRecordings(recordingsData);
+      setSpecies(speciesData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load data");
+    } finally {
+      setIsReloading(false);
+    }
+  }, [router]);
 
   useEffect(() => {
     void loadData();
@@ -77,6 +109,9 @@ export default function AdminDashboard() {
 
   const addRecording = (newRecording: Recording): void => {
     setRecordings((prev) => [...prev, newRecording]);
+  };
+  const deleteRecording = (id: string): void => {
+    setRecordings((prev) => prev.filter((r) => r.id !== id));
   };
 
   const addSpecies = (newSpecies: Species): void => {
@@ -189,7 +224,9 @@ export default function AdminDashboard() {
               species={species}
               onUpdate={updateRecording}
               onAdd={addRecording}
-              onRefresh={() => void loadData()}
+              onDelete={deleteRecording}
+              onRefresh={() => void reloadData()}
+              isReloading={isReloading}
             />
           </TabsContent>
 
@@ -198,7 +235,8 @@ export default function AdminDashboard() {
               species={species}
               onUpdate={updateSpecies}
               onAdd={addSpecies}
-              onRefresh={() => void loadData()}
+              onRefresh={() => void reloadData()}
+              isReloading={isReloading}
             />
           </TabsContent>
         </Tabs>
