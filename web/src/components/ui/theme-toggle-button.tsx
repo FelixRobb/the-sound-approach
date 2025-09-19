@@ -62,12 +62,14 @@ export default function ThemeToggleButton({
       }
     };
 
-    if (!document.startViewTransition) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+    if (!(document as any).startViewTransition) {
       switchTheme();
       return;
     }
 
-    (document.startViewTransition as (callback: () => void) => ViewTransition)(switchTheme);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
+    (document as any).startViewTransition(switchTheme);
   }, [variant, start, url, updateStyles, setTheme, theme]);
 
   // Get the icon based on the current theme
