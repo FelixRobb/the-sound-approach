@@ -62,12 +62,12 @@ export default function ThemeToggleButton({
       }
     };
 
-    if (!(document as any).startViewTransition) {
+    if (!document.startViewTransition) {
       switchTheme();
       return;
     }
 
-    (document as any).startViewTransition(switchTheme);
+    (document.startViewTransition as (callback: () => void) => ViewTransition)(switchTheme);
   }, [variant, start, url, updateStyles, setTheme, theme]);
 
   // Get the icon based on the current theme

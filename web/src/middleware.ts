@@ -6,11 +6,14 @@ import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
   // Handle admin routes
-  if (request.nextUrl.pathname.startsWith("/admin")) {
+  if (
+    request.nextUrl.pathname.startsWith("/admin") ||
+    request.nextUrl.pathname.startsWith("/api/admin")
+  ) {
     // Allow access to login page
     if (
       request.nextUrl.pathname === "/admin/login" ||
-      (request.nextUrl.pathname === "/api/admin/auth" && request.method === "POST")
+      request.nextUrl.pathname === "/api/admin/auth"
     ) {
       return NextResponse.next();
     }

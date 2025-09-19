@@ -19,14 +19,11 @@ export default function SecretKeyCombo({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    console.log("SecretKeyCombo mounted");
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      console.log("Key pressed:", key);
       // Only track our target keys
       if (targetKeys.includes(key)) {
         pressedKeys.current.add(key);
-        console.log("Pressed keys:", pressedKeys.current);
         // Clear any existing timeout
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -34,7 +31,6 @@ export default function SecretKeyCombo({
 
         // Check if all target keys are pressed
         const allKeysPressed = targetKeys.every((targetKey) => pressedKeys.current.has(targetKey));
-        console.log("All keys pressed:", allKeysPressed);
         if (allKeysPressed && pressedKeys.current.size === targetKeys.length) {
           // All keys are pressed simultaneously
           if (onActivate) {
@@ -42,11 +38,9 @@ export default function SecretKeyCombo({
           } else {
             router.push(redirectPath);
           }
-          console.log("All keys pressed and activated");
           // Clear the pressed keys
           pressedKeys.current.clear();
         }
-        console.log("Cleared pressed keys");
         // Set a timeout to clear keys if they're not all pressed within a short window
         timeoutRef.current = setTimeout(() => {
           pressedKeys.current.clear();
@@ -56,15 +50,12 @@ export default function SecretKeyCombo({
 
     const handleKeyUp = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      console.log("Key released:", key);
       if (targetKeys.includes(key)) {
         pressedKeys.current.delete(key);
-        console.log("Pressed keys:", pressedKeys.current);
         // If no keys are pressed, clear the timeout
         if (pressedKeys.current.size === 0 && timeoutRef.current) {
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
-          console.log("Timeout cleared");
         }
       }
     };
@@ -75,13 +66,11 @@ export default function SecretKeyCombo({
 
     // Cleanup
     return () => {
-      console.log("SecretKeyCombo unmounted");
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
 
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
-        console.log("Timeout cleared");
       }
     };
   }, [targetKeys, redirectPath, router, onActivate]);
