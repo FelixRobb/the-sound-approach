@@ -48,10 +48,8 @@
     },
     "plugins": [
       "expo-video",
-      "expo-asset",
       "expo-font",
       "expo-audio",
-      "expo-secure-store",
       [
         "expo-screen-orientation",
         {

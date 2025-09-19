@@ -22,7 +22,6 @@ export default function AdminLogin() {
     setError("");
 
     try {
-      console.log("Submitting password:", password);
       const response = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -30,7 +29,6 @@ export default function AdminLogin() {
       });
 
       if (response.ok) {
-        console.log("Password submitted successfully");
         router.push("/admin/dashboard");
       } else {
         const data = (await response.json()) as { error?: string };
