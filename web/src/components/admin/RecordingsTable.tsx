@@ -643,6 +643,7 @@ export default function RecordingsTable({
                   <TableHead className="w-[80px]">Rec #</TableHead>
                   <TableHead>Species</TableHead>
                   <TableHead>Catalogue Code</TableHead>
+                  <TableHead>Caption</TableHead>
                   <TableHead>Site</TableHead>
                   <TableHead>Media</TableHead>
                   <TableHead>Recorded By</TableHead>
@@ -706,6 +707,17 @@ export default function RecordingsTable({
                         />
                       ) : (
                         recording.catalogue_code
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingId === recording.id ? (
+                        <Input
+                          value={editData.caption || ""}
+                          onChange={(e) => setEditData({ ...editData, caption: e.target.value })}
+                        />
+                      ) : (
+                        recording.caption.slice(0, 50) +
+                        (recording.caption.length > 50 ? "..." : "")
                       )}
                     </TableCell>
                     <TableCell>
