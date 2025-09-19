@@ -12,7 +12,7 @@ export type Species = {
   created_at: string;
 };
 
-export type MediaType = "audio-hq" | "audio_lq" | "sonagram_video";
+export type MediaType = "audiohqid" | "audiolqid" | "sonagramvideoid";
 
 export type Recording = {
   id: string;

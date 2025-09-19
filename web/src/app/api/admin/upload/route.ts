@@ -2,8 +2,56 @@ import { PostgrestError } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
 import { checkAdminAuth } from "@/lib/adminAuth";
-import { Recording } from "@/types";
+import { MediaType, Recording } from "@/types";
 import { createAdminClient } from "@/utils/supabase/admin";
+
+export async function POST(request: NextRequest) {
+  const isAuthorized = await checkAdminAuth(request);
+  if (!isAuthorized) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { recording, mediaType } = (await request.json()) as {
+    recording: Recording;
+    mediaType: MediaType;
+  };
+  if (!mediaType || !recording) {
+    return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+  }
+  let fileName = "";
+  let bucketName = "";
+
+  switch (mediaType) {
+    case "audiohqid":
+      fileName = `${recording.audiohqid}.wav`;
+      bucketName = process.env.AUDIO_HQ_BUCKET || "audio-hq";
+      break;
+    case "audiolqid":
+      fileName = `${recording.audiolqid}.mp3`;
+      bucketName = process.env.AUDIO_LQ_BUCKET || "audio-lq";
+      break;
+    case "sonagramvideoid":
+      fileName = `${recording.sonagramvideoid}.mp4`;
+      bucketName = process.env.SONAGRAMS_BUCKET || "sonogramvideos";
+      break;
+  }
+  const supabase = createAdminClient();
+
+  const { data, error } = (await supabase.storage
+    .from(bucketName)
+    .createSignedUrl(fileName, 60 * 60 * 24 * 30)) as {
+    data: { signedUrl: string };
+    error: PostgrestError | null;
+  };
+  if (error) {
+    return NextResponse.json({ error: "Error fetching recording" }, { status: 500 });
+  }
+  return NextResponse.json({
+    mediaType,
+    recordingId: recording.id,
+    recNumber: recording.rec_number,
+    signedUrl: data.signedUrl,
+  });
+}
 
 export async function DELETE(request: NextRequest) {
   try {

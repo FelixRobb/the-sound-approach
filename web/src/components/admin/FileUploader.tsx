@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Recording } from "@/types";
+import { MediaType, Recording } from "@/types";
 
 interface FileUploaderProps {
   recording: Recording;
@@ -73,7 +73,7 @@ export default function FileUploader({ recording, onFileUploaded }: FileUploader
         body: JSON.stringify({
           recordingId: recording.id,
           recNumber: recording.rec_number,
-          mediaType: mediaType as "audiohqid" | "audiolqid" | "sonagramvideoid",
+          mediaType: mediaType as MediaType,
         }),
       });
 

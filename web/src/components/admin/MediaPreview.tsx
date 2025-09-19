@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBestAudioUri, getBestLqAudioUri, getsonagramVideoUri } from "@/lib/mediaUtils";
 import { Recording } from "@/types";
 
 interface MediaPreviewProps {
@@ -60,21 +59,17 @@ export default function MediaPreview({ recording, mediaType, onFileUpdated }: Me
     setError("");
 
     try {
-      let url: string | null = null;
+      const response = await fetch(`/api/admin/upload`, {
+        method: "POST",
+        body: JSON.stringify({ recording, mediaType }),
+      });
+      const data = (await response.json()) as { signedUrl: string };
 
-      if (mediaType === "sonagramvideoid") {
-        url = await getsonagramVideoUri(recording);
-      } else if (mediaType === "audiolqid") {
-        url = await getBestLqAudioUri(recording);
-      } else {
-        url = await getBestAudioUri(recording);
-      }
-
-      if (!url) {
+      if (!data.signedUrl) {
         throw new Error("Media file not found");
       }
 
-      setMediaUrl(url);
+      setMediaUrl(data.signedUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load media");
     } finally {

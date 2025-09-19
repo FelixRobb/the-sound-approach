@@ -46,15 +46,20 @@ export const getBestLqAudioUri = async (recording: Recording): Promise<string | 
  * @returns The URI to the sonagram video or null if not available
  */
 export const getsonagramVideoUri = async (recording: Recording): Promise<string | null> => {
+  console.log("recording", recording);
+  console.log("recording.sonagramvideoid", recording.sonagramvideoid);
   if (!recording || !recording.sonagramvideoid) return null;
   const sonagramBucket = process.env.SONAGRAMS_BUCKET || "sonogramvideos";
   // Use public URL from Supabase for sonagram video
   const { data, error } = await supabase.storage
     .from(sonagramBucket)
     .createSignedUrl(`${recording.sonagramvideoid}.mp4`, 60 * 60 * 24 * 30);
+  console.log("data", data);
+  console.log("error", error);
   if (error) {
     console.error("Error creating signed URL:", error);
     throw error;
   }
+  console.log("data?.signedUrl", data?.signedUrl);
   return data?.signedUrl as string | null;
 };

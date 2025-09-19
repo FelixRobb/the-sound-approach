@@ -1,7 +1,11 @@
-"use client";
+import { Suspense } from "react";
 
-import SignupPage from "@/components/SignupPage";
+import SignupForm from "./SignupForm";
 
-export default function Signup() {
-  return <SignupPage />;
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupForm />
+    </Suspense>
+  );
 }

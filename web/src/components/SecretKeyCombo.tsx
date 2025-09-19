@@ -20,9 +20,9 @@ export default function SecretKeyCombo({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
+      const key = event.key?.toLowerCase();
       // Only track our target keys
-      if (targetKeys.includes(key)) {
+      if (key && targetKeys.includes(key)) {
         pressedKeys.current.add(key);
         // Clear any existing timeout
         if (timeoutRef.current) {
@@ -49,8 +49,8 @@ export default function SecretKeyCombo({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
-      if (targetKeys.includes(key)) {
+      const key = event.key?.toLowerCase();
+      if (key && targetKeys.includes(key)) {
         pressedKeys.current.delete(key);
         // If no keys are pressed, clear the timeout
         if (pressedKeys.current.size === 0 && timeoutRef.current) {

@@ -11,96 +11,43 @@ import {
   HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 
-import { Alert, AlertDescription } from "./ui/alert";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { signup } from "./actions";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? (
+        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+      ) : (
+        <UserPlus className="w-4 h-4 mr-2" />
+      )}
+      {pending ? "Creating account..." : "Create Account"}
+    </Button>
+  );
+}
 
 export default function SignupPage() {
-  const { signUp, state, clearError } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [bookCode, setBookCode] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [bookCodeError, setBookCodeError] = useState("");
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const [showError, setShowError] = useState(!!error);
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
 
-  // Validate email format
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Validate password (at least 6 characters)
-  const validatePassword = (password: string) => {
-    return password.length >= 6;
-  };
-
-  // Validate book code format (8 characters alphanumeric)
-  const validateBookCode = (code: string) => {
-    const codeRegex = /^[A-Za-z0-9]{8}$/;
-    return codeRegex.test(code);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Reset errors
-    setEmailError("");
-    setPasswordError("");
-    setBookCodeError("");
-    clearError();
-
-    // Validate inputs
-    let isValid = true;
-
-    if (!email) {
-      setEmailError("Email is required");
-      isValid = false;
-    } else if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address");
-      isValid = false;
-    }
-
-    if (!password) {
-      setPasswordError("Password is required");
-      isValid = false;
-    } else if (!validatePassword(password)) {
-      setPasswordError("Password must be at least 6 characters");
-      isValid = false;
-    }
-
-    if (!bookCode) {
-      setBookCodeError("Book code is required");
-      isValid = false;
-    } else if (!validateBookCode(bookCode)) {
-      setBookCodeError("Book code must be 8 characters (letters and numbers)");
-      isValid = false;
-    }
-
-    if (!isValid) return;
-
-    setIsSubmitting(true);
-
-    try {
-      await signUp(email, password, bookCode);
-      router.push("/onboarding");
-    } catch (error) {
-      // Error is handled by the auth context
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  useEffect(() => {
+    setShowError(!!error);
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -118,14 +65,14 @@ export default function SignupPage() {
 
           <CardContent className="space-y-6">
             {/* Error message */}
-            {state.error && (
+            {showError && error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{state.error.message}</AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <form onSubmit={void handleSubmit} className="space-y-4">
+            <form action={signup} className="space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="email"
@@ -136,22 +83,10 @@ export default function SignupPage() {
                 <Input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setEmailError("");
-                  }}
+                  name="email"
                   required
                   placeholder="Enter your email"
-                  disabled={isSubmitting}
-                  className={emailError ? "border-destructive" : ""}
                 />
-                {emailError && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {emailError}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -165,15 +100,9 @@ export default function SignupPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setPasswordError("");
-                    }}
+                    name="password"
                     required
                     placeholder="Create a password"
-                    disabled={isSubmitting}
-                    className={passwordError ? "border-destructive pr-10" : "pr-10"}
                   />
                   <Button
                     type="button"
@@ -185,12 +114,6 @@ export default function SignupPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                {passwordError && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {passwordError}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -224,36 +147,19 @@ export default function SignupPage() {
                 <Input
                   id="bookCode"
                   type="text"
-                  value={bookCode}
-                  onChange={(e) => {
-                    setBookCode(e.target.value.toUpperCase());
-                    setBookCodeError("");
-                  }}
+                  name="bookCode"
                   required
                   placeholder="Enter your book code"
-                  disabled={isSubmitting}
-                  className={`uppercase ${bookCodeError ? "border-destructive" : ""}`}
+                  className="uppercase"
                   maxLength={8}
                 />
-                {bookCodeError && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {bookCodeError}
-                  </p>
-                )}
+
                 <p className="text-xs text-muted-foreground">
                   Found in your copy of &quot;The Sound Approach to Birding&quot;
                 </p>
               </div>
 
-              <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <UserPlus className="w-4 h-4 mr-2" />
-                )}
-                {isSubmitting ? "Creating account..." : "Create Account"}
-              </Button>
+              <SubmitButton />
             </form>
 
             {/* Navigation */}

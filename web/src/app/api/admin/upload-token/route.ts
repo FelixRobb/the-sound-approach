@@ -7,6 +7,7 @@ import {
   badRequestResponse,
   successResponse,
 } from "@/lib/apiResponse";
+import { MediaType } from "@/types";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function POST(request: NextRequest) {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { recordingId, recNumber, mediaType } = (await request.json()) as {
       recordingId: string;
       recNumber: number;
-      mediaType: "audiohqid" | "audiolqid" | "sonagramvideoid";
+      mediaType: MediaType;
     };
 
     if (!recordingId || !recNumber || !mediaType) {
