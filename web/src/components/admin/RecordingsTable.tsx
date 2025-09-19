@@ -1,7 +1,7 @@
 "use client";
 
-import { Edit, Save, X, Plus, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Edit, Save, X, Plus, AlertCircle, CheckCircle, Loader2, Upload, File } from "lucide-react";
+import { useState, useRef } from "react";
 
 import FileUploader from "./FileUploader";
 import MediaPreview from "./MediaPreview";
@@ -12,8 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -68,6 +70,22 @@ export default function RecordingsTable({
     species_id: "",
   });
 
+  // File upload states for add dialog
+  const [selectedFiles, setSelectedFiles] = useState<{
+    audiohqid: File | null;
+    audiolqid: File | null;
+    sonagramvideoid: File | null;
+  }>({
+    audiohqid: null,
+    audiolqid: null,
+    sonagramvideoid: null,
+  });
+  const [fileUploadRefs] = useState({
+    audiohqid: useRef<HTMLInputElement>(null),
+    audiolqid: useRef<HTMLInputElement>(null),
+    sonagramvideoid: useRef<HTMLInputElement>(null),
+  });
+
   const startEdit = (recording: Recording) => {
     setEditingId(recording.id);
     setEditData({ ...recording });
@@ -120,11 +138,33 @@ export default function RecordingsTable({
     setError("");
 
     try {
-      const response = await fetch("/api/admin/recordings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newRecording),
-      });
+      const hasFiles = Object.values(selectedFiles).some((f) => f);
+      let response;
+
+      if (hasFiles) {
+        // Use FormData for requests with files
+        const formData = new FormData();
+        formData.append("recordingData", JSON.stringify(newRecording));
+
+        // Add files to FormData
+        Object.entries(selectedFiles).forEach(([fileType, file]) => {
+          if (file) {
+            formData.append(fileType, file);
+          }
+        });
+
+        response = await fetch("/api/admin/recordings", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        // Use JSON for requests without files (backwards compatibility)
+        response = await fetch("/api/admin/recordings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newRecording),
+        });
+      }
 
       if (!response.ok) {
         const data = (await response.json()) as { error?: string };
@@ -132,18 +172,11 @@ export default function RecordingsTable({
       }
 
       const createdRecording = (await response.json()) as Recording;
+
       onAdd(createdRecording);
       setShowAddDialog(false);
-      setNewRecording({
-        rec_number: 0,
-        catalogue_code: "",
-        site_name: "",
-        caption: "",
-        recorded_by: "",
-        date_recorded: "",
-        species_id: "",
-      });
-      setSuccess("Recording created successfully");
+      resetAddForm();
+      setSuccess("Recording created successfully" + (hasFiles ? " with files uploaded" : ""));
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(""), 3000);
@@ -152,6 +185,44 @@ export default function RecordingsTable({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const resetAddForm = () => {
+    setNewRecording({
+      rec_number: 0,
+      catalogue_code: "",
+      site_name: "",
+      caption: "",
+      recorded_by: "",
+      date_recorded: "",
+      species_id: "",
+    });
+    setSelectedFiles({
+      audiohqid: null,
+      audiolqid: null,
+      sonagramvideoid: null,
+    });
+    // Clear file inputs
+    Object.values(fileUploadRefs).forEach((ref) => {
+      if (ref.current) {
+        ref.current.value = "";
+      }
+    });
+  };
+
+  const handleFileSelect =
+    (fileType: "audiohqid" | "audiolqid" | "sonagramvideoid") =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0] || null;
+      setSelectedFiles((prev) => ({ ...prev, [fileType]: file }));
+    };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const handleFileUploaded = (recording: Recording) => {
@@ -175,7 +246,7 @@ export default function RecordingsTable({
               Add Recording
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="overflow-y-scroll max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>Add New Recording</DialogTitle>
               <DialogDescription>Create a new recording entry in the database</DialogDescription>
@@ -267,22 +338,162 @@ export default function RecordingsTable({
                       setNewRecording({ ...newRecording, date_recorded: e.target.value })
                     }
                     placeholder="e.g., 2023-05-15 08:30:00"
+                    type="datetime-local"
                   />
                 </div>
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddDialog(false)}
-                  disabled={isLoading}
-                >
-                  Cancel
-                </Button>
+
+              {/* Optional File Uploads Section */}
+              <div className="space-y-4">
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-medium mb-3">Optional File Uploads</h4>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    You can upload media files now or add them later from the recordings table.
+                  </p>
+
+                  {/* High Quality Audio Upload */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">High Quality Audio (.mp3, .wav)</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileUploadRefs.audiohqid}
+                        type="file"
+                        accept=".mp3,.wav"
+                        onChange={handleFileSelect("audiohqid")}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileUploadRefs.audiohqid.current?.click()}
+                        disabled={isLoading}
+                        className="flex-1"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {selectedFiles.audiohqid ? "Change File" : "Choose HQ Audio"}
+                      </Button>
+                    </div>
+                    {selectedFiles.audiohqid && (
+                      <div className="p-2 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <File className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {selectedFiles.audiohqid.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Audio • {formatFileSize(selectedFiles.audiohqid.size)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Low Quality Audio Upload */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Low Quality Audio (.mp3, .wav)</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileUploadRefs.audiolqid}
+                        type="file"
+                        accept=".mp3,.wav"
+                        onChange={handleFileSelect("audiolqid")}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileUploadRefs.audiolqid.current?.click()}
+                        disabled={isLoading}
+                        className="flex-1"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {selectedFiles.audiolqid ? "Change File" : "Choose LQ Audio"}
+                      </Button>
+                    </div>
+                    {selectedFiles.audiolqid && (
+                      <div className="p-2 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <File className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {selectedFiles.audiolqid.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Audio • {formatFileSize(selectedFiles.audiolqid.size)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sonogram Video Upload */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sonogram Video (.mp4)</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={fileUploadRefs.sonagramvideoid}
+                        type="file"
+                        accept=".mp4"
+                        onChange={handleFileSelect("sonagramvideoid")}
+                        disabled={isLoading}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileUploadRefs.sonagramvideoid.current?.click()}
+                        disabled={isLoading}
+                        className="flex-1"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {selectedFiles.sonagramvideoid ? "Change File" : "Choose Video"}
+                      </Button>
+                    </div>
+                    {selectedFiles.sonagramvideoid && (
+                      <div className="p-2 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <File className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {selectedFiles.sonagramvideoid.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Video • {formatFileSize(selectedFiles.sonagramvideoid.size)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => {
+                      resetAddForm();
+                      setError("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
                 <Button onClick={() => void addRecording()} disabled={isLoading}>
                   {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Create Recording
+                  {Object.values(selectedFiles).some((f) => f) && (
+                    <span className="ml-1 text-xs">& Upload Files</span>
+                  )}
                 </Button>
-              </div>
+              </DialogFooter>
             </div>
           </DialogContent>
         </Dialog>

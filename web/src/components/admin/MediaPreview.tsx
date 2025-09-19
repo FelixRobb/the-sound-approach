@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getBestAudioUri, getsonagramVideoUri } from "@/lib/mediaUtils";
+import { getBestAudioUri, getBestLqAudioUri, getsonagramVideoUri } from "@/lib/mediaUtils";
 import { Recording } from "@/types";
 
 interface MediaPreviewProps {
@@ -64,6 +64,8 @@ export default function MediaPreview({ recording, mediaType, onFileUpdated }: Me
 
       if (mediaType === "sonagramvideoid") {
         url = await getsonagramVideoUri(recording);
+      } else if (mediaType === "audiolqid") {
+        url = await getBestLqAudioUri(recording);
       } else {
         url = await getBestAudioUri(recording);
       }
