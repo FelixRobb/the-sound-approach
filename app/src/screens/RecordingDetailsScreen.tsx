@@ -19,7 +19,6 @@ import {
 } from "react-native";
 import { Slider } from "react-native-awesome-slider";
 import { useSharedValue } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import BackgroundPattern from "../components/BackgroundPattern";
 import CustomModal from "../components/CustomModal";
@@ -41,7 +40,6 @@ const { width } = Dimensions.get("window");
 
 const RecordingDetailsScreen = () => {
   const { theme } = useEnhancedTheme();
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const {
@@ -627,70 +625,8 @@ const RecordingDetailsScreen = () => {
       justifyContent: "center",
       width: "100%",
     },
-    fullScreenVideoOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      alignItems: "center",
-      justifyContent: "center",
-    },
     fullscreenButton: {
       marginLeft: theme.spacing.sm,
-    },
-    fullscreenContainer: {
-      backgroundColor: theme.colors.background,
-      height: "100%",
-      position: "absolute",
-      width: "100%",
-      zIndex: theme.zIndex.base7,
-    },
-    fullscreenControls: {
-      alignItems: "center",
-      backgroundColor: theme.colors.backdrop,
-      borderRadius: theme.borderRadius.md,
-      bottom: theme.spacing.md,
-      elevation: 5,
-      flexDirection: "row",
-      left: theme.spacing.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      position: "absolute",
-      right: theme.spacing.md,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      zIndex: theme.zIndex.base10,
-    },
-    fullscreenHeader: {
-      backgroundColor: theme.colors.background,
-      borderBottomColor: theme.colors.backdrop,
-      borderBottomWidth: 1,
-      padding: theme.spacing.md,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      position: "absolute",
-      top: 0,
-      width: "100%",
-      zIndex: theme.zIndex.base10,
-    },
-    fullscreenSubtitle: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
-      marginTop: theme.spacing.xs,
-    },
-    fullscreenTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "2xl",
-        weight: "bold",
-        color: "onSurface",
-      }),
-    },
-    fullscreenVideo: {
-      flex: 1,
-      marginLeft: insets.left,
-      marginRight: insets.right,
     },
     heroBackground: {
       position: "absolute",
@@ -798,6 +734,7 @@ const RecordingDetailsScreen = () => {
       paddingHorizontal: theme.spacing.lg,
       paddingVertical: theme.spacing.md,
     },
+
     mediaSubtitle: {
       ...createThemedTextStyle(theme, {
         size: "base",
@@ -806,7 +743,6 @@ const RecordingDetailsScreen = () => {
       }),
       marginTop: theme.spacing.xs,
     },
-
     mediaTitle: {
       ...createThemedTextStyle(theme, {
         size: "xl",
