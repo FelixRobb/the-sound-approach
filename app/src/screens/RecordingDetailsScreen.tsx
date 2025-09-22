@@ -4,7 +4,6 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { useEventListener } from "expo";
 import { LinearGradient } from "expo-linear-gradient";
-import * as ScreenOrientation from "expo-screen-orientation";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useState, useContext, useRef, useEffect, useCallback } from "react";
 import {
@@ -15,7 +14,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   BackHandler,
-  StatusBar,
   Animated,
   Dimensions,
 } from "react-native";
@@ -43,6 +41,7 @@ const { width } = Dimensions.get("window");
 
 const RecordingDetailsScreen = () => {
   const { theme } = useEnhancedTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "RecordingDetails">>();
   const {
@@ -55,8 +54,6 @@ const RecordingDetailsScreen = () => {
   } = useContext(DownloadContext);
   const { stopPlayback } = useAudio();
   const globalAudioBarHeight = useGlobalAudioBarHeight();
-
-  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
 
   // Hide GlobalAudioBar when in fullscreen mode
   const { hide: hideGlobalAudioBar, show: showGlobalAudioBar } = useGlobalAudioBar();
@@ -76,13 +73,14 @@ const RecordingDetailsScreen = () => {
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const controlsOpacity = useRef(new Animated.Value(1)).current;
   const backdropOpacity = useRef(new Animated.Value(0.5)).current;
+  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
 
   // Modal states
   const [showDownloadErrorModal, setShowDownloadErrorModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const videoViewRef = useRef(null);
+  const videoViewRef = useRef<VideoView>(null);
   const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isComponentMountedRef = useRef(true);
 
@@ -90,7 +88,6 @@ const RecordingDetailsScreen = () => {
   const sliderProgress = useSharedValue(0);
   const sliderMin = useSharedValue(0);
   const sliderMax = useSharedValue(1); // Default to 1, will be updated when video loads
-  const insets = useSafeAreaInsets();
 
   // Fetch recording details
   const {
@@ -262,44 +259,31 @@ const RecordingDetailsScreen = () => {
     resetVideoState();
   }, [resetVideoState]);
 
-  // Handle orientation and fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = async () => {
-      if (isVideoFullscreen) {
-        StatusBar.setHidden(true);
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-        hideGlobalAudioBar(); // Hide GlobalAudioBar in fullscreen
-      } else {
-        StatusBar.setHidden(false);
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-        showGlobalAudioBar(); // Show GlobalAudioBar when exiting fullscreen
-      }
-    };
+  // Handle native fullscreen events
+  const handleFullscreenEnter = useCallback(() => {
+    hideGlobalAudioBar();
+  }, [hideGlobalAudioBar]);
 
-    void handleFullscreenChange();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVideoFullscreen]);
+  const handleFullscreenExit = useCallback(() => {
+    showGlobalAudioBar();
+  }, [showGlobalAudioBar]);
 
-  // Cleanup effect
+  // Cleanup effect - no need to manage orientation manually
   useEffect(() => {
     return () => {
-      StatusBar.setHidden(false);
-      void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      // Cleanup is handled by native fullscreen
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Handle back button
+  // Handle back button - native fullscreen handles this automatically
   useEffect(() => {
     const backHandler = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (isVideoFullscreen) {
-        setIsVideoFullscreen(false);
-        return true;
-      }
+      // Native fullscreen will handle back button automatically
       return false;
     });
 
     return () => backHandler.remove();
-  }, [isVideoFullscreen]);
+  }, []);
 
   // Handle screen focus/blur - pause video when navigating forward to another screen
   useFocusEffect(
@@ -416,6 +400,17 @@ const RecordingDetailsScreen = () => {
     resetControlsTimeout();
   }, [controlsOpacity, backdropOpacity, resetControlsTimeout]);
 
+  const toggleFullscreen = () => {
+    if (!hasVideo || !videoPlayer) return;
+    if (isVideoFullscreen) {
+      void videoViewRef.current?.exitFullscreen();
+      setIsVideoFullscreen(false);
+    } else {
+      void videoViewRef.current?.enterFullscreen();
+      setIsVideoFullscreen(true);
+    }
+  };
+
   const handleVideoPress = useCallback(() => {
     if (showControls) {
       hideVideoControls();
@@ -456,11 +451,6 @@ const RecordingDetailsScreen = () => {
       console.error("Error toggling play/pause:", error);
       setVideoError(true);
     }
-  };
-
-  const toggleFullscreen = () => {
-    if (!hasVideo) return;
-    setIsVideoFullscreen(!isVideoFullscreen);
   };
 
   const onSeekStart = () => {
@@ -1016,11 +1006,9 @@ const RecordingDetailsScreen = () => {
     },
   });
 
-  const renderVideoControls = (isFullscreen = false) => {
-    const containerStyle = isFullscreen ? styles.fullscreenControls : styles.controlsContainer;
-
+  const renderVideoControls = () => {
     return (
-      <Animated.View style={[containerStyle, { opacity: controlsOpacity }]}>
+      <Animated.View style={[styles.controlsContainer, { opacity: controlsOpacity }]}>
         <TouchableOpacity onPress={() => void togglePlayPause()} disabled={!isVideoLoaded}>
           <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.tertiary} />
         </TouchableOpacity>
@@ -1087,13 +1075,15 @@ const RecordingDetailsScreen = () => {
           ref={videoViewRef}
           player={videoPlayer}
           style={styles.video}
-          contentFit={isVideoFullscreen ? "contain" : "cover"}
+          contentFit="cover"
           nativeControls={false}
           fullscreenOptions={{
-            enable: false,
+            enable: true,
             orientation: "landscape",
-            autoExitOnRotate: false,
+            autoExitOnRotate: true,
           }}
+          onFullscreenEnter={handleFullscreenEnter}
+          onFullscreenExit={handleFullscreenExit}
           allowsPictureInPicture={false}
           allowsVideoFrameAnalysis={false}
         />
@@ -1169,7 +1159,7 @@ const RecordingDetailsScreen = () => {
           )}
 
         {/* Bottom controls */}
-        {showControls && renderVideoControls(false)}
+        {showControls && renderVideoControls()}
       </View>
     );
   };
@@ -1197,104 +1187,7 @@ const RecordingDetailsScreen = () => {
     );
   }
 
-  if (isVideoFullscreen) {
-    // Exit fullscreen if no video available or no video URI
-    if (!hasVideo || !sonagramVideoUri) {
-      setIsVideoFullscreen(false);
-      return null;
-    }
-
-    return (
-      <View style={styles.fullscreenContainer}>
-        <View style={styles.fullscreenHeader}>
-          <Text style={styles.fullscreenTitle}>{recording.species?.scientific_name}</Text>
-          <Text style={styles.fullscreenSubtitle}>{recording.species?.common_name}</Text>
-        </View>
-        <VideoView
-          player={videoPlayer}
-          style={styles.fullscreenVideo}
-          contentFit="contain"
-          nativeControls={false}
-          allowsFullscreen={false}
-          allowsPictureInPicture={false}
-          allowsVideoFrameAnalysis={false}
-        />
-
-        {/* Touch overlay for showing/hiding controls */}
-        <TouchableOpacity
-          style={styles.videoTouchOverlay}
-          onPress={handleVideoPress}
-          activeOpacity={1}
-        />
-
-        {/* Backdrop overlay that fades with controls */}
-        {showControls && (
-          <Animated.View
-            style={[styles.controlsBackdrop, { opacity: backdropOpacity }]}
-            pointerEvents="none"
-          />
-        )}
-
-        {showInitialLoading && (
-          <View style={[styles.fullScreenVideoOverlay, { backgroundColor: theme.colors.backdrop }]}>
-            <ActivityIndicator size={36} color={theme.colors.primary} />
-          </View>
-        )}
-
-        {/* Play button when paused */}
-        {isVideoLoaded &&
-          !isPlaying &&
-          !isVideoEnded &&
-          !isSeeking &&
-          !showInitialLoading &&
-          showControls && (
-            <Animated.View style={[styles.playButton, { opacity: controlsOpacity }]}>
-              <TouchableOpacity
-                onPress={() => void togglePlayPause()}
-                activeOpacity={0.8}
-                style={styles.fullButtonTouchable}
-              >
-                <Ionicons name="play" size={40} color="white" style={styles.buttonIcon} />
-              </TouchableOpacity>
-            </Animated.View>
-          )}
-
-        {/* Replay button when video ended */}
-        {isVideoLoaded && isVideoEnded && !isSeeking && !showInitialLoading && showControls && (
-          <Animated.View style={[styles.replayButton, { opacity: controlsOpacity }]}>
-            <TouchableOpacity
-              onPress={togglePlayPause}
-              activeOpacity={0.8}
-              style={styles.fullButtonTouchable}
-            >
-              <Ionicons name="refresh" size={40} color="white" />
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-
-        {/* Pause button when playing and controls visible */}
-        {isVideoLoaded &&
-          isPlaying &&
-          !isVideoEnded &&
-          showControls &&
-          !isSeeking &&
-          !showInitialLoading && (
-            <Animated.View style={[styles.pauseButton, { opacity: controlsOpacity }]}>
-              <TouchableOpacity
-                onPress={togglePlayPause}
-                activeOpacity={0.8}
-                style={styles.fullButtonTouchable}
-              >
-                <Ionicons name="pause" size={40} color="white" />
-              </TouchableOpacity>
-            </Animated.View>
-          )}
-
-        {/* Bottom controls */}
-        {showControls && renderVideoControls(true)}
-      </View>
-    );
-  }
+  // Custom fullscreen UI removed - using native fullscreen
 
   return (
     <View style={styles.container}>
