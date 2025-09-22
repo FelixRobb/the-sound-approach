@@ -1089,7 +1089,11 @@ const RecordingDetailsScreen = () => {
           style={styles.video}
           contentFit={isVideoFullscreen ? "contain" : "cover"}
           nativeControls={false}
-          allowsFullscreen={false}
+          fullscreenOptions={{
+            enable: false,
+            orientation: "landscape",
+            autoExitOnRotate: false,
+          }}
           allowsPictureInPicture={false}
           allowsVideoFrameAnalysis={false}
         />

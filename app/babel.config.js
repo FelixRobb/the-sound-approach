@@ -1,4 +1,4 @@
-module.exports = (api) => {
+export default (api) => {
   api.cache(true);
   return {
     presets: ["babel-preset-expo"],
@@ -14,7 +14,7 @@ module.exports = (api) => {
           allowUndefined: true,
         },
       ],
-      "react-native-reanimated/plugin",
+      "react-native-worklets/plugin",
     ],
   };
 };

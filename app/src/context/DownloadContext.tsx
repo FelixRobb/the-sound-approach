@@ -1,6 +1,6 @@
 // src/context/DownloadContext.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import type React from "react";
 import { createContext, useState, useEffect, useContext, useCallback, useRef } from "react";
 

@@ -160,7 +160,7 @@ class AudioService {
 
       // Create new audio player with expo-audio
       const audioSource: AudioSource = { uri };
-      this.player = createAudioPlayer(audioSource, 100); // 100ms update interval
+      this.player = createAudioPlayer(audioSource, { updateInterval: 100 }); // 100ms update interval
 
       // Set up status update listener
       this.statusUpdateListener = (status: AudioStatus) => {

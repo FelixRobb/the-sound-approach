@@ -408,7 +408,6 @@ const MainTabNavigator: React.FC = () => {
             </AnimatedTabLabel>
           ),
           tabBarButton: (props) => <AnimatedTabButton {...props} isLargeScreen={isLargeScreen} />,
-          animationDuration: 250,
           headerShown: false,
           tabBarHideOnKeyboard: true,
           tabBarActiveTintColor: theme.colors.primary,
@@ -477,7 +476,6 @@ const MainNavigator: React.FC = () => {
           contentStyle: {
             backgroundColor: theme.colors.background,
           },
-          animationDuration: 250,
         }}
       >
         <MainStack.Screen name="MainTabs" component={withGlobalAudioBar(MainTabNavigator)} />
