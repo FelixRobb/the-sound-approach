@@ -37,7 +37,6 @@
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
     "expo-system-ui": "~6.0.7",
-    "expo-video": "~3.0.11",
     "patch-package": "^8.0.0",
     "react": "19.1.0",
     "react-native": "0.81.4",
@@ -47,12 +46,14 @@
     "react-native-reanimated": "~4.1.0",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-url-polyfill": "^2.0.0",
+    "react-native-video": "^6.16.1",
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@eslint/eslintrc": "^3.3.1",
     "@types/react": "~19.1.10",
+    "@types/react-native-video": "^5.0.20",
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",

@@ -47,13 +47,24 @@
       "package": "com.robbfelix.soundapproachapp"
     },
     "plugins": [
-      "expo-video",
       "expo-font",
       "expo-audio",
       [
         "expo-screen-orientation",
         {
           "initialOrientation": "PORTRAIT_UP"
+        }
+      ],
+      [
+      "react-native-video",
+      {
+        "enableNotificationControls": true,
+        "androidExtensions": {
+          "useExoplayerRtsp": false,
+          "useExoplayerSmoothStreaming": false,
+          "useExoplayerHls": false,
+            "useExoplayerDash": false
+          }
         }
       ]
     ],
