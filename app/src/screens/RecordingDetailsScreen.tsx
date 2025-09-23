@@ -259,10 +259,12 @@ const RecordingDetailsScreen = () => {
 
   // Handle native fullscreen events
   const handleFullscreenEnter = useCallback(() => {
+    setIsVideoFullscreen(true);
     hideGlobalAudioBar();
   }, [hideGlobalAudioBar]);
 
   const handleFullscreenExit = useCallback(() => {
+    setIsVideoFullscreen(false);
     showGlobalAudioBar();
   }, [showGlobalAudioBar]);
 
