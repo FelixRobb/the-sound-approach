@@ -71,10 +71,16 @@ const DetailHeader = ({ title, subtitle, rightElement, bgColor, textColor }: Det
             weight: "bold",
             color: textColor || "secondary",
           })}
+          numberOfLines={1}
+          ellipsizeMode="tail"
         >
           {title}
         </Text>
-        {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        {subtitle && (
+          <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
+            {subtitle}
+          </Text>
+        )}
       </View>
       {rightElement}
     </View>

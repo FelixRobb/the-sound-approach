@@ -250,7 +250,7 @@ const RecordingDetailsScreen = () => {
   // Handle video URI changes
   useEffect(() => {
     resetVideoState();
-  }, [resetVideoState]);
+  }, [recording, resetVideoState]);
 
   // Handle orientation and fullscreen changes
   useEffect(() => {
@@ -267,8 +267,7 @@ const RecordingDetailsScreen = () => {
     };
 
     void handleFullscreenChange();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVideoFullscreen]);
+  }, [isVideoFullscreen, hideGlobalAudioBar, showGlobalAudioBar]);
 
   // Cleanup effect
   useEffect(() => {
@@ -276,7 +275,7 @@ const RecordingDetailsScreen = () => {
       StatusBar.setHidden(false);
       void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle back button
   useEffect(() => {
@@ -498,7 +497,7 @@ const RecordingDetailsScreen = () => {
     } else if (!isPlaying && controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
-  }, [isPlaying, resetControlsTimeout, showControls]);
+  }, [isPlaying, showControls, resetControlsTimeout]);
 
   const styles = StyleSheet.create({
     actionSection: {
@@ -530,24 +529,6 @@ const RecordingDetailsScreen = () => {
       ...StyleSheet.absoluteFillObject,
       backgroundColor: theme.colors.backdrop,
       zIndex: theme.zIndex.base2,
-    },
-    controlsContainer: {
-      alignItems: "center",
-      backgroundColor: theme.colors.backdrop,
-      borderRadius: theme.borderRadius.lg,
-      bottom: theme.spacing.sm,
-      elevation: 5,
-      flexDirection: "row",
-      left: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      position: "absolute",
-      right: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      zIndex: theme.zIndex.base5,
     },
     descriptionTextError: {
       ...createThemedTextStyle(theme, {
@@ -641,30 +622,16 @@ const RecordingDetailsScreen = () => {
       width: "100%",
       zIndex: theme.zIndex.base7,
     },
-    fullscreenControls: {
-      alignItems: "center",
-      backgroundColor: theme.colors.backdrop,
-      borderRadius: theme.borderRadius.lg,
-      bottom: insets.bottom + theme.spacing.lg,
-      elevation: 5,
-      flexDirection: "row",
-      left: insets.left + theme.spacing.lg,
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.md,
-      position: "absolute",
-      right: insets.right + theme.spacing.lg,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      zIndex: theme.zIndex.base10,
+    fullscreenControlsContainer: {
+      marginBottom: insets.bottom + theme.spacing.sm,
+      marginHorizontal: Math.max(insets.left, insets.right) + theme.spacing.xs,
     },
     fullscreenHeader: {
-      backgroundColor: theme.colors.backdrop,
-      padding: theme.spacing.md,
+      backgroundColor: theme.colors.surface,
+      paddingBottom: theme.spacing.sm,
       paddingLeft: insets.left + theme.spacing.lg,
       paddingRight: insets.right + theme.spacing.lg,
-      paddingTop: insets.top + theme.spacing.md,
+      paddingTop: insets.top + theme.spacing.sm,
       position: "absolute",
       top: 0,
       width: "100%",
@@ -677,7 +644,6 @@ const RecordingDetailsScreen = () => {
         color: "onSurfaceVariant",
       }),
       color: theme.colors.onSurface,
-      marginTop: theme.spacing.xs,
     },
     fullscreenTitle: {
       ...createThemedTextStyle(theme, {
@@ -689,6 +655,19 @@ const RecordingDetailsScreen = () => {
     },
     fullscreenVideo: {
       flex: 1,
+    },
+    globalControlsContainer: {
+      alignItems: "center",
+      backgroundColor: theme.colors.backdrop,
+      borderRadius: theme.borderRadius.lg,
+      bottom: theme.spacing.sm,
+      flexDirection: "row",
+      left: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      position: "absolute",
+      right: theme.spacing.sm,
+      zIndex: theme.zIndex.base5,
     },
     heroBackground: {
       position: "absolute",
@@ -923,7 +902,7 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.tertiary,
       flex: 1,
       height: theme.spacing.xl,
-      marginHorizontal: theme.spacing.sm,
+      marginHorizontal: theme.spacing.lg,
     },
     sliderThumb: {
       backgroundColor: theme.colors.tertiary,
@@ -991,16 +970,6 @@ const RecordingDetailsScreen = () => {
       minWidth: 80,
       textAlign: "center",
     },
-    timeTextFullscreen: {
-      ...createThemedTextStyle(theme, {
-        size: "base",
-        weight: "medium",
-        color: "onTertiary",
-      }),
-      color: theme.colors.onSurface,
-      minWidth: 90,
-      textAlign: "center",
-    },
     video: {
       flex: 1,
     },
@@ -1015,18 +984,17 @@ const RecordingDetailsScreen = () => {
     },
   });
 
-  const renderVideoControls = (isFullscreen = false) => {
-    const containerStyle = isFullscreen ? styles.fullscreenControls : styles.controlsContainer;
-    const timeTextStyle = isFullscreen ? styles.timeTextFullscreen : styles.timeText;
-
+  const renderVideoControls = () => {
     return (
-      <Animated.View style={[containerStyle, { opacity: controlsOpacity }]}>
+      <Animated.View
+        style={[
+          styles.globalControlsContainer,
+          isVideoFullscreen && styles.fullscreenControlsContainer,
+          { opacity: controlsOpacity },
+        ]}
+      >
         <TouchableOpacity onPress={togglePlayPause} disabled={!isVideoLoaded}>
-          <Ionicons
-            name={isPlaying ? "pause" : "play"}
-            size={isFullscreen ? 32 : 24}
-            color={isFullscreen ? "white" : theme.colors.tertiary}
-          />
+          <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={theme.colors.tertiary} />
         </TouchableOpacity>
 
         <Slider
@@ -1037,10 +1005,8 @@ const RecordingDetailsScreen = () => {
           onSlidingComplete={onSeekComplete}
           thumbWidth={16}
           theme={{
-            minimumTrackTintColor: isFullscreen ? theme.colors.primary : theme.colors.tertiary,
-            maximumTrackTintColor: isFullscreen
-              ? "rgba(255,255,255,0.3)"
-              : theme.colors.tertiary + "50",
+            minimumTrackTintColor: theme.colors.tertiary,
+            maximumTrackTintColor: theme.colors.tertiary + "50",
             bubbleBackgroundColor: theme.colors.tertiary,
             bubbleTextColor: theme.colors.onTertiary,
           }}
@@ -1051,15 +1017,15 @@ const RecordingDetailsScreen = () => {
           renderThumb={() => <View style={styles.sliderThumb} />}
         />
 
-        <Text style={timeTextStyle}>
+        <Text style={styles.timeText}>
           {formatTime(videoPosition)} / {formatTime(videoDuration)}
         </Text>
 
         <TouchableOpacity style={styles.fullscreenButton} onPress={toggleFullscreen}>
           <Ionicons
             name={isVideoFullscreen ? "contract" : "expand"}
-            size={isFullscreen ? 32 : 24}
-            color={isFullscreen ? "white" : theme.colors.tertiary}
+            size={24}
+            color={theme.colors.tertiary}
           />
         </TouchableOpacity>
       </Animated.View>
@@ -1175,7 +1141,7 @@ const RecordingDetailsScreen = () => {
           )}
 
         {/* Bottom controls */}
-        {showControls && renderVideoControls(false)}
+        {showControls && renderVideoControls()}
       </View>
     );
   };
@@ -1263,7 +1229,7 @@ const RecordingDetailsScreen = () => {
               </View>
             )}
 
-            {showControls && renderVideoControls(true)}
+            {showControls && renderVideoControls()}
           </TouchableOpacity>
         </View>
       </Modal>
@@ -1290,8 +1256,6 @@ const RecordingDetailsScreen = () => {
           )
         }
       />
-
-      {hasVideo && renderVideoPlayer()}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Hero Section - Species Info */}
@@ -1343,6 +1307,7 @@ const RecordingDetailsScreen = () => {
               <MiniAudioPlayer recording={recording} size={44} onPress={stopVideoPlayback} />
             </TouchableOpacity>
           </View>
+          {hasVideo && renderVideoPlayer()}
         </View>
 
         {/* Content Sections */}
