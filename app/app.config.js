@@ -78,7 +78,7 @@ export default {
             useExoplayerRtsp: false,
             useExoplayerSmoothStreaming: false,
             useExoplayerHls: false,
-            useExoplayerDash: false
+            useExoplayerDash: false  // This helps reduce conflicts with the Android Media3 library
           }
         }
       ],
@@ -89,7 +89,11 @@ export default {
             packagingOptions: {
               pickFirst: [
                 "**/androidx/media3/exoplayer/dash/DashMediaSource$Factory.dex",
-                "**/androidx/media3/exoplayer/dash/DashMediaSource$Factory.class"
+                "**/androidx/media3/exoplayer/dash/DashMediaSource$Factory.class",
+                "**/androidx/media3/exoplayer/**",
+                "**/androidx/media3/common/**",
+                "**/androidx/media3/session/**",
+                "**/androidx/media3/ui/**"
               ]
             }
           }
