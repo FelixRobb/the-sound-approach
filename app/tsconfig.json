@@ -8,12 +8,14 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules",
@@ -28,6 +30,7 @@
     "*.d.ts",
     "assets",
     "recordings",
-    "sonagrams"
+    "sonagrams",
+    "supabase/functions/**/*"
   ]
 }

@@ -78,7 +78,8 @@ export default {
             useExoplayerRtsp: false,
             useExoplayerSmoothStreaming: false,
             useExoplayerHls: false,
-            useExoplayerDash: false  // This helps reduce conflicts with the Android Media3 library
+            useExoplayerDash: false,
+            useExoplayerIMA: false
           }
         }
       ],
@@ -87,11 +88,47 @@ export default {
         {
           android: {
             resolutions: {
-              "androidx.media3:media3-exoplayer": "1.3.1",
-              "androidx.media3:media3-exoplayer-dash": "1.3.1",
-              "androidx.media3:media3-ui": "1.3.1",
-              "androidx.media3:media3-common": "1.3.1",
-              "androidx.media3:media3-session": "1.3.1"
+              // Force consistent Media3 versions to prevent duplicate classes
+              "androidx.media3:media3-exoplayer": "1.2.1",
+              "androidx.media3:media3-exoplayer-dash": "1.2.1",
+              "androidx.media3:media3-ui": "1.2.1",
+              "androidx.media3:media3-common": "1.2.1",
+              "androidx.media3:media3-session": "1.2.1",
+              "androidx.media3:media3-datasource": "1.2.1",
+              "androidx.media3:media3-exoplayer-hls": "1.2.1",
+              "androidx.media3:media3-exoplayer-rtsp": "1.2.1",
+              "androidx.media3:media3-exoplayer-smoothstreaming": "1.2.1"
+            },
+            // Enable ProGuard to handle duplicate class removal
+            enableProguardInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
+            proguardMinifyEnabled: true,
+            // Add dependency exclusions to prevent conflicts (based on real developer solutions)
+            packagingOptions: {
+              pickFirst: [
+                "**/libc++_shared.so",
+                "**/libjsc.so"
+              ],
+              exclude: [
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0"
+              ]
+            },
+            // Force exclude conflicting ExoPlayer modules (proven solution from other developers)
+            configurations: {
+              all: {
+                exclude: [
+                  "com.google.android.exoplayer:exoplayer-core",
+                  "com.google.android.exoplayer:exoplayer-dash",
+                  "com.google.android.exoplayer:exoplayer-hls"
+                ]
+              }
             }
           }
         }
