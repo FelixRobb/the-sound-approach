@@ -897,9 +897,12 @@ const RecordingDetailsScreen = () => {
     },
     slider: {
       backgroundColor: theme.colors.tertiary,
+      borderRadius: 2,
       flex: 1,
-      height: theme.spacing.xl,
+      height: 4,
       marginHorizontal: theme.spacing.lg,
+      overflow: "hidden",
+      width: "100%",
     },
     sliderThumb: {
       backgroundColor: theme.colors.tertiary,
@@ -1005,12 +1008,20 @@ const RecordingDetailsScreen = () => {
             minimumTrackTintColor: theme.colors.tertiary,
             maximumTrackTintColor: theme.colors.tertiary + "50",
             bubbleBackgroundColor: theme.colors.tertiary,
-            bubbleTextColor: theme.colors.onTertiary,
           }}
           containerStyle={styles.slider}
           disable={!isVideoLoaded}
           disableTapEvent
           bubble={(value) => formatTime(value)}
+          bubbleTextStyle={{
+            ...createThemedTextStyle(theme, {
+              size: "xs",
+              weight: "medium",
+              color: "onTertiary",
+              lineHeight: "snug",
+            }),
+            fontVariant: ["tabular-nums"],
+          }}
           renderThumb={() => <View style={styles.sliderThumb} />}
         />
 
