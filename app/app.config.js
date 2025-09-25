@@ -86,15 +86,12 @@ export default {
         "expo-build-properties",
         {
           android: {
-            packagingOptions: {
-              pickFirst: [
-                "**/androidx/media3/exoplayer/dash/DashMediaSource$Factory.dex",
-                "**/androidx/media3/exoplayer/dash/DashMediaSource$Factory.class",
-                "**/androidx/media3/exoplayer/**",
-                "**/androidx/media3/common/**",
-                "**/androidx/media3/session/**",
-                "**/androidx/media3/ui/**"
-              ]
+            resolutions: {
+              "androidx.media3:media3-exoplayer": "1.3.1",
+              "androidx.media3:media3-exoplayer-dash": "1.3.1",
+              "androidx.media3:media3-ui": "1.3.1",
+              "androidx.media3:media3-common": "1.3.1",
+              "androidx.media3:media3-session": "1.3.1"
             }
           }
         }
