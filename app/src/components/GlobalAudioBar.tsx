@@ -149,7 +149,7 @@ const GlobalAudioBar: React.FC = () => {
 
   // Small gap between audio bar and tab bar - consistent across platforms
   const gapBetweenAudioBarAndTabBar = 12;
-  const baseBottomMargin = safeAreaBottom > 0 ? 0 : 5;
+  const baseBottomMargin = 5 + (safeAreaBottom > 0 ? 0 : 5);
   const POSITION_EPSILON = 0.3; // seconds threshold to consider position caught up
 
   const bottomPosition = useAnimatedStyle(() => {
@@ -396,7 +396,6 @@ const GlobalAudioBar: React.FC = () => {
       borderRadius: theme.borderRadius.lg,
       borderWidth: 1,
       elevation: 12,
-      filter: "drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))",
       flexDirection: "column",
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,

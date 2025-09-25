@@ -201,7 +201,6 @@ const ProfileSettingsScreen = () => {
     },
     scrollContent: {
       padding: theme.spacing.md,
-      paddingBottom: globalAudioBarHeight,
     },
     settingsCard: {
       backgroundColor: theme.colors.surface,
@@ -539,7 +538,10 @@ const ProfileSettingsScreen = () => {
       <BackgroundPattern />
       <Header />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: globalAudioBarHeight }]}
+        showsVerticalScrollIndicator={false}
+      >
         <ProfileCard />
         <ThemeCard />
         <DownloadsCard />

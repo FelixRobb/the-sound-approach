@@ -58,7 +58,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { isConnected } = useContext(NetworkContext);
 
   // Get global audio bar context
-  const { show: showAudioBar } = useGlobalAudioBar(); // Destructure and rename show to avoid conflict
+  const { show: showAudioBar, hide: hideAudioBar } = useGlobalAudioBar(); // Destructure and rename show to avoid conflict
 
   // Create a unique ID for this component instance
   const listenerId = useRef(uuidv4()).current;
@@ -79,12 +79,18 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     audioService.addListener(listenerId, setAudioState);
 
+    // Set up completion callback to hide audio bar when audio finishes
+    audioService.setCompletionCallback(() => {
+      hideAudioBar();
+    });
+
     // Cleanup function to ensure audio is stopped when provider unmounts
     return () => {
       audioService.removeListener(listenerId);
+      audioService.setCompletionCallback(null);
       audioService.stop();
     };
-  }, [listenerId, audioService]);
+  }, [listenerId, audioService, hideAudioBar]);
 
   /**
    * Previous implementation stopped any remote-streamed audio as soon as

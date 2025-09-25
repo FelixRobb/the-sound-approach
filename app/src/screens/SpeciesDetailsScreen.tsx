@@ -43,7 +43,6 @@ const SpeciesDetailsScreen = () => {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.lg,
       elevation: 3,
-      marginBottom: globalAudioBarHeight,
       overflow: "hidden",
       padding: theme.spacing.md,
       shadowColor: theme.colors.shadow,
@@ -54,10 +53,6 @@ const SpeciesDetailsScreen = () => {
     container: {
       backgroundColor: theme.colors.background,
       flex: 1,
-    },
-    content: {
-      padding: theme.spacing.md,
-      paddingBottom: theme.spacing.lg,
     },
     emptyContainer: {
       alignItems: "center",
@@ -217,7 +212,7 @@ const SpeciesDetailsScreen = () => {
       <BackgroundPattern />
       <DetailHeader title={speciesName} subtitle={scientificName} />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}>
         {/* Recordings Card */}
         <View style={styles.card}>
           <View style={styles.sectionHeader}>

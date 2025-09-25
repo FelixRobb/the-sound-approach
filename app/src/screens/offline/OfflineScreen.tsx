@@ -159,7 +159,6 @@ const OfflineScreen = () => {
     },
     listContent: {
       padding: theme.spacing.md,
-      paddingBottom: globalAudioBarHeight,
     },
     loadingCard: {
       alignItems: "center",
@@ -330,7 +329,7 @@ const OfflineScreen = () => {
         data={downloads}
         renderItem={renderDownloadItem}
         keyExtractor={(item) => item.recording_id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={(styles.listContent, { paddingBottom: globalAudioBarHeight })}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={<EmptyState />}
         removeClippedSubviews={false}

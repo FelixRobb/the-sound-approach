@@ -261,9 +261,6 @@ const DownloadsScreen = () => {
       flexDirection: "row",
       flex: 1,
     },
-    listContent: {
-      paddingBottom: globalAudioBarHeight,
-    },
     loadingCard: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -455,7 +452,7 @@ const DownloadsScreen = () => {
         data={downloads}
         renderItem={renderDownloadItem}
         keyExtractor={(item) => item.recording_id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
         ListEmptyComponent={<EmptyState />}
         removeClippedSubviews={false}
         windowSize={10}

@@ -97,7 +97,6 @@ const DeleteAccountScreen = () => {
       marginBottom: theme.spacing.sm,
     },
     scrollContent: {
-      paddingBottom: globalAudioBarHeight,
       paddingHorizontal: theme.spacing.xl,
       paddingVertical: theme.spacing.md,
     },
@@ -146,7 +145,7 @@ const DeleteAccountScreen = () => {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: globalAudioBarHeight }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >

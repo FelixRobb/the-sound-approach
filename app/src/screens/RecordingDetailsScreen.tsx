@@ -518,9 +518,6 @@ const RecordingDetailsScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
     },
-    content: {
-      paddingBottom: globalAudioBarHeight + theme.spacing.md,
-    },
     contentSection: {
       paddingHorizontal: theme.spacing.lg,
       paddingTop: theme.spacing.xl,
@@ -1257,7 +1254,10 @@ const RecordingDetailsScreen = () => {
         }
       />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Hero Section - Species Info */}
         <View style={styles.heroSection}>
           <LinearGradient

@@ -12,6 +12,7 @@ import { Recording } from "../types";
 export type PlaybackState = "idle" | "loading" | "playing" | "paused";
 
 export type AudioListenerCallback = (state: AudioPlayerState) => void;
+export type AudioCompletionCallback = () => void;
 
 export interface AudioPlayerState {
   uri: string | null;
@@ -40,6 +41,7 @@ class AudioService {
   private player: AudioPlayer | null = null;
   private state: AudioPlayerState = { ...initialState };
   private listeners: Map<string, AudioListenerCallback> = new Map();
+  private completionCallback: AudioCompletionCallback | null = null;
   private isDestroyed = false;
   private statusUpdateListener: ((status: AudioStatus) => void) | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
@@ -356,6 +358,11 @@ class AudioService {
     this.listeners.delete(id);
   }
 
+  // Set completion callback
+  public setCompletionCallback(callback: AudioCompletionCallback | null): void {
+    this.completionCallback = callback;
+  }
+
   // Update state and notify listeners
   private updateState(partialState: Partial<AudioPlayerState>): void {
     this.state = { ...this.state, ...partialState };
@@ -393,6 +400,10 @@ class AudioService {
 
       if (status.didJustFinish) {
         newPlaybackState = "idle";
+        // Call completion callback before stopping
+        if (this.completionCallback) {
+          this.completionCallback();
+        }
         // Auto-cleanup when finished
         setTimeout(() => {
           this.stop();

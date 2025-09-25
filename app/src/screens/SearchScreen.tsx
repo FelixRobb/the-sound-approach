@@ -116,9 +116,6 @@ const SearchScreen = () => {
     headerInner: {
       paddingHorizontal: theme.spacing.xl,
     },
-    listContent: {
-      paddingBottom: globalAudioBarHeight,
-    },
     loadingContainer: {
       alignItems: "center",
       flex: 1,
@@ -462,7 +459,7 @@ const SearchScreen = () => {
     }
 
     return (
-      <ScrollView contentContainerStyle={styles.listContent}>
+      <ScrollView contentContainerStyle={{ paddingBottom: globalAudioBarHeight }}>
         {recordings.length > 0 && (
           <View style={styles.resultsSection}>
             <Text style={styles.resultsHeader}>Recordings ({recordings.length})</Text>

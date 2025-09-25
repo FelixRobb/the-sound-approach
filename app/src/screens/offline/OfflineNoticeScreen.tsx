@@ -25,7 +25,6 @@ const OfflineNoticeScreen = () => {
       backgroundColor: theme.colors.background,
       flex: 1,
       justifyContent: "center",
-      paddingBottom: globalAudioBarHeight,
     },
     content: {
       alignItems: "center",
@@ -62,7 +61,7 @@ const OfflineNoticeScreen = () => {
   const hasDownloads = downloadedRecordings.length > 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: globalAudioBarHeight }]}>
       <View style={styles.content}>
         <Ionicons name="cloud-offline-outline" size={80} color={theme.colors.error} />
 
