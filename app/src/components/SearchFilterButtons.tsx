@@ -123,7 +123,7 @@ const SearchFilterButtons: React.FC<SearchFilterButtonsProps> = ({
     },
     tabText: {
       ...createThemedTextStyle(theme, {
-        size: "base",
+        size: "sm",
         weight: "normal",
         color: "onSurfaceVariant",
       }),
@@ -152,12 +152,12 @@ const SearchFilterButtons: React.FC<SearchFilterButtonsProps> = ({
               styles.tabText,
               activeFilter === "all"
                 ? createThemedTextStyle(theme, {
-                    size: "base",
+                    size: "sm",
                     weight: "normal",
                     color: "onPrimary",
                   })
                 : createThemedTextStyle(theme, {
-                    size: "base",
+                    size: "sm",
                     weight: "normal",
                     color: "onSurfaceVariant",
                   }),
@@ -187,12 +187,12 @@ const SearchFilterButtons: React.FC<SearchFilterButtonsProps> = ({
               styles.tabText,
               activeFilter === "recordings"
                 ? createThemedTextStyle(theme, {
-                    size: "base",
+                    size: "sm",
                     weight: "normal",
                     color: "onPrimary",
                   })
                 : createThemedTextStyle(theme, {
-                    size: "base",
+                    size: "sm",
                     weight: "normal",
                     color: "onSurfaceVariant",
                   }),
@@ -222,12 +222,12 @@ const SearchFilterButtons: React.FC<SearchFilterButtonsProps> = ({
               styles.tabText,
               activeFilter === "species"
                 ? createThemedTextStyle(theme, {
-                    size: "base",
+                    size: "sm",
                     weight: "normal",
                     color: "onPrimary",
                   })
                 : createThemedTextStyle(theme, {
-                    size: "base",
+                    size: "sm",
                     weight: "normal",
                     color: "onSurfaceVariant",
                   }),

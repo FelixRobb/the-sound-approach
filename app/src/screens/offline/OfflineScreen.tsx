@@ -195,11 +195,12 @@ const OfflineScreen = () => {
     storageInfo: {
       alignItems: "center",
       backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.full,
       flexDirection: "row",
       marginHorizontal: theme.spacing.md,
       marginVertical: theme.spacing.sm,
-      padding: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
     },
     storageInfoIcon: {
       alignItems: "center",

@@ -247,7 +247,6 @@ export type ProfileStackParamList = {
 
 export type OfflineStackParamList = {
   OfflineMain: undefined;
-  OfflineNotice: undefined;
 };
 
 // ==========================================

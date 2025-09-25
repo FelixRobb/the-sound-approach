@@ -1,33 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { createThemedTextStyle } from "../lib/theme";
-import type { OfflineStackParamList } from "../types";
 
 const OfflineIndicator = () => {
   const { theme } = useEnhancedTheme();
-  const navigation = useNavigation<NativeStackNavigationProp<OfflineStackParamList>>();
   const screenWidth = Dimensions.get("window").width;
 
   const styles = StyleSheet.create({
-    button: {
-      backgroundColor: theme.colors.error,
-      borderRadius: theme.borderRadius.md,
-      marginBottom: theme.spacing.sm,
-      marginLeft: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
-    },
-    buttonText: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onError",
-      }),
-    },
     container: {
       alignItems: "center",
       backgroundColor: theme.colors.surface,
@@ -75,9 +56,6 @@ const OfflineIndicator = () => {
           You&apos;re offline - Limited functionality available
         </Text>
       </View>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("OfflineNotice")}>
-        <Text style={styles.buttonText}>Info</Text>
-      </TouchableOpacity>
     </View>
   );
 };

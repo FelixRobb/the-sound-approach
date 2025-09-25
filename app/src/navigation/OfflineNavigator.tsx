@@ -4,7 +4,6 @@ import { StyleSheet, View } from "react-native";
 import { withGlobalAudioBar } from "../components/GlobalAudioBar";
 import OfflineIndicator from "../components/OfflineIndicator";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
-import OfflineNoticeScreen from "../screens/offline/OfflineNoticeScreen";
 import OfflineScreen from "../screens/offline/OfflineScreen";
 import { OfflineStackParamList } from "../types";
 
@@ -37,18 +36,6 @@ const OfflineNavigator = () => {
         }}
       >
         <OfflineStack.Screen name="OfflineMain" component={withGlobalAudioBar(OfflineScreen)} />
-        <OfflineStack.Screen
-          name="OfflineNotice"
-          component={withGlobalAudioBar(OfflineNoticeScreen)}
-          options={{
-            presentation: "modal",
-            gestureEnabled: true,
-            animation: "slide_from_bottom",
-            contentStyle: {
-              backgroundColor: theme.colors.background,
-            },
-          }}
-        />
       </OfflineStack.Navigator>
       <OfflineIndicator />
     </View>
