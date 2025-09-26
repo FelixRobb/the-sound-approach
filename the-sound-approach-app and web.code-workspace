@@ -13,6 +13,7 @@
     }
   ],
   "settings": {
-    "typescript.tsdk": "App/node_modules/typescript/lib"
+    "typescript.tsdk": "App/node_modules/typescript/lib",
+    "cursor.composer.cmdPFilePicker2": true
   }
 }

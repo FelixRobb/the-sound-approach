@@ -6,8 +6,8 @@ import { AppState } from "react-native";
 
 import type { Recording, Species, SearchResults } from "../types";
 // Initialize Supabase client
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL as string) || "";
+const supabaseAnonKey = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string) || "";
 
 // Initialise Supabase client following official React-Native guide
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

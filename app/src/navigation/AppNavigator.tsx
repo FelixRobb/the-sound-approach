@@ -16,7 +16,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { withGlobalAudioBar } from "../components/GlobalAudioBar";
-import { AudioProvider } from "../context/AudioContext";
 import { AuthContext } from "../context/AuthContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { NetworkContext } from "../context/NetworkContext";
@@ -624,11 +623,9 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <AudioProvider>
-      <View style={backgroundStyle.container}>
-        <NavigationContainer theme={navTheme}>{navigatorToShow}</NavigationContainer>
-      </View>
-    </AudioProvider>
+    <View style={backgroundStyle.container}>
+      <NavigationContainer theme={navTheme}>{navigatorToShow}</NavigationContainer>
+    </View>
   );
 };
 

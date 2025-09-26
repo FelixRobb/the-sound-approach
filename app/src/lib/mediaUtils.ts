@@ -8,7 +8,7 @@ export const getBestAudioUri = async (
   getDownloadPath: (fileId: string) => string | null,
   isConnected: boolean
 ): Promise<string | null> => {
-  const audioHqBucket = process.env.AUDIO_HQ_BUCKET || "";
+  const audioHqBucket = (process.env.AUDIO_HQ_BUCKET as string) || "";
   if (!recording) return null;
   // First try to use downloaded audio if available
   if (recording.audiolqid && isDownloaded(recording.id)) {
@@ -40,7 +40,7 @@ export const getBestAudioUri = async (
  */
 export const getsonagramVideoUri = async (recording: Recording): Promise<string | null> => {
   if (!recording || !recording.sonagramvideoid) return null;
-  const sonagramBucket = process.env.SONAGRAMS_BUCKET || "";
+  const sonagramBucket = (process.env.SONAGRAMS_BUCKET as string) || "";
   // Use public URL from Supabase for sonagram video
   const { data, error } = await supabase.storage
     .from(sonagramBucket)

@@ -135,7 +135,6 @@ class AudioService {
       });
       return false;
     }
-
     try {
       // If same track is already playing, just pause it
       if (this.state.recording?.id === recording.id && this.state.playbackState === "playing") {
@@ -159,29 +158,23 @@ class AudioService {
         position: 0,
         duration: 0,
       });
-
       // Create new audio player with expo-audio
       const audioSource: AudioSource = { uri };
       this.player = createAudioPlayer(audioSource, { updateInterval: 100 }); // 100ms update interval
-
       // Set up status update listener
       this.statusUpdateListener = (status: AudioStatus) => {
         this.handlePlaybackStatusUpdate(status);
       };
-
       this.player.addListener("playbackStatusUpdate", this.statusUpdateListener);
       // Start playing immediately
       this.player.play();
-
       this.updateState({
         playbackState: "playing",
         error: null,
       });
-
       // Set up cleanup timer as a safety measure
       this.cleanupTimer = setTimeout(() => {
         if (this.state.playbackState === "loading") {
-          console.warn("Audio loading timeout, stopping playback");
           this.stop();
         }
       }, 30000); // 30 second timeout
@@ -190,10 +183,8 @@ class AudioService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown playback error";
       console.error("Error in playTrack:", errorMessage, error);
-
       // Clean up on error
       this.cleanup();
-
       this.updateState({
         uri: null,
         playbackState: "idle",
@@ -227,7 +218,6 @@ class AudioService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error playing audio";
       console.error("Error playing audio:", errorMessage);
-
       this.updateState({
         playbackState: "idle",
         error: `Play failed: ${errorMessage}`,
@@ -242,17 +232,14 @@ class AudioService {
       console.error("Cannot pause: AudioService has been destroyed");
       return false;
     }
-
     if (!this.player) {
       console.warn("No player loaded to pause");
       return false;
     }
-
     if (this.state.playbackState !== "playing") {
       console.warn("Audio is not currently playing");
       return false;
     }
-
     try {
       this.player.pause();
       this.updateState({
@@ -263,7 +250,6 @@ class AudioService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error pausing audio";
       console.error("Error pausing audio:", errorMessage);
-
       this.updateState({
         error: `Pause failed: ${errorMessage}`,
       });
@@ -277,7 +263,6 @@ class AudioService {
       console.warn("AudioService already destroyed");
       return true;
     }
-
     try {
       // Clear cleanup timer
       if (this.cleanupTimer) {
@@ -290,7 +275,6 @@ class AudioService {
         clearInterval(this.statusUpdateInterval);
         this.statusUpdateInterval = null;
       }
-
       // Stop and remove player if it exists
       if (this.player) {
         try {
@@ -298,22 +282,18 @@ class AudioService {
         } catch (stopError) {
           console.warn("Error stopping player:", stopError);
         }
-
         // Remove listener before removing player
         if (this.statusUpdateListener) {
           this.player.removeListener("playbackStatusUpdate", this.statusUpdateListener);
           this.statusUpdateListener = null;
         }
-
         try {
           this.player.remove();
         } catch (removeError) {
           console.warn("Error removing player:", removeError);
         }
-
         this.player = null;
       }
-
       // Reset state
       this.updateState({
         ...initialState,
@@ -321,7 +301,6 @@ class AudioService {
       return true;
     } catch (error) {
       console.error("Error in stop method:", error);
-
       // Force cleanup even if there were errors
       this.player = null;
       this.statusUpdateListener = null;
@@ -333,7 +312,6 @@ class AudioService {
         clearInterval(this.statusUpdateInterval);
         this.statusUpdateInterval = null;
       }
-
       this.updateState({
         ...initialState,
       });

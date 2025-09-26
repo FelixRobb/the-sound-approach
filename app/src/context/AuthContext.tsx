@@ -721,7 +721,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Get the Supabase URL from your config
-        const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+        const supabaseUrl = (process.env.EXPO_PUBLIC_SUPABASE_URL as string) || "";
 
         // Call the edge function to delete the user
         const response = await fetch(`${supabaseUrl}/functions/v1/delete-user`, {

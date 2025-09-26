@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useCallback,
+} from "react";
 
 type GlobalAudioBarContextType = {
   isVisible: boolean;
@@ -13,17 +20,17 @@ const GlobalAudioBarContext = createContext<GlobalAudioBarContextType | undefine
 export const GlobalAudioBarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  const setVisible = (visible: boolean) => {
+  const setVisible = useCallback((visible: boolean) => {
     setIsVisible(visible);
-  };
+  }, []);
 
-  const hide = () => {
+  const hide = useCallback(() => {
     setIsVisible(false);
-  };
+  }, []);
 
-  const show = () => {
+  const show = useCallback(() => {
     setIsVisible(true);
-  };
+  }, []);
 
   const value = {
     isVisible,

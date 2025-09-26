@@ -80,7 +80,7 @@ const MiniAudioPlayer: React.FC<MiniAudioPlayerProps> = (props) => {
   return (
     <TouchableOpacity
       style={iconSize ? styles.iconSizeButtonContainer : styles.buttonContainer}
-      onPress={!isCurrentlyLoading && !disabled ? handlePress : undefined}
+      onPress={!isCurrentlyLoading && !disabled ? () => handlePress() : undefined}
       activeOpacity={0.7}
       disabled={disabled}
     >

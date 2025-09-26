@@ -207,7 +207,7 @@ export const DownloadProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       // Get signed URL for download
       const { data: audioUrlData } = await supabase.storage
-        .from(process.env.AUDIO_LQ_BUCKET || "")
+        .from((process.env.AUDIO_LQ_BUCKET as string) || "")
         .createSignedUrl(`${recording.audiolqid}.mp3`, 60 * 60 * 24 * 30);
 
       if (!audioUrlData?.signedUrl) throw new Error("Failed to get audio URL");

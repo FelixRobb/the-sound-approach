@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ToastProvider } from "./src/components/bna-toast";
+import { AudioProvider } from "./src/context/AudioContext";
 import { AuthProvider } from "./src/context/AuthContext";
 import { DownloadProvider } from "./src/context/DownloadContext";
 import { EnhancedThemeProvider, useEnhancedTheme } from "./src/context/EnhancedThemeProvider";
@@ -41,7 +42,9 @@ const AppContent = () => {
               <GlobalAudioBarProvider>
                 <AuthProvider>
                   <DownloadProvider>
-                    <AppNavigator />
+                    <AudioProvider>
+                      <AppNavigator />
+                    </AudioProvider>
                   </DownloadProvider>
                 </AuthProvider>
               </GlobalAudioBarProvider>

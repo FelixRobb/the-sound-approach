@@ -130,10 +130,7 @@ const GlobalAudioBar: React.FC = () => {
         runOnJS(handleDismiss)();
       } else {
         // Snap back to visible position
-        translateY.value = withSpring(0, {
-          damping: 20,
-          stiffness: 300,
-        });
+        translateY.value = withSpring(0);
       }
     });
 
@@ -149,7 +146,7 @@ const GlobalAudioBar: React.FC = () => {
 
   // Small gap between audio bar and tab bar - consistent across platforms
   const gapBetweenAudioBarAndTabBar = 12;
-  const baseBottomMargin = 5 + (safeAreaBottom > 0 ? 0 : 5);
+  const baseBottomMargin = 10 + (safeAreaBottom > 0 ? 0 : 5);
   const POSITION_EPSILON = 0.3; // seconds threshold to consider position caught up
 
   const bottomPosition = useAnimatedStyle(() => {
@@ -341,10 +338,7 @@ const GlobalAudioBar: React.FC = () => {
   useEffect(() => {
     const targetValue = hasTabBar ? 0 : 1;
     setTimeout(() => {
-      slideAnim.value = withSpring(targetValue, {
-        damping: 20,
-        stiffness: 300,
-      });
+      slideAnim.value = withSpring(targetValue);
     }, 100);
   }, [hasTabBar, slideAnim]);
 
@@ -352,10 +346,7 @@ const GlobalAudioBar: React.FC = () => {
   useEffect(() => {
     if (isVisible) {
       // Animate in from below
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 300,
-      });
+      translateY.value = withSpring(0);
     } else {
       // When the bar should be hidden, move it off-screen
       translateY.value = withTiming(120, {

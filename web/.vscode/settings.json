@@ -18,7 +18,7 @@
   },
   "prettier.requireConfig": true,
   "prettier.useEditorConfig": false,
-  "prettier.configPath": "./.prettierrc.json",
+  "prettier.configPath": "./prettier.config.js",
   "eslint.format.enable": false,
   "eslint.validate": ["typescript", "typescriptreact", "javascript", "javascriptreact"],
   "eslint.alwaysShowStatus": true,
