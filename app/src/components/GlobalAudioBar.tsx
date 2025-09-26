@@ -20,9 +20,9 @@ import Animated, {
   interpolate,
   Extrapolation,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { scheduleOnRN } from "react-native-worklets";
 
 import { useAudio } from "../context/AudioContext";
 import { DownloadContext } from "../context/DownloadContext";
@@ -127,7 +127,7 @@ const GlobalAudioBar: React.FC = () => {
         translateY.value = withTiming(dismissDistance, {
           duration: Math.max(150, 300 * (1 - currentY / dismissDistance)), // Shorter duration if already partway down
         });
-        runOnJS(handleDismiss)();
+        scheduleOnRN(handleDismiss);
       } else {
         // Snap back to visible position
         translateY.value = withSpring(0);

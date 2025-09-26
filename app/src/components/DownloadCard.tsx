@@ -1,16 +1,19 @@
 /* eslint-disable react-native/sort-styles */
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useEffect, useCallback, useContext } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import React, { useState, useEffect, useCallback, useContext, useRef } from "react";
+import { View, Text, StyleSheet } from "react-native";
+// Use Swipeable for robust swipe-to-delete and TouchableOpacity for compatibility
+import { Pressable } from "react-native-gesture-handler";
+import Swipeable, { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withTiming,
-  runOnJS,
   withDelay,
+  SharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 import { DownloadContext } from "../context/DownloadContext";
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
@@ -30,7 +33,45 @@ interface DownloadCardProps {
   isDeleting?: boolean;
   animationDelay?: number;
 }
+const RightSwipeAction = ({
+  progress,
+  onPress,
+}: {
+  progress: SharedValue<number>;
+  onPress: () => void;
+}) => {
+  const { theme } = useEnhancedTheme();
+  // This hook is now correctly called inside a React component.
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: progress.value }],
+  }));
+  const styles = StyleSheet.create({
+    deleteActionContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      width: 80, // Matches DELETE_ZONE_WIDTH
+    },
+    deleteButton: {
+      alignItems: "center",
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: 28,
+      height: 44,
+      justifyContent: "center",
+      width: 44,
+    },
+  });
 
+  return (
+    <View style={styles.deleteActionContainer}>
+      <Pressable style={styles.deleteButton} onPress={onPress}>
+        <Animated.View style={animatedStyle}>
+          <Ionicons name="trash-outline" size={20} color={theme.colors.onErrorContainer} />
+        </Animated.View>
+      </Pressable>
+    </View>
+  );
+};
 const DownloadCard: React.FC<DownloadCardProps> = ({
   item,
   onPress,
@@ -43,23 +84,22 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
 }) => {
   const { theme } = useEnhancedTheme();
   const { downloads, resumeDownload } = useContext(DownloadContext);
-  const translateX = useSharedValue(0);
+  const swipeableRef = useRef<SwipeableMethods>(null);
+
+  // Animation values for add/delete animations
   const opacity = useSharedValue(1);
   const translateY = useSharedValue(0);
   const cardHeight = useSharedValue(1);
+
+  // State to track if the delete action is revealed
   const [isRevealed, setIsRevealed] = useState(false);
 
-  const SWIPE_THRESHOLD = -100;
-  const DELETE_ZONE_WIDTH = 80;
-
-  // Get download status for this recording
   const downloadStatus = downloads[item.recording_id];
   const isDownloading = downloadStatus?.status === "downloading";
   const isPaused = downloadStatus?.status === "paused";
   const hasError = downloadStatus?.status === "error";
   const progress = downloadStatus?.progress || 0;
 
-  // Handle resume download
   const handleResumePress = async () => {
     if (isPaused && downloadStatus) {
       try {
@@ -70,42 +110,38 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
     }
   };
 
-  // Handle delete animation with slide up effect
+  // Animate card out when deleting
   useEffect(() => {
     if (isDeleting) {
-      // First fade out the card with smooth timing
       opacity.value = withTiming(0, { duration: 200 });
-
-      // Then collapse the height with spring for smooth transition
-      cardHeight.value = withDelay(
-        150,
-        withSpring(0, {
-          damping: 20,
-          stiffness: 300,
-          mass: 0.8,
-        })
-      );
+      cardHeight.value = withDelay(150, withSpring(0, { damping: 20, stiffness: 300, mass: 0.8 }));
     }
   }, [isDeleting, opacity, cardHeight]);
 
-  // Handle slide-up animation for items below deleted item
+  // Animate card in when a card above is deleted
   useEffect(() => {
     if (animationDelay > 0) {
-      // Start with items slightly below their final position
       translateY.value = 20;
-      // Then animate to final position with smooth spring
       translateY.value = withDelay(
         animationDelay,
-        withSpring(0, {
-          damping: 25,
-          stiffness: 400,
-          mass: 0.6,
-        })
+        withSpring(0, { damping: 25, stiffness: 400, mass: 0.6 })
       );
     }
   }, [animationDelay, translateY]);
 
+  // Close swipeable row if shouldResetPosition becomes true
+  useEffect(() => {
+    if (shouldResetPosition && isRevealed) {
+      swipeableRef.current?.close();
+    }
+  }, [shouldResetPosition, isRevealed]);
+
   const styles = StyleSheet.create({
+    tappableArea: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+    },
     actionContainer: {
       alignItems: "center",
       flexShrink: 0,
@@ -118,11 +154,7 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       zIndex: 10,
     },
     caption: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
+      ...createThemedTextStyle(theme, { size: "sm", weight: "normal", color: "onSurfaceVariant" }),
       lineHeight: 18,
       marginTop: theme.spacing.xxs,
     },
@@ -132,43 +164,11 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       minWidth: 0,
       paddingRight: theme.spacing.md,
     },
-    deleteActionContainer: {
-      alignItems: "center",
-      height: "100%",
-      justifyContent: "center",
-      position: "absolute",
-      right: 0,
-      top: 0,
-      width: DELETE_ZONE_WIDTH,
-    },
-    deleteButton: {
-      alignItems: "center",
-      backgroundColor: theme.colors.errorContainer,
-      borderRadius: 28,
-      height: 44,
-      justifyContent: "center",
-      width: 44,
-    },
-    downloadStatusContainer: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: theme.spacing.xs,
-      marginTop: theme.spacing.xs,
-    },
-    downloadStatusText: {
-      ...createThemedTextStyle(theme, {
-        size: "xs",
-        weight: "medium",
-        color: "onSurfaceVariant",
-      }),
-      flex: 1,
-    },
+
     downloadCard: {
       backgroundColor: theme.colors.transparent,
       marginHorizontal: theme.spacing.xxs,
-      marginVertical: theme.spacing.xxs,
       overflow: "hidden",
-      position: "relative",
     },
     downloadCardContent: {
       alignItems: "center",
@@ -179,25 +179,22 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       paddingVertical: theme.spacing.md,
     },
     downloadDate: {
-      ...createThemedTextStyle(theme, {
-        size: "xs",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
+      ...createThemedTextStyle(theme, { size: "xs", weight: "normal", color: "onSurfaceVariant" }),
       marginTop: theme.spacing.xxs,
       opacity: 0.7,
     },
-    errorText: {
-      ...createThemedTextStyle(theme, {
-        size: "xs",
-        weight: "medium",
-        color: "error",
-      }),
-    },
-    headerRow: {
-      alignItems: "flex-start",
+    downloadStatusContainer: {
+      alignItems: "center",
       flexDirection: "row",
-      justifyContent: "space-between",
+      gap: theme.spacing.xs,
+      marginTop: theme.spacing.xs,
+    },
+    downloadStatusText: {
+      ...createThemedTextStyle(theme, { size: "xs", weight: "medium", color: "onSurfaceVariant" }),
+      flex: 1,
+    },
+    errorText: {
+      ...createThemedTextStyle(theme, { size: "xs", weight: "medium", color: "error" }),
     },
     leftContent: {
       flex: 1,
@@ -233,11 +230,7 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       top: 1,
     },
     posterText: {
-      ...createThemedTextStyle(theme, {
-        size: "xl",
-        weight: "bold",
-        color: "onPrimaryContainer",
-      }),
+      ...createThemedTextStyle(theme, { size: "xl", weight: "bold", color: "onPrimaryContainer" }),
       fontSize: 18,
     },
     progressBar: {
@@ -261,18 +254,10 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       paddingVertical: theme.spacing.xs,
     },
     resumeButtonText: {
-      ...createThemedTextStyle(theme, {
-        size: "sm",
-        weight: "medium",
-        color: "onPrimary",
-      }),
+      ...createThemedTextStyle(theme, { size: "sm", weight: "medium", color: "onPrimary" }),
     },
     secondaryTitle: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "normal",
-        color: "onSurfaceVariant",
-      }),
+      ...createThemedTextStyle(theme, { size: "lg", weight: "normal", color: "onSurfaceVariant" }),
     },
     titleRow: {
       alignItems: "center",
@@ -281,11 +266,7 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
       minWidth: 0,
     },
     titleText: {
-      ...createThemedTextStyle(theme, {
-        size: "lg",
-        weight: "semiBold",
-        color: "onSurface",
-      }),
+      ...createThemedTextStyle(theme, { size: "lg", weight: "semiBold", color: "onSurface" }),
     },
   });
 
@@ -295,206 +276,87 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return "Downloaded today";
-    if (diffDays === 2) return "Downloaded yesterday";
+    if (diffDays <= 0) return "Downloaded today";
+    if (diffDays === 1) return "Downloaded yesterday";
     if (diffDays <= 7) return `Downloaded ${diffDays} days ago`;
-    return `Downloaded ${date.toLocaleDateString()}`;
+    return `Downloaded on ${date.toLocaleDateString()}`;
   };
-
-  // Pan gesture strictly limited to left-swipe movement so vertical scrolling remains responsive
-  const panGesture = Gesture.Pan()
-    // Require reasonable horizontal swipe distance before activation to avoid intercepting vertical scroll
-    .minDistance(15)
-    // Only activate when swiping left (negative X) beyond threshold
-    .activeOffsetX([-25, 0])
-    // Fail (let parent scroll) if vertical movement exceeds a small value
-    .failOffsetY([-10, 10])
-    .onUpdate((event) => {
-      // Only process if this is primarily a horizontal gesture
-      const absX = Math.abs(event.translationX);
-      const absY = Math.abs(event.translationY);
-
-      if (absX > absY && absX > 10) {
-        if (isRevealed) {
-          // When revealed, calculate new position based on current position + translation
-          // Allow dragging back to the right (towards 0) but not beyond it
-          const newTranslateX = Math.min(0, SWIPE_THRESHOLD + event.translationX);
-          translateX.value = newTranslateX;
-        } else {
-          // When not revealed, only allow leftward movement (negative translationX)
-          const newTranslateX = Math.min(0, event.translationX);
-          translateX.value = newTranslateX;
-        }
-      }
-    })
-    .onEnd((event) => {
-      const absX = Math.abs(event.translationX);
-      const absY = Math.abs(event.translationY);
-
-      // Only process if this was primarily a horizontal gesture
-      if (absX > absY && absX > 10) {
-        if (isRevealed) {
-          // If currently revealed, check if dragged back far enough to close
-          const finalPosition = SWIPE_THRESHOLD + event.translationX;
-          if (finalPosition > SWIPE_THRESHOLD / 2) {
-            // Close the delete action
-            translateX.value = withSpring(0, {
-              damping: 15,
-              stiffness: 200,
-            });
-            runOnJS(setIsRevealed)(false);
-          } else {
-            // Keep it revealed
-            translateX.value = withSpring(SWIPE_THRESHOLD, {
-              damping: 15,
-              stiffness: 200,
-            });
-          }
-        } else {
-          // Not revealed, check if should reveal
-          if (event.translationX < SWIPE_THRESHOLD) {
-            // Swipe threshold reached - show delete action
-            translateX.value = withSpring(SWIPE_THRESHOLD, {
-              damping: 15,
-              stiffness: 200,
-            });
-            runOnJS(setIsRevealed)(true);
-          } else {
-            // Snap back to original position
-            translateX.value = withSpring(0, {
-              damping: 15,
-              stiffness: 200,
-            });
-            runOnJS(setIsRevealed)(false);
-          }
-        }
-      } else {
-        // If not a horizontal gesture, reset position
-        translateX.value = withSpring(0, {
-          damping: 15,
-          stiffness: 200,
-        });
-        runOnJS(setIsRevealed)(false);
-      }
-    });
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
-      opacity: opacity.value,
-    };
-  });
-
-  const containerAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      height: cardHeight.value === 0 ? 0 : undefined,
-      marginVertical: cardHeight.value === 0 ? 0 : undefined,
-      overflow: "hidden",
-    };
-  });
-
-  const deleteActionAnimatedStyle = useAnimatedStyle(() => {
-    const progress = Math.abs(translateX.value) / DELETE_ZONE_WIDTH;
-    const clampedProgress = Math.min(1, progress);
-
-    return {
-      opacity: clampedProgress * opacity.value, // Apply both reveal and delete fade
-      transform: [{ scale: clampedProgress }],
-    };
-  });
-
-  const handleDeletePress = () => {
-    onDeletePress?.();
-    // Don't reset position immediately - let the parent handle it
-  };
-
-  const resetPosition = useCallback(() => {
-    setIsRevealed(false);
-    translateX.value = withSpring(0, {
-      damping: 15,
-      stiffness: 200,
-    });
-  }, [translateX]);
-
-  // Handle shouldResetPosition prop
-  useEffect(() => {
-    if (shouldResetPosition) {
-      resetPosition();
-    }
-  }, [shouldResetPosition, resetPosition]);
 
   const handleCardPress = () => {
     if (isRevealed) {
-      resetPosition();
+      swipeableRef.current?.close();
     } else {
       onPress();
     }
   };
+  // A new component to render the swipe action, allowing hooks to be used correctly.
+
+  const handleDeletePress = useCallback(() => {
+    swipeableRef.current?.close();
+    onDeletePress?.();
+  }, [onDeletePress]);
+
+  // This function now renders the new component, passing the animated value and props down.
+  const renderRightActions = useCallback(
+    (progress: SharedValue<number>) => {
+      return <RightSwipeAction progress={progress} onPress={handleDeletePress} />;
+    },
+    [handleDeletePress] // Add theme and styles to the dependency array
+  );
+
+  // Animated style for the root container, handling collapse/fade and slide-up
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    height: cardHeight.value === 0 ? 0 : undefined,
+    marginVertical: cardHeight.value === 0 ? 0 : theme.spacing.xxs,
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+    overflow: "hidden",
+  }));
 
   return (
     <Animated.View style={[styles.downloadCard, containerAnimatedStyle]}>
-      {/* Delete Action Background */}
-      {showDeleteButton && (
-        <View style={styles.deleteActionContainer}>
-          <Animated.View style={deleteActionAnimatedStyle}>
-            <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePress}>
-              <Ionicons name="trash-outline" size={20} color={theme.colors.onErrorContainer} />
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
-      )}
-
-      {/* Main Card Content */}
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={animatedStyle}>
-          <TouchableOpacity
-            style={styles.downloadCardContent}
-            onPress={handleCardPress}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={`Downloaded recording ${item.rec_number || "Unknown"}: ${item.species?.common_name || "Unknown species"}`}
-            accessibilityHint="Tap to view recording details, or swipe left to delete"
-          >
-            {/* Enhanced Poster Element */}
+      <Swipeable
+        ref={swipeableRef}
+        friction={2}
+        rightThreshold={40}
+        renderRightActions={showDeleteButton ? renderRightActions : undefined}
+        onSwipeableWillOpen={() => scheduleOnRN(setIsRevealed, true)}
+        onSwipeableWillClose={() => scheduleOnRN(setIsRevealed, false)}
+        overshootRight={false}
+      >
+        {/* This View is now the direct child, containing two separate pressable areas */}
+        <View style={styles.downloadCardContent}>
+          {/* AREA 1: The main pressable area for navigation */}
+          <Pressable style={styles.tappableArea} onPress={handleCardPress}>
             <View style={styles.posterContainer}>
               <View style={styles.posterOverlay}>
                 <Text style={styles.posterText}>{item.rec_number}</Text>
               </View>
-
-              {/* Download Badge - positioned at top-right corner */}
-
               <View style={styles.badgeContainer}>
                 <DownloadedBadge compact smallRound />
               </View>
             </View>
-            {/* Content Section */}
-            <View style={styles.contentContainer}>
-              <View style={styles.headerRow}>
-                <View style={styles.leftContent}>
-                  {/* Species Title with Download Indicator */}
-                  <View style={styles.titleRow}>
-                    {item.species && (
-                      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.titleText}>
-                        {item.species.common_name || `Recording ${item.rec_number}`} •{" "}
-                        <Text style={styles.secondaryTitle} numberOfLines={1} ellipsizeMode="tail">
-                          {item.species.scientific_name}
-                        </Text>
-                      </Text>
-                    )}
-                  </View>
 
-                  {/* Caption */}
-                  {item.caption && (
-                    <Text style={styles.caption} numberOfLines={1} ellipsizeMode="tail">
-                      {item.caption}
+            <View style={styles.contentContainer}>
+              <View style={styles.leftContent}>
+                <View style={styles.titleRow}>
+                  {item.species && (
+                    <Text numberOfLines={1} ellipsizeMode="tail" style={styles.titleText}>
+                      {item.species.common_name || `Recording ${item.rec_number}`} •{" "}
+                      <Text style={styles.secondaryTitle} numberOfLines={1} ellipsizeMode="tail">
+                        {item.species.scientific_name}
+                      </Text>
                     </Text>
                   )}
-
-                  {/* Download Date */}
-                  <Text style={styles.downloadDate}>{formatDownloadDate(item.downloaded_at)}</Text>
-
-                  {/* Download Progress and Status */}
-                  {(isDownloading || isPaused || hasError) && (
+                </View>
+                {item.caption && (
+                  <Text style={styles.caption} numberOfLines={1} ellipsizeMode="tail">
+                    {item.caption}
+                  </Text>
+                )}
+                <Text style={styles.downloadDate}>{formatDownloadDate(item.downloaded_at)}</Text>
+                {(isDownloading || isPaused || hasError) && (
+                  <View>
                     <View style={styles.downloadStatusContainer}>
                       <Text style={hasError ? styles.errorText : styles.downloadStatusText}>
                         {isDownloading && `Downloading... ${Math.round(progress * 100)}%`}
@@ -502,36 +364,33 @@ const DownloadCard: React.FC<DownloadCardProps> = ({
                         {hasError && downloadStatus?.error}
                       </Text>
                       {isPaused && (
-                        <TouchableOpacity
+                        <Pressable
                           style={styles.resumeButton}
                           onPress={() => void handleResumePress()}
-                          activeOpacity={0.8}
                         >
                           <Text style={styles.resumeButtonText}>Resume</Text>
-                        </TouchableOpacity>
+                        </Pressable>
                       )}
                     </View>
-                  )}
-
-                  {/* Progress Bar */}
-                  {(isDownloading || isPaused) && (
-                    <View style={styles.progressContainer}>
-                      <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
-                    </View>
-                  )}
-                </View>
+                    {(isDownloading || isPaused) && (
+                      <View style={styles.progressContainer}>
+                        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+                      </View>
+                    )}
+                  </View>
+                )}
               </View>
             </View>
+          </Pressable>
 
-            {/* Audio Player */}
-            {showPlayButton && downloadStatus?.status === "completed" && (
-              <View style={styles.actionContainer}>
-                <MiniAudioPlayer recording={item} size={44} />
-              </View>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-      </GestureDetector>
+          {/* AREA 2: The audio player, now a sibling and not nested */}
+          {showPlayButton && downloadStatus?.status === "completed" && (
+            <View style={styles.actionContainer}>
+              <MiniAudioPlayer recording={item} size={44} />
+            </View>
+          )}
+        </View>
+      </Swipeable>
     </Animated.View>
   );
 };

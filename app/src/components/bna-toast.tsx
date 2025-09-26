@@ -11,13 +11,13 @@ import {
 } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 import { useEnhancedTheme } from "../context/EnhancedThemeProvider";
 import { createThemedTextStyle } from "../lib/theme/typography";
@@ -153,7 +153,7 @@ export function Toast({
     // This function will be called from the UI thread
     const onDismissAction = () => {
       "worklet";
-      runOnJS(onDismiss)(id);
+      scheduleOnRN(onDismiss, id);
     };
 
     translateY.value = withSpring(-100, SPRING_CONFIG);
@@ -176,7 +176,7 @@ export function Toast({
         // Dismiss action to be called from the UI thread
         const onDismissAction = () => {
           "worklet";
-          runOnJS(onDismiss)(id);
+          scheduleOnRN(onDismiss, id);
         };
 
         // Animate out horizontally
