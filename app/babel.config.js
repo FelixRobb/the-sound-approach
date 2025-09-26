@@ -14,7 +14,7 @@ export default (api) => {
           allowUndefined: true,
         },
       ],
-      "react-native-worklets/plugin",
+      "react-native-reanimated/plugin",
     ],
   };
 };

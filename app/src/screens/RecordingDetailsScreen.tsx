@@ -609,9 +609,6 @@ const RecordingDetailsScreen = () => {
       alignItems: "center",
       justifyContent: "center",
     },
-    fullscreenButton: {
-      marginLeft: theme.spacing.sm,
-    },
     fullscreenContainer: {
       backgroundColor: theme.colors.background,
       height: "100%",
@@ -660,7 +657,7 @@ const RecordingDetailsScreen = () => {
       bottom: theme.spacing.sm,
       flexDirection: "row",
       left: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
       paddingVertical: theme.spacing.sm,
       position: "absolute",
       right: theme.spacing.sm,
@@ -967,7 +964,7 @@ const RecordingDetailsScreen = () => {
         weight: "medium",
         color: "onTertiary",
       }),
-      minWidth: 80,
+      marginHorizontal: theme.spacing.sm,
       textAlign: "center",
     },
     video: {
@@ -1029,7 +1026,7 @@ const RecordingDetailsScreen = () => {
           {formatTime(videoPosition)} / {formatTime(videoDuration)}
         </Text>
 
-        <TouchableOpacity style={styles.fullscreenButton} onPress={toggleFullscreen}>
+        <TouchableOpacity onPress={toggleFullscreen}>
           <Ionicons
             name={isVideoFullscreen ? "contract" : "expand"}
             size={24}
@@ -1063,20 +1060,22 @@ const RecordingDetailsScreen = () => {
 
     return (
       <View style={styles.playerContainer}>
-        <Video
-          ref={videoPlayerRef}
-          source={{ uri: sonagramVideoUri as string }}
-          style={styles.video}
-          paused={!isPlaying}
-          resizeMode={isVideoFullscreen ? "contain" : "cover"}
-          onLoad={onVideoLoad}
-          onProgress={onVideoProgress}
-          onError={onVideoError}
-          onEnd={onVideoEnd}
-          onBuffer={onBuffer}
-          playInBackground={false}
-          controls={false}
-        />
+        {sonagramVideoUri && (
+          <Video
+            ref={videoPlayerRef}
+            source={{ uri: sonagramVideoUri }}
+            style={styles.video}
+            paused={!isPlaying}
+            resizeMode={isVideoFullscreen ? "contain" : "cover"}
+            onLoad={onVideoLoad}
+            onProgress={onVideoProgress}
+            onError={onVideoError}
+            onEnd={onVideoEnd}
+            onBuffer={onBuffer}
+            playInBackground={false}
+            controls={false}
+          />
+        )}
 
         {/* Touch overlay for showing/hiding controls */}
         <TouchableOpacity
