@@ -63,26 +63,21 @@ export default {
         },
       ],
       [
+        // CORRECTED SECTION:
+        // Remove the 'androidExtensions' block. Let the library use its default
+        // ExoPlayer implementation. We will solve the version conflict below.
         "react-native-video",
         {
           enableNotificationControls: true,
-          androidExtensions: {
-            useExoplayerRtsp: false,
-            useExoplayerSmoothStreaming: false,
-            useExoplayerHls: false,
-            useExoplayerDash: false,
-            useExoplayerIMA: false,
-            useExoplayer: false, // Completely disable ExoPlayer
-            buildFromSource: false,
-          },
         },
       ],
       [
         "expo-build-properties",
         {
           android: {
-            // This is the main fix. We are now forcing version 1.8.0,
-            // which we discovered from the new build log.
+            // This forces the HIGHEST required version (1.8.0 from expo-audio)
+            // for all media3 modules. This will override the 1.4.1 requested
+            // by react-native-video. it works well. don't change it.
             resolutions: {
               "androidx.media3:media3-common": "1.8.0",
               "androidx.media3:media3-datasource": "1.8.0",
@@ -97,7 +92,7 @@ export default {
               "androidx.media3:media3-session": "1.8.0",
               "androidx.media3:media3-ui": "1.8.0",
             },
-            // It's fine to keep these packaging options
+            // Your packaging options are fine to keep.
             packagingOptions: {
               pickFirst: ["**/libc++_shared.so", "**/libjsc.so"],
               exclude: [
